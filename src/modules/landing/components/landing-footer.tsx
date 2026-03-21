@@ -1,0 +1,94 @@
+import Link from "next/link";
+
+export function LandingFooter() {
+  return (
+    <footer className="border-t border-[#d8d3a8] bg-[#d8cfb6]">
+      <div className="grid w-full gap-10 px-3 py-14 md:grid-cols-2 md:px-5 lg:grid-cols-4 lg:gap-8 lg:px-7">
+        <section>
+          <h3 className="text-3xl font-semibold tracking-tight text-black">Koru</h3>
+
+          <h4 className="mt-8 text-3xl font-semibold tracking-tight text-black">
+            Quick Links
+          </h4>
+          <nav className="mt-4 space-y-2.5 text-[1.5rem] leading-none text-black/95">
+            <a href="#">Home</a>
+            <a href="#metodo" className="block">
+              About
+            </a>
+            <a href="#niveles" className="block">
+              Studios
+            </a>
+            <a href="#comunidad" className="block">
+              Our Promise
+            </a>
+            <a href="#tour" className="block">
+              Make a donation
+            </a>
+          </nav>
+
+        </section>
+
+        <section>
+          <h4 className="text-3xl font-semibold tracking-tight text-black">
+            Campus Koru
+          </h4>
+          <p className="mt-6 text-[1.5rem] leading-[1.3] text-black/95">
+            Calle Principal 115 A
+            <br />
+            Centro
+            <br />
+            64650
+          </p>
+          <p className="mt-6 text-[1.5rem] leading-[1.3] text-black/95">
+            Whatsapp:
+            <br />
+            (+52) 81 1182 7264
+          </p>
+          <p className="mt-6 text-[1.5rem] leading-[1.3] text-black/95">
+            General Inquiries:
+            <br />
+            hola@koru.academy
+          </p>
+        </section>
+
+        <section>
+          <h4 className="text-3xl font-semibold tracking-tight text-black">Follow</h4>
+          <p className="mt-12 text-[1.5rem] leading-tight text-black/95">
+            Sign up to stay up to date
+          </p>
+          <label
+            htmlFor="footer-email"
+            className="mt-2 block text-[1.5rem] font-semibold leading-none text-black"
+          >
+            Email *
+          </label>
+          <form className="mt-4 flex max-w-[30rem] overflow-hidden rounded-xl border border-black/40">
+            <input
+              id="footer-email"
+              type="email"
+              className="h-12 w-full bg-[#ececec] px-4 text-[1.3rem] outline-none"
+            />
+            <button
+              type="button"
+              className="h-12 shrink-0 bg-black px-6 text-[1.5rem] font-semibold text-white"
+            >
+              Subscribe
+            </button>
+          </form>
+
+          <p className="mt-8 text-[1.25rem] text-black/95">
+            (c) 2026 Koru - Organismo Social de Aprendizaje
+          </p>
+        </section>
+
+        <section className="pt-16 lg:pt-0">
+          <nav className="space-y-6 text-[1.5rem] font-semibold leading-none text-black">
+            <Link href="#">LinkedIn</Link>
+            <Link href="#">YouTube</Link>
+            <Link href="#">Instagram</Link>
+          </nav>
+        </section>
+      </div>
+    </footer>
+  );
+}

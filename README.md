@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Koru
 
-## Getting Started
+Base inicial del proyecto CMS full-stack, construida siguiendo `docs/roadmap.md`.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- Prisma + Neon PostgreSQL
+- Zod
+- React Hook Form
+
+## Requisitos
+
+- Node.js 20+
+- npm 10+
+
+## Primer arranque
+
+1. Copiar variables de entorno:
+
+```bash
+cp .env.example .env
+```
+
+2. Completar al menos estas variables en `.env`:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=require"
+BETTER_AUTH_SECRET=""
+BETTER_AUTH_URL="http://localhost:3000"
+CLOUDINARY_CLOUD_NAME=""
+CLOUDINARY_API_KEY=""
+CLOUDINARY_API_SECRET=""
+```
+3. Generar cliente Prisma:
+
+```bash
+npm run prisma:generate
+```
+
+4. Crear primera migración:
+
+```bash
+npm run prisma:migrate -- --name init
+```
+
+5. Levantar entorno local:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts útiles
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `npm run dev`
+- `npm run lint`
+- `npm run prisma:generate`
+- `npm run prisma:migrate`
+- `npm run prisma:studio`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Estado actual
 
-## Learn More
+- Fase 1 (setup): completada.
+- Fase 2 (auth admin): pendiente.
+- Fase 3 (schema Prisma): base creada y lista para evolucionar.
 
-To learn more about Next.js, take a look at the following resources:
+## Próximo hito recomendado
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Integrar Better Auth para proteger `/admin` y habilitar el CRUD inicial de páginas y bloques.
