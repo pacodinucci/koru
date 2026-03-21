@@ -140,3 +140,11 @@ model Donation {
   updatedAt       DateTime         @updatedAt
   completedAt     DateTime?
 }
+
+model CmsTextEntry {
+  key            String   @id
+  draftValue     String
+  publishedValue String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

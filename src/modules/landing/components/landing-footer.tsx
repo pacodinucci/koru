@@ -1,11 +1,18 @@
 import Link from "next/link";
+import type { LandingTextMap } from "@/modules/landing/types/landing-text";
 
-export function LandingFooter() {
+type LandingFooterProps = {
+  textMap: LandingTextMap;
+};
+
+export function LandingFooter({ textMap }: LandingFooterProps) {
   return (
     <footer className="border-t border-[#d8d3a8] bg-[#d8cfb6]">
       <div className="grid w-full gap-10 px-3 py-14 md:grid-cols-2 md:px-5 lg:grid-cols-4 lg:gap-8 lg:px-7">
         <section>
-          <h3 className="text-3xl font-semibold tracking-tight text-black">Koru</h3>
+          <h3 className="text-3xl font-semibold tracking-tight text-black">
+            {textMap["footer-brand"]}
+          </h3>
 
           <h4 className="mt-8 text-3xl font-semibold tracking-tight text-black">
             Quick Links
@@ -30,7 +37,7 @@ export function LandingFooter() {
 
         <section>
           <h4 className="text-3xl font-semibold tracking-tight text-black">
-            Campus Koru
+            {textMap["footer-campus"]}
           </h4>
           <p className="mt-6 text-[1.5rem] leading-[1.3] text-black/95">
             Calle Principal 115 A
@@ -47,7 +54,7 @@ export function LandingFooter() {
           <p className="mt-6 text-[1.5rem] leading-[1.3] text-black/95">
             General Inquiries:
             <br />
-            hola@koru.academy
+            {textMap["footer-mail"]}
           </p>
         </section>
 
@@ -77,7 +84,7 @@ export function LandingFooter() {
           </form>
 
           <p className="mt-8 text-[1.25rem] text-black/95">
-            (c) 2026 Koru - Organismo Social de Aprendizaje
+            {textMap["footer-legal"]}
           </p>
         </section>
 

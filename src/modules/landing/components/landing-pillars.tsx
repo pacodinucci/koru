@@ -1,17 +1,27 @@
 import { landingPillars } from "@/modules/landing/data/landing-content";
+import type { LandingTextMap } from "@/modules/landing/types/landing-text";
 
-export function LandingPillars() {
+type LandingPillarsProps = {
+  textMap: LandingTextMap;
+};
+
+export function LandingPillars({ textMap }: LandingPillarsProps) {
   return (
     <section id="metodo" className="flex min-h-screen items-center">
-      <div className="mx-auto w-full max-w-[92rem] px-5 py-20 md:px-8 lg:px-12">
+      <div className="mx-auto w-full max-w-400 px-5 py-20 md:px-8 lg:px-12">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold tracking-[0.2em] text-black/55">
             NUESTRA MIRADA
           </p>
           <h2 className="mt-3 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
-            Nos nutrimos de pedagogias alternativas, crianza consciente y
-            comunidad.
+            {textMap["vision-title"]}
           </h2>
+          <p className="mt-4 max-w-2xl leading-7 text-black/75">
+            {textMap["vision-body"]}
+          </p>
+          <p className="mt-4 text-lg font-medium text-black/85">
+            {textMap["vision-highlight"]}
+          </p>
         </div>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">

@@ -1,6 +1,11 @@
 import { landingPrograms } from "@/modules/landing/data/landing-content";
+import type { LandingTextMap } from "@/modules/landing/types/landing-text";
 
-export function LandingPrograms() {
+type LandingProgramsProps = {
+  textMap: LandingTextMap;
+};
+
+export function LandingPrograms({ textMap }: LandingProgramsProps) {
   return (
     <section
       id="niveles"
@@ -13,12 +18,11 @@ export function LandingPrograms() {
               CAMINO KORU
             </p>
             <h2 className="mt-2 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
-              Una practica educativa que se mueve con la vida
+              {textMap["path-title"]}
             </h2>
           </div>
           <p className="max-w-md text-sm leading-6 text-black/70">
-            Caminamos unid@s en el respeto por los ritmos, las emociones y la
-            transformacion de cada proceso.
+            {textMap["path-body"]}
           </p>
         </div>
 

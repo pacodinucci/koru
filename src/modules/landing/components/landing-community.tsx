@@ -1,17 +1,22 @@
-export function LandingCommunity() {
+import type { LandingTextMap } from "@/modules/landing/types/landing-text";
+
+type LandingCommunityProps = {
+  textMap: LandingTextMap;
+};
+
+export function LandingCommunity({ textMap }: LandingCommunityProps) {
   return (
     <section id="comunidad" className="flex min-h-screen items-center">
-      <div className="mx-auto grid w-full max-w-[92rem] gap-8 px-5 py-20 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-12">
+      <div className="mx-auto grid w-full max-w-400 gap-8 px-5 py-20 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-12">
         <div className="rounded-3xl border border-black/10 bg-[#f8f7f2] p-8">
           <p className="text-xs font-semibold tracking-[0.2em] text-black/55">
             KORU ES
           </p>
           <h2 className="mt-3 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
-            Abrazo, tribu y transformacion.
+            {textMap["community-title"]}
           </h2>
           <p className="mt-5 max-w-2xl leading-7 text-black/75">
-            Quieres ser parte de esta vision? Siguenos para conocer mas y
-            caminar junt@s por nuevos paradigmas educativos.
+            {textMap["community-body"]}
           </p>
         </div>
         <div
@@ -22,11 +27,10 @@ export function LandingCommunity() {
             SUMATE A KORU OSA
           </p>
           <h3 className="mt-3 text-2xl font-semibold tracking-tight">
-            Organismo Social de Aprendizaje
+            {textMap["community-card-title"]}
           </h3>
           <p className="mt-4 leading-7 text-white/75">
-            Comunidad que respira, siente, aprende y se transforma con quienes
-            la habitan.
+            {textMap["community-card-body"]}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
