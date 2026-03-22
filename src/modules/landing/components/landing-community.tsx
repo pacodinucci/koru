@@ -1,21 +1,56 @@
-import type { LandingTextMap } from "@/modules/landing/types/landing-text";
+import { cn } from "@/lib/utils";
+import type {
+  LandingPreviewBindings,
+  LandingTextMap,
+} from "@/modules/landing/types/landing-text";
+import { getLandingFieldFontSize } from "@/modules/landing/types/landing-text";
 
 type LandingCommunityProps = {
   textMap: LandingTextMap;
-};
+} & LandingPreviewBindings;
 
-export function LandingCommunity({ textMap }: LandingCommunityProps) {
+function selectableClass(active: boolean, previewMode?: boolean) {
+  return cn(
+    previewMode && "cursor-pointer rounded-sm transition",
+    active && "ring-2 ring-primary/50",
+  );
+}
+
+export function LandingCommunity({
+  textMap,
+  previewMode,
+  selectedFieldId,
+  onSelectField,
+}: LandingCommunityProps) {
   return (
     <section id="comunidad" className="flex min-h-screen items-center">
-      <div className="mx-auto grid w-full max-w-400 gap-8 px-5 py-20 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-12">
+      <div className="mx-auto grid w-full max-w-[92rem] gap-8 px-5 py-20 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-12">
         <div className="rounded-3xl border border-black/10 bg-[#f8f7f2] p-8">
           <p className="text-xs font-semibold tracking-[0.2em] text-black/55">
             KORU ES
           </p>
-          <h2 className="mt-3 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
+          <h2
+            className={cn(
+              "mt-3 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl",
+              selectableClass(selectedFieldId === "community-title", previewMode),
+            )}
+            onClick={() => onSelectField?.("community-title")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "community-title", 40)}px`,
+            }}
+          >
             {textMap["community-title"]}
           </h2>
-          <p className="mt-5 max-w-2xl leading-7 text-black/75">
+          <p
+            className={cn(
+              "mt-5 max-w-2xl leading-7 text-black/75",
+              selectableClass(selectedFieldId === "community-body", previewMode),
+            )}
+            onClick={() => onSelectField?.("community-body")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "community-body", 18)}px`,
+            }}
+          >
             {textMap["community-body"]}
           </p>
         </div>
@@ -26,10 +61,28 @@ export function LandingCommunity({ textMap }: LandingCommunityProps) {
           <p className="text-xs font-semibold tracking-[0.2em] text-white/60">
             SUMATE A KORU OSA
           </p>
-          <h3 className="mt-3 text-2xl font-semibold tracking-tight">
+          <h3
+            className={cn(
+              "mt-3 text-2xl font-semibold tracking-tight",
+              selectableClass(selectedFieldId === "community-card-title", previewMode),
+            )}
+            onClick={() => onSelectField?.("community-card-title")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "community-card-title", 30)}px`,
+            }}
+          >
             {textMap["community-card-title"]}
           </h3>
-          <p className="mt-4 leading-7 text-white/75">
+          <p
+            className={cn(
+              "mt-4 leading-7 text-white/75",
+              selectableClass(selectedFieldId === "community-card-body", previewMode),
+            )}
+            onClick={() => onSelectField?.("community-card-body")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "community-card-body", 18)}px`,
+            }}
+          >
             {textMap["community-card-body"]}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">

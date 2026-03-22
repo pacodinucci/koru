@@ -59,15 +59,13 @@ export function AdminDashboardShell({
               Text editing mode
             </Button>
             <DropdownMenu>
-              <DropdownMenuTrigger>
-                <Button variant="ghost" size="sm">
-                  <Avatar className="size-6">
-                    <AvatarFallback>
-                      {userEmail.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <ChevronDownIcon />
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
+                <Avatar className="size-6">
+                  <AvatarFallback>
+                    {userEmail.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <ChevronDownIcon />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>

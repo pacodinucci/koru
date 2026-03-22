@@ -1,11 +1,28 @@
 import { landingPrograms } from "@/modules/landing/data/landing-content";
-import type { LandingTextMap } from "@/modules/landing/types/landing-text";
+import { cn } from "@/lib/utils";
+import type {
+  LandingPreviewBindings,
+  LandingTextMap,
+} from "@/modules/landing/types/landing-text";
+import { getLandingFieldFontSize } from "@/modules/landing/types/landing-text";
 
 type LandingProgramsProps = {
   textMap: LandingTextMap;
-};
+} & LandingPreviewBindings;
 
-export function LandingPrograms({ textMap }: LandingProgramsProps) {
+function selectableClass(active: boolean, previewMode?: boolean) {
+  return cn(
+    previewMode && "cursor-pointer rounded-sm transition",
+    active && "ring-2 ring-primary/50",
+  );
+}
+
+export function LandingPrograms({
+  textMap,
+  previewMode,
+  selectedFieldId,
+  onSelectField,
+}: LandingProgramsProps) {
   return (
     <section
       id="niveles"
@@ -17,11 +34,29 @@ export function LandingPrograms({ textMap }: LandingProgramsProps) {
             <p className="text-xs font-semibold tracking-[0.2em] text-black/55">
               CAMINO KORU
             </p>
-            <h2 className="mt-2 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
+            <h2
+              className={cn(
+                "mt-2 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl",
+                selectableClass(selectedFieldId === "path-title", previewMode),
+              )}
+              onClick={() => onSelectField?.("path-title")}
+              style={{
+                fontSize: `${getLandingFieldFontSize(textMap, "path-title", 40)}px`,
+              }}
+            >
               {textMap["path-title"]}
             </h2>
           </div>
-          <p className="max-w-md text-sm leading-6 text-black/70">
+          <p
+            className={cn(
+              "max-w-md text-sm leading-6 text-black/70",
+              selectableClass(selectedFieldId === "path-body", previewMode),
+            )}
+            onClick={() => onSelectField?.("path-body")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "path-body", 14)}px`,
+            }}
+          >
             {textMap["path-body"]}
           </p>
         </div>

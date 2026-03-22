@@ -1,71 +1,75 @@
 import { prisma } from "@/lib/prisma";
 import {
-  cmsLandingDefaultTextMap,
-  cmsLandingTextKeys,
-} from "@/modules/admin/data/cms-landing-content";
+  ensureLandingDefaults,
+  getDefaultLandingTextMap,
+} from "@/modules/landing/config/landing-sections";
 
 export type CmsTextMap = Record<string, string>;
 
-async function getEntriesByKeys() {
+async function getEntries() {
   return prisma.cmsTextEntry.findMany({
-    where: { key: { in: cmsLandingTextKeys } },
+    orderBy: { key: "asc" },
   });
 }
 
 export async function getCmsDraftTextMap(): Promise<CmsTextMap> {
-  const entries = await getEntriesByKeys();
-  const dbDraftMap = Object.fromEntries(
+  const entries = await getEntries();
+  const map = Object.fromEntries(
     entries.map((entry) => [entry.key, entry.draftValue]),
   );
 
-  return {
-    ...cmsLandingDefaultTextMap,
-    ...dbDraftMap,
-  };
+  return ensureLandingDefaults(map);
 }
 
 export async function getCmsPublishedTextMap(): Promise<CmsTextMap> {
-  const entries = await getEntriesByKeys();
-  const dbPublishedMap = Object.fromEntries(
+  const entries = await getEntries();
+  const map = Object.fromEntries(
     entries.map((entry) => [
       entry.key,
-      entry.publishedValue ?? entry.draftValue ?? cmsLandingDefaultTextMap[entry.key],
+      entry.publishedValue ?? entry.draftValue ?? "",
     ]),
   );
 
-  return {
-    ...cmsLandingDefaultTextMap,
-    ...dbPublishedMap,
-  };
+  return ensureLandingDefaults(map);
 }
 
 export async function saveCmsDraftTextMap(textMap: CmsTextMap) {
-  const operations = cmsLandingTextKeys.map((key) =>
-    prisma.cmsTextEntry.upsert({
-      where: { key },
-      create: { key, draftValue: textMap[key] ?? cmsLandingDefaultTextMap[key] },
-      update: { draftValue: textMap[key] ?? cmsLandingDefaultTextMap[key] },
-    }),
-  );
+  const fullPayload = {
+    ...getDefaultLandingTextMap(),
+    ...textMap,
+  };
 
-  await prisma.$transaction(operations);
+  await Promise.all(
+    Object.entries(fullPayload).map(([key, value]) =>
+      prisma.cmsTextEntry.upsert({
+        where: { key },
+        create: { key, draftValue: value },
+        update: { draftValue: value },
+      }),
+    ),
+  );
 }
 
 export async function publishCmsTextMap(textMap: CmsTextMap) {
-  const operations = cmsLandingTextKeys.map((key) =>
-    prisma.cmsTextEntry.upsert({
-      where: { key },
-      create: {
-        key,
-        draftValue: textMap[key] ?? cmsLandingDefaultTextMap[key],
-        publishedValue: textMap[key] ?? cmsLandingDefaultTextMap[key],
-      },
-      update: {
-        draftValue: textMap[key] ?? cmsLandingDefaultTextMap[key],
-        publishedValue: textMap[key] ?? cmsLandingDefaultTextMap[key],
-      },
-    }),
-  );
+  const fullPayload = {
+    ...getDefaultLandingTextMap(),
+    ...textMap,
+  };
 
-  await prisma.$transaction(operations);
+  await Promise.all(
+    Object.entries(fullPayload).map(([key, value]) =>
+      prisma.cmsTextEntry.upsert({
+        where: { key },
+        create: {
+          key,
+          draftValue: value,
+          publishedValue: value,
+        },
+        update: {
+          draftValue: value,
+          publishedValue: value,
+        },
+      }),
+    ),
+  );
 }

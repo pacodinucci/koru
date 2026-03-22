@@ -1,32 +1,86 @@
 import { landingMetrics } from "@/modules/landing/data/landing-content";
-import type { LandingTextMap } from "@/modules/landing/types/landing-text";
+import { cn } from "@/lib/utils";
+import {
+  getLandingFieldFontSize,
+  LandingPreviewBindings,
+  LandingTextMap,
+} from "@/modules/landing/types/landing-text";
 
 type LandingHeroProps = {
   textMap: LandingTextMap;
-};
+} & LandingPreviewBindings;
 
-export function LandingHero({ textMap }: LandingHeroProps) {
+function selectableClass(active: boolean, previewMode?: boolean) {
+  return cn(previewMode && "cursor-pointer rounded-sm transition", active && "ring-2 ring-primary/50");
+}
+
+export function LandingHero({
+  textMap,
+  previewMode,
+  selectedFieldId,
+  onSelectField,
+}: LandingHeroProps) {
   return (
     <section className="relative flex min-h-screen items-center overflow-hidden border-b border-black/10 bg-[#f4efe5]">
       <div className="absolute -left-20 top-10 h-64 w-64 rounded-full bg-[#d5e8d4]/60 blur-3xl" />
       <div className="absolute -right-20 bottom-10 h-64 w-64 rounded-full bg-[#c8d8f0]/70 blur-3xl" />
-      <div className="relative mx-auto grid w-full max-w-400 gap-8 px-5 py-20 md:px-8 lg:grid-cols-[1.2fr_0.8fr] lg:px-12">
+      <div className="relative mx-auto grid w-full max-w-[92rem] gap-8 px-5 py-20 md:px-8 lg:grid-cols-[1.2fr_0.8fr] lg:px-12">
         <div>
-          <p className="text-xs font-semibold tracking-[0.25em] text-black/60">
+          <p
+            className={cn(
+              "text-xs font-semibold tracking-[0.25em] text-black/60",
+              selectableClass(selectedFieldId === "hero-kicker", previewMode),
+            )}
+            onClick={() => onSelectField?.("hero-kicker")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "hero-kicker", 12)}px`,
+            }}
+          >
             {textMap["hero-kicker"]}
           </p>
-          <h1 className="mt-4 max-w-3xl text-4xl leading-tight font-semibold tracking-tight text-black sm:text-5xl lg:text-6xl">
+          <h1
+            className={cn(
+              "mt-4 max-w-3xl text-4xl leading-tight font-semibold tracking-tight text-black sm:text-5xl lg:text-6xl",
+              selectableClass(selectedFieldId === "hero-title", previewMode),
+            )}
+            onClick={() => onSelectField?.("hero-title")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "hero-title", 56)}px`,
+            }}
+          >
             {textMap["hero-title"]}
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-7 text-black/70 sm:text-lg">
+          <p
+            className={cn(
+              "mt-6 max-w-2xl text-base leading-7 text-black/70 sm:text-lg",
+              selectableClass(selectedFieldId === "hero-body", previewMode),
+            )}
+            onClick={() => onSelectField?.("hero-body")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "hero-body", 20)}px`,
+            }}
+          >
             {textMap["hero-body"]}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
               href="#tour"
+              onClick={(event) => {
+                if (previewMode) {
+                  event.preventDefault();
+                  onSelectField?.("hero-cta");
+                }
+              }}
               className="inline-flex h-11 items-center rounded-full bg-black px-6 text-sm font-medium text-white transition hover:opacity-85"
             >
-              {textMap["hero-cta"]}
+              <span
+                className={selectableClass(selectedFieldId === "hero-cta", previewMode)}
+                style={{
+                  fontSize: `${getLandingFieldFontSize(textMap, "hero-cta", 14)}px`,
+                }}
+              >
+                {textMap["hero-cta"]}
+              </span>
             </a>
             <a
               href="#metodo"

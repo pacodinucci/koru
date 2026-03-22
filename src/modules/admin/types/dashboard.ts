@@ -25,6 +25,7 @@ export type CmsTextField = {
   label: string;
   value: string;
   multiline?: boolean;
+  fontSize: number;
 };
 
 export type CmsSection = {

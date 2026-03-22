@@ -1,16 +1,42 @@
 import Link from "next/link";
-import type { LandingTextMap } from "@/modules/landing/types/landing-text";
+import { cn } from "@/lib/utils";
+import {
+  getLandingFieldFontSize,
+  type LandingPreviewBindings,
+  type LandingTextMap,
+} from "@/modules/landing/types/landing-text";
 
 type LandingFooterProps = {
   textMap: LandingTextMap;
-};
+} & LandingPreviewBindings;
 
-export function LandingFooter({ textMap }: LandingFooterProps) {
+function selectableClass(active: boolean, previewMode?: boolean) {
+  return cn(
+    previewMode && "cursor-pointer rounded-sm transition",
+    active && "ring-2 ring-primary/50",
+  );
+}
+
+export function LandingFooter({
+  textMap,
+  previewMode,
+  selectedFieldId,
+  onSelectField,
+}: LandingFooterProps) {
   return (
     <footer className="border-t border-[#d8d3a8] bg-[#d8cfb6]">
       <div className="grid w-full gap-10 px-3 py-14 md:grid-cols-2 md:px-5 lg:grid-cols-4 lg:gap-8 lg:px-7">
         <section>
-          <h3 className="text-3xl font-semibold tracking-tight text-black">
+          <h3
+            className={cn(
+              "text-3xl font-semibold tracking-tight text-black",
+              selectableClass(selectedFieldId === "footer-brand", previewMode),
+            )}
+            onClick={() => onSelectField?.("footer-brand")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "footer-brand", 38)}px`,
+            }}
+          >
             {textMap["footer-brand"]}
           </h3>
 
@@ -36,7 +62,16 @@ export function LandingFooter({ textMap }: LandingFooterProps) {
         </section>
 
         <section>
-          <h4 className="text-3xl font-semibold tracking-tight text-black">
+          <h4
+            className={cn(
+              "text-3xl font-semibold tracking-tight text-black",
+              selectableClass(selectedFieldId === "footer-campus", previewMode),
+            )}
+            onClick={() => onSelectField?.("footer-campus")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "footer-campus", 38)}px`,
+            }}
+          >
             {textMap["footer-campus"]}
           </h4>
           <p className="mt-6 text-[1.5rem] leading-[1.3] text-black/95">
@@ -51,7 +86,16 @@ export function LandingFooter({ textMap }: LandingFooterProps) {
             <br />
             (+52) 81 1182 7264
           </p>
-          <p className="mt-6 text-[1.5rem] leading-[1.3] text-black/95">
+          <p
+            className={cn(
+              "mt-6 text-[1.5rem] leading-[1.3] text-black/95",
+              selectableClass(selectedFieldId === "footer-mail", previewMode),
+            )}
+            onClick={() => onSelectField?.("footer-mail")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "footer-mail", 24)}px`,
+            }}
+          >
             General Inquiries:
             <br />
             {textMap["footer-mail"]}
@@ -83,7 +127,16 @@ export function LandingFooter({ textMap }: LandingFooterProps) {
             </button>
           </form>
 
-          <p className="mt-8 text-[1.25rem] text-black/95">
+          <p
+            className={cn(
+              "mt-8 text-[1.25rem] text-black/95",
+              selectableClass(selectedFieldId === "footer-legal", previewMode),
+            )}
+            onClick={() => onSelectField?.("footer-legal")}
+            style={{
+              fontSize: `${getLandingFieldFontSize(textMap, "footer-legal", 20)}px`,
+            }}
+          >
             {textMap["footer-legal"]}
           </p>
         </section>
