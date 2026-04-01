@@ -128,3 +128,7 @@
     @apply font-sans;
   }
 }
+
+[data-landing-preview="true"] .min-h-screen {
+  min-height: var(--landing-preview-vh, 100vh) !important;
+}

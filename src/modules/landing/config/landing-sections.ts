@@ -30,6 +30,13 @@ export type LandingSectionInstance = {
   name: string;
 };
 
+export type SectionExtraElementType = "title" | "text" | "button";
+
+export type SectionExtraElement = {
+  id: string;
+  type: SectionExtraElementType;
+};
+
 export const landingSectionCatalog: Record<
   LandingSectionType,
   LandingSectionTypeDefinition
@@ -191,6 +198,97 @@ export const defaultLandingStructure: LandingSectionInstance[] = [
 
 export function getSectionFieldKey(sectionId: string, fieldKey: string) {
   return `section.${sectionId}.${fieldKey}`;
+}
+
+export function getSectionExtrasKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__extras");
+}
+
+export function getSectionBackgroundImageKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__background_image");
+}
+
+export function getSectionBackgroundModeKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__background_mode");
+}
+
+export function getSectionBackgroundColorKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__background_color");
+}
+
+export function getSectionBackgroundGradientKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__background_gradient");
+}
+
+export function getSectionBackgroundZoomKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__background_zoom");
+}
+
+export function getSectionBackgroundPositionXKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__background_position_x");
+}
+
+export function getSectionBackgroundPositionYKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__background_position_y");
+}
+
+export function getSectionGalleryVariantKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__gallery_variant");
+}
+
+export function getSectionGalleryAutoplaySecondsKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__gallery_autoplay_seconds");
+}
+
+export function getSectionGalleryItemImageKey(sectionId: string, index: number) {
+  return getSectionFieldKey(sectionId, `item${index}_image`);
+}
+
+export function getSectionItemsOrderKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__items_order");
+}
+
+export function getSectionExtraTextKey(sectionId: string, extraId: string) {
+  return getSectionFieldKey(sectionId, `extra.${extraId}.text`);
+}
+
+export function parseSectionExtraElements(
+  textMap: LandingTextMap,
+  sectionId: string,
+): SectionExtraElement[] {
+  const raw = textMap[getSectionExtrasKey(sectionId)];
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as SectionExtraElement[];
+    return parsed.filter(
+      (item) =>
+        item &&
+        typeof item.id === "string" &&
+        (item.type === "title" || item.type === "text" || item.type === "button"),
+    );
+  } catch {
+    return [];
+  }
+}
+
+export function parseSectionItemsOrder(
+  textMap: LandingTextMap,
+  sectionId: string,
+): string[] {
+  const raw = textMap[getSectionItemsOrderKey(sectionId)];
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as string[];
+    return parsed.filter((item) => typeof item === "string");
+  } catch {
+    return [];
+  }
 }
 
 export function getDefaultLandingTextMap(
