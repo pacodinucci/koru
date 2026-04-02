@@ -37,8 +37,13 @@ import {
   getSectionBackgroundPositionXKey,
   getSectionBackgroundPositionYKey,
   getSectionBackgroundZoomKey,
+  getSectionGalleryCaptionContainerBackgroundKey,
+  getSectionGalleryCaptionContainerPaddingXKey,
+  getSectionGalleryCaptionContainerPaddingYKey,
   getSectionGalleryAutoplaySecondsKey,
+  getSectionGalleryItemCaptionModeKey,
   getSectionGalleryItemImageKey,
+  getSectionGalleryItemSubtitleKey,
   getSectionGalleryVariantKey,
   getSectionExtraTextKey,
   getSectionExtrasKey,
@@ -201,7 +206,7 @@ function getSectionBackgroundPositionValue(raw: string | undefined) {
 }
 
 function getGalleryVariantValue(raw: string | undefined) {
-  if (raw === "carousel" || raw === "stacked") {
+  if (raw === "carousel" || raw === "stacked" || raw === "editorial") {
     return raw;
   }
   return "grid";
@@ -213,6 +218,31 @@ function getGalleryAutoplaySecondsValue(raw: string | undefined) {
     return 0;
   }
   return clamp(parsed, 0, 10);
+}
+
+function getGalleryCaptionModeValue(raw: string | undefined) {
+  if (raw === "none" || raw === "title-subtitle") {
+    return raw;
+  }
+  return "title";
+}
+
+function getGalleryCaptionContainerBackgroundValue(raw: string | undefined) {
+  if (raw === "off") {
+    return "off";
+  }
+  return "on";
+}
+
+function getGalleryCaptionContainerPaddingValue(
+  raw: string | undefined,
+  fallback: number,
+) {
+  const parsed = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return clamp(parsed, 0, 80);
 }
 
 const PREVIEW_ZOOM_MIN = 30;
@@ -354,6 +384,30 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
   const selectedSectionGalleryAutoplaySecondsKey = selectedSection
     ? getSectionGalleryAutoplaySecondsKey(selectedSection.id)
     : null;
+  const selectedSectionGalleryCaptionContainerBackgroundKey = selectedSection
+    ? getSectionGalleryCaptionContainerBackgroundKey(selectedSection.id)
+    : null;
+  const selectedSectionGalleryCaptionContainerPaddingXKey = selectedSection
+    ? getSectionGalleryCaptionContainerPaddingXKey(selectedSection.id)
+    : null;
+  const selectedSectionGalleryCaptionContainerPaddingYKey = selectedSection
+    ? getSectionGalleryCaptionContainerPaddingYKey(selectedSection.id)
+    : null;
+  const selectedSectionGalleryItemCaptionModeKeys = selectedSection
+    ? [1, 2, 3, 4].map((index) =>
+        getSectionGalleryItemCaptionModeKey(selectedSection.id, index),
+      )
+    : [];
+  const selectedSectionGalleryItemSubtitleKeys = selectedSection
+    ? [1, 2, 3, 4].map((index) =>
+        getSectionGalleryItemSubtitleKey(selectedSection.id, index),
+      )
+    : [];
+  const selectedSectionGalleryItemTitleKeys = selectedSection
+    ? [1, 2, 3, 4].map((index) =>
+        getSectionFieldKey(selectedSection.id, `item${index}`),
+      )
+    : [];
   const selectedSectionGalleryItemImageKeys = selectedSection
     ? [1, 2, 3, 4].map((index) =>
         getSectionGalleryItemImageKey(selectedSection.id, index),
@@ -424,6 +478,30 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
           textMap[selectedSectionGalleryAutoplaySecondsKey],
         )
       : 0;
+  const selectedSectionGalleryCaptionContainerBackground =
+    selectedSectionGalleryCaptionContainerBackgroundKey
+      ? getGalleryCaptionContainerBackgroundValue(
+          textMap[selectedSectionGalleryCaptionContainerBackgroundKey],
+        )
+      : "on";
+  const selectedSectionGalleryCaptionContainerPaddingX =
+    selectedSectionGalleryCaptionContainerPaddingXKey
+      ? getGalleryCaptionContainerPaddingValue(
+          textMap[selectedSectionGalleryCaptionContainerPaddingXKey],
+          12,
+        )
+      : 12;
+  const selectedSectionGalleryCaptionContainerPaddingY =
+    selectedSectionGalleryCaptionContainerPaddingYKey
+      ? getGalleryCaptionContainerPaddingValue(
+          textMap[selectedSectionGalleryCaptionContainerPaddingYKey],
+          8,
+        )
+      : 8;
+  const selectedSectionGalleryItemCaptionModes =
+    selectedSectionGalleryItemCaptionModeKeys.map((key) =>
+      getGalleryCaptionModeValue(textMap[key]),
+    );
 
   const selectedFieldContext = useMemo<SelectedFieldContext | null>(() => {
     if (!selectedFieldId) {
@@ -1026,7 +1104,133 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         />
                                         Stacked
                                       </label>
+                                      <label className="inline-flex items-center gap-1">
+                                        <input
+                                          type="radio"
+                                          name={`${selectedSection.id}-gallery-variant`}
+                                          checked={selectedSectionGalleryVariant === "editorial"}
+                                          onChange={() =>
+                                            updateField(
+                                              selectedSectionGalleryVariantKey,
+                                              "editorial",
+                                            )
+                                          }
+                                        />
+                                        Editorial
+                                      </label>
                                     </div>
+
+                                    {selectedSectionGalleryCaptionContainerBackgroundKey &&
+                                    selectedSectionGalleryCaptionContainerPaddingXKey &&
+                                    selectedSectionGalleryCaptionContainerPaddingYKey ? (
+                                      <div className="space-y-2 rounded-md border bg-background p-2">
+                                        <label className="text-xs font-medium text-muted-foreground">
+                                          Contenedor de texto
+                                        </label>
+                                        <div className="flex gap-3 rounded-md border px-3 py-2 text-xs">
+                                          <label className="inline-flex items-center gap-1">
+                                            <input
+                                              type="radio"
+                                              name={`${selectedSection.id}-caption-container-bg`}
+                                              checked={
+                                                selectedSectionGalleryCaptionContainerBackground ===
+                                                "on"
+                                              }
+                                              onChange={() =>
+                                                updateField(
+                                                  selectedSectionGalleryCaptionContainerBackgroundKey,
+                                                  "on",
+                                                )
+                                              }
+                                            />
+                                            Con fondo
+                                          </label>
+                                          <label className="inline-flex items-center gap-1">
+                                            <input
+                                              type="radio"
+                                              name={`${selectedSection.id}-caption-container-bg`}
+                                              checked={
+                                                selectedSectionGalleryCaptionContainerBackground ===
+                                                "off"
+                                              }
+                                              onChange={() =>
+                                                updateField(
+                                                  selectedSectionGalleryCaptionContainerBackgroundKey,
+                                                  "off",
+                                                )
+                                              }
+                                            />
+                                            Sin fondo
+                                          </label>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                          <label className="text-xs font-medium text-muted-foreground">
+                                            Padding X ({selectedSectionGalleryCaptionContainerPaddingX}px)
+                                          </label>
+                                          <div className="grid grid-cols-[1fr_84px] gap-2">
+                                            <Input
+                                              type="range"
+                                              min={0}
+                                              max={80}
+                                              step={1}
+                                              value={selectedSectionGalleryCaptionContainerPaddingX}
+                                              onChange={(event) =>
+                                                updateField(
+                                                  selectedSectionGalleryCaptionContainerPaddingXKey,
+                                                  event.target.value,
+                                                )
+                                              }
+                                            />
+                                            <Input
+                                              type="number"
+                                              min={0}
+                                              max={80}
+                                              step={1}
+                                              value={selectedSectionGalleryCaptionContainerPaddingX}
+                                              onChange={(event) =>
+                                                updateField(
+                                                  selectedSectionGalleryCaptionContainerPaddingXKey,
+                                                  event.target.value,
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                          <label className="text-xs font-medium text-muted-foreground">
+                                            Padding Y ({selectedSectionGalleryCaptionContainerPaddingY}px)
+                                          </label>
+                                          <div className="grid grid-cols-[1fr_84px] gap-2">
+                                            <Input
+                                              type="range"
+                                              min={0}
+                                              max={80}
+                                              step={1}
+                                              value={selectedSectionGalleryCaptionContainerPaddingY}
+                                              onChange={(event) =>
+                                                updateField(
+                                                  selectedSectionGalleryCaptionContainerPaddingYKey,
+                                                  event.target.value,
+                                                )
+                                              }
+                                            />
+                                            <Input
+                                              type="number"
+                                              min={0}
+                                              max={80}
+                                              step={1}
+                                              value={selectedSectionGalleryCaptionContainerPaddingY}
+                                              onChange={(event) =>
+                                                updateField(
+                                                  selectedSectionGalleryCaptionContainerPaddingYKey,
+                                                  event.target.value,
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ) : null}
 
                                     {(selectedSectionGalleryVariant === "carousel" ||
                                       selectedSectionGalleryVariant === "stacked") &&
@@ -1073,16 +1277,87 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             Imagenes del carrusel
                                           </label>
                                           {selectedSectionGalleryItemImageKeys.map(
-                                            (imageKey, imageIndex) => (
-                                              <Input
-                                                key={imageKey}
-                                                placeholder={`https://... (Imagen ${imageIndex + 1})`}
-                                                value={textMap[imageKey] ?? ""}
-                                                onChange={(event) =>
-                                                  updateField(imageKey, event.target.value)
-                                                }
-                                              />
-                                            ),
+                                            (imageKey, imageIndex) => {
+                                              const titleKey =
+                                                selectedSectionGalleryItemTitleKeys[
+                                                  imageIndex
+                                                ];
+                                              const modeKey =
+                                                selectedSectionGalleryItemCaptionModeKeys[
+                                                  imageIndex
+                                                ];
+                                              const subtitleKey =
+                                                selectedSectionGalleryItemSubtitleKeys[
+                                                  imageIndex
+                                                ];
+                                              const mode =
+                                                selectedSectionGalleryItemCaptionModes[
+                                                  imageIndex
+                                                ] ?? "title";
+
+                                              return (
+                                                <div
+                                                  key={imageKey}
+                                                  className="space-y-2 rounded-md border bg-background p-2"
+                                                >
+                                                  <p className="text-[11px] font-medium text-muted-foreground uppercase">
+                                                    Imagen {imageIndex + 1}
+                                                  </p>
+                                                  <Input
+                                                    placeholder="https://... (URL imagen)"
+                                                    value={textMap[imageKey] ?? ""}
+                                                    onChange={(event) =>
+                                                      updateField(
+                                                        imageKey,
+                                                        event.target.value,
+                                                      )
+                                                    }
+                                                  />
+                                                  <Input
+                                                    placeholder="Titulo"
+                                                    value={textMap[titleKey] ?? ""}
+                                                    onChange={(event) =>
+                                                      updateField(
+                                                        titleKey,
+                                                        event.target.value,
+                                                      )
+                                                    }
+                                                  />
+                                                  <select
+                                                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                                    value={mode}
+                                                    onChange={(event) =>
+                                                      updateField(
+                                                        modeKey,
+                                                        event.target.value,
+                                                      )
+                                                    }
+                                                  >
+                                                    <option value="none">
+                                                      Sin texto
+                                                    </option>
+                                                    <option value="title">
+                                                      Solo titulo
+                                                    </option>
+                                                    <option value="title-subtitle">
+                                                      Titulo + subtitulo
+                                                    </option>
+                                                  </select>
+                                                  {mode === "title-subtitle" ? (
+                                                    <Input
+                                                      placeholder="Subtitulo"
+                                                      value={textMap[subtitleKey] ?? ""}
+                                                      onChange={(event) =>
+                                                        updateField(
+                                                          subtitleKey,
+                                                          event.target.value,
+                                                        )
+                                                      }
+                                                    />
+                                                  ) : null}
+                                                </div>
+                                              );
+                                            },
                                           )}
                                         </div>
                                       </div>

@@ -6,7 +6,12 @@ import { cn } from "@/lib/utils";
 import { LandingNav } from "@/modules/landing/components/landing-nav";
 import {
   getSectionGalleryAutoplaySecondsKey,
+  getSectionGalleryCaptionContainerBackgroundKey,
+  getSectionGalleryCaptionContainerPaddingXKey,
+  getSectionGalleryCaptionContainerPaddingYKey,
+  getSectionGalleryItemCaptionModeKey,
   getSectionGalleryItemImageKey,
+  getSectionGalleryItemSubtitleKey,
   getSectionBackgroundColorKey,
   getSectionBackgroundGradientKey,
   ensureLandingDefaults,
@@ -186,7 +191,7 @@ function hasBackgroundImageLayer(style: CSSProperties) {
 }
 
 function getGalleryVariantValue(raw: string | undefined) {
-  if (raw === "carousel" || raw === "stacked") {
+  if (raw === "carousel" || raw === "stacked" || raw === "editorial") {
     return raw;
   }
   return "grid";
@@ -198,6 +203,31 @@ function getGalleryAutoplaySecondsValue(raw: string | undefined) {
     return 0;
   }
   return Math.min(10, Math.max(0, parsed));
+}
+
+function getGalleryCaptionModeValue(raw: string | undefined) {
+  if (raw === "none" || raw === "title-subtitle") {
+    return raw;
+  }
+  return "title";
+}
+
+function getGalleryCaptionContainerBackgroundValue(raw: string | undefined) {
+  if (raw === "off") {
+    return false;
+  }
+  return true;
+}
+
+function getGalleryCaptionContainerPaddingValue(
+  raw: string | undefined,
+  fallback: number,
+) {
+  const parsed = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.min(80, Math.max(0, parsed));
 }
 
 function SectionExtras({
@@ -731,6 +761,17 @@ function GallerySection({
   const autoplaySeconds = getGalleryAutoplaySecondsValue(
     textMap[getSectionGalleryAutoplaySecondsKey(section.id)],
   );
+  const captionContainerHasBackground = getGalleryCaptionContainerBackgroundValue(
+    textMap[getSectionGalleryCaptionContainerBackgroundKey(section.id)],
+  );
+  const captionContainerPaddingX = getGalleryCaptionContainerPaddingValue(
+    textMap[getSectionGalleryCaptionContainerPaddingXKey(section.id)],
+    12,
+  );
+  const captionContainerPaddingY = getGalleryCaptionContainerPaddingValue(
+    textMap[getSectionGalleryCaptionContainerPaddingYKey(section.id)],
+    8,
+  );
   const orderedItems = items
     .slice()
     .sort(
@@ -757,7 +798,17 @@ function GallerySection({
       Number.isFinite(itemNumber) && itemNumber >= 1 && itemNumber <= itemImages.length
         ? itemImages[itemNumber - 1]
         : "";
-    return { item, image };
+    const captionMode =
+      Number.isFinite(itemNumber) && itemNumber >= 1
+        ? getGalleryCaptionModeValue(
+            textMap[getSectionGalleryItemCaptionModeKey(section.id, itemNumber)],
+          )
+        : "title";
+    const subtitle =
+      Number.isFinite(itemNumber) && itemNumber >= 1
+        ? textMap[getSectionGalleryItemSubtitleKey(section.id, itemNumber)] ?? ""
+        : "";
+    return { item, image, captionMode, subtitle };
   });
 
   useEffect(() => {
@@ -799,6 +850,24 @@ function GallerySection({
     const rawDelta = index - normalizedSlideIndex;
     const normalizedDelta = ((rawDelta % total) + total) % total;
     return normalizedDelta > total / 2 ? normalizedDelta - total : normalizedDelta;
+  }
+
+  function getCaptionContainerClassName(basePositionClass: string) {
+    return cn(
+      basePositionClass,
+      captionContainerHasBackground
+        ? "rounded-md bg-white/80 text-black/90 backdrop-blur-sm"
+        : "text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.7)]",
+    );
+  }
+
+  function getCaptionContainerStyle(): CSSProperties {
+    return {
+      paddingLeft: `${captionContainerPaddingX}px`,
+      paddingRight: `${captionContainerPaddingX}px`,
+      paddingTop: `${captionContainerPaddingY}px`,
+      paddingBottom: `${captionContainerPaddingY}px`,
+    };
   }
 
   return (
@@ -865,16 +934,33 @@ function GallerySection({
                       <div className="h-full w-full bg-gradient-to-br from-[#d9e8d4] via-[#f4efe5] to-[#d8cfb6]" />
                     )}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
-                    <p
-                      className={cn(
-                        "absolute bottom-5 left-5 rounded-md bg-white/80 px-3 py-2 font-medium text-black/90 backdrop-blur-sm",
-                        selectableClass(selectedFieldId === slide.item.key, previewMode),
-                      )}
-                      onClick={() => onSelectField?.(slide.item.key)}
-                      style={getFieldStyle(slide.item)}
-                    >
-                      {slide.item.value}
-                    </p>
+                    {slide.captionMode !== "none" ? (
+                      <div
+                        className={getCaptionContainerClassName("absolute bottom-5 left-5")}
+                        style={getCaptionContainerStyle()}
+                      >
+                        <p
+                          className={cn(
+                            "font-medium",
+                            selectableClass(selectedFieldId === slide.item.key, previewMode),
+                          )}
+                          onClick={() => onSelectField?.(slide.item.key)}
+                          style={getFieldStyle(slide.item)}
+                        >
+                          {slide.item.value}
+                        </p>
+                        {slide.captionMode === "title-subtitle" && slide.subtitle ? (
+                          <p
+                            className={cn(
+                              "mt-1 text-sm",
+                              captionContainerHasBackground ? "text-black/70" : "text-white/90",
+                            )}
+                          >
+                            {slide.subtitle}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </article>
                 ))}
               </div>
@@ -937,16 +1023,33 @@ function GallerySection({
                       <div className="h-full w-full bg-gradient-to-br from-[#d9e8d4] via-[#f4efe5] to-[#d8cfb6]" />
                     )}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
-                    <p
-                      className={cn(
-                        "absolute bottom-4 left-4 rounded-md bg-white/80 px-3 py-2 font-medium text-black/90 backdrop-blur-sm",
-                        selectableClass(selectedFieldId === slide.item.key, previewMode),
-                      )}
-                      onClick={() => onSelectField?.(slide.item.key)}
-                      style={getFieldStyle(slide.item)}
-                    >
-                      {slide.item.value}
-                    </p>
+                    {slide.captionMode !== "none" ? (
+                      <div
+                        className={getCaptionContainerClassName("absolute bottom-4 left-4")}
+                        style={getCaptionContainerStyle()}
+                      >
+                        <p
+                          className={cn(
+                            "font-medium",
+                            selectableClass(selectedFieldId === slide.item.key, previewMode),
+                          )}
+                          onClick={() => onSelectField?.(slide.item.key)}
+                          style={getFieldStyle(slide.item)}
+                        >
+                          {slide.item.value}
+                        </p>
+                        {slide.captionMode === "title-subtitle" && slide.subtitle ? (
+                          <p
+                            className={cn(
+                              "mt-1 text-sm",
+                              captionContainerHasBackground ? "text-black/70" : "text-white/90",
+                            )}
+                          >
+                            {slide.subtitle}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </article>
                 );
               })}
@@ -986,6 +1089,58 @@ function GallerySection({
               </button>
             </div>
           </div>
+        ) : galleryVariant === "editorial" ? (
+          <div
+            className="mt-10 rounded-3xl bg-[#f0f0f2] p-5 md:p-8"
+            style={{ order: getOrder(orderMap, "base:items", 2) }}
+          >
+            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:thin] md:gap-4">
+              {orderedSlides.map((slide, index) => (
+                <article
+                  key={index}
+                  className="group relative h-[340px] min-w-[210px] overflow-hidden rounded-2xl border border-black/10 md:h-[430px] md:min-w-[280px]"
+                >
+                  {slide.image ? (
+                    <div
+                      className="h-full w-full bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
+                      style={{ backgroundImage: `url("${slide.image}")` }}
+                      aria-label={slide.item.value}
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-[#d9e8d4] via-[#f4efe5] to-[#d8cfb6]" />
+                  )}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
+                  {slide.captionMode !== "none" ? (
+                    <div
+                      className={getCaptionContainerClassName("absolute top-3 left-3 right-3")}
+                      style={getCaptionContainerStyle()}
+                    >
+                      <p
+                        className={cn(
+                          "font-medium",
+                          selectableClass(selectedFieldId === slide.item.key, previewMode),
+                        )}
+                        onClick={() => onSelectField?.(slide.item.key)}
+                        style={getFieldStyle(slide.item)}
+                      >
+                        {slide.item.value}
+                      </p>
+                      {slide.captionMode === "title-subtitle" && slide.subtitle ? (
+                        <p
+                          className={cn(
+                            "mt-1 text-sm",
+                            captionContainerHasBackground ? "text-black/70" : "text-white/90",
+                          )}
+                        >
+                          {slide.subtitle}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          </div>
         ) : (
           <div
             className="mt-10 grid gap-4 md:grid-cols-2"
@@ -996,16 +1151,47 @@ function GallerySection({
                 key={index}
                 className="flex h-52 items-end rounded-3xl border border-black/10 bg-gradient-to-br from-[#d9e8d4] via-[#f4efe5] to-[#d8cfb6] p-5"
               >
-                <p
-                  className={cn(
-                    "font-medium text-black/90",
-                    selectableClass(selectedFieldId === item.key, previewMode),
-                  )}
-                  onClick={() => onSelectField?.(item.key)}
-                  style={getFieldStyle(item)}
-                >
-                  {item.value}
-                </p>
+                {(() => {
+                  const itemNumber = Number.parseInt(
+                    (item.key.split(".").pop() ?? "").replace("item", ""),
+                    10,
+                  );
+                  const captionMode = Number.isFinite(itemNumber)
+                    ? getGalleryCaptionModeValue(
+                        textMap[getSectionGalleryItemCaptionModeKey(section.id, itemNumber)],
+                      )
+                    : "title";
+                  const subtitle = Number.isFinite(itemNumber)
+                    ? textMap[getSectionGalleryItemSubtitleKey(section.id, itemNumber)] ?? ""
+                    : "";
+                  return captionMode !== "none" ? (
+                    <div
+                      className={getCaptionContainerClassName("")}
+                      style={getCaptionContainerStyle()}
+                    >
+                      <p
+                        className={cn(
+                          "font-medium",
+                          selectableClass(selectedFieldId === item.key, previewMode),
+                        )}
+                        onClick={() => onSelectField?.(item.key)}
+                        style={getFieldStyle(item)}
+                      >
+                        {item.value}
+                      </p>
+                      {captionMode === "title-subtitle" && subtitle ? (
+                        <p
+                          className={cn(
+                            "mt-1 text-sm",
+                            captionContainerHasBackground ? "text-black/70" : "text-white/90",
+                          )}
+                        >
+                          {subtitle}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null;
+                })()}
               </article>
             ))}
           </div>

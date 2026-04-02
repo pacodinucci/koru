@@ -244,6 +244,26 @@ export function getSectionGalleryItemImageKey(sectionId: string, index: number) 
   return getSectionFieldKey(sectionId, `item${index}_image`);
 }
 
+export function getSectionGalleryItemCaptionModeKey(sectionId: string, index: number) {
+  return getSectionFieldKey(sectionId, `item${index}_caption_mode`);
+}
+
+export function getSectionGalleryItemSubtitleKey(sectionId: string, index: number) {
+  return getSectionFieldKey(sectionId, `item${index}_subtitle`);
+}
+
+export function getSectionGalleryCaptionContainerBackgroundKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__gallery_caption_container_bg");
+}
+
+export function getSectionGalleryCaptionContainerPaddingXKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__gallery_caption_container_padding_x");
+}
+
+export function getSectionGalleryCaptionContainerPaddingYKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__gallery_caption_container_padding_y");
+}
+
 export function getSectionItemsOrderKey(sectionId: string) {
   return getSectionFieldKey(sectionId, "__items_order");
 }
