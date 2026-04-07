@@ -25,6 +25,7 @@ import {
   EditorCommandList,
   EditorContent,
   EditorRoot,
+  ImageResizer,
   Placeholder,
   StarterKit,
   UpdatedImage,
@@ -356,6 +357,13 @@ export function NovelBlogEditor({
 
   const editorRef = useRef<EditorInstance | null>(null);
   const imageFileInputRef = useRef<HTMLInputElement | null>(null);
+  const resizeStateRef = useRef<{
+    nodePos: number;
+    startX: number;
+    startWidth: number;
+    edge: "left" | "right";
+    keepSquare: boolean;
+  } | null>(null);
 
   async function uploadImage(file: File) {
     const formData = new FormData();
@@ -421,6 +429,58 @@ export function NovelBlogEditor({
     setPendingPlaceholderNode(null);
     setSingleImageMode(mode);
     imageFileInputRef.current?.click();
+  }
+
+  function startEdgeResize(params: {
+    nodePos: number;
+    startX: number;
+    startWidth: number;
+    edge: "left" | "right";
+    keepSquare: boolean;
+  }) {
+    resizeStateRef.current = params;
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const state = resizeStateRef.current;
+      const editor = editorRef.current;
+      if (!state || !editor) {
+        return;
+      }
+
+      const delta = event.clientX - state.startX;
+      const signedDelta = state.edge === "right" ? delta : -delta;
+      const nextWidth = Math.max(80, Math.min(1800, Math.round(state.startWidth + signedDelta)));
+
+      if (state.keepSquare) {
+        editor
+          .chain()
+          .focus()
+          .setNodeSelection(state.nodePos)
+          .updateAttributes("image", { width: nextWidth, height: nextWidth })
+          .run();
+        return;
+      }
+
+      editor
+        .chain()
+        .focus()
+        .setNodeSelection(state.nodePos)
+        .updateAttributes("image", { width: nextWidth, height: null })
+        .run();
+    };
+
+    const handleMouseUp = () => {
+      resizeStateRef.current = null;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.body.style.cursor = "ew-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
   }
 
   const suggestionItems = useMemo(
@@ -602,6 +662,41 @@ export function NovelBlogEditor({
           editorProps={{
             handleDOMEvents: {
               keydown: (_, event) => handleCommandNavigation(event),
+              mousedown: (view, event) => {
+                const target = event.target as HTMLElement | null;
+                const image = target?.closest("img");
+                if (!image) {
+                  return false;
+                }
+
+                const rect = image.getBoundingClientRect();
+                const threshold = 12;
+                const nearLeft = Math.abs(event.clientX - rect.left) <= threshold;
+                const nearRight = Math.abs(event.clientX - rect.right) <= threshold;
+
+                if (!nearLeft && !nearRight) {
+                  return false;
+                }
+
+                const nodePos = view.posAtDOM(image, 0);
+                const startWidth =
+                  Number.parseInt(image.getAttribute("width") ?? "", 10) ||
+                  Math.round(rect.width);
+
+                const galleryCols = image.getAttribute("data-gallery-cols");
+                const keepSquare = Boolean(galleryCols);
+
+                startEdgeResize({
+                  nodePos,
+                  startX: event.clientX,
+                  startWidth,
+                  edge: nearRight ? "right" : "left",
+                  keepSquare,
+                });
+
+                event.preventDefault();
+                return true;
+              },
             },
             handleClickOn: (_view, _pos, node, nodePos) => {
               if (node.type.name !== "image") {
@@ -661,6 +756,8 @@ export function NovelBlogEditor({
             setHtmlValue(editor.getHTML());
           }}
         >
+          <ImageResizer />
+
           <InlineTextAlignToolbar />
 
           <EditorBubble
