@@ -256,12 +256,20 @@ export function getSectionGalleryCaptionContainerBackgroundKey(sectionId: string
   return getSectionFieldKey(sectionId, "__gallery_caption_container_bg");
 }
 
+export function getSectionGalleryCaptionContainerOpacityKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__gallery_caption_container_opacity");
+}
+
 export function getSectionGalleryCaptionContainerPaddingXKey(sectionId: string) {
   return getSectionFieldKey(sectionId, "__gallery_caption_container_padding_x");
 }
 
 export function getSectionGalleryCaptionContainerPaddingYKey(sectionId: string) {
   return getSectionFieldKey(sectionId, "__gallery_caption_container_padding_y");
+}
+
+export function getSectionGalleryGridImageShapeKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__gallery_grid_image_shape");
 }
 
 export function getSectionItemsOrderKey(sectionId: string) {

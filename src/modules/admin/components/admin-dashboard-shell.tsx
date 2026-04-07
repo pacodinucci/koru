@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDownIcon, LayoutGridIcon, LogOutIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -25,22 +26,27 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { AdminAppSidebar } from "@/modules/admin/components/admin-app-sidebar";
-import { CmsLandingEditor } from "@/modules/admin/components/cms-landing-editor";
 
 type AdminDashboardShellProps = {
   userEmail: string;
-  initialTextMap: Record<string, string>;
+  currentPath: string;
+  breadcrumbPage: string;
+  children: ReactNode;
+  showEditingModeButton?: boolean;
   onSignOut: (formData: FormData) => void;
 };
 
 export function AdminDashboardShell({
   userEmail,
-  initialTextMap,
+  currentPath,
+  breadcrumbPage,
+  children,
+  showEditingModeButton = false,
   onSignOut,
 }: AdminDashboardShellProps) {
   return (
     <SidebarProvider>
-      <AdminAppSidebar userEmail={userEmail} />
+      <AdminAppSidebar userEmail={userEmail} currentPath={currentPath} />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
           <SidebarTrigger />
@@ -50,14 +56,16 @@ export function AdminDashboardShell({
               <BreadcrumbItem>Admin</BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>CMS</BreadcrumbPage>
+                <BreadcrumbPage>{breadcrumbPage}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              Text editing mode
-            </Button>
+            {showEditingModeButton ? (
+              <Button variant="outline" size="sm">
+                Text editing mode
+              </Button>
+            ) : null}
             <DropdownMenu>
               <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
                 <Avatar className="size-6">
@@ -85,7 +93,7 @@ export function AdminDashboardShell({
         </header>
 
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-          <CmsLandingEditor initialTextMap={initialTextMap} />
+          {children}
         </div>
       </SidebarInset>
     </SidebarProvider>

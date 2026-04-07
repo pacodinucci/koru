@@ -38,9 +38,11 @@ import {
   getSectionBackgroundPositionYKey,
   getSectionBackgroundZoomKey,
   getSectionGalleryCaptionContainerBackgroundKey,
+  getSectionGalleryCaptionContainerOpacityKey,
   getSectionGalleryCaptionContainerPaddingXKey,
   getSectionGalleryCaptionContainerPaddingYKey,
   getSectionGalleryAutoplaySecondsKey,
+  getSectionGalleryGridImageShapeKey,
   getSectionGalleryItemCaptionModeKey,
   getSectionGalleryItemImageKey,
   getSectionGalleryItemSubtitleKey,
@@ -227,11 +229,18 @@ function getGalleryCaptionModeValue(raw: string | undefined) {
   return "title";
 }
 
-function getGalleryCaptionContainerBackgroundValue(raw: string | undefined) {
-  if (raw === "off") {
-    return "off";
+function getGalleryCaptionContainerOpacityValue(
+  rawOpacity: string | undefined,
+  rawBackgroundMode: string | undefined,
+) {
+  const parsed = Number.parseInt(rawOpacity ?? "", 10);
+  if (Number.isFinite(parsed)) {
+    return clamp(parsed, 0, 100);
   }
-  return "on";
+  if (rawBackgroundMode === "off") {
+    return 0;
+  }
+  return 80;
 }
 
 function getGalleryCaptionContainerPaddingValue(
@@ -243,6 +252,13 @@ function getGalleryCaptionContainerPaddingValue(
     return fallback;
   }
   return clamp(parsed, 0, 80);
+}
+
+function getGalleryGridImageShapeValue(raw: string | undefined) {
+  if (raw === "square" || raw === "portrait" || raw === "landscape") {
+    return raw;
+  }
+  return "landscape";
 }
 
 const PREVIEW_ZOOM_MIN = 30;
@@ -387,11 +403,17 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
   const selectedSectionGalleryCaptionContainerBackgroundKey = selectedSection
     ? getSectionGalleryCaptionContainerBackgroundKey(selectedSection.id)
     : null;
+  const selectedSectionGalleryCaptionContainerOpacityKey = selectedSection
+    ? getSectionGalleryCaptionContainerOpacityKey(selectedSection.id)
+    : null;
   const selectedSectionGalleryCaptionContainerPaddingXKey = selectedSection
     ? getSectionGalleryCaptionContainerPaddingXKey(selectedSection.id)
     : null;
   const selectedSectionGalleryCaptionContainerPaddingYKey = selectedSection
     ? getSectionGalleryCaptionContainerPaddingYKey(selectedSection.id)
+    : null;
+  const selectedSectionGalleryGridImageShapeKey = selectedSection
+    ? getSectionGalleryGridImageShapeKey(selectedSection.id)
     : null;
   const selectedSectionGalleryItemCaptionModeKeys = selectedSection
     ? [1, 2, 3, 4].map((index) =>
@@ -478,12 +500,15 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
           textMap[selectedSectionGalleryAutoplaySecondsKey],
         )
       : 0;
-  const selectedSectionGalleryCaptionContainerBackground =
-    selectedSectionGalleryCaptionContainerBackgroundKey
-      ? getGalleryCaptionContainerBackgroundValue(
-          textMap[selectedSectionGalleryCaptionContainerBackgroundKey],
+  const selectedSectionGalleryCaptionContainerOpacity =
+    selectedSectionGalleryCaptionContainerOpacityKey
+      ? getGalleryCaptionContainerOpacityValue(
+          textMap[selectedSectionGalleryCaptionContainerOpacityKey],
+          selectedSectionGalleryCaptionContainerBackgroundKey
+            ? textMap[selectedSectionGalleryCaptionContainerBackgroundKey]
+            : undefined,
         )
-      : "on";
+      : 80;
   const selectedSectionGalleryCaptionContainerPaddingX =
     selectedSectionGalleryCaptionContainerPaddingXKey
       ? getGalleryCaptionContainerPaddingValue(
@@ -498,6 +523,11 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
           8,
         )
       : 8;
+  const selectedSectionGalleryGridImageShape = selectedSectionGalleryGridImageShapeKey
+    ? getGalleryGridImageShapeValue(
+        textMap[selectedSectionGalleryGridImageShapeKey],
+      )
+    : "landscape";
   const selectedSectionGalleryItemCaptionModes =
     selectedSectionGalleryItemCaptionModeKeys.map((key) =>
       getGalleryCaptionModeValue(textMap[key]),
@@ -1120,48 +1150,98 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                       </label>
                                     </div>
 
-                                    {selectedSectionGalleryCaptionContainerBackgroundKey &&
+                                    {selectedSectionGalleryVariant === "grid" &&
+                                    selectedSectionGalleryGridImageShapeKey ? (
+                                      <div className="space-y-2 rounded-md border bg-background p-2">
+                                        <label className="text-xs font-medium text-muted-foreground">
+                                          Forma de imagen en grid
+                                        </label>
+                                        <div className="flex flex-wrap gap-3 rounded-md border px-3 py-2 text-xs">
+                                          <label className="inline-flex items-center gap-1">
+                                            <input
+                                              type="radio"
+                                              name={`${selectedSection.id}-gallery-grid-shape`}
+                                              checked={selectedSectionGalleryGridImageShape === "square"}
+                                              onChange={() =>
+                                                updateField(
+                                                  selectedSectionGalleryGridImageShapeKey,
+                                                  "square",
+                                                )
+                                              }
+                                            />
+                                            Cuadrada
+                                          </label>
+                                          <label className="inline-flex items-center gap-1">
+                                            <input
+                                              type="radio"
+                                              name={`${selectedSection.id}-gallery-grid-shape`}
+                                              checked={selectedSectionGalleryGridImageShape === "portrait"}
+                                              onChange={() =>
+                                                updateField(
+                                                  selectedSectionGalleryGridImageShapeKey,
+                                                  "portrait",
+                                                )
+                                              }
+                                            />
+                                            Vertical
+                                          </label>
+                                          <label className="inline-flex items-center gap-1">
+                                            <input
+                                              type="radio"
+                                              name={`${selectedSection.id}-gallery-grid-shape`}
+                                              checked={selectedSectionGalleryGridImageShape === "landscape"}
+                                              onChange={() =>
+                                                updateField(
+                                                  selectedSectionGalleryGridImageShapeKey,
+                                                  "landscape",
+                                                )
+                                              }
+                                            />
+                                            Horizontal
+                                          </label>
+                                        </div>
+                                      </div>
+                                    ) : null}
+
+                                    {selectedSectionGalleryCaptionContainerOpacityKey &&
                                     selectedSectionGalleryCaptionContainerPaddingXKey &&
                                     selectedSectionGalleryCaptionContainerPaddingYKey ? (
                                       <div className="space-y-2 rounded-md border bg-background p-2">
                                         <label className="text-xs font-medium text-muted-foreground">
                                           Contenedor de texto
                                         </label>
-                                        <div className="flex gap-3 rounded-md border px-3 py-2 text-xs">
-                                          <label className="inline-flex items-center gap-1">
-                                            <input
-                                              type="radio"
-                                              name={`${selectedSection.id}-caption-container-bg`}
-                                              checked={
-                                                selectedSectionGalleryCaptionContainerBackground ===
-                                                "on"
-                                              }
-                                              onChange={() =>
+                                        <div className="space-y-1.5">
+                                          <label className="text-xs font-medium text-muted-foreground">
+                                            Opacidad de fondo ({selectedSectionGalleryCaptionContainerOpacity}%)
+                                          </label>
+                                          <div className="grid grid-cols-[1fr_84px] gap-2">
+                                            <Input
+                                              type="range"
+                                              min={0}
+                                              max={100}
+                                              step={1}
+                                              value={selectedSectionGalleryCaptionContainerOpacity}
+                                              onChange={(event) =>
                                                 updateField(
-                                                  selectedSectionGalleryCaptionContainerBackgroundKey,
-                                                  "on",
+                                                  selectedSectionGalleryCaptionContainerOpacityKey,
+                                                  event.target.value,
                                                 )
                                               }
                                             />
-                                            Con fondo
-                                          </label>
-                                          <label className="inline-flex items-center gap-1">
-                                            <input
-                                              type="radio"
-                                              name={`${selectedSection.id}-caption-container-bg`}
-                                              checked={
-                                                selectedSectionGalleryCaptionContainerBackground ===
-                                                "off"
-                                              }
-                                              onChange={() =>
+                                            <Input
+                                              type="number"
+                                              min={0}
+                                              max={100}
+                                              step={1}
+                                              value={selectedSectionGalleryCaptionContainerOpacity}
+                                              onChange={(event) =>
                                                 updateField(
-                                                  selectedSectionGalleryCaptionContainerBackgroundKey,
-                                                  "off",
+                                                  selectedSectionGalleryCaptionContainerOpacityKey,
+                                                  event.target.value,
                                                 )
                                               }
                                             />
-                                            Sin fondo
-                                          </label>
+                                          </div>
                                         </div>
                                         <div className="space-y-1.5">
                                           <label className="text-xs font-medium text-muted-foreground">

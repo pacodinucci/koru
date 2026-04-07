@@ -1,13 +1,16 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { auth } from "@/lib/auth";
-import { CmsLandingEditor } from "@/modules/admin/components/cms-landing-editor";
 import { AdminDashboardShell } from "@/modules/admin/components/admin-dashboard-shell";
 import { signOutAction } from "@/modules/auth/server/auth-actions";
-import { getCmsDraftTextMap } from "@/modules/cms/server/cms-text.repository";
 
-export async function AdminHomeView() {
+type AdminBlogPageViewProps = {
+  children: ReactNode;
+};
+
+export async function AdminBlogPageView({ children }: AdminBlogPageViewProps) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -16,17 +19,14 @@ export async function AdminHomeView() {
     redirect("/sign-in");
   }
 
-  const initialTextMap = await getCmsDraftTextMap();
-
   return (
     <AdminDashboardShell
       userEmail={session.user.email}
-      currentPath="/admin"
-      breadcrumbPage="CMS"
-      showEditingModeButton
+      currentPath="/admin/blog"
+      breadcrumbPage="Blog"
       onSignOut={signOutAction}
     >
-      <CmsLandingEditor initialTextMap={initialTextMap} />
+      {children}
     </AdminDashboardShell>
   );
 }

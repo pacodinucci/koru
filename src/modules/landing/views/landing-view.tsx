@@ -7,8 +7,10 @@ import { LandingNav } from "@/modules/landing/components/landing-nav";
 import {
   getSectionGalleryAutoplaySecondsKey,
   getSectionGalleryCaptionContainerBackgroundKey,
+  getSectionGalleryCaptionContainerOpacityKey,
   getSectionGalleryCaptionContainerPaddingXKey,
   getSectionGalleryCaptionContainerPaddingYKey,
+  getSectionGalleryGridImageShapeKey,
   getSectionGalleryItemCaptionModeKey,
   getSectionGalleryItemImageKey,
   getSectionGalleryItemSubtitleKey,
@@ -212,11 +214,18 @@ function getGalleryCaptionModeValue(raw: string | undefined) {
   return "title";
 }
 
-function getGalleryCaptionContainerBackgroundValue(raw: string | undefined) {
-  if (raw === "off") {
-    return false;
+function getGalleryCaptionContainerOpacityValue(
+  rawOpacity: string | undefined,
+  rawBackgroundMode: string | undefined,
+) {
+  const parsed = Number.parseInt(rawOpacity ?? "", 10);
+  if (Number.isFinite(parsed)) {
+    return Math.min(100, Math.max(0, parsed));
   }
-  return true;
+  if (rawBackgroundMode === "off") {
+    return 0;
+  }
+  return 80;
 }
 
 function getGalleryCaptionContainerPaddingValue(
@@ -228,6 +237,13 @@ function getGalleryCaptionContainerPaddingValue(
     return fallback;
   }
   return Math.min(80, Math.max(0, parsed));
+}
+
+function getGalleryGridImageShapeValue(raw: string | undefined) {
+  if (raw === "square" || raw === "portrait" || raw === "landscape") {
+    return raw;
+  }
+  return "landscape";
 }
 
 function SectionExtras({
@@ -761,7 +777,8 @@ function GallerySection({
   const autoplaySeconds = getGalleryAutoplaySecondsValue(
     textMap[getSectionGalleryAutoplaySecondsKey(section.id)],
   );
-  const captionContainerHasBackground = getGalleryCaptionContainerBackgroundValue(
+  const captionContainerOpacity = getGalleryCaptionContainerOpacityValue(
+    textMap[getSectionGalleryCaptionContainerOpacityKey(section.id)],
     textMap[getSectionGalleryCaptionContainerBackgroundKey(section.id)],
   );
   const captionContainerPaddingX = getGalleryCaptionContainerPaddingValue(
@@ -771,6 +788,9 @@ function GallerySection({
   const captionContainerPaddingY = getGalleryCaptionContainerPaddingValue(
     textMap[getSectionGalleryCaptionContainerPaddingYKey(section.id)],
     8,
+  );
+  const gridImageShape = getGalleryGridImageShapeValue(
+    textMap[getSectionGalleryGridImageShapeKey(section.id)],
   );
   const orderedItems = items
     .slice()
@@ -855,8 +875,8 @@ function GallerySection({
   function getCaptionContainerClassName(basePositionClass: string) {
     return cn(
       basePositionClass,
-      captionContainerHasBackground
-        ? "rounded-md bg-white/80 text-black/90 backdrop-blur-sm"
+      captionContainerOpacity > 0
+        ? "rounded-md text-black/90 backdrop-blur-sm"
         : "text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.7)]",
     );
   }
@@ -867,7 +887,20 @@ function GallerySection({
       paddingRight: `${captionContainerPaddingX}px`,
       paddingTop: `${captionContainerPaddingY}px`,
       paddingBottom: `${captionContainerPaddingY}px`,
+      ...(captionContainerOpacity > 0
+        ? { backgroundColor: `rgba(255, 255, 255, ${captionContainerOpacity / 100})` }
+        : null),
     };
+  }
+
+  function getGridCardShapeClassName() {
+    if (gridImageShape === "square") {
+      return "aspect-square";
+    }
+    if (gridImageShape === "portrait") {
+      return "aspect-[3/4]";
+    }
+    return "aspect-[16/9]";
   }
 
   return (
@@ -953,7 +986,7 @@ function GallerySection({
                           <p
                             className={cn(
                               "mt-1 text-sm",
-                              captionContainerHasBackground ? "text-black/70" : "text-white/90",
+                              captionContainerOpacity > 0 ? "text-black/70" : "text-white/90",
                             )}
                           >
                             {slide.subtitle}
@@ -1042,7 +1075,7 @@ function GallerySection({
                           <p
                             className={cn(
                               "mt-1 text-sm",
-                              captionContainerHasBackground ? "text-black/70" : "text-white/90",
+                              captionContainerOpacity > 0 ? "text-black/70" : "text-white/90",
                             )}
                           >
                             {slide.subtitle}
@@ -1129,7 +1162,7 @@ function GallerySection({
                         <p
                           className={cn(
                             "mt-1 text-sm",
-                            captionContainerHasBackground ? "text-black/70" : "text-white/90",
+                            captionContainerOpacity > 0 ? "text-black/70" : "text-white/90",
                           )}
                         >
                           {slide.subtitle}
@@ -1146,52 +1179,54 @@ function GallerySection({
             className="mt-10 grid gap-4 md:grid-cols-2"
             style={{ order: getOrder(orderMap, "base:items", 2) }}
           >
-            {orderedItems.map((item, index) => (
+            {orderedSlides.map((slide, index) => (
               <article
                 key={index}
-                className="flex h-52 items-end rounded-3xl border border-black/10 bg-gradient-to-br from-[#d9e8d4] via-[#f4efe5] to-[#d8cfb6] p-5"
+                className={cn(
+                  "relative flex items-end overflow-hidden rounded-3xl border border-black/10 p-5",
+                  getGridCardShapeClassName(),
+                )}
               >
-                {(() => {
-                  const itemNumber = Number.parseInt(
-                    (item.key.split(".").pop() ?? "").replace("item", ""),
-                    10,
-                  );
-                  const captionMode = Number.isFinite(itemNumber)
-                    ? getGalleryCaptionModeValue(
-                        textMap[getSectionGalleryItemCaptionModeKey(section.id, itemNumber)],
-                      )
-                    : "title";
-                  const subtitle = Number.isFinite(itemNumber)
-                    ? textMap[getSectionGalleryItemSubtitleKey(section.id, itemNumber)] ?? ""
-                    : "";
-                  return captionMode !== "none" ? (
-                    <div
-                      className={getCaptionContainerClassName("")}
-                      style={getCaptionContainerStyle()}
+                {slide.image ? (
+                  <div
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                    style={{ backgroundImage: `url("${slide.image}")` }}
+                    aria-label={slide.item.value}
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#d9e8d4] via-[#f4efe5] to-[#d8cfb6]" />
+                )}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-black/5 to-transparent" />
+                {slide.captionMode !== "none" ? (
+                  <div
+                    className={cn(
+                      "relative z-10",
+                      getCaptionContainerClassName(""),
+                    )}
+                    style={getCaptionContainerStyle()}
+                  >
+                    <p
+                      className={cn(
+                        "font-medium",
+                        selectableClass(selectedFieldId === slide.item.key, previewMode),
+                      )}
+                      onClick={() => onSelectField?.(slide.item.key)}
+                      style={getFieldStyle(slide.item)}
                     >
+                      {slide.item.value}
+                    </p>
+                    {slide.captionMode === "title-subtitle" && slide.subtitle ? (
                       <p
                         className={cn(
-                          "font-medium",
-                          selectableClass(selectedFieldId === item.key, previewMode),
+                          "mt-1 text-sm",
+                          captionContainerOpacity > 0 ? "text-black/70" : "text-white/90",
                         )}
-                        onClick={() => onSelectField?.(item.key)}
-                        style={getFieldStyle(item)}
                       >
-                        {item.value}
+                        {slide.subtitle}
                       </p>
-                      {captionMode === "title-subtitle" && subtitle ? (
-                        <p
-                          className={cn(
-                            "mt-1 text-sm",
-                            captionContainerHasBackground ? "text-black/70" : "text-white/90",
-                          )}
-                        >
-                          {subtitle}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null;
-                })()}
+                    ) : null}
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>

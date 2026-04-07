@@ -19,9 +19,13 @@ import { Badge } from "@/components/ui/badge";
 
 type AdminAppSidebarProps = {
   userEmail: string;
+  currentPath: string;
 };
 
-export function AdminAppSidebar({ userEmail }: AdminAppSidebarProps) {
+export function AdminAppSidebar({
+  userEmail,
+  currentPath,
+}: AdminAppSidebarProps) {
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader>
@@ -41,7 +45,7 @@ export function AdminAppSidebar({ userEmail }: AdminAppSidebarProps) {
               {adminNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    isActive={item.href === "/admin"}
+                    isActive={item.href === currentPath}
                     render={<Link href={item.href} />}
                   >
                     <item.icon />
