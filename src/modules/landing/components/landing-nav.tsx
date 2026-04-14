@@ -1,17 +1,23 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function LandingNav() {
   return (
-    <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f2f2f2]/95 backdrop-blur">
-      <div className="flex w-full items-center justify-between px-5 pt-6 pb-4 md:px-8 lg:px-14 xl:px-20">
-        <Link href="/" className="inline-flex items-end">
-          <span className="text-4xl leading-none font-semibold tracking-tight text-[#1d1d1f]">
-            KORU
-          </span>
+    <header className="font-fira sticky top-0 z-20 border-b border-black/10 bg-white backdrop-blur">
+      <div className="flex w-full items-center justify-between px-5 pt-2 pb-0 md:px-8 lg:px-14 xl:px-20">
+        <Link href="/" className="inline-flex items-center">
+          <Image
+            src="/branding/koru-logo.png"
+            alt="Koru"
+            width={1536}
+            height={1024}
+            className="h-14 w-auto"
+            priority
+          />
         </Link>
 
         <div className="hidden items-center gap-8 lg:flex">
-          <nav className="flex items-center gap-9 text-[1.2rem] font-semibold tracking-tight text-[#111]">
+          <nav className="flex items-center gap-9 text-[.8rem] font-semibold tracking-tight text-[#111]">
             <a href="#" className="transition hover:opacity-70">
               Home
             </a>
@@ -31,7 +37,7 @@ export function LandingNav() {
 
           <Link
             href="/sign-in"
-            className="inline-flex items-center gap-2 text-[1.2rem] font-semibold tracking-tight text-[#111] transition hover:opacity-70"
+            className="inline-flex items-center gap-2 text-[.8rem] font-semibold tracking-tight text-[#111] transition hover:opacity-70"
           >
             {/* <CircleUserRound className="h-4 w-4" /> */}
             Log In
@@ -39,9 +45,9 @@ export function LandingNav() {
 
           <a
             href="#tour"
-            className="inline-flex h-10 items-center rounded-full border border-black/65 bg-[#bdee86] px-7 text-[1.2rem] font-semibold tracking-tight text-[#1a1a1a] transition hover:brightness-95"
+            className="inline-flex py-2 items-center rounded-sm border border-(--brand-700) bg-(--brand-300) px-4 text-[.8rem] font-semibold tracking-tight text-[var(--brand-900)] transition hover:bg-[var(--brand-100)]"
           >
-            Make a donation
+            Haz una donación
           </a>
         </div>
       </div>

@@ -1,4 +1,7 @@
-import { getLandingFieldSizeKey, type LandingTextMap } from "@/modules/landing/types/landing-text";
+import {
+  getLandingFieldSizeKey,
+  type LandingTextMap,
+} from "@/modules/landing/types/landing-text";
 
 export const LANDING_STRUCTURE_KEY = "__landing_structure";
 
@@ -7,6 +10,7 @@ export type LandingSectionType =
   | "cards"
   | "story"
   | "gallery"
+  | "image-grid"
   | "video"
   | "footer";
 
@@ -45,11 +49,17 @@ export const landingSectionCatalog: Record<
     type: "hero",
     label: "Hero",
     fields: [
-      { key: "kicker", label: "Kicker", defaultValue: "BIENVENID@S A KORU OSA", defaultSize: 12 },
+      {
+        key: "kicker",
+        label: "Kicker",
+        defaultValue: "BIENVENID@S A KORU OSA",
+        defaultSize: 12,
+      },
       {
         key: "title",
         label: "Titulo",
-        defaultValue: "En Koru, entendemos la educacion como un organismo vivo.",
+        defaultValue:
+          "En Koru, entendemos la educacion como un organismo vivo.",
         defaultSize: 56,
       },
       {
@@ -60,18 +70,29 @@ export const landingSectionCatalog: Record<
         defaultSize: 20,
         multiline: true,
       },
-      { key: "cta", label: "Texto boton", defaultValue: "Make a donation", defaultSize: 14 },
+      {
+        key: "cta",
+        label: "Texto boton",
+        defaultValue: "Haz una donación",
+        defaultSize: 14,
+      },
     ],
   },
   cards: {
     type: "cards",
     label: "Cards Section",
     fields: [
-      { key: "kicker", label: "Kicker", defaultValue: "NUESTRA MIRADA", defaultSize: 12 },
+      {
+        key: "kicker",
+        label: "Kicker",
+        defaultValue: "NUESTRA MIRADA",
+        defaultSize: 12,
+      },
       {
         key: "title",
         label: "Titulo",
-        defaultValue: "Pedagogias alternativas, crianza consciente y comunidad.",
+        defaultValue:
+          "Pedagogias alternativas, crianza consciente y comunidad.",
         defaultSize: 40,
       },
       {
@@ -82,27 +103,45 @@ export const landingSectionCatalog: Record<
         defaultSize: 18,
         multiline: true,
       },
-      { key: "card1_title", label: "Card 1 titulo", defaultValue: "Ritmo Propio", defaultSize: 30 },
+      {
+        key: "card1_title",
+        label: "Card 1 titulo",
+        defaultValue: "Ritmo Propio",
+        defaultSize: 30,
+      },
       {
         key: "card1_body",
         label: "Card 1 texto",
-        defaultValue: "Acompanamos procesos individuales con calma, juego y curiosidad.",
+        defaultValue:
+          "Acompanamos procesos individuales con calma, juego y curiosidad.",
         defaultSize: 18,
         multiline: true,
       },
-      { key: "card2_title", label: "Card 2 titulo", defaultValue: "Comunidad Viva", defaultSize: 30 },
+      {
+        key: "card2_title",
+        label: "Card 2 titulo",
+        defaultValue: "Comunidad Viva",
+        defaultSize: 30,
+      },
       {
         key: "card2_body",
         label: "Card 2 texto",
-        defaultValue: "Aprender con otr@s nos ensena cuidado mutuo y autonomia.",
+        defaultValue:
+          "Aprender con otr@s nos ensena cuidado mutuo y autonomia.",
         defaultSize: 18,
         multiline: true,
       },
-      { key: "card3_title", label: "Card 3 titulo", defaultValue: "Transformacion", defaultSize: 30 },
+      {
+        key: "card3_title",
+        label: "Card 3 titulo",
+        defaultValue: "Transformacion",
+        defaultSize: 30,
+      },
       {
         key: "card3_body",
         label: "Card 3 texto",
-        defaultValue: "Cada experiencia deja huella y abre nuevas posibilidades.",
+        defaultValue:
+          "Cada experiencia deja huella y abre nuevas posibilidades.",
         defaultSize: 18,
         multiline: true,
       },
@@ -138,34 +177,131 @@ export const landingSectionCatalog: Record<
     type: "gallery",
     label: "Gallery Section",
     fields: [
-      { key: "title", label: "Titulo", defaultValue: "Galeria de experiencias", defaultSize: 40 },
+      {
+        key: "title",
+        label: "Titulo",
+        defaultValue: "Galeria de experiencias",
+        defaultSize: 40,
+      },
       {
         key: "body",
         label: "Descripcion",
-        defaultValue: "Momentos de juego, exploracion y aprendizaje compartido.",
+        defaultValue:
+          "Momentos de juego, exploracion y aprendizaje compartido.",
         defaultSize: 18,
       },
-      { key: "item1", label: "Item 1", defaultValue: "Exploracion sensorial", defaultSize: 18 },
-      { key: "item2", label: "Item 2", defaultValue: "Arte en comunidad", defaultSize: 18 },
-      { key: "item3", label: "Item 3", defaultValue: "Huerta y naturaleza", defaultSize: 18 },
-      { key: "item4", label: "Item 4", defaultValue: "Rondas de palabra", defaultSize: 18 },
+      {
+        key: "item1",
+        label: "Item 1",
+        defaultValue: "Exploracion sensorial",
+        defaultSize: 18,
+      },
+      {
+        key: "item2",
+        label: "Item 2",
+        defaultValue: "Arte en comunidad",
+        defaultSize: 18,
+      },
+      {
+        key: "item3",
+        label: "Item 3",
+        defaultValue: "Huerta y naturaleza",
+        defaultSize: 18,
+      },
+      {
+        key: "item4",
+        label: "Item 4",
+        defaultValue: "Rondas de palabra",
+        defaultSize: 18,
+      },
+    ],
+  },
+  "image-grid": {
+    type: "image-grid",
+    label: "Image Grid Section",
+    fields: [
+      {
+        key: "item1",
+        label: "Card 1 titulo",
+        defaultValue: "Comunidad",
+        defaultSize: 22,
+      },
+      {
+        key: "item2",
+        label: "Card 2 titulo",
+        defaultValue: "Aprendizaje",
+        defaultSize: 22,
+      },
+      {
+        key: "item3",
+        label: "Card 3 titulo",
+        defaultValue: "Juego",
+        defaultSize: 22,
+      },
+      {
+        key: "item4",
+        label: "Card 4 titulo",
+        defaultValue: "Naturaleza",
+        defaultSize: 22,
+      },
+      {
+        key: "item5",
+        label: "Card 5 titulo",
+        defaultValue: "Vinculo",
+        defaultSize: 22,
+      },
+      {
+        key: "item6",
+        label: "Card 6 titulo",
+        defaultValue: "Exploracion",
+        defaultSize: 22,
+      },
+      {
+        key: "item7",
+        label: "Card 7 titulo",
+        defaultValue: "Curiosidad",
+        defaultSize: 22,
+      },
+      {
+        key: "item8",
+        label: "Card 8 titulo",
+        defaultValue: "Movimiento",
+        defaultSize: 22,
+      },
+      {
+        key: "item9",
+        label: "Card 9 titulo",
+        defaultValue: "Arte",
+        defaultSize: 22,
+      },
+      {
+        key: "item10",
+        label: "Card 10 titulo",
+        defaultValue: "Transformacion",
+        defaultSize: 22,
+      },
+      {
+        key: "item11",
+        label: "Card 11 titulo",
+        defaultValue: "Tribu",
+        defaultSize: 22,
+      },
+      {
+        key: "item12",
+        label: "Card 12 titulo",
+        defaultValue: "Presencia",
+        defaultSize: 22,
+      },
     ],
   },
   video: {
     type: "video",
-    label: "Video Section",
+    label: "Video Fullscreen",
     fields: [
-      { key: "title", label: "Titulo", defaultValue: "Conoce nuestra propuesta", defaultSize: 40 },
-      {
-        key: "body",
-        label: "Descripcion",
-        defaultValue: "Una mirada breve sobre como se vive Koru por dentro.",
-        defaultSize: 18,
-      },
       {
         key: "url",
-        label: "URL video embed",
-        defaultValue: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        label: "URL video MP4",
+        defaultValue: "/assets/vid1.mp4",
         defaultSize: 14,
       },
     ],
@@ -175,8 +311,18 @@ export const landingSectionCatalog: Record<
     label: "Footer",
     fields: [
       { key: "brand", label: "Marca", defaultValue: "Koru", defaultSize: 38 },
-      { key: "campus", label: "Titulo campus", defaultValue: "Campus Koru", defaultSize: 38 },
-      { key: "mail", label: "Email", defaultValue: "hola@koru.academy", defaultSize: 24 },
+      {
+        key: "campus",
+        label: "Titulo campus",
+        defaultValue: "Campus Koru",
+        defaultSize: 38,
+      },
+      {
+        key: "mail",
+        label: "Email",
+        defaultValue: "hola@koru.academy",
+        defaultSize: 24,
+      },
       {
         key: "legal",
         label: "Texto legal",
@@ -192,7 +338,7 @@ export const defaultLandingStructure: LandingSectionInstance[] = [
   { id: "cards-1", type: "cards", name: "Pilares en cards" },
   { id: "story-1", type: "story", name: "Historia Koru" },
   { id: "gallery-1", type: "gallery", name: "Galeria" },
-  { id: "video-1", type: "video", name: "Video" },
+  { id: "video-1", type: "video", name: "Video Fullscreen" },
   { id: "footer-1", type: "footer", name: "Footer" },
 ];
 
@@ -240,19 +386,30 @@ export function getSectionGalleryAutoplaySecondsKey(sectionId: string) {
   return getSectionFieldKey(sectionId, "__gallery_autoplay_seconds");
 }
 
-export function getSectionGalleryItemImageKey(sectionId: string, index: number) {
+export function getSectionGalleryItemImageKey(
+  sectionId: string,
+  index: number,
+) {
   return getSectionFieldKey(sectionId, `item${index}_image`);
 }
 
-export function getSectionGalleryItemCaptionModeKey(sectionId: string, index: number) {
+export function getSectionGalleryItemCaptionModeKey(
+  sectionId: string,
+  index: number,
+) {
   return getSectionFieldKey(sectionId, `item${index}_caption_mode`);
 }
 
-export function getSectionGalleryItemSubtitleKey(sectionId: string, index: number) {
+export function getSectionGalleryItemSubtitleKey(
+  sectionId: string,
+  index: number,
+) {
   return getSectionFieldKey(sectionId, `item${index}_subtitle`);
 }
 
-export function getSectionGalleryCaptionContainerBackgroundKey(sectionId: string) {
+export function getSectionGalleryCaptionContainerBackgroundKey(
+  sectionId: string,
+) {
   return getSectionFieldKey(sectionId, "__gallery_caption_container_bg");
 }
 
@@ -260,11 +417,15 @@ export function getSectionGalleryCaptionContainerOpacityKey(sectionId: string) {
   return getSectionFieldKey(sectionId, "__gallery_caption_container_opacity");
 }
 
-export function getSectionGalleryCaptionContainerPaddingXKey(sectionId: string) {
+export function getSectionGalleryCaptionContainerPaddingXKey(
+  sectionId: string,
+) {
   return getSectionFieldKey(sectionId, "__gallery_caption_container_padding_x");
 }
 
-export function getSectionGalleryCaptionContainerPaddingYKey(sectionId: string) {
+export function getSectionGalleryCaptionContainerPaddingYKey(
+  sectionId: string,
+) {
   return getSectionFieldKey(sectionId, "__gallery_caption_container_padding_y");
 }
 
@@ -295,7 +456,9 @@ export function parseSectionExtraElements(
       (item) =>
         item &&
         typeof item.id === "string" &&
-        (item.type === "title" || item.type === "text" || item.type === "button"),
+        (item.type === "title" ||
+          item.type === "text" ||
+          item.type === "button"),
     );
   } catch {
     return [];
@@ -338,7 +501,9 @@ export function getDefaultLandingTextMap(
   return textMap;
 }
 
-export function parseLandingStructure(textMap: LandingTextMap): LandingSectionInstance[] {
+export function parseLandingStructure(
+  textMap: LandingTextMap,
+): LandingSectionInstance[] {
   const raw = textMap[LANDING_STRUCTURE_KEY];
   if (!raw) {
     return defaultLandingStructure;

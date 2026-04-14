@@ -61,6 +61,12 @@ npm run dev
 - `npm run prisma:migrate`
 - `npm run prisma:studio`
 
+## Documentación
+
+- [Roadmap](docs/roadmap.md)
+- [Documentación general del proyecto](docs/project-overview.md)
+- [API y Endpoints (superficial)](docs/api-endpoints.md)
+
 ## Estado actual
 
 - Fase 1 (setup): completada.

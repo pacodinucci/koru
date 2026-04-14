@@ -55,10 +55,9 @@ export function LandingFooter({
               Our Promise
             </a>
             <a href="#tour" className="block">
-              Make a donation
+              Haz una donación
             </a>
           </nav>
-
         </section>
 
         <section>
@@ -103,7 +102,9 @@ export function LandingFooter({
         </section>
 
         <section>
-          <h4 className="text-3xl font-semibold tracking-tight text-black">Follow</h4>
+          <h4 className="text-3xl font-semibold tracking-tight text-black">
+            Follow
+          </h4>
           <p className="mt-12 text-[1.5rem] leading-tight text-black/95">
             Sign up to stay up to date
           </p>

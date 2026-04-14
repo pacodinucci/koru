@@ -61,6 +61,8 @@ import {
 } from "@/modules/landing/config/landing-sections";
 import {
   getLandingFieldColorKey,
+  getLandingFieldFontFamilyKey,
+  getLandingFieldFontWeightKey,
   getLandingFieldMarginKey,
   getLandingFieldMarginLeftKey,
   getLandingFieldMarginModeKey,
@@ -93,6 +95,8 @@ type SelectedFieldContext = {
   key: string;
   sizeKey: string;
   colorKey: string;
+  fontFamilyKey: string;
+  fontWeightKey: string;
   marginKey: string;
   marginModeKey: string;
   marginXKey: string;
@@ -551,26 +555,33 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     const definition = landingSectionCatalog[section.type];
     const field = definition.fields.find((item) => item.key === match[2]);
     if (field) {
+      const styleFieldId =
+        section.type === "image-grid" && /^item\d+$/.test(field.key)
+          ? getSectionFieldKey(section.id, "__cards_text_style")
+          : selectedFieldId;
+
       return {
         key: selectedFieldId,
-        sizeKey: getLandingFieldSizeKey(selectedFieldId),
-        colorKey: getLandingFieldColorKey(selectedFieldId),
-        marginKey: getLandingFieldMarginKey(selectedFieldId),
-        marginModeKey: getLandingFieldMarginModeKey(selectedFieldId),
-        marginXKey: getLandingFieldMarginXKey(selectedFieldId),
-        marginYKey: getLandingFieldMarginYKey(selectedFieldId),
-        marginTopKey: getLandingFieldMarginTopKey(selectedFieldId),
-        marginRightKey: getLandingFieldMarginRightKey(selectedFieldId),
-        marginBottomKey: getLandingFieldMarginBottomKey(selectedFieldId),
-        marginLeftKey: getLandingFieldMarginLeftKey(selectedFieldId),
-        paddingKey: getLandingFieldPaddingKey(selectedFieldId),
-        paddingModeKey: getLandingFieldPaddingModeKey(selectedFieldId),
-        paddingXKey: getLandingFieldPaddingXKey(selectedFieldId),
-        paddingYKey: getLandingFieldPaddingYKey(selectedFieldId),
-        paddingTopKey: getLandingFieldPaddingTopKey(selectedFieldId),
-        paddingRightKey: getLandingFieldPaddingRightKey(selectedFieldId),
-        paddingBottomKey: getLandingFieldPaddingBottomKey(selectedFieldId),
-        paddingLeftKey: getLandingFieldPaddingLeftKey(selectedFieldId),
+        sizeKey: getLandingFieldSizeKey(styleFieldId),
+        colorKey: getLandingFieldColorKey(styleFieldId),
+        fontFamilyKey: getLandingFieldFontFamilyKey(styleFieldId),
+        fontWeightKey: getLandingFieldFontWeightKey(styleFieldId),
+        marginKey: getLandingFieldMarginKey(styleFieldId),
+        marginModeKey: getLandingFieldMarginModeKey(styleFieldId),
+        marginXKey: getLandingFieldMarginXKey(styleFieldId),
+        marginYKey: getLandingFieldMarginYKey(styleFieldId),
+        marginTopKey: getLandingFieldMarginTopKey(styleFieldId),
+        marginRightKey: getLandingFieldMarginRightKey(styleFieldId),
+        marginBottomKey: getLandingFieldMarginBottomKey(styleFieldId),
+        marginLeftKey: getLandingFieldMarginLeftKey(styleFieldId),
+        paddingKey: getLandingFieldPaddingKey(styleFieldId),
+        paddingModeKey: getLandingFieldPaddingModeKey(styleFieldId),
+        paddingXKey: getLandingFieldPaddingXKey(styleFieldId),
+        paddingYKey: getLandingFieldPaddingYKey(styleFieldId),
+        paddingTopKey: getLandingFieldPaddingTopKey(styleFieldId),
+        paddingRightKey: getLandingFieldPaddingRightKey(styleFieldId),
+        paddingBottomKey: getLandingFieldPaddingBottomKey(styleFieldId),
+        paddingLeftKey: getLandingFieldPaddingLeftKey(styleFieldId),
         section,
         field,
       };
@@ -593,6 +604,8 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
       key: selectedFieldId,
       sizeKey: getLandingFieldSizeKey(selectedFieldId),
       colorKey: getLandingFieldColorKey(selectedFieldId),
+      fontFamilyKey: getLandingFieldFontFamilyKey(selectedFieldId),
+      fontWeightKey: getLandingFieldFontWeightKey(selectedFieldId),
       marginKey: getLandingFieldMarginKey(selectedFieldId),
       marginModeKey: getLandingFieldMarginModeKey(selectedFieldId),
       marginXKey: getLandingFieldMarginXKey(selectedFieldId),
@@ -1506,7 +1519,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             )
                                           }
                                         />
-                                        Degrade
+                                        Gradient
                                       </label>
                                     </div>
 
@@ -2345,6 +2358,55 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                               </div>
                             </div>
 
+                            <div className="grid grid-cols-[1fr_1fr] gap-2">
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-muted-foreground">
+                                  Fuente
+                                </label>
+                                <select
+                                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                                  value={
+                                    textMap[selectedFieldContext.fontFamilyKey] ??
+                                    "montserrat"
+                                  }
+                                  onChange={(event) =>
+                                    updateField(
+                                      selectedFieldContext.fontFamilyKey,
+                                      event.target.value,
+                                    )
+                                  }
+                                >
+                                  <option value="montserrat">Montserrat</option>
+                                  <option value="nunito">Nunito</option>
+                                  <option value="fira-sans">Fira Sans</option>
+                                </select>
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-muted-foreground">
+                                  Weight
+                                </label>
+                                <select
+                                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                                  value={
+                                    textMap[selectedFieldContext.fontWeightKey] ??
+                                    "500"
+                                  }
+                                  onChange={(event) =>
+                                    updateField(
+                                      selectedFieldContext.fontWeightKey,
+                                      event.target.value,
+                                    )
+                                  }
+                                >
+                                  <option value="400">400</option>
+                                  <option value="500">500</option>
+                                  <option value="600">600</option>
+                                  <option value="700">700</option>
+                                </select>
+                              </div>
+                            </div>
+
                             {(() => {
                               const marginMode = getSpacingModeValue(
                                 textMap[selectedFieldContext.marginModeKey],
@@ -2999,7 +3061,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
       <CardContent className="p-4">
         <div
           ref={previewScrollRef}
-          className="relative h-[78vh] overflow-auto rounded-xl border bg-muted/20 p-3"
+          className="relative h-[78vh] overflow-auto rounded-xl border bg-muted/20"
         >
           <div className="w-full min-w-0">
             <div

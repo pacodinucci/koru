@@ -33,9 +33,12 @@ import {
 } from "@/modules/landing/config/landing-sections";
 import {
   getLandingFieldColor,
+  getLandingFieldFontFamily,
   getLandingFieldFontSize,
+  getLandingFieldFontWeight,
   getLandingFieldMarginStyle,
   getLandingFieldPaddingStyle,
+  type LandingFontFamily,
   type LandingPreviewBindings,
   type LandingTextMap,
 } from "@/modules/landing/types/landing-text";
@@ -70,19 +73,37 @@ function renderField(
     value: textMap[key] ?? fallback,
     fontSize: getLandingFieldFontSize(textMap, key, fallbackSize),
     color: getLandingFieldColor(textMap, key),
+    fontFamily: getLandingFieldFontFamily(textMap, key),
+    fontWeight: getLandingFieldFontWeight(textMap, key),
     marginStyle: getLandingFieldMarginStyle(textMap, key),
     paddingStyle: getLandingFieldPaddingStyle(textMap, key),
   };
 }
 
+function getFontFamilyStyleValue(fontFamily: LandingFontFamily) {
+  if (fontFamily === "montserrat") {
+    return 'var(--font-montserrat), "Segoe UI", sans-serif';
+  }
+  if (fontFamily === "nunito") {
+    return 'var(--font-nunito), "Segoe UI", sans-serif';
+  }
+  return '"Fira Sans", "Segoe UI", sans-serif';
+}
+
 function getFieldStyle(field: {
   fontSize: number;
   color: string | null;
+  fontFamily: LandingFontFamily | null;
+  fontWeight: number | null;
   marginStyle: ReturnType<typeof getLandingFieldMarginStyle>;
   paddingStyle: ReturnType<typeof getLandingFieldPaddingStyle>;
 }): CSSProperties {
   return {
     fontSize: `${field.fontSize}px`,
+    ...(field.fontFamily
+      ? { fontFamily: getFontFamilyStyleValue(field.fontFamily) }
+      : null),
+    ...(field.fontWeight ? { fontWeight: field.fontWeight } : null),
     ...field.marginStyle,
     ...field.paddingStyle,
     ...(field.color ? { color: field.color } : null),
@@ -171,7 +192,8 @@ function getSectionBackgroundStyle(
   }
 
   if (mode === "gradient") {
-    const gradient = textMap[getSectionBackgroundGradientKey(sectionId)]?.trim();
+    const gradient =
+      textMap[getSectionBackgroundGradientKey(sectionId)]?.trim();
     if (!gradient) {
       return {};
     }
@@ -189,7 +211,10 @@ function getSectionBackgroundStyle(
 }
 
 function hasBackgroundImageLayer(style: CSSProperties) {
-  return typeof style.backgroundImage === "string" && style.backgroundImage.length > 0;
+  return (
+    typeof style.backgroundImage === "string" &&
+    style.backgroundImage.length > 0
+  );
 }
 
 function getGalleryVariantValue(raw: string | undefined) {
@@ -270,79 +295,93 @@ function SectionExtras({
         .slice()
         .sort(
           (a, b) =>
-            getOrder(orderMap ?? new Map(), `extra:${a.id}`, Number.MAX_SAFE_INTEGER) -
-            getOrder(orderMap ?? new Map(), `extra:${b.id}`, Number.MAX_SAFE_INTEGER),
+            getOrder(
+              orderMap ?? new Map(),
+              `extra:${a.id}`,
+              Number.MAX_SAFE_INTEGER,
+            ) -
+            getOrder(
+              orderMap ?? new Map(),
+              `extra:${b.id}`,
+              Number.MAX_SAFE_INTEGER,
+            ),
         )
         .map((extra) => {
-        const key = getSectionExtraTextKey(section.id, extra.id);
-        const defaults = getExtraDefault(extra.type);
-        const order = getOrder(orderMap ?? new Map(), `extra:${extra.id}`, 999);
-        const field = {
-          key,
-          value: textMap[key] ?? defaults.text,
-          fontSize: getLandingFieldFontSize(textMap, key, defaults.size),
-          color: getLandingFieldColor(textMap, key),
-          marginStyle: getLandingFieldMarginStyle(textMap, key),
-          paddingStyle: getLandingFieldPaddingStyle(textMap, key),
-        };
+          const key = getSectionExtraTextKey(section.id, extra.id);
+          const defaults = getExtraDefault(extra.type);
+          const order = getOrder(
+            orderMap ?? new Map(),
+            `extra:${extra.id}`,
+            999,
+          );
+          const field = {
+            key,
+            value: textMap[key] ?? defaults.text,
+            fontSize: getLandingFieldFontSize(textMap, key, defaults.size),
+            color: getLandingFieldColor(textMap, key),
+            fontFamily: getLandingFieldFontFamily(textMap, key),
+            fontWeight: getLandingFieldFontWeight(textMap, key),
+            marginStyle: getLandingFieldMarginStyle(textMap, key),
+            paddingStyle: getLandingFieldPaddingStyle(textMap, key),
+          };
 
-        if (extra.type === "title") {
+          if (extra.type === "title") {
+            return (
+              <h3
+                key={extra.id}
+                className={cn(
+                  "font-semibold tracking-tight",
+                  selectableClass(selectedFieldId === field.key, previewMode),
+                )}
+                onClick={() => onSelectField?.(field.key)}
+                style={{ ...getFieldStyle(field), order }}
+              >
+                {field.value}
+              </h3>
+            );
+          }
+
+          if (extra.type === "button") {
+            return (
+              <a
+                key={extra.id}
+                href="#"
+                className="inline-flex h-10 items-center rounded-full border border-black/20 bg-white/70 px-5 transition hover:bg-white"
+                style={{ order }}
+                onClick={(event) => {
+                  if (previewMode) {
+                    event.preventDefault();
+                    onSelectField?.(field.key);
+                  }
+                }}
+              >
+                <span
+                  className={selectableClass(
+                    selectedFieldId === field.key,
+                    previewMode,
+                  )}
+                  style={getFieldStyle(field)}
+                >
+                  {field.value}
+                </span>
+              </a>
+            );
+          }
+
           return (
-            <h3
+            <p
               key={extra.id}
               className={cn(
-                "font-semibold tracking-tight",
+                "leading-7 text-black/75",
                 selectableClass(selectedFieldId === field.key, previewMode),
               )}
               onClick={() => onSelectField?.(field.key)}
               style={{ ...getFieldStyle(field), order }}
             >
               {field.value}
-            </h3>
+            </p>
           );
-        }
-
-        if (extra.type === "button") {
-          return (
-            <a
-              key={extra.id}
-              href="#"
-              className="inline-flex h-10 items-center rounded-full border border-black/20 bg-white/70 px-5 transition hover:bg-white"
-              style={{ order }}
-              onClick={(event) => {
-                if (previewMode) {
-                  event.preventDefault();
-                  onSelectField?.(field.key);
-                }
-              }}
-            >
-              <span
-                className={selectableClass(
-                  selectedFieldId === field.key,
-                  previewMode,
-                )}
-                style={getFieldStyle(field)}
-              >
-                {field.value}
-              </span>
-            </a>
-          );
-        }
-
-        return (
-          <p
-            key={extra.id}
-            className={cn(
-              "leading-7 text-black/75",
-              selectableClass(selectedFieldId === field.key, previewMode),
-            )}
-            onClick={() => onSelectField?.(field.key)}
-            style={{ ...getFieldStyle(field), order }}
-          >
-            {field.value}
-          </p>
-        );
-      })}
+        })}
     </div>
   );
 }
@@ -378,7 +417,7 @@ function HeroSection({
     20,
     textMap,
   );
-  const cta = renderField(section, "cta", "Make a donation", 14, textMap);
+  const cta = renderField(section, "cta", "Haz una donación", 14, textMap);
   const orderMap = getSectionOrderMap(textMap, section.id);
   const sectionPaddingStyle = getLandingFieldPaddingStyle(
     textMap,
@@ -393,7 +432,11 @@ function HeroSection({
       style={hasImageLayer ? undefined : sectionBackgroundStyle}
     >
       {hasImageLayer ? (
-        <div aria-hidden className="absolute inset-0 -z-10" style={sectionBackgroundStyle} />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10"
+          style={sectionBackgroundStyle}
+        />
       ) : null}
       <div className="absolute -left-20 top-10 h-64 w-64 rounded-full bg-[#d5e8d4]/60 blur-3xl" />
       <div className="absolute -right-20 bottom-10 h-64 w-64 rounded-full bg-[#c8d8f0]/70 blur-3xl" />
@@ -540,7 +583,11 @@ function CardsSection({
       style={hasImageLayer ? undefined : sectionBackgroundStyle}
     >
       {hasImageLayer ? (
-        <div aria-hidden className="absolute inset-0 -z-10" style={sectionBackgroundStyle} />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10"
+          style={sectionBackgroundStyle}
+        />
       ) : null}
       <div
         className="mx-auto flex w-full max-w-[92rem] flex-col px-5 py-20 md:px-8 lg:px-12"
@@ -676,7 +723,11 @@ function StorySection({
       style={hasImageLayer ? undefined : sectionBackgroundStyle}
     >
       {hasImageLayer ? (
-        <div aria-hidden className="absolute inset-0 -z-10" style={sectionBackgroundStyle} />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10"
+          style={sectionBackgroundStyle}
+        />
       ) : null}
       <div
         className="mx-auto flex w-full max-w-[92rem] flex-col px-5 py-20 md:px-8 lg:px-12"
@@ -762,7 +813,8 @@ function GallerySection({
     renderField(section, `item${index}`, `Item ${index}`, 18, textMap),
   );
   const itemImages = [1, 2, 3, 4].map(
-    (index) => textMap[getSectionGalleryItemImageKey(section.id, index)]?.trim() ?? "",
+    (index) =>
+      textMap[getSectionGalleryItemImageKey(section.id, index)]?.trim() ?? "",
   );
   const orderMap = getSectionOrderMap(textMap, section.id);
   const sectionPaddingStyle = getLandingFieldPaddingStyle(
@@ -810,23 +862,25 @@ function GallerySection({
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const orderedSlides = orderedItems.map((item) => {
     const suffix = item.key.split(".").pop() ?? "";
-    const itemNumber = Number.parseInt(
-      suffix.replace("item", ""),
-      10,
-    );
+    const itemNumber = Number.parseInt(suffix.replace("item", ""), 10);
     const image =
-      Number.isFinite(itemNumber) && itemNumber >= 1 && itemNumber <= itemImages.length
+      Number.isFinite(itemNumber) &&
+      itemNumber >= 1 &&
+      itemNumber <= itemImages.length
         ? itemImages[itemNumber - 1]
         : "";
     const captionMode =
       Number.isFinite(itemNumber) && itemNumber >= 1
         ? getGalleryCaptionModeValue(
-            textMap[getSectionGalleryItemCaptionModeKey(section.id, itemNumber)],
+            textMap[
+              getSectionGalleryItemCaptionModeKey(section.id, itemNumber)
+            ],
           )
         : "title";
     const subtitle =
       Number.isFinite(itemNumber) && itemNumber >= 1
-        ? textMap[getSectionGalleryItemSubtitleKey(section.id, itemNumber)] ?? ""
+        ? (textMap[getSectionGalleryItemSubtitleKey(section.id, itemNumber)] ??
+          "")
         : "";
     return { item, image, captionMode, subtitle };
   });
@@ -858,7 +912,8 @@ function GallerySection({
     if (orderedSlides.length === 0) {
       return;
     }
-    const normalized = (nextIndex + orderedSlides.length) % orderedSlides.length;
+    const normalized =
+      (nextIndex + orderedSlides.length) % orderedSlides.length;
     setActiveSlideIndex(normalized);
   }
 
@@ -869,7 +924,9 @@ function GallerySection({
     const total = orderedSlides.length;
     const rawDelta = index - normalizedSlideIndex;
     const normalizedDelta = ((rawDelta % total) + total) % total;
-    return normalizedDelta > total / 2 ? normalizedDelta - total : normalizedDelta;
+    return normalizedDelta > total / 2
+      ? normalizedDelta - total
+      : normalizedDelta;
   }
 
   function getCaptionContainerClassName(basePositionClass: string) {
@@ -888,7 +945,9 @@ function GallerySection({
       paddingTop: `${captionContainerPaddingY}px`,
       paddingBottom: `${captionContainerPaddingY}px`,
       ...(captionContainerOpacity > 0
-        ? { backgroundColor: `rgba(255, 255, 255, ${captionContainerOpacity / 100})` }
+        ? {
+            backgroundColor: `rgba(255, 255, 255, ${captionContainerOpacity / 100})`,
+          }
         : null),
     };
   }
@@ -909,7 +968,11 @@ function GallerySection({
       style={hasImageLayer ? undefined : sectionBackgroundStyle}
     >
       {hasImageLayer ? (
-        <div aria-hidden className="absolute inset-0 -z-10" style={sectionBackgroundStyle} />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10"
+          style={sectionBackgroundStyle}
+        />
       ) : null}
       <div
         className="mx-auto flex w-full max-w-[92rem] flex-col px-5 py-20 md:px-8 lg:px-12"
@@ -950,7 +1013,9 @@ function GallerySection({
             <div className="relative overflow-hidden rounded-3xl border border-black/10 bg-black/10">
               <div
                 className="flex transition-transform duration-500 ease-out"
-                style={{ transform: `translateX(-${normalizedSlideIndex * 100}%)` }}
+                style={{
+                  transform: `translateX(-${normalizedSlideIndex * 100}%)`,
+                }}
               >
                 {orderedSlides.map((slide, index) => (
                   <article
@@ -969,24 +1034,32 @@ function GallerySection({
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent" />
                     {slide.captionMode !== "none" ? (
                       <div
-                        className={getCaptionContainerClassName("absolute bottom-5 left-5")}
+                        className={getCaptionContainerClassName(
+                          "absolute bottom-5 left-5",
+                        )}
                         style={getCaptionContainerStyle()}
                       >
                         <p
                           className={cn(
                             "font-medium",
-                            selectableClass(selectedFieldId === slide.item.key, previewMode),
+                            selectableClass(
+                              selectedFieldId === slide.item.key,
+                              previewMode,
+                            ),
                           )}
                           onClick={() => onSelectField?.(slide.item.key)}
                           style={getFieldStyle(slide.item)}
                         >
                           {slide.item.value}
                         </p>
-                        {slide.captionMode === "title-subtitle" && slide.subtitle ? (
+                        {slide.captionMode === "title-subtitle" &&
+                        slide.subtitle ? (
                           <p
                             className={cn(
                               "mt-1 text-sm",
-                              captionContainerOpacity > 0 ? "text-black/70" : "text-white/90",
+                              captionContainerOpacity > 0
+                                ? "text-black/70"
+                                : "text-white/90",
                             )}
                           >
                             {slide.subtitle}
@@ -1026,7 +1099,8 @@ function GallerySection({
                 const offset = getRelativeSlideOffset(index);
                 const absOffset = Math.abs(offset);
                 const visible = absOffset <= 2;
-                const scale = absOffset === 0 ? 1 : absOffset === 1 ? 0.88 : 0.75;
+                const scale =
+                  absOffset === 0 ? 1 : absOffset === 1 ? 0.88 : 0.75;
                 const opacity = visible
                   ? absOffset === 0
                     ? 1
@@ -1058,24 +1132,32 @@ function GallerySection({
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
                     {slide.captionMode !== "none" ? (
                       <div
-                        className={getCaptionContainerClassName("absolute bottom-4 left-4")}
+                        className={getCaptionContainerClassName(
+                          "absolute bottom-4 left-4",
+                        )}
                         style={getCaptionContainerStyle()}
                       >
                         <p
                           className={cn(
                             "font-medium",
-                            selectableClass(selectedFieldId === slide.item.key, previewMode),
+                            selectableClass(
+                              selectedFieldId === slide.item.key,
+                              previewMode,
+                            ),
                           )}
                           onClick={() => onSelectField?.(slide.item.key)}
                           style={getFieldStyle(slide.item)}
                         >
                           {slide.item.value}
                         </p>
-                        {slide.captionMode === "title-subtitle" && slide.subtitle ? (
+                        {slide.captionMode === "title-subtitle" &&
+                        slide.subtitle ? (
                           <p
                             className={cn(
                               "mt-1 text-sm",
-                              captionContainerOpacity > 0 ? "text-black/70" : "text-white/90",
+                              captionContainerOpacity > 0
+                                ? "text-black/70"
+                                : "text-white/90",
                             )}
                           >
                             {slide.subtitle}
@@ -1145,24 +1227,32 @@ function GallerySection({
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
                   {slide.captionMode !== "none" ? (
                     <div
-                      className={getCaptionContainerClassName("absolute top-3 left-3 right-3")}
+                      className={getCaptionContainerClassName(
+                        "absolute top-3 left-3 right-3",
+                      )}
                       style={getCaptionContainerStyle()}
                     >
                       <p
                         className={cn(
                           "font-medium",
-                          selectableClass(selectedFieldId === slide.item.key, previewMode),
+                          selectableClass(
+                            selectedFieldId === slide.item.key,
+                            previewMode,
+                          ),
                         )}
                         onClick={() => onSelectField?.(slide.item.key)}
                         style={getFieldStyle(slide.item)}
                       >
                         {slide.item.value}
                       </p>
-                      {slide.captionMode === "title-subtitle" && slide.subtitle ? (
+                      {slide.captionMode === "title-subtitle" &&
+                      slide.subtitle ? (
                         <p
                           className={cn(
                             "mt-1 text-sm",
-                            captionContainerOpacity > 0 ? "text-black/70" : "text-white/90",
+                            captionContainerOpacity > 0
+                              ? "text-black/70"
+                              : "text-white/90",
                           )}
                         >
                           {slide.subtitle}
@@ -1208,18 +1298,24 @@ function GallerySection({
                     <p
                       className={cn(
                         "font-medium",
-                        selectableClass(selectedFieldId === slide.item.key, previewMode),
+                        selectableClass(
+                          selectedFieldId === slide.item.key,
+                          previewMode,
+                        ),
                       )}
                       onClick={() => onSelectField?.(slide.item.key)}
                       style={getFieldStyle(slide.item)}
                     >
                       {slide.item.value}
                     </p>
-                    {slide.captionMode === "title-subtitle" && slide.subtitle ? (
+                    {slide.captionMode === "title-subtitle" &&
+                    slide.subtitle ? (
                       <p
                         className={cn(
                           "mt-1 text-sm",
-                          captionContainerOpacity > 0 ? "text-black/70" : "text-white/90",
+                          captionContainerOpacity > 0
+                            ? "text-black/70"
+                            : "text-white/90",
                         )}
                       >
                         {slide.subtitle}
@@ -1244,7 +1340,7 @@ function GallerySection({
   );
 }
 
-function VideoSection({
+function ImageGridSection({
   section,
   textMap,
   previewMode,
@@ -1254,21 +1350,35 @@ function VideoSection({
   section: LandingSectionInstance;
   textMap: LandingTextMap;
 } & LandingPreviewBindings) {
-  const title = renderField(
-    section,
-    "title",
-    "Conoce nuestra propuesta",
-    40,
-    textMap,
+  const sharedTextStyleKey = getSectionFieldKey(section.id, "__cards_text_style");
+  const sharedTextStyleField = {
+    key: sharedTextStyleKey,
+    value: "",
+    fontSize: getLandingFieldFontSize(textMap, sharedTextStyleKey, 22),
+    color: getLandingFieldColor(textMap, sharedTextStyleKey),
+    fontFamily: getLandingFieldFontFamily(textMap, sharedTextStyleKey),
+    fontWeight: getLandingFieldFontWeight(textMap, sharedTextStyleKey),
+    marginStyle: getLandingFieldMarginStyle(textMap, sharedTextStyleKey),
+    paddingStyle: getLandingFieldPaddingStyle(textMap, sharedTextStyleKey),
+  };
+  const cards = Array.from({ length: 12 }, (_, index) =>
+    renderField(section, `item${index + 1}`, `Card ${index + 1}`, 22, textMap),
   );
-  const body = renderField(section, "body", "Una mirada breve", 18, textMap);
-  const url = renderField(
-    section,
-    "url",
-    "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    14,
-    textMap,
-  );
+  const imageUrls = [
+    "/assets/img1.jpg",
+    "/assets/img2.jpg",
+    "/assets/img3.jpg",
+    "/assets/img4.jpg",
+    "/assets/img5.jpg",
+    "/assets/img6.jpg",
+    "/assets/img7.jpg",
+    "/assets/img8.jpg",
+    "/assets/img9.jpg",
+    "/assets/img1.jpg",
+    "/assets/img2.jpg",
+    "/assets/img3.jpg",
+  ];
+  const orderMap = getSectionOrderMap(textMap, section.id);
   const sectionPaddingStyle = getLandingFieldPaddingStyle(
     textMap,
     getSectionFieldKey(section.id, "__section_padding"),
@@ -1278,65 +1388,108 @@ function VideoSection({
 
   return (
     <section
-      className="relative isolate flex min-h-screen items-center overflow-hidden border-y border-black/10 bg-[#f8f7f2]"
+      className="relative isolate overflow-hidden border-y border-black/10 bg-[#eef0dd]"
       style={hasImageLayer ? undefined : sectionBackgroundStyle}
     >
       {hasImageLayer ? (
-        <div aria-hidden className="absolute inset-0 -z-10" style={sectionBackgroundStyle} />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10"
+          style={sectionBackgroundStyle}
+        />
       ) : null}
       <div
-        className="mx-auto grid w-full max-w-[92rem] gap-8 px-5 py-20 md:px-8 lg:grid-cols-[1fr_1fr] lg:px-12"
+        className="mx-auto w-full max-w-[110rem] px-4 py-14 md:px-6 lg:px-8"
         style={sectionPaddingStyle}
       >
-        <div>
-          <h2
-            className={cn(
-              "leading-tight font-semibold tracking-tight",
-              selectableClass(selectedFieldId === title.key, previewMode),
-            )}
-            onClick={() => onSelectField?.(title.key)}
-            style={getFieldStyle(title)}
-          >
-            {title.value}
-          </h2>
-          <p
-            className={cn(
-              "mt-4 text-black/75",
-              selectableClass(selectedFieldId === body.key, previewMode),
-            )}
-            onClick={() => onSelectField?.(body.key)}
-            style={getFieldStyle(body)}
-          >
-            {body.value}
-          </p>
+        <div
+          className="grid grid-cols-4 gap-3 md:gap-4"
+          style={{ order: getOrder(orderMap, "base:grid", 0) }}
+        >
+          {cards.map((card, index) => (
+            <article
+              key={card.key}
+              className="group relative aspect-square overflow-hidden"
+            >
+              <div
+                className="h-full w-full scale-[1.08] bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-100"
+                style={{ backgroundImage: `url("${imageUrls[index]}")` }}
+              />
+              <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/35" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p
+                  className={cn(
+                    previewMode
+                      ? "text-center text-white -translate-y-3"
+                      : "landing-curtain-rtl text-center text-white -translate-y-3",
+                    selectableClass(selectedFieldId === card.key, previewMode),
+                  )}
+                  onClick={() => onSelectField?.(card.key)}
+                  style={getFieldStyle({
+                    ...card,
+                    fontSize: sharedTextStyleField.fontSize,
+                    color: sharedTextStyleField.color,
+                    fontFamily: sharedTextStyleField.fontFamily,
+                    fontWeight: sharedTextStyleField.fontWeight,
+                    marginStyle: sharedTextStyleField.marginStyle,
+                    paddingStyle: sharedTextStyleField.paddingStyle,
+                  })}
+                >
+                  {card.value}
+                </p>
+              </div>
+            </article>
+          ))}
         </div>
-        <div className="overflow-hidden rounded-3xl border border-black/10 bg-black">
-          <iframe
-            src={url.value}
-            title="Koru video"
-            className="h-[320px] w-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-          <p
-            className={cn(
-              "px-4 py-3 text-white/65",
-              selectableClass(selectedFieldId === url.key, previewMode),
-            )}
-            onClick={() => onSelectField?.(url.key)}
-            style={getFieldStyle(url)}
-          >
-            {url.value}
-          </p>
-        </div>
+
         <SectionExtras
           section={section}
           textMap={textMap}
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          orderMap={orderMap}
         />
       </div>
+    </section>
+  );
+}
+
+function VideoSection({
+  section,
+  textMap,
+  previewMode,
+}: {
+  section: LandingSectionInstance;
+  textMap: LandingTextMap;
+} & LandingPreviewBindings) {
+  const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
+  const sectionStyle: CSSProperties = {
+    ...sectionBackgroundStyle,
+    transform: undefined,
+    transformOrigin: undefined,
+    minHeight: "100vh",
+  };
+
+  return (
+    <section
+      className="relative isolate w-full overflow-hidden"
+      style={sectionStyle}
+    >
+      <video
+        className="block h-screen w-[100vw] object-cover"
+        src="/assets/vid2.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        controls={previewMode}
+      />
+      <SectionExtras
+        section={section}
+        textMap={textMap}
+        previewMode={previewMode}
+      />
     </section>
   );
 }
@@ -1374,7 +1527,11 @@ function FooterSection({
       style={hasImageLayer ? undefined : sectionBackgroundStyle}
     >
       {hasImageLayer ? (
-        <div aria-hidden className="absolute inset-0 -z-10" style={sectionBackgroundStyle} />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10"
+          style={sectionBackgroundStyle}
+        />
       ) : null}
       <div
         className="grid w-full gap-10 px-3 py-14 md:grid-cols-2 md:px-5 lg:grid-cols-4 lg:gap-8 lg:px-7"
@@ -1497,6 +1654,16 @@ function SectionRenderer({
           onSelectField={onSelectField}
         />
       );
+    case "image-grid":
+      return (
+        <ImageGridSection
+          section={section}
+          textMap={textMap}
+          previewMode={previewMode}
+          selectedFieldId={selectedFieldId}
+          onSelectField={onSelectField}
+        />
+      );
     case "video":
       return (
         <VideoSection
@@ -1533,7 +1700,9 @@ export function LandingView({
   const structure = parseLandingStructure(completeMap);
   const previewRootStyle: CSSProperties | undefined =
     previewMode && previewViewportHeight
-      ? ({ ["--landing-preview-vh" as string]: `${previewViewportHeight}px` } as CSSProperties)
+      ? ({
+          ["--landing-preview-vh" as string]: `${previewViewportHeight}px`,
+        } as CSSProperties)
       : undefined;
 
   return (

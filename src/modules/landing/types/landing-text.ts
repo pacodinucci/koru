@@ -1,4 +1,5 @@
 export type LandingTextMap = Record<string, string>;
+export type LandingFontFamily = "montserrat" | "nunito" | "fira-sans";
 
 export type LandingPreviewBindings = {
   previewMode?: boolean;
@@ -12,6 +13,14 @@ export function getLandingFieldSizeKey(fieldId: string) {
 
 export function getLandingFieldColorKey(fieldId: string) {
   return `${fieldId}__color`;
+}
+
+export function getLandingFieldFontFamilyKey(fieldId: string) {
+  return `${fieldId}__font_family`;
+}
+
+export function getLandingFieldFontWeightKey(fieldId: string) {
+  return `${fieldId}__font_weight`;
 }
 
 export function getLandingFieldMarginKey(fieldId: string) {
@@ -104,6 +113,39 @@ export function getLandingFieldColor(textMap: LandingTextMap, fieldId: string) {
   const isHex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw);
   if (isHex) {
     return raw;
+  }
+
+  return null;
+}
+
+export function getLandingFieldFontFamily(
+  textMap: LandingTextMap,
+  fieldId: string,
+) {
+  const raw = textMap[getLandingFieldFontFamilyKey(fieldId)]?.trim();
+  if (raw === "montserrat" || raw === "nunito" || raw === "fira-sans") {
+    return raw;
+  }
+
+  return null;
+}
+
+export function getLandingFieldFontWeight(
+  textMap: LandingTextMap,
+  fieldId: string,
+) {
+  const raw = textMap[getLandingFieldFontWeightKey(fieldId)]?.trim();
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  if (parsed === 400 || parsed === 500 || parsed === 600 || parsed === 700) {
+    return parsed;
   }
 
   return null;
