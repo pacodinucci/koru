@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   SlidersHorizontal,
   ChevronRight,
+  ChevronsRight,
   ChevronLeft,
-  ChevronDown,
   GripVertical,
   Trash2,
   Minus,
@@ -17,14 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
@@ -195,6 +188,59 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+function getNumberValue(
+  raw: string | undefined,
+  fallback: number,
+  min = 0,
+  max = 120,
+) {
+  const parsed = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return clamp(parsed, min, max);
+}
+
+type SliderValueControlProps = {
+  label: string;
+  value: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  onChange: (value: number) => void;
+};
+
+function SliderValueControl({
+  label,
+  value,
+  min = 0,
+  max = 120,
+  step = 1,
+  onChange,
+}: SliderValueControlProps) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      <div className="grid grid-cols-[1fr_72px] gap-2">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          className="h-2 w-full cursor-pointer self-center accent-primary"
+          onChange={(event) =>
+            onChange(clamp(Number.parseInt(event.target.value, 10), min, max))
+          }
+        />
+        <div className="flex h-9 items-center justify-center rounded-md border bg-muted/30 text-xs font-medium tabular-nums">
+          {value}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function getSectionBackgroundZoomValue(raw: string | undefined) {
   const parsed = Number.parseFloat(raw ?? "");
   if (!Number.isFinite(parsed)) {
@@ -270,6 +316,14 @@ const PREVIEW_ZOOM_MAX = 200;
 const PREVIEW_ZOOM_STEP = 10;
 const PREVIEW_ZOOM_DEFAULT = 100;
 const PREVIEW_ZOOM_BASE_SCALE = 0.7;
+const VIDEO_ASSET_OPTIONS = [
+  "/assets/vid1.mp4",
+  "/assets/vid2.mp4",
+  "/assets/vid3.mp4",
+  "/assets/vid4.mp4",
+  "/assets/vid5.mp4",
+  "/assets/vid6.mp4",
+] as const;
 
 export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
   const RECENT_BG_COLORS_KEY = "koru_recent_section_bg_colors";
@@ -289,7 +343,6 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     useState<SectionExtraElementType>("text");
   const [statusMessage, setStatusMessage] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
-  const [isSectionConfigOpen, setIsSectionConfigOpen] = useState(false);
   const [isSectionSettingsView, setIsSectionSettingsView] = useState(false);
   const [recentBackgroundColors, setRecentBackgroundColors] = useState<
     string[]
@@ -527,11 +580,12 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
           8,
         )
       : 8;
-  const selectedSectionGalleryGridImageShape = selectedSectionGalleryGridImageShapeKey
-    ? getGalleryGridImageShapeValue(
-        textMap[selectedSectionGalleryGridImageShapeKey],
-      )
-    : "landscape";
+  const selectedSectionGalleryGridImageShape =
+    selectedSectionGalleryGridImageShapeKey
+      ? getGalleryGridImageShapeValue(
+          textMap[selectedSectionGalleryGridImageShapeKey],
+        )
+      : "landscape";
   const selectedSectionGalleryItemCaptionModes =
     selectedSectionGalleryItemCaptionModeKeys.map((key) =>
       getGalleryCaptionModeValue(textMap[key]),
@@ -998,26 +1052,74 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                 render={<Button type="button" size="sm" variant="outline" />}
               >
                 <SlidersHorizontal className="h-4 w-4" />
-                Open editor panel
+                Abrir panel de edición
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-full p-0 sm:max-w-[460px]"
+                className="font-fira w-full overflow-visible border-l-0 p-0 sm:max-w-[460px]"
                 showOverlay={false}
+                showCloseButton={false}
               >
-                <SheetHeader className="border-b">
-                  <SheetTitle>Panel de configuracion</SheetTitle>
-                  <SheetDescription>
-                    Edita contenido, estilos y orden de secciones desde un solo
-                    lugar.
-                  </SheetDescription>
-                </SheetHeader>
-
+                <button
+                  type="button"
+                  className="panel-close-float absolute top-1/2 -left-10 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/65 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+                  onClick={() => setPanelOpen(false)}
+                  aria-label="Cerrar panel"
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </button>
                 <div className="flex h-full min-h-0 flex-col">
+                  <div className="border-b">
+                    <div className="relative grid min-h-14 grid-cols-2 items-stretch">
+                      <span className="pointer-events-none absolute top-1/2 left-1/2 h-8 w-px -translate-x-1/2 -translate-y-1/2 bg-border" />
+
+                      <div className="flex items-center justify-center gap-4 px-2">
+                        <Button
+                          type="button"
+                          size="icon-sm"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-md"
+                          onClick={() => goToAdjacentSection("prev")}
+                          disabled={activeSectionIndex <= 0}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <span className="max-w-[120px] truncate text-center text-sm font-medium">
+                          {activeSectionId
+                            ? structure[activeSectionIndex]?.name
+                            : "Sección actual"}
+                        </span>
+                        <Button
+                          type="button"
+                          size="icon-sm"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-md"
+                          onClick={() => goToAdjacentSection("next")}
+                          disabled={
+                            activeSectionIndex < 0 ||
+                            activeSectionIndex >= structure.length - 1
+                          }
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="w-full">
+                        <Button
+                          type="button"
+                          className="h-full w-full rounded-none border-0 bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700"
+                          onClick={handlePublish}
+                        >
+                          Publicar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="relative flex-1 overflow-hidden">
                     <div
                       className={cn(
-                        "absolute inset-0 space-y-4 overflow-y-auto p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden transition-transform duration-300 ease-out",
+                        "absolute inset-0 flex flex-col gap-4 overflow-y-auto p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden transition-transform duration-300 ease-out",
                         isSectionSettingsView
                           ? "-translate-x-full"
                           : "translate-x-0",
@@ -1029,23 +1131,22 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                         </p>
                       ) : null}
 
-                      <div className="space-y-3 rounded-lg border p-3">
-                        <button
+                      <div className="flex justify-end">
+                        <Button
                           type="button"
-                          className="flex w-full items-center justify-between text-left text-xs font-medium tracking-wide text-muted-foreground uppercase"
-                          onClick={() =>
-                            setIsSectionConfigOpen((previous) => !previous)
-                          }
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setIsSectionSettingsView(true)}
                         >
+                          Configurar secciones
+                        </Button>
+                      </div>
+
+                      <div className="order-2 space-y-3 rounded-lg border p-3">
+                        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                           Configuracion de seccion
-                          <ChevronDown
-                            className={`h-4 w-4 transition-transform duration-300 ${isSectionConfigOpen ? "rotate-180" : ""}`}
-                          />
-                        </button>
-                        <div
-                          className={`grid transition-all duration-300 ease-out ${isSectionConfigOpen ? "mt-3 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
-                        >
-                          <div className="min-h-0 overflow-hidden space-y-3">
+                        </p>
+                        <div className="min-h-0 overflow-hidden space-y-3">
                             <div className="space-y-1.5">
                               <label className="text-xs font-medium text-muted-foreground">
                                 Seccion activa
@@ -1109,7 +1210,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <input
                                           type="radio"
                                           name={`${selectedSection.id}-gallery-variant`}
-                                          checked={selectedSectionGalleryVariant === "grid"}
+                                          checked={
+                                            selectedSectionGalleryVariant ===
+                                            "grid"
+                                          }
                                           onChange={() =>
                                             updateField(
                                               selectedSectionGalleryVariantKey,
@@ -1123,7 +1227,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <input
                                           type="radio"
                                           name={`${selectedSection.id}-gallery-variant`}
-                                          checked={selectedSectionGalleryVariant === "carousel"}
+                                          checked={
+                                            selectedSectionGalleryVariant ===
+                                            "carousel"
+                                          }
                                           onChange={() =>
                                             updateField(
                                               selectedSectionGalleryVariantKey,
@@ -1137,7 +1244,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <input
                                           type="radio"
                                           name={`${selectedSection.id}-gallery-variant`}
-                                          checked={selectedSectionGalleryVariant === "stacked"}
+                                          checked={
+                                            selectedSectionGalleryVariant ===
+                                            "stacked"
+                                          }
                                           onChange={() =>
                                             updateField(
                                               selectedSectionGalleryVariantKey,
@@ -1151,7 +1261,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <input
                                           type="radio"
                                           name={`${selectedSection.id}-gallery-variant`}
-                                          checked={selectedSectionGalleryVariant === "editorial"}
+                                          checked={
+                                            selectedSectionGalleryVariant ===
+                                            "editorial"
+                                          }
                                           onChange={() =>
                                             updateField(
                                               selectedSectionGalleryVariantKey,
@@ -1174,7 +1287,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             <input
                                               type="radio"
                                               name={`${selectedSection.id}-gallery-grid-shape`}
-                                              checked={selectedSectionGalleryGridImageShape === "square"}
+                                              checked={
+                                                selectedSectionGalleryGridImageShape ===
+                                                "square"
+                                              }
                                               onChange={() =>
                                                 updateField(
                                                   selectedSectionGalleryGridImageShapeKey,
@@ -1188,7 +1304,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             <input
                                               type="radio"
                                               name={`${selectedSection.id}-gallery-grid-shape`}
-                                              checked={selectedSectionGalleryGridImageShape === "portrait"}
+                                              checked={
+                                                selectedSectionGalleryGridImageShape ===
+                                                "portrait"
+                                              }
                                               onChange={() =>
                                                 updateField(
                                                   selectedSectionGalleryGridImageShapeKey,
@@ -1202,7 +1321,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             <input
                                               type="radio"
                                               name={`${selectedSection.id}-gallery-grid-shape`}
-                                              checked={selectedSectionGalleryGridImageShape === "landscape"}
+                                              checked={
+                                                selectedSectionGalleryGridImageShape ===
+                                                "landscape"
+                                              }
                                               onChange={() =>
                                                 updateField(
                                                   selectedSectionGalleryGridImageShapeKey,
@@ -1225,7 +1347,11 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         </label>
                                         <div className="space-y-1.5">
                                           <label className="text-xs font-medium text-muted-foreground">
-                                            Opacidad de fondo ({selectedSectionGalleryCaptionContainerOpacity}%)
+                                            Opacidad de fondo (
+                                            {
+                                              selectedSectionGalleryCaptionContainerOpacity
+                                            }
+                                            %)
                                           </label>
                                           <div className="grid grid-cols-[1fr_84px] gap-2">
                                             <Input
@@ -1233,7 +1359,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                               min={0}
                                               max={100}
                                               step={1}
-                                              value={selectedSectionGalleryCaptionContainerOpacity}
+                                              value={
+                                                selectedSectionGalleryCaptionContainerOpacity
+                                              }
                                               onChange={(event) =>
                                                 updateField(
                                                   selectedSectionGalleryCaptionContainerOpacityKey,
@@ -1246,7 +1374,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                               min={0}
                                               max={100}
                                               step={1}
-                                              value={selectedSectionGalleryCaptionContainerOpacity}
+                                              value={
+                                                selectedSectionGalleryCaptionContainerOpacity
+                                              }
                                               onChange={(event) =>
                                                 updateField(
                                                   selectedSectionGalleryCaptionContainerOpacityKey,
@@ -1257,81 +1387,49 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                           </div>
                                         </div>
                                         <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Padding X ({selectedSectionGalleryCaptionContainerPaddingX}px)
-                                          </label>
-                                          <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <Input
-                                              type="range"
-                                              min={0}
-                                              max={80}
-                                              step={1}
-                                              value={selectedSectionGalleryCaptionContainerPaddingX}
-                                              onChange={(event) =>
-                                                updateField(
-                                                  selectedSectionGalleryCaptionContainerPaddingXKey,
-                                                  event.target.value,
-                                                )
-                                              }
-                                            />
-                                            <Input
-                                              type="number"
-                                              min={0}
-                                              max={80}
-                                              step={1}
-                                              value={selectedSectionGalleryCaptionContainerPaddingX}
-                                              onChange={(event) =>
-                                                updateField(
-                                                  selectedSectionGalleryCaptionContainerPaddingXKey,
-                                                  event.target.value,
-                                                )
-                                              }
-                                            />
-                                          </div>
+                                          <SliderValueControl
+                                            label="Padding X"
+                                            value={selectedSectionGalleryCaptionContainerPaddingX}
+                                            min={0}
+                                            max={80}
+                                            onChange={(value) =>
+                                              updateField(
+                                                selectedSectionGalleryCaptionContainerPaddingXKey,
+                                                String(value),
+                                              )
+                                            }
+                                          />
                                         </div>
                                         <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Padding Y ({selectedSectionGalleryCaptionContainerPaddingY}px)
-                                          </label>
-                                          <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <Input
-                                              type="range"
-                                              min={0}
-                                              max={80}
-                                              step={1}
-                                              value={selectedSectionGalleryCaptionContainerPaddingY}
-                                              onChange={(event) =>
-                                                updateField(
-                                                  selectedSectionGalleryCaptionContainerPaddingYKey,
-                                                  event.target.value,
-                                                )
-                                              }
-                                            />
-                                            <Input
-                                              type="number"
-                                              min={0}
-                                              max={80}
-                                              step={1}
-                                              value={selectedSectionGalleryCaptionContainerPaddingY}
-                                              onChange={(event) =>
-                                                updateField(
-                                                  selectedSectionGalleryCaptionContainerPaddingYKey,
-                                                  event.target.value,
-                                                )
-                                              }
-                                            />
-                                          </div>
+                                          <SliderValueControl
+                                            label="Padding Y"
+                                            value={selectedSectionGalleryCaptionContainerPaddingY}
+                                            min={0}
+                                            max={80}
+                                            onChange={(value) =>
+                                              updateField(
+                                                selectedSectionGalleryCaptionContainerPaddingYKey,
+                                                String(value),
+                                              )
+                                            }
+                                          />
                                         </div>
                                       </div>
                                     ) : null}
 
-                                    {(selectedSectionGalleryVariant === "carousel" ||
-                                      selectedSectionGalleryVariant === "stacked") &&
+                                    {(selectedSectionGalleryVariant ===
+                                      "carousel" ||
+                                      selectedSectionGalleryVariant ===
+                                        "stacked") &&
                                     selectedSectionGalleryAutoplaySecondsKey ? (
                                       <div className="space-y-2">
                                         <div className="space-y-1.5">
                                           <label className="text-xs font-medium text-muted-foreground">
-                                            Autoplay ({selectedSectionGalleryAutoplaySeconds}s)
+                                            Autoplay (
+                                            {
+                                              selectedSectionGalleryAutoplaySeconds
+                                            }
+                                            s)
                                           </label>
                                           <div className="grid grid-cols-[1fr_84px] gap-2">
                                             <Input
@@ -1339,7 +1437,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                               min={0}
                                               max={10}
                                               step={1}
-                                              value={selectedSectionGalleryAutoplaySeconds}
+                                              value={
+                                                selectedSectionGalleryAutoplaySeconds
+                                              }
                                               onChange={(event) =>
                                                 updateField(
                                                   selectedSectionGalleryAutoplaySecondsKey,
@@ -1352,7 +1452,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                               min={0}
                                               max={10}
                                               step={1}
-                                              value={selectedSectionGalleryAutoplaySeconds}
+                                              value={
+                                                selectedSectionGalleryAutoplaySeconds
+                                              }
                                               onChange={(event) =>
                                                 updateField(
                                                   selectedSectionGalleryAutoplaySecondsKey,
@@ -1398,7 +1500,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                                   </p>
                                                   <Input
                                                     placeholder="https://... (URL imagen)"
-                                                    value={textMap[imageKey] ?? ""}
+                                                    value={
+                                                      textMap[imageKey] ?? ""
+                                                    }
                                                     onChange={(event) =>
                                                       updateField(
                                                         imageKey,
@@ -1408,7 +1512,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                                   />
                                                   <Input
                                                     placeholder="Titulo"
-                                                    value={textMap[titleKey] ?? ""}
+                                                    value={
+                                                      textMap[titleKey] ?? ""
+                                                    }
                                                     onChange={(event) =>
                                                       updateField(
                                                         titleKey,
@@ -1439,7 +1545,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                                   {mode === "title-subtitle" ? (
                                                     <Input
                                                       placeholder="Subtitulo"
-                                                      value={textMap[subtitleKey] ?? ""}
+                                                      value={
+                                                        textMap[subtitleKey] ??
+                                                        ""
+                                                      }
                                                       onChange={(event) =>
                                                         updateField(
                                                           subtitleKey,
@@ -1853,197 +1962,148 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                     </div>
 
                                     {selectedSectionPaddingMode === "all" ? (
-                                      <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-muted-foreground">
-                                          Padding
-                                        </label>
-                                        <Input
-                                          type="number"
-                                          min={0}
-                                          max={120}
-                                          step={1}
-                                          value={
+                                      <SliderValueControl
+                                        label="Padding"
+                                        value={getNumberValue(
+                                          textMap[
+                                            getLandingFieldPaddingKey(
+                                              selectedSectionPaddingFieldId,
+                                            )
+                                          ],
+                                          0,
+                                        )}
+                                        onChange={(value) =>
+                                          updateField(
+                                            getLandingFieldPaddingKey(
+                                              selectedSectionPaddingFieldId,
+                                            ),
+                                            String(value),
+                                          )
+                                        }
+                                      />
+                                    ) : null}
+
+                                    {selectedSectionPaddingMode === "axis" ? (
+                                      <div className="grid grid-cols-1 gap-2">
+                                        <SliderValueControl
+                                          label="Px"
+                                          value={getNumberValue(
                                             textMap[
-                                              getLandingFieldPaddingKey(
+                                              getLandingFieldPaddingXKey(
                                                 selectedSectionPaddingFieldId,
                                               )
-                                            ] ?? ""
-                                          }
-                                          onChange={(event) =>
+                                            ],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
                                             updateField(
-                                              getLandingFieldPaddingKey(
+                                              getLandingFieldPaddingXKey(
                                                 selectedSectionPaddingFieldId,
                                               ),
-                                              event.target.value,
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Py"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldPaddingYKey(
+                                                selectedSectionPaddingFieldId,
+                                              )
+                                            ],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldPaddingYKey(
+                                                selectedSectionPaddingFieldId,
+                                              ),
+                                              String(value),
                                             )
                                           }
                                         />
                                       </div>
                                     ) : null}
 
-                                    {selectedSectionPaddingMode === "axis" ? (
-                                      <div className="grid grid-cols-[1fr_1fr] gap-2">
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Px
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                getLandingFieldPaddingXKey(
-                                                  selectedSectionPaddingFieldId,
-                                                )
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                getLandingFieldPaddingXKey(
-                                                  selectedSectionPaddingFieldId,
-                                                ),
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Py
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                getLandingFieldPaddingYKey(
-                                                  selectedSectionPaddingFieldId,
-                                                )
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                getLandingFieldPaddingYKey(
-                                                  selectedSectionPaddingFieldId,
-                                                ),
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      </div>
-                                    ) : null}
-
                                     {selectedSectionPaddingMode === "sides" ? (
-                                      <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-2">
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Pt
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                getLandingFieldPaddingTopKey(
-                                                  selectedSectionPaddingFieldId,
-                                                )
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                getLandingFieldPaddingTopKey(
-                                                  selectedSectionPaddingFieldId,
-                                                ),
-                                                event.target.value,
+                                      <div className="grid grid-cols-1 gap-2">
+                                        <SliderValueControl
+                                          label="Pt"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldPaddingTopKey(
+                                                selectedSectionPaddingFieldId,
                                               )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Pr
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                getLandingFieldPaddingRightKey(
-                                                  selectedSectionPaddingFieldId,
-                                                )
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                getLandingFieldPaddingRightKey(
-                                                  selectedSectionPaddingFieldId,
-                                                ),
-                                                event.target.value,
+                                            ],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldPaddingTopKey(
+                                                selectedSectionPaddingFieldId,
+                                              ),
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Pr"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldPaddingRightKey(
+                                                selectedSectionPaddingFieldId,
                                               )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Pb
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                getLandingFieldPaddingBottomKey(
-                                                  selectedSectionPaddingFieldId,
-                                                )
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                getLandingFieldPaddingBottomKey(
-                                                  selectedSectionPaddingFieldId,
-                                                ),
-                                                event.target.value,
+                                            ],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldPaddingRightKey(
+                                                selectedSectionPaddingFieldId,
+                                              ),
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Pb"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldPaddingBottomKey(
+                                                selectedSectionPaddingFieldId,
                                               )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Pl
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                getLandingFieldPaddingLeftKey(
-                                                  selectedSectionPaddingFieldId,
-                                                )
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                getLandingFieldPaddingLeftKey(
-                                                  selectedSectionPaddingFieldId,
-                                                ),
-                                                event.target.value,
+                                            ],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldPaddingBottomKey(
+                                                selectedSectionPaddingFieldId,
+                                              ),
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Pl"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldPaddingLeftKey(
+                                                selectedSectionPaddingFieldId,
                                               )
-                                            }
-                                          />
-                                        </div>
+                                            ],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldPaddingLeftKey(
+                                                selectedSectionPaddingFieldId,
+                                              ),
+                                              String(value),
+                                            )
+                                          }
+                                        />
                                       </div>
                                     ) : null}
                                   </div>
@@ -2179,44 +2239,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                               </>
                             ) : null}
 
-                            <div className="flex justify-end">
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                className="text-destructive hover:text-destructive"
-                                onClick={() => {
-                                  if (!selectedSection) {
-                                    return;
-                                  }
-                                  removeSection(selectedSection.id);
-                                }}
-                                disabled={
-                                  !selectedSection || structure.length <= 1
-                                }
-                              >
-                                {/* <Trash2 className="h-4 w-4" />
-                                    <span className="sr-only">
-                                      Remove section
-                                    </span> */}
-                                Eliminar Sección
-                              </Button>
-                            </div>
-
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="w-full"
-                              onClick={() => setIsSectionSettingsView(true)}
-                            >
-                              Ir a configuracion de secciones
-                            </Button>
-                          </div>
                         </div>
                       </div>
 
-                      <div className="space-y-3 rounded-lg border p-3">
+                      <div className="order-1 space-y-3 rounded-lg border p-3">
                         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                           Navegacion de elementos
                         </p>
@@ -2250,7 +2276,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                         </div>
                       </div>
 
-                      <div className="space-y-3 rounded-lg border p-3">
+                      <div className="order-3 space-y-3 rounded-lg border p-3">
                         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                           Campo seleccionado
                         </p>
@@ -2269,7 +2295,32 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                               <label className="text-xs font-medium text-muted-foreground">
                                 Texto
                               </label>
-                              {selectedFieldContext.field.multiline ? (
+                              {selectedFieldContext.section.type === "video" &&
+                              selectedFieldContext.field.key === "url" ? (
+                                <select
+                                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                                  value={
+                                    VIDEO_ASSET_OPTIONS.includes(
+                                      (textMap[selectedFieldContext.key] ??
+                                        "") as (typeof VIDEO_ASSET_OPTIONS)[number],
+                                    )
+                                      ? (textMap[selectedFieldContext.key] as (typeof VIDEO_ASSET_OPTIONS)[number])
+                                      : "/assets/vid2.mp4"
+                                  }
+                                  onChange={(event) =>
+                                    updateField(
+                                      selectedFieldContext.key,
+                                      event.target.value,
+                                    )
+                                  }
+                                >
+                                  {VIDEO_ASSET_OPTIONS.map((videoPath) => (
+                                    <option key={videoPath} value={videoPath}>
+                                      {videoPath.replace("/assets/", "")}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : selectedFieldContext.field.multiline ? (
                                 <Textarea
                                   value={
                                     textMap[selectedFieldContext.key] ?? ""
@@ -2366,8 +2417,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                 <select
                                   className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                                   value={
-                                    textMap[selectedFieldContext.fontFamilyKey] ??
-                                    "montserrat"
+                                    textMap[
+                                      selectedFieldContext.fontFamilyKey
+                                    ] ?? "montserrat"
                                   }
                                   onChange={(event) =>
                                     updateField(
@@ -2389,8 +2441,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                 <select
                                   className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                                   value={
-                                    textMap[selectedFieldContext.fontWeightKey] ??
-                                    "500"
+                                    textMap[
+                                      selectedFieldContext.fontWeightKey
+                                    ] ?? "500"
                                   }
                                   onChange={(event) =>
                                     updateField(
@@ -2696,171 +2749,104 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                     </div>
 
                                     {paddingMode === "all" ? (
-                                      <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-muted-foreground">
-                                          Padding
-                                        </label>
-                                        <Input
-                                          type="number"
-                                          min={0}
-                                          max={120}
-                                          step={1}
-                                          value={
-                                            textMap[
-                                              selectedFieldContext.paddingKey
-                                            ] ?? ""
-                                          }
-                                          onChange={(event) =>
+                                      <SliderValueControl
+                                        label="Padding"
+                                        value={getNumberValue(
+                                          textMap[selectedFieldContext.paddingKey],
+                                          0,
+                                        )}
+                                        onChange={(value) =>
+                                          updateField(
+                                            selectedFieldContext.paddingKey,
+                                            String(value),
+                                          )
+                                        }
+                                      />
+                                    ) : null}
+                                    {paddingMode === "axis" ? (
+                                      <div className="grid grid-cols-1 gap-2">
+                                        <SliderValueControl
+                                          label="Px"
+                                          value={getNumberValue(
+                                            textMap[selectedFieldContext.paddingXKey],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
                                             updateField(
-                                              selectedFieldContext.paddingKey,
-                                              event.target.value,
+                                              selectedFieldContext.paddingXKey,
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Py"
+                                          value={getNumberValue(
+                                            textMap[selectedFieldContext.paddingYKey],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
+                                            updateField(
+                                              selectedFieldContext.paddingYKey,
+                                              String(value),
                                             )
                                           }
                                         />
                                       </div>
                                     ) : null}
-                                    {paddingMode === "axis" ? (
-                                      <div className="grid grid-cols-[1fr_1fr] gap-2">
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Px
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext.paddingXKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.paddingXKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Py
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext.paddingYKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.paddingYKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      </div>
-                                    ) : null}
                                     {paddingMode === "sides" ? (
-                                      <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-2">
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Pt
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext
-                                                  .paddingTopKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.paddingTopKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Pr
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext
-                                                  .paddingRightKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.paddingRightKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Pb
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext
-                                                  .paddingBottomKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.paddingBottomKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Pl
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext
-                                                  .paddingLeftKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.paddingLeftKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
+                                      <div className="grid grid-cols-1 gap-2">
+                                        <SliderValueControl
+                                          label="Pt"
+                                          value={getNumberValue(
+                                            textMap[selectedFieldContext.paddingTopKey],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
+                                            updateField(
+                                              selectedFieldContext.paddingTopKey,
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Pr"
+                                          value={getNumberValue(
+                                            textMap[selectedFieldContext.paddingRightKey],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
+                                            updateField(
+                                              selectedFieldContext.paddingRightKey,
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Pb"
+                                          value={getNumberValue(
+                                            textMap[selectedFieldContext.paddingBottomKey],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
+                                            updateField(
+                                              selectedFieldContext.paddingBottomKey,
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Pl"
+                                          value={getNumberValue(
+                                            textMap[selectedFieldContext.paddingLeftKey],
+                                            0,
+                                          )}
+                                          onChange={(value) =>
+                                            updateField(
+                                              selectedFieldContext.paddingLeftKey,
+                                              String(value),
+                                            )
+                                          }
+                                        />
                                       </div>
                                     ) : null}
                                   </div>
@@ -3008,47 +2994,6 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                           </Button>
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t p-4">
-                    <div className="w-full flex items-center gap-2">
-                      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-                        <Button
-                          type="button"
-                          size="xs"
-                          variant="ghost"
-                          onClick={() => goToAdjacentSection("prev")}
-                          disabled={activeSectionIndex <= 0}
-                        >
-                          <ChevronLeft />
-                        </Button>
-                        <span className="mx-auto w-40 truncate text-center text-sm text-muted-foreground">
-                          {activeSectionId
-                            ? structure[activeSectionIndex]?.name
-                            : "Sin seccion"}
-                        </span>
-                        <Button
-                          type="button"
-                          size="xs"
-                          variant="ghost"
-                          onClick={() => goToAdjacentSection("next")}
-                          disabled={
-                            activeSectionIndex < 0 ||
-                            activeSectionIndex >= structure.length - 1
-                          }
-                        >
-                          <ChevronRight />
-                        </Button>
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="ml-auto"
-                        onClick={handlePublish}
-                      >
-                        Publicar
-                      </Button>
                     </div>
                   </div>
                 </div>

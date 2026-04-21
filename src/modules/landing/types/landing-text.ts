@@ -121,7 +121,7 @@ export function getLandingFieldColor(textMap: LandingTextMap, fieldId: string) {
 export function getLandingFieldFontFamily(
   textMap: LandingTextMap,
   fieldId: string,
-) {
+): LandingFontFamily | null {
   const raw = textMap[getLandingFieldFontFamilyKey(fieldId)]?.trim();
   if (raw === "montserrat" || raw === "nunito" || raw === "fira-sans") {
     return raw;

@@ -28,7 +28,7 @@ cp .env.example .env
 2. Completar al menos estas variables en `.env`:
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=require"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=require&uselibpqcompat=true"
 BETTER_AUTH_SECRET=""
 BETTER_AUTH_URL="http://localhost:3000"
 CLOUDINARY_CLOUD_NAME=""
