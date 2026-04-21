@@ -220,7 +220,9 @@ function SliderValueControl({
 }: SliderValueControlProps) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      <label className="text-xs font-medium text-muted-foreground">
+        {label}
+      </label>
       <div className="grid grid-cols-[1fr_72px] gap-2">
         <input
           type="range"
@@ -324,9 +326,18 @@ const VIDEO_ASSET_OPTIONS = [
   "/assets/vid5.mp4",
   "/assets/vid6.mp4",
 ] as const;
+const APP_BACKGROUND_COLOR_OPTIONS = [
+  "#f6f7fb", // background
+  "#ffffff", // card
+  "#eef1f7", // secondary
+  "#f3f4f6", // muted
+  "#ede9fe", // accent
+  "#7c63c9", // brand-500
+  "#5a3e99", // brand-600
+  "#3b2a66", // brand-700
+] as const;
 
 export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
-  const RECENT_BG_COLORS_KEY = "koru_recent_section_bg_colors";
   const initialStructure = parseLandingStructure(initialTextMap);
   const [textMap, setTextMap] = useState<LandingTextMap>(() =>
     ensureLandingDefaults(initialTextMap),
@@ -334,7 +345,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
   const [structure, setStructure] =
     useState<LandingSectionInstance[]>(initialStructure);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
-    null,
+    initialStructure[0]?.id ?? null,
   );
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [newSectionType, setNewSectionType] =
@@ -344,25 +355,6 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
   const [statusMessage, setStatusMessage] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
   const [isSectionSettingsView, setIsSectionSettingsView] = useState(false);
-  const [recentBackgroundColors, setRecentBackgroundColors] = useState<
-    string[]
-  >(() => {
-    try {
-      if (typeof window === "undefined") {
-        return [];
-      }
-      const raw = window.localStorage.getItem(RECENT_BG_COLORS_KEY);
-      if (!raw) {
-        return [];
-      }
-      const parsed = JSON.parse(raw) as string[];
-      return parsed
-        .filter((item) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(item))
-        .slice(0, 8);
-    } catch {
-      return [];
-    }
-  });
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
   const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(
     null,
@@ -421,30 +413,11 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     };
   }, []);
 
-  function rememberBackgroundColor(color: string) {
-    if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color)) {
-      return;
-    }
-
-    setRecentBackgroundColors((previous) => {
-      const next = [color, ...previous.filter((item) => item !== color)].slice(
-        0,
-        8,
-      );
-      try {
-        window.localStorage.setItem(RECENT_BG_COLORS_KEY, JSON.stringify(next));
-      } catch {
-        // no-op
-      }
-      return next;
-    });
-  }
-
-  const selectedSection = useMemo(
-    () => structure.find((item) => item.id === selectedSectionId) ?? null,
-    [selectedSectionId, structure],
-  );
   const activeSectionId = selectedSectionId ?? structure[0]?.id ?? null;
+  const selectedSection = useMemo(
+    () => structure.find((item) => item.id === activeSectionId) ?? null,
+    [activeSectionId, structure],
+  );
   const activeSectionIndex = activeSectionId
     ? structure.findIndex((item) => item.id === activeSectionId)
     : -1;
@@ -1070,10 +1043,14 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                 </button>
                 <div className="flex h-full min-h-0 flex-col">
                   <div className="border-b">
-                    <div className="relative grid min-h-14 grid-cols-2 items-stretch">
-                      <span className="pointer-events-none absolute top-1/2 left-1/2 h-8 w-px -translate-x-1/2 -translate-y-1/2 bg-border" />
-
-                      <div className="flex items-center justify-center gap-4 px-2">
+                    <div
+                      className="h-14 w-full overflow-hidden"
+                      style={{ display: "flex", flexDirection: "row", flexWrap: "nowrap" }}
+                    >
+                      <div
+                        className="flex h-full min-w-0 items-center justify-center gap-4 border-r px-2"
+                        style={{ flex: "0 0 50%", maxWidth: "50%" }}
+                      >
                         <Button
                           type="button"
                           size="icon-sm"
@@ -1104,14 +1081,18 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                         </Button>
                       </div>
 
-                      <div className="w-full">
-                        <Button
+                      <div
+                        className="h-full min-w-0"
+                        style={{ flex: "0 0 50%", maxWidth: "50%" }}
+                      >
+                        <button
                           type="button"
-                          className="h-full w-full rounded-none border-0 bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700"
+                          className="block h-full w-full rounded-none border-0"
+                          style={{ backgroundColor: "#059669", color: "#ffffff" }}
                           onClick={handlePublish}
                         >
                           Publicar
-                        </Button>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1120,6 +1101,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                     <div
                       className={cn(
                         "absolute inset-0 flex flex-col gap-4 overflow-y-auto p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden transition-transform duration-300 ease-out",
+                        isSectionSettingsView && "hidden",
                         isSectionSettingsView
                           ? "-translate-x-full"
                           : "translate-x-0",
@@ -1142,55 +1124,35 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                         </Button>
                       </div>
 
-                      <div className="order-2 space-y-3 rounded-lg border p-3">
-                        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                          Configuracion de seccion
-                        </p>
-                        <div className="min-h-0 overflow-hidden space-y-3">
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-muted-foreground">
-                                Seccion activa
-                              </label>
-                              <select
-                                className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                                value={selectedSectionId ?? ""}
-                                onChange={(event) =>
-                                  focusSection(event.target.value)
-                                }
-                              >
-                                <option value="" disabled>
-                                  Seleccionar seccion
-                                </option>
-                                {structure.map((section) => (
-                                  <option key={section.id} value={section.id}>
-                                    {section.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-
-                            {selectedSection ? (
-                              <>
-                                <div className="space-y-1.5">
-                                  <label className="text-xs font-medium text-muted-foreground">
-                                    Nombre de seccion
-                                  </label>
-                                  <Input
-                                    value={selectedSection.name}
-                                    onChange={(event) =>
-                                      commitStructure(
-                                        structure.map((item) =>
-                                          item.id === selectedSection.id
-                                            ? {
-                                                ...item,
-                                                name: event.target.value,
-                                              }
-                                            : item,
-                                        ),
-                                      )
-                                    }
-                                  />
-                                </div>
+                      <div className="order-2 min-h-0 overflow-hidden space-y-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-muted-foreground">
+                            Seccion activa
+                          </label>
+                          <select
+                            className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                            value={selectedSectionId ?? ""}
+                            onChange={(event) =>
+                              focusSection(event.target.value)
+                            }
+                          >
+                            <option value="" disabled>
+                              Seleccionar seccion
+                            </option>
+                            {structure.map((section) => (
+                              <option key={section.id} value={section.id}>
+                                {section.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {selectedSection ? (
+                          <>
+                            <details className="rounded-md border p-2" open>
+                              <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                Atributos generales de seccion
+                              </summary>
+                              <div className="mt-2 space-y-3">
                                 <p className="text-xs text-muted-foreground">
                                   Tipo:{" "}
                                   {
@@ -1389,7 +1351,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <div className="space-y-1.5">
                                           <SliderValueControl
                                             label="Padding X"
-                                            value={selectedSectionGalleryCaptionContainerPaddingX}
+                                            value={
+                                              selectedSectionGalleryCaptionContainerPaddingX
+                                            }
                                             min={0}
                                             max={80}
                                             onChange={(value) =>
@@ -1403,7 +1367,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <div className="space-y-1.5">
                                           <SliderValueControl
                                             label="Padding Y"
-                                            value={selectedSectionGalleryCaptionContainerPaddingY}
+                                            value={
+                                              selectedSectionGalleryCaptionContainerPaddingY
+                                            }
                                             min={0}
                                             max={80}
                                             onChange={(value) =>
@@ -1792,9 +1758,6 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                                 selectedSectionBackgroundColorKey,
                                                 event.target.value,
                                               );
-                                              rememberBackgroundColor(
-                                                event.target.value,
-                                              );
                                             }}
                                           />
                                           <Input
@@ -1810,23 +1773,37 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                                 event.target.value,
                                               )
                                             }
-                                            onBlur={(event) =>
-                                              rememberBackgroundColor(
-                                                event.target.value,
-                                              )
-                                            }
                                           />
                                         </div>
-                                        {recentBackgroundColors.length > 0 ? (
-                                          <div className="flex flex-wrap gap-1.5">
-                                            {recentBackgroundColors.map(
-                                              (color) => (
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {APP_BACKGROUND_COLOR_OPTIONS.map(
+                                            (color) => {
+                                              const isActive =
+                                                (
+                                                  textMap[
+                                                    selectedSectionBackgroundColorKey
+                                                  ] ?? ""
+                                                )
+                                                  .trim()
+                                                  .toLowerCase() ===
+                                                color.toLowerCase();
+
+                                              return (
                                                 <button
                                                   key={color}
                                                   type="button"
-                                                  className="h-6 w-6 rounded border border-black/20"
+                                                  aria-label={`Color ${color}`}
+                                                  className={cn(
+                                                    "rounded-sm border border-black/30",
+                                                    isActive &&
+                                                      "ring-2 ring-primary ring-offset-1",
+                                                  )}
                                                   style={{
                                                     backgroundColor: color,
+                                                    width: "18px",
+                                                    height: "18px",
+                                                    minWidth: "18px",
+                                                    display: "inline-block",
                                                   }}
                                                   title={color}
                                                   onClick={() =>
@@ -1836,10 +1813,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                                     )
                                                   }
                                                 />
-                                              ),
-                                            )}
-                                          </div>
-                                        ) : null}
+                                              );
+                                            },
+                                          )}
+                                        </div>
                                       </div>
                                     ) : null}
 
@@ -2108,138 +2085,135 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                     ) : null}
                                   </div>
                                 ) : null}
+                              </div>
+                            </details>
 
-                                <div className="space-y-2 rounded-md border p-2">
-                                  <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                    Elementos de la seccion
-                                  </p>
+                            <div className="space-y-2 rounded-md border p-2">
+                              <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                Elementos de la seccion
+                              </p>
 
-                                  {activeSectionItems.length > 0 ? (
-                                    activeSectionItems.map((item) => {
-                                      const isExtra = item.kind === "extra";
-                                      const extraId = item.extraId;
+                              {activeSectionItems.length > 0 ? (
+                                activeSectionItems.map((item) => {
+                                  const isExtra = item.kind === "extra";
+                                  const extraId = item.extraId;
 
-                                      return (
-                                        <div
-                                          key={item.id}
-                                          draggable
-                                          onDragStart={(event) => {
-                                            setDraggedItemId(item.id);
-                                            event.dataTransfer.setData(
-                                              "text/plain",
-                                              item.id,
-                                            );
-                                            event.dataTransfer.effectAllowed =
-                                              "move";
-                                          }}
-                                          onDragOver={(event) => {
-                                            event.preventDefault();
-                                            event.dataTransfer.dropEffect =
-                                              "move";
-                                            setDragOverItemId(item.id);
-                                          }}
-                                          onDrop={(event) => {
-                                            event.preventDefault();
-                                            const sourceId =
-                                              draggedItemId ||
-                                              event.dataTransfer.getData(
-                                                "text/plain",
-                                              );
-                                            if (sourceId) {
-                                              reorderSectionItems(
-                                                selectedSection.id,
-                                                sourceId,
-                                                item.id,
-                                              );
-                                            }
-                                            setDraggedItemId(null);
-                                            setDragOverItemId(null);
-                                          }}
-                                          onDragEnd={() => {
-                                            setDraggedItemId(null);
-                                            setDragOverItemId(null);
-                                          }}
-                                          className={cn(
-                                            "flex items-center gap-2 rounded-md border px-2 py-1.5",
-                                            dragOverItemId === item.id &&
-                                              "border-primary bg-primary/5",
-                                          )}
+                                  return (
+                                    <div
+                                      key={item.id}
+                                      draggable
+                                      onDragStart={(event) => {
+                                        setDraggedItemId(item.id);
+                                        event.dataTransfer.setData(
+                                          "text/plain",
+                                          item.id,
+                                        );
+                                        event.dataTransfer.effectAllowed =
+                                          "move";
+                                      }}
+                                      onDragOver={(event) => {
+                                        event.preventDefault();
+                                        event.dataTransfer.dropEffect = "move";
+                                        setDragOverItemId(item.id);
+                                      }}
+                                      onDrop={(event) => {
+                                        event.preventDefault();
+                                        const sourceId =
+                                          draggedItemId ||
+                                          event.dataTransfer.getData(
+                                            "text/plain",
+                                          );
+                                        if (sourceId) {
+                                          reorderSectionItems(
+                                            selectedSection.id,
+                                            sourceId,
+                                            item.id,
+                                          );
+                                        }
+                                        setDraggedItemId(null);
+                                        setDragOverItemId(null);
+                                      }}
+                                      onDragEnd={() => {
+                                        setDraggedItemId(null);
+                                        setDragOverItemId(null);
+                                      }}
+                                      className={cn(
+                                        "flex items-center gap-2 rounded-md border px-2 py-1.5",
+                                        dragOverItemId === item.id &&
+                                          "border-primary bg-primary/5",
+                                      )}
+                                    >
+                                      <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" />
+                                      <button
+                                        type="button"
+                                        className="min-w-0 flex-1 truncate text-left text-xs"
+                                        onClick={() =>
+                                          setSelectedFieldId(item.textKey)
+                                        }
+                                      >
+                                        {item.label}
+                                      </button>
+                                      {isExtra && extraId ? (
+                                        <Button
+                                          type="button"
+                                          size="icon-sm"
+                                          variant="ghost"
+                                          className="text-destructive hover:text-destructive"
+                                          onClick={() =>
+                                            removeExtraElement(
+                                              selectedSection.id,
+                                              extraId,
+                                            )
+                                          }
                                         >
-                                          <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" />
-                                          <button
-                                            type="button"
-                                            className="min-w-0 flex-1 truncate text-left text-xs"
-                                            onClick={() =>
-                                              setSelectedFieldId(item.textKey)
-                                            }
-                                          >
-                                            {item.label}
-                                          </button>
-                                          {isExtra && extraId ? (
-                                            <Button
-                                              type="button"
-                                              size="icon-sm"
-                                              variant="ghost"
-                                              className="text-destructive hover:text-destructive"
-                                              onClick={() =>
-                                                removeExtraElement(
-                                                  selectedSection.id,
-                                                  extraId,
-                                                )
-                                              }
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                              <span className="sr-only">
-                                                Remove element
-                                              </span>
-                                            </Button>
-                                          ) : (
-                                            <Badge variant="secondary">
-                                              Base
-                                            </Badge>
-                                          )}
-                                        </div>
-                                      );
-                                    })
-                                  ) : (
-                                    <p className="text-xs text-muted-foreground">
-                                      No hay elementos extra en esta seccion.
-                                    </p>
-                                  )}
+                                          <Trash2 className="h-4 w-4" />
+                                          <span className="sr-only">
+                                            Remove element
+                                          </span>
+                                        </Button>
+                                      ) : (
+                                        <Badge variant="secondary">Base</Badge>
+                                      )}
+                                    </div>
+                                  );
+                                })
+                              ) : (
+                                <p className="text-xs text-muted-foreground">
+                                  No hay elementos extra en esta seccion.
+                                </p>
+                              )}
 
-                                  <div className="grid grid-cols-[1fr_auto] gap-2">
-                                    <select
-                                      className="h-9 rounded-md border bg-background px-3 text-sm"
-                                      value={newExtraType}
-                                      onChange={(event) =>
-                                        setNewExtraType(
-                                          event.target
-                                            .value as SectionExtraElementType,
-                                        )
-                                      }
-                                    >
-                                      <option value="title">Titulo</option>
-                                      <option value="text">Texto</option>
-                                      <option value="button">Boton</option>
-                                    </select>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      onClick={() =>
-                                        addExtraElement(
-                                          selectedSection.id,
-                                          newExtraType,
-                                        )
-                                      }
-                                    >
-                                      Agregar
-                                    </Button>
-                                  </div>
-                                </div>
-                              </>
-                            ) : null}
-
-                        </div>
+                              <div className="grid grid-cols-[1fr_auto] gap-2">
+                                <select
+                                  className="h-9 rounded-md border bg-background px-3 text-sm"
+                                  value={newExtraType}
+                                  onChange={(event) =>
+                                    setNewExtraType(
+                                      event.target
+                                        .value as SectionExtraElementType,
+                                    )
+                                  }
+                                >
+                                  <option value="title">Titulo</option>
+                                  <option value="text">Texto</option>
+                                  <option value="button">Boton</option>
+                                </select>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() =>
+                                    addExtraElement(
+                                      selectedSection.id,
+                                      newExtraType,
+                                    )
+                                  }
+                                >
+                                  Agregar
+                                </Button>
+                              </div>
+                            </div>
+                          </>
+                        ) : null}
                       </div>
 
                       <div className="order-1 space-y-3 rounded-lg border p-3">
@@ -2304,7 +2278,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                       (textMap[selectedFieldContext.key] ??
                                         "") as (typeof VIDEO_ASSET_OPTIONS)[number],
                                     )
-                                      ? (textMap[selectedFieldContext.key] as (typeof VIDEO_ASSET_OPTIONS)[number])
+                                      ? (textMap[
+                                          selectedFieldContext.key
+                                        ] as (typeof VIDEO_ASSET_OPTIONS)[number])
                                       : "/assets/vid2.mp4"
                                   }
                                   onChange={(event) =>
@@ -2752,7 +2728,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                       <SliderValueControl
                                         label="Padding"
                                         value={getNumberValue(
-                                          textMap[selectedFieldContext.paddingKey],
+                                          textMap[
+                                            selectedFieldContext.paddingKey
+                                          ],
                                           0,
                                         )}
                                         onChange={(value) =>
@@ -2768,7 +2746,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <SliderValueControl
                                           label="Px"
                                           value={getNumberValue(
-                                            textMap[selectedFieldContext.paddingXKey],
+                                            textMap[
+                                              selectedFieldContext.paddingXKey
+                                            ],
                                             0,
                                           )}
                                           onChange={(value) =>
@@ -2781,7 +2761,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <SliderValueControl
                                           label="Py"
                                           value={getNumberValue(
-                                            textMap[selectedFieldContext.paddingYKey],
+                                            textMap[
+                                              selectedFieldContext.paddingYKey
+                                            ],
                                             0,
                                           )}
                                           onChange={(value) =>
@@ -2798,7 +2780,9 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <SliderValueControl
                                           label="Pt"
                                           value={getNumberValue(
-                                            textMap[selectedFieldContext.paddingTopKey],
+                                            textMap[
+                                              selectedFieldContext.paddingTopKey
+                                            ],
                                             0,
                                           )}
                                           onChange={(value) =>
@@ -2811,7 +2795,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <SliderValueControl
                                           label="Pr"
                                           value={getNumberValue(
-                                            textMap[selectedFieldContext.paddingRightKey],
+                                            textMap[
+                                              selectedFieldContext
+                                                .paddingRightKey
+                                            ],
                                             0,
                                           )}
                                           onChange={(value) =>
@@ -2824,7 +2811,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <SliderValueControl
                                           label="Pb"
                                           value={getNumberValue(
-                                            textMap[selectedFieldContext.paddingBottomKey],
+                                            textMap[
+                                              selectedFieldContext
+                                                .paddingBottomKey
+                                            ],
                                             0,
                                           )}
                                           onChange={(value) =>
@@ -2837,7 +2827,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                         <SliderValueControl
                                           label="Pl"
                                           value={getNumberValue(
-                                            textMap[selectedFieldContext.paddingLeftKey],
+                                            textMap[
+                                              selectedFieldContext
+                                                .paddingLeftKey
+                                            ],
                                             0,
                                           )}
                                           onChange={(value) =>
@@ -2879,6 +2872,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                     <div
                       className={cn(
                         "absolute inset-0 space-y-4 overflow-y-auto p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden transition-transform duration-300 ease-out",
+                        !isSectionSettingsView && "hidden",
                         isSectionSettingsView
                           ? "translate-x-0"
                           : "translate-x-full",
