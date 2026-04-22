@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   SlidersHorizontal,
   ChevronRight,
@@ -53,17 +53,6 @@ import {
   type LandingSectionType,
 } from "@/modules/landing/config/landing-sections";
 import {
-  getLandingFieldColorKey,
-  getLandingFieldFontFamilyKey,
-  getLandingFieldFontWeightKey,
-  getLandingFieldMarginKey,
-  getLandingFieldMarginLeftKey,
-  getLandingFieldMarginModeKey,
-  getLandingFieldMarginRightKey,
-  getLandingFieldMarginTopKey,
-  getLandingFieldMarginXKey,
-  getLandingFieldMarginYKey,
-  getLandingFieldMarginBottomKey,
   getLandingFieldPaddingKey,
   getLandingFieldPaddingBottomKey,
   getLandingFieldPaddingLeftKey,
@@ -82,37 +71,6 @@ type LandingTextMap = Record<string, string>;
 
 type CmsLandingEditorProps = {
   initialTextMap: LandingTextMap;
-};
-
-type SelectedFieldContext = {
-  key: string;
-  sizeKey: string;
-  colorKey: string;
-  fontFamilyKey: string;
-  fontWeightKey: string;
-  marginKey: string;
-  marginModeKey: string;
-  marginXKey: string;
-  marginYKey: string;
-  marginTopKey: string;
-  marginRightKey: string;
-  marginBottomKey: string;
-  marginLeftKey: string;
-  paddingKey: string;
-  paddingModeKey: string;
-  paddingXKey: string;
-  paddingYKey: string;
-  paddingTopKey: string;
-  paddingRightKey: string;
-  paddingBottomKey: string;
-  paddingLeftKey: string;
-  section: LandingSectionInstance;
-  field: {
-    key: string;
-    label: string;
-    multiline?: boolean;
-    defaultSize: number;
-  };
 };
 
 type SectionItem = {
@@ -210,6 +168,69 @@ type SliderValueControlProps = {
   onChange: (value: number) => void;
 };
 
+type PanelRangeInputProps = {
+  value: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  onChange: (value: number) => void;
+  className?: string;
+};
+
+function PanelRangeInput({
+  value,
+  min = 0,
+  max = 100,
+  step = 1,
+  onChange,
+  className,
+}: PanelRangeInputProps) {
+  const safeValue = Number.isFinite(value) ? clamp(value, min, max) : min;
+  const range = max - min;
+  const progress = range > 0 ? ((safeValue - min) / range) * 100 : 0;
+  const decimals = Number.isInteger(step)
+    ? 0
+    : (step.toString().split(".")[1]?.length ?? 0);
+
+  const handleAdjust = (direction: -1 | 1) => {
+    const next = clamp(safeValue + direction * step, min, max);
+    onChange(Number(next.toFixed(decimals)));
+  };
+
+  return (
+    <div className={cn("grid grid-cols-[26px_1fr_26px] items-center gap-2", className)}>
+      <button
+        type="button"
+        className="panel-range-stepper"
+        onClick={() => handleAdjust(-1)}
+        aria-label="Disminuir valor"
+      >
+        <Minus className="h-3.5 w-3.5" />
+      </button>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={safeValue}
+        className="panel-range-input"
+        style={{ "--panel-range-progress": `${progress}%` } as CSSProperties}
+        onChange={(event) =>
+          onChange(clamp(Number.parseFloat(event.target.value), min, max))
+        }
+      />
+      <button
+        type="button"
+        className="panel-range-stepper"
+        onClick={() => handleAdjust(1)}
+        aria-label="Aumentar valor"
+      >
+        <Plus className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
 function SliderValueControl({
   label,
   value,
@@ -224,16 +245,12 @@ function SliderValueControl({
         {label}
       </label>
       <div className="grid grid-cols-[1fr_72px] gap-2">
-        <input
-          type="range"
+        <PanelRangeInput
+          value={value}
           min={min}
           max={max}
           step={step}
-          value={value}
-          className="h-2 w-full cursor-pointer self-center accent-primary"
-          onChange={(event) =>
-            onChange(clamp(Number.parseInt(event.target.value, 10), min, max))
-          }
+          onChange={onChange}
         />
         <div className="flex h-9 items-center justify-center rounded-md border bg-muted/30 text-xs font-medium tabular-nums">
           {value}
@@ -313,6 +330,43 @@ function getGalleryGridImageShapeValue(raw: string | undefined) {
   return "landscape";
 }
 
+function getSectionVideoTextItemsKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__video_text_items");
+}
+
+function getSectionVideoTextFieldKey(
+  sectionId: string,
+  textId: string,
+  field:
+    | "content"
+    | "size"
+    | "color"
+    | "weight"
+    | "align"
+    | "position_x"
+    | "position_y",
+) {
+  return getSectionFieldKey(sectionId, `__video_text_${textId}_${field}`);
+}
+
+function parseSectionVideoTextItems(textMap: LandingTextMap, sectionId: string) {
+  const raw = textMap[getSectionVideoTextItemsKey(sectionId)];
+  if (!raw) {
+    return [] as string[];
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return [] as string[];
+    }
+    return parsed.filter(
+      (item): item is string => typeof item === "string" && item.trim().length > 0,
+    );
+  } catch {
+    return [] as string[];
+  }
+}
+
 const PREVIEW_ZOOM_MIN = 30;
 const PREVIEW_ZOOM_MAX = 200;
 const PREVIEW_ZOOM_STEP = 10;
@@ -365,6 +419,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
   const [previewViewportHeight, setPreviewViewportHeight] = useState(0);
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const nextExtraIdRef = useRef(1);
+  const nextVideoTextIdRef = useRef(1);
   const effectivePreviewScale = (previewZoom / 100) * PREVIEW_ZOOM_BASE_SCALE;
   const previewViewportHeightForContent =
     previewViewportHeight > 0 && effectivePreviewScale > 0
@@ -521,6 +576,62 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
         textMap[getLandingFieldPaddingModeKey(selectedSectionPaddingFieldId)],
       )
     : "all";
+  const selectedSectionVideoOverlayOpacityKey = selectedSection
+    ? getSectionFieldKey(selectedSection.id, "__video_overlay_opacity")
+    : null;
+  const selectedSectionVideoPositionXKey = selectedSection
+    ? getSectionFieldKey(selectedSection.id, "__video_position_x")
+    : null;
+  const selectedSectionVideoPositionYKey = selectedSection
+    ? getSectionFieldKey(selectedSection.id, "__video_position_y")
+    : null;
+  const selectedSectionVideoZoomKey = selectedSection
+    ? getSectionFieldKey(selectedSection.id, "__video_zoom")
+    : null;
+  const selectedSectionVideoOverlayOpacityRaw = Number.parseInt(
+    selectedSectionVideoOverlayOpacityKey
+      ? (textMap[selectedSectionVideoOverlayOpacityKey] ?? "")
+      : "",
+    10,
+  );
+  const selectedSectionVideoOverlayOpacity = Number.isFinite(
+    selectedSectionVideoOverlayOpacityRaw,
+  )
+    ? clamp(selectedSectionVideoOverlayOpacityRaw, 0, 100)
+    : 80;
+  const selectedSectionVideoPositionXRaw = Number.parseInt(
+    selectedSectionVideoPositionXKey
+      ? (textMap[selectedSectionVideoPositionXKey] ?? "")
+      : "",
+    10,
+  );
+  const selectedSectionVideoPositionX = Number.isFinite(
+    selectedSectionVideoPositionXRaw,
+  )
+    ? clamp(selectedSectionVideoPositionXRaw, 0, 100)
+    : 50;
+  const selectedSectionVideoPositionYRaw = Number.parseInt(
+    selectedSectionVideoPositionYKey
+      ? (textMap[selectedSectionVideoPositionYKey] ?? "")
+      : "",
+    10,
+  );
+  const selectedSectionVideoPositionY = Number.isFinite(
+    selectedSectionVideoPositionYRaw,
+  )
+    ? clamp(selectedSectionVideoPositionYRaw, 0, 100)
+    : 50;
+  const selectedSectionVideoZoomRaw = Number.parseFloat(
+    selectedSectionVideoZoomKey ? (textMap[selectedSectionVideoZoomKey] ?? "") : "",
+  );
+  const selectedSectionVideoZoom = Number.isFinite(selectedSectionVideoZoomRaw)
+    ? clamp(selectedSectionVideoZoomRaw, 1, 3)
+    : 1;
+  const selectedSectionVideoTextItems = useMemo(
+    () =>
+      selectedSection ? parseSectionVideoTextItems(textMap, selectedSection.id) : [],
+    [selectedSection, textMap],
+  );
   const selectedSectionGalleryVariant = selectedSectionGalleryVariantKey
     ? getGalleryVariantValue(textMap[selectedSectionGalleryVariantKey])
     : "grid";
@@ -563,101 +674,6 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     selectedSectionGalleryItemCaptionModeKeys.map((key) =>
       getGalleryCaptionModeValue(textMap[key]),
     );
-
-  const selectedFieldContext = useMemo<SelectedFieldContext | null>(() => {
-    if (!selectedFieldId) {
-      return null;
-    }
-
-    const match = selectedFieldId.match(/^section\.([^.]*)\.(.+)$/);
-    if (!match) {
-      return null;
-    }
-
-    const section = structure.find((item) => item.id === match[1]);
-    if (!section) {
-      return null;
-    }
-
-    const definition = landingSectionCatalog[section.type];
-    const field = definition.fields.find((item) => item.key === match[2]);
-    if (field) {
-      const styleFieldId =
-        section.type === "image-grid" && /^item\d+$/.test(field.key)
-          ? getSectionFieldKey(section.id, "__cards_text_style")
-          : selectedFieldId;
-
-      return {
-        key: selectedFieldId,
-        sizeKey: getLandingFieldSizeKey(styleFieldId),
-        colorKey: getLandingFieldColorKey(styleFieldId),
-        fontFamilyKey: getLandingFieldFontFamilyKey(styleFieldId),
-        fontWeightKey: getLandingFieldFontWeightKey(styleFieldId),
-        marginKey: getLandingFieldMarginKey(styleFieldId),
-        marginModeKey: getLandingFieldMarginModeKey(styleFieldId),
-        marginXKey: getLandingFieldMarginXKey(styleFieldId),
-        marginYKey: getLandingFieldMarginYKey(styleFieldId),
-        marginTopKey: getLandingFieldMarginTopKey(styleFieldId),
-        marginRightKey: getLandingFieldMarginRightKey(styleFieldId),
-        marginBottomKey: getLandingFieldMarginBottomKey(styleFieldId),
-        marginLeftKey: getLandingFieldMarginLeftKey(styleFieldId),
-        paddingKey: getLandingFieldPaddingKey(styleFieldId),
-        paddingModeKey: getLandingFieldPaddingModeKey(styleFieldId),
-        paddingXKey: getLandingFieldPaddingXKey(styleFieldId),
-        paddingYKey: getLandingFieldPaddingYKey(styleFieldId),
-        paddingTopKey: getLandingFieldPaddingTopKey(styleFieldId),
-        paddingRightKey: getLandingFieldPaddingRightKey(styleFieldId),
-        paddingBottomKey: getLandingFieldPaddingBottomKey(styleFieldId),
-        paddingLeftKey: getLandingFieldPaddingLeftKey(styleFieldId),
-        section,
-        field,
-      };
-    }
-
-    const extraMatch = match[2].match(/^extra\.([^.]*)\.text$/);
-    if (!extraMatch) {
-      return null;
-    }
-
-    const extras = parseSectionExtraElements(textMap, section.id);
-    const extra = extras.find((item) => item.id === extraMatch[1]);
-    if (!extra) {
-      return null;
-    }
-
-    const defaults = getExtraDefaults(extra.type);
-
-    return {
-      key: selectedFieldId,
-      sizeKey: getLandingFieldSizeKey(selectedFieldId),
-      colorKey: getLandingFieldColorKey(selectedFieldId),
-      fontFamilyKey: getLandingFieldFontFamilyKey(selectedFieldId),
-      fontWeightKey: getLandingFieldFontWeightKey(selectedFieldId),
-      marginKey: getLandingFieldMarginKey(selectedFieldId),
-      marginModeKey: getLandingFieldMarginModeKey(selectedFieldId),
-      marginXKey: getLandingFieldMarginXKey(selectedFieldId),
-      marginYKey: getLandingFieldMarginYKey(selectedFieldId),
-      marginTopKey: getLandingFieldMarginTopKey(selectedFieldId),
-      marginRightKey: getLandingFieldMarginRightKey(selectedFieldId),
-      marginBottomKey: getLandingFieldMarginBottomKey(selectedFieldId),
-      marginLeftKey: getLandingFieldMarginLeftKey(selectedFieldId),
-      paddingKey: getLandingFieldPaddingKey(selectedFieldId),
-      paddingModeKey: getLandingFieldPaddingModeKey(selectedFieldId),
-      paddingXKey: getLandingFieldPaddingXKey(selectedFieldId),
-      paddingYKey: getLandingFieldPaddingYKey(selectedFieldId),
-      paddingTopKey: getLandingFieldPaddingTopKey(selectedFieldId),
-      paddingRightKey: getLandingFieldPaddingRightKey(selectedFieldId),
-      paddingBottomKey: getLandingFieldPaddingBottomKey(selectedFieldId),
-      paddingLeftKey: getLandingFieldPaddingLeftKey(selectedFieldId),
-      section,
-      field: {
-        key: match[2],
-        label: defaults.label,
-        multiline: defaults.multiline,
-        defaultSize: defaults.size,
-      },
-    };
-  }, [selectedFieldId, structure, textMap]);
 
   const activeSectionExtras = useMemo(
     () =>
@@ -707,10 +723,6 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
 
     return [...ordered, ...missing];
   }, [selectedSectionId, structure, activeSectionExtras, textMap]);
-  const activeItemIndex = selectedFieldId
-    ? activeSectionItems.findIndex((item) => item.textKey === selectedFieldId)
-    : -1;
-
   function updateField(fieldId: string, value: string) {
     setTextMap((previous) => ({
       ...previous,
@@ -823,6 +835,42 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     }
   }
 
+  function addVideoTextItem(sectionId: string) {
+    const currentItems = parseSectionVideoTextItems(textMap, sectionId);
+    const itemId = `txt-${nextVideoTextIdRef.current++}`;
+    const nextItems = [...currentItems, itemId];
+    setTextMap((previous) => ({
+      ...previous,
+      [getSectionVideoTextItemsKey(sectionId)]: JSON.stringify(nextItems),
+      [getSectionVideoTextFieldKey(sectionId, itemId, "content")]: "Nuevo texto",
+      [getSectionVideoTextFieldKey(sectionId, itemId, "size")]: "44",
+      [getSectionVideoTextFieldKey(sectionId, itemId, "color")]: "#ffffff",
+      [getSectionVideoTextFieldKey(sectionId, itemId, "weight")]: "700",
+      [getSectionVideoTextFieldKey(sectionId, itemId, "align")]: "center",
+      [getSectionVideoTextFieldKey(sectionId, itemId, "position_x")]: "50",
+      [getSectionVideoTextFieldKey(sectionId, itemId, "position_y")]: "50",
+    }));
+  }
+
+  function removeVideoTextItem(sectionId: string, itemId: string) {
+    const currentItems = parseSectionVideoTextItems(textMap, sectionId);
+    const nextItems = currentItems.filter((id) => id !== itemId);
+    setTextMap((previous) => {
+      const next = {
+        ...previous,
+        [getSectionVideoTextItemsKey(sectionId)]: JSON.stringify(nextItems),
+      };
+      delete next[getSectionVideoTextFieldKey(sectionId, itemId, "content")];
+      delete next[getSectionVideoTextFieldKey(sectionId, itemId, "size")];
+      delete next[getSectionVideoTextFieldKey(sectionId, itemId, "color")];
+      delete next[getSectionVideoTextFieldKey(sectionId, itemId, "weight")];
+      delete next[getSectionVideoTextFieldKey(sectionId, itemId, "align")];
+      delete next[getSectionVideoTextFieldKey(sectionId, itemId, "position_x")];
+      delete next[getSectionVideoTextFieldKey(sectionId, itemId, "position_y")];
+      return next;
+    });
+  }
+
   function reorderSectionItems(
     sectionId: string,
     sourceItemId: string,
@@ -885,22 +933,6 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     }
 
     focusSection(targetSection.id);
-  }
-
-  function goToAdjacentItem(direction: "prev" | "next") {
-    if (activeSectionItems.length === 0) {
-      return;
-    }
-
-    const baseIndex = activeItemIndex >= 0 ? activeItemIndex : 0;
-    const nextIndex = direction === "next" ? baseIndex + 1 : baseIndex - 1;
-    const targetItem = activeSectionItems[nextIndex];
-    if (!targetItem) {
-      return;
-    }
-
-    setSelectedFieldId(targetItem.textKey);
-    setPanelOpen(true);
   }
 
   function scrollPreviewToSection(sectionId: string) {
@@ -1097,14 +1129,11 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                     </div>
                   </div>
 
-                  <div className="relative flex-1 overflow-hidden">
+                  <div className="relative flex-1 min-h-0 overflow-hidden">
                     <div
                       className={cn(
-                        "absolute inset-0 flex flex-col gap-4 overflow-y-auto p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden transition-transform duration-300 ease-out",
+                        "h-full min-h-0 flex flex-col gap-4 overflow-y-auto overscroll-contain p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
                         isSectionSettingsView && "hidden",
-                        isSectionSettingsView
-                          ? "-translate-x-full"
-                          : "translate-x-0",
                       )}
                     >
                       {statusMessage ? (
@@ -1124,28 +1153,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                         </Button>
                       </div>
 
-                      <div className="order-2 min-h-0 overflow-hidden space-y-3">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-medium text-muted-foreground">
-                            Seccion activa
-                          </label>
-                          <select
-                            className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                            value={selectedSectionId ?? ""}
-                            onChange={(event) =>
-                              focusSection(event.target.value)
-                            }
-                          >
-                            <option value="" disabled>
-                              Seleccionar seccion
-                            </option>
-                            {structure.map((section) => (
-                              <option key={section.id} value={section.id}>
-                                {section.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                      <div className="order-2 space-y-3">
                         {selectedSection ? (
                           <>
                             <details className="rounded-md border p-2" open>
@@ -1316,18 +1324,17 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             %)
                                           </label>
                                           <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <Input
-                                              type="range"
+                                            <PanelRangeInput
                                               min={0}
                                               max={100}
                                               step={1}
                                               value={
                                                 selectedSectionGalleryCaptionContainerOpacity
                                               }
-                                              onChange={(event) =>
+                                              onChange={(value) =>
                                                 updateField(
                                                   selectedSectionGalleryCaptionContainerOpacityKey,
-                                                  event.target.value,
+                                                  String(value),
                                                 )
                                               }
                                             />
@@ -1398,18 +1405,17 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             s)
                                           </label>
                                           <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <Input
-                                              type="range"
+                                            <PanelRangeInput
                                               min={0}
                                               max={10}
                                               step={1}
                                               value={
                                                 selectedSectionGalleryAutoplaySeconds
                                               }
-                                              onChange={(event) =>
+                                              onChange={(value) =>
                                                 updateField(
                                                   selectedSectionGalleryAutoplaySecondsKey,
-                                                  event.target.value,
+                                                  String(value),
                                                 )
                                               }
                                             />
@@ -1624,18 +1630,17 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             x)
                                           </label>
                                           <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <Input
-                                              type="range"
+                                            <PanelRangeInput
                                               min={1}
                                               max={3}
                                               step={0.05}
                                               value={
                                                 selectedSectionBackgroundZoom
                                               }
-                                              onChange={(event) =>
+                                              onChange={(value) =>
                                                 updateField(
                                                   selectedSectionBackgroundZoomKey,
-                                                  event.target.value,
+                                                  String(value),
                                                 )
                                               }
                                             />
@@ -1665,18 +1670,17 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             %)
                                           </label>
                                           <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <Input
-                                              type="range"
+                                            <PanelRangeInput
                                               min={0}
                                               max={100}
                                               step={1}
                                               value={
                                                 selectedSectionBackgroundPositionX
                                               }
-                                              onChange={(event) =>
+                                              onChange={(value) =>
                                                 updateField(
                                                   selectedSectionBackgroundPositionXKey,
-                                                  event.target.value,
+                                                  String(value),
                                                 )
                                               }
                                             />
@@ -1706,18 +1710,17 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             %)
                                           </label>
                                           <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <Input
-                                              type="range"
+                                            <PanelRangeInput
                                               min={0}
                                               max={100}
                                               step={1}
                                               value={
                                                 selectedSectionBackgroundPositionY
                                               }
-                                              onChange={(event) =>
+                                              onChange={(value) =>
                                                 updateField(
                                                   selectedSectionBackgroundPositionYKey,
-                                                  event.target.value,
+                                                  String(value),
                                                 )
                                               }
                                             />
@@ -2088,794 +2091,592 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                               </div>
                             </details>
 
-                            <div className="space-y-2 rounded-md border p-2">
-                              <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                            <details className="rounded-md border p-2" open>
+                              <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
                                 Elementos de la seccion
-                              </p>
+                              </summary>
+                              <div className="mt-2 space-y-2">
+                                {activeSectionItems.length > 0 ? (
+                                  activeSectionItems.map((item) => {
+                                    const isExtra = item.kind === "extra";
+                                    const extraId = item.extraId;
 
-                              {activeSectionItems.length > 0 ? (
-                                activeSectionItems.map((item) => {
-                                  const isExtra = item.kind === "extra";
-                                  const extraId = item.extraId;
-
-                                  return (
-                                    <div
-                                      key={item.id}
-                                      draggable
-                                      onDragStart={(event) => {
-                                        setDraggedItemId(item.id);
-                                        event.dataTransfer.setData(
-                                          "text/plain",
-                                          item.id,
-                                        );
-                                        event.dataTransfer.effectAllowed =
-                                          "move";
-                                      }}
-                                      onDragOver={(event) => {
-                                        event.preventDefault();
-                                        event.dataTransfer.dropEffect = "move";
-                                        setDragOverItemId(item.id);
-                                      }}
-                                      onDrop={(event) => {
-                                        event.preventDefault();
-                                        const sourceId =
-                                          draggedItemId ||
-                                          event.dataTransfer.getData(
+                                    return (
+                                      <div
+                                        key={item.id}
+                                        draggable
+                                        onDragStart={(event) => {
+                                          setDraggedItemId(item.id);
+                                          event.dataTransfer.setData(
                                             "text/plain",
-                                          );
-                                        if (sourceId) {
-                                          reorderSectionItems(
-                                            selectedSection.id,
-                                            sourceId,
                                             item.id,
                                           );
-                                        }
-                                        setDraggedItemId(null);
-                                        setDragOverItemId(null);
-                                      }}
-                                      onDragEnd={() => {
-                                        setDraggedItemId(null);
-                                        setDragOverItemId(null);
-                                      }}
-                                      className={cn(
-                                        "flex items-center gap-2 rounded-md border px-2 py-1.5",
-                                        dragOverItemId === item.id &&
-                                          "border-primary bg-primary/5",
-                                      )}
-                                    >
-                                      <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" />
-                                      <button
-                                        type="button"
-                                        className="min-w-0 flex-1 truncate text-left text-xs"
-                                        onClick={() =>
-                                          setSelectedFieldId(item.textKey)
-                                        }
-                                      >
-                                        {item.label}
-                                      </button>
-                                      {isExtra && extraId ? (
-                                        <Button
-                                          type="button"
-                                          size="icon-sm"
-                                          variant="ghost"
-                                          className="text-destructive hover:text-destructive"
-                                          onClick={() =>
-                                            removeExtraElement(
+                                          event.dataTransfer.effectAllowed =
+                                            "move";
+                                        }}
+                                        onDragOver={(event) => {
+                                          event.preventDefault();
+                                          event.dataTransfer.dropEffect = "move";
+                                          setDragOverItemId(item.id);
+                                        }}
+                                        onDrop={(event) => {
+                                          event.preventDefault();
+                                          const sourceId =
+                                            draggedItemId ||
+                                            event.dataTransfer.getData(
+                                              "text/plain",
+                                            );
+                                          if (sourceId) {
+                                            reorderSectionItems(
                                               selectedSection.id,
-                                              extraId,
-                                            )
+                                              sourceId,
+                                              item.id,
+                                            );
+                                          }
+                                          setDraggedItemId(null);
+                                          setDragOverItemId(null);
+                                        }}
+                                        onDragEnd={() => {
+                                          setDraggedItemId(null);
+                                          setDragOverItemId(null);
+                                        }}
+                                        className={cn(
+                                          "flex items-center gap-2 rounded-md border px-2 py-1.5",
+                                          dragOverItemId === item.id &&
+                                            "border-primary bg-primary/5",
+                                        )}
+                                      >
+                                        <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" />
+                                        <button
+                                          type="button"
+                                          className="min-w-0 flex-1 truncate text-left text-xs"
+                                          onClick={() =>
+                                            setSelectedFieldId(item.textKey)
                                           }
                                         >
-                                          <Trash2 className="h-4 w-4" />
-                                          <span className="sr-only">
-                                            Remove element
-                                          </span>
-                                        </Button>
+                                          {item.label}
+                                        </button>
+                                        {isExtra && extraId ? (
+                                          <Button
+                                            type="button"
+                                            size="icon-sm"
+                                            variant="ghost"
+                                            className="text-destructive hover:text-destructive"
+                                            onClick={() =>
+                                              removeExtraElement(
+                                                selectedSection.id,
+                                                extraId,
+                                              )
+                                            }
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">
+                                              Remove element
+                                            </span>
+                                          </Button>
+                                        ) : (
+                                          <Badge variant="secondary">Base</Badge>
+                                        )}
+                                      </div>
+                                    );
+                                  })
+                                ) : (
+                                  <p className="text-xs text-muted-foreground">
+                                    No hay elementos extra en esta seccion.
+                                  </p>
+                                )}
+
+                                <div className="grid grid-cols-[1fr_auto] gap-2">
+                                  <select
+                                    className="h-9 rounded-md border bg-background px-3 text-sm"
+                                    value={newExtraType}
+                                    onChange={(event) =>
+                                      setNewExtraType(
+                                        event.target
+                                          .value as SectionExtraElementType,
+                                      )
+                                    }
+                                  >
+                                    <option value="title">Titulo</option>
+                                    <option value="text">Texto</option>
+                                    <option value="button">Boton</option>
+                                  </select>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={() =>
+                                      addExtraElement(
+                                        selectedSection.id,
+                                        newExtraType,
+                                      )
+                                    }
+                                  >
+                                    Agregar
+                                  </Button>
+                                </div>
+                              </div>
+                            </details>
+
+                            <div className="space-y-2">
+                              {activeSectionItems.map((item) => {
+                                const baseFieldKey =
+                                  item.kind === "base"
+                                    ? item.id.replace(/^base:/, "")
+                                    : null;
+                                const baseField = baseFieldKey
+                                  ? landingSectionCatalog[
+                                      selectedSection.type
+                                    ].fields.find(
+                                      (field) => field.key === baseFieldKey,
+                                    )
+                                  : null;
+                                const extraItem = item.extraId
+                                  ? activeSectionExtras.find(
+                                      (entry) => entry.id === item.extraId,
+                                    )
+                                  : null;
+                                const extraDefaults = extraItem
+                                  ? getExtraDefaults(extraItem.type)
+                                  : null;
+                                const isMultiline =
+                                  baseField?.multiline ??
+                                  extraDefaults?.multiline ??
+                                  false;
+                                const isVideoUrlItem =
+                                  selectedSection.type === "video" &&
+                                  item.kind === "base" &&
+                                  baseFieldKey === "url";
+                                const hasKnownVideoControls =
+                                  isVideoUrlItem &&
+                                  selectedSectionVideoOverlayOpacityKey &&
+                                  selectedSectionVideoPositionXKey &&
+                                  selectedSectionVideoPositionYKey &&
+                                  selectedSectionVideoZoomKey;
+
+                                return (
+                                  <details
+                                    key={`config-${item.id}`}
+                                    className="rounded-md border p-2"
+                                    open={isVideoUrlItem}
+                                  >
+                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                      {item.label}
+                                    </summary>
+                                    <div className="mt-2 space-y-2">
+                                      {isVideoUrlItem ? (
+                                        <>
+                                          <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-muted-foreground">
+                                              Archivo de video
+                                            </label>
+                                            <select
+                                              className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                              value={
+                                                VIDEO_ASSET_OPTIONS.includes(
+                                                  (textMap[item.textKey] ??
+                                                    "") as (typeof VIDEO_ASSET_OPTIONS)[number],
+                                                )
+                                                  ? ((textMap[item.textKey] ??
+                                                      "/assets/vid2.mp4") as (typeof VIDEO_ASSET_OPTIONS)[number])
+                                                  : "/assets/vid2.mp4"
+                                              }
+                                              onChange={(event) =>
+                                                updateField(
+                                                  item.textKey,
+                                                  event.target.value,
+                                                )
+                                              }
+                                            >
+                                              {VIDEO_ASSET_OPTIONS.map(
+                                                (videoPath) => (
+                                                  <option
+                                                    key={videoPath}
+                                                    value={videoPath}
+                                                  >
+                                                    {videoPath.replace(
+                                                      "/assets/",
+                                                      "",
+                                                    )}
+                                                  </option>
+                                                ),
+                                              )}
+                                            </select>
+                                          </div>
+                                          <div className="space-y-2 rounded-md border p-2">
+                                            <button
+                                              type="button"
+                                              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                              onClick={() =>
+                                                addVideoTextItem(selectedSection.id)
+                                              }
+                                            >
+                                              <Plus className="h-3.5 w-3.5" />
+                                              Agregar texto
+                                            </button>
+                                            {selectedSectionVideoTextItems.map(
+                                              (videoTextId, index) => {
+                                                const contentKey = getSectionVideoTextFieldKey(
+                                                  selectedSection.id,
+                                                  videoTextId,
+                                                  "content",
+                                                );
+                                                const sizeKey = getSectionVideoTextFieldKey(
+                                                  selectedSection.id,
+                                                  videoTextId,
+                                                  "size",
+                                                );
+                                                const colorKey = getSectionVideoTextFieldKey(
+                                                  selectedSection.id,
+                                                  videoTextId,
+                                                  "color",
+                                                );
+                                                const weightKey = getSectionVideoTextFieldKey(
+                                                  selectedSection.id,
+                                                  videoTextId,
+                                                  "weight",
+                                                );
+                                                const positionXKey =
+                                                  getSectionVideoTextFieldKey(
+                                                    selectedSection.id,
+                                                    videoTextId,
+                                                    "position_x",
+                                                  );
+                                                const positionYKey =
+                                                  getSectionVideoTextFieldKey(
+                                                    selectedSection.id,
+                                                    videoTextId,
+                                                    "position_y",
+                                                  );
+                                                const textSize = getNumberValue(
+                                                  textMap[sizeKey],
+                                                  44,
+                                                  12,
+                                                  120,
+                                                );
+                                                const textPositionX = getNumberValue(
+                                                  textMap[positionXKey],
+                                                  50,
+                                                  0,
+                                                  100,
+                                                );
+                                                const textPositionY = getNumberValue(
+                                                  textMap[positionYKey],
+                                                  50,
+                                                  0,
+                                                  100,
+                                                );
+                                                const textWeight = getNumberValue(
+                                                  textMap[weightKey],
+                                                  700,
+                                                  400,
+                                                  900,
+                                                );
+
+                                                return (
+                                                  <details
+                                                    key={videoTextId}
+                                                    className="rounded-md border p-2"
+                                                    open
+                                                  >
+                                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                                      Texto {index + 1}
+                                                    </summary>
+                                                    <div className="mt-2 space-y-2">
+                                                      <div className="flex justify-end">
+                                                        <Button
+                                                          type="button"
+                                                          size="sm"
+                                                          variant="ghost"
+                                                          className="h-7 px-2 text-destructive hover:text-destructive"
+                                                          onClick={() =>
+                                                            removeVideoTextItem(
+                                                              selectedSection.id,
+                                                              videoTextId,
+                                                            )
+                                                          }
+                                                        >
+                                                          <Trash2 className="mr-1 h-3.5 w-3.5" />
+                                                          Eliminar
+                                                        </Button>
+                                                      </div>
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Contenido
+                                                        </label>
+                                                        <Textarea
+                                                          value={
+                                                            textMap[contentKey] ??
+                                                            ""
+                                                          }
+                                                          onChange={(event) =>
+                                                            updateField(
+                                                              contentKey,
+                                                              event.target.value,
+                                                            )
+                                                          }
+                                                          rows={3}
+                                                          placeholder="Escribi el texto sobre el video"
+                                                        />
+                                                      </div>
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Color
+                                                        </label>
+                                                        <div className="flex gap-2">
+                                                          <Input
+                                                            type="color"
+                                                            className="h-9 w-14 p-1"
+                                                            value={
+                                                              textMap[
+                                                                colorKey
+                                                              ] || "#ffffff"
+                                                            }
+                                                            onChange={(event) =>
+                                                              updateField(
+                                                                colorKey,
+                                                                event.target.value,
+                                                              )
+                                                            }
+                                                          />
+                                                          <Input
+                                                            value={
+                                                              textMap[
+                                                                colorKey
+                                                              ] ?? "#ffffff"
+                                                            }
+                                                            onChange={(event) =>
+                                                              updateField(
+                                                                colorKey,
+                                                                event.target.value,
+                                                              )
+                                                            }
+                                                          />
+                                                        </div>
+                                                      </div>
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Weight ({textWeight})
+                                                        </label>
+                                                      <PanelRangeInput
+                                                        min={400}
+                                                        max={900}
+                                                        step={100}
+                                                        value={textWeight}
+                                                        onChange={(value) =>
+                                                          updateField(
+                                                            weightKey,
+                                                            String(value),
+                                                          )
+                                                        }
+                                                      />
+                                                      </div>
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Tamaño ({textSize}px)
+                                                        </label>
+                                                      <PanelRangeInput
+                                                        min={12}
+                                                        max={120}
+                                                        step={1}
+                                                        value={textSize}
+                                                        onChange={(value) =>
+                                                          updateField(
+                                                            sizeKey,
+                                                            String(value),
+                                                          )
+                                                        }
+                                                      />
+                                                      </div>
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Posicion X ({textPositionX}%)
+                                                        </label>
+                                                      <PanelRangeInput
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={textPositionX}
+                                                        onChange={(value) =>
+                                                          updateField(
+                                                            positionXKey,
+                                                            String(value),
+                                                          )
+                                                        }
+                                                      />
+                                                      </div>
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Posicion Y ({textPositionY}%)
+                                                        </label>
+                                                      <PanelRangeInput
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={textPositionY}
+                                                        onChange={(value) =>
+                                                          updateField(
+                                                            positionYKey,
+                                                            String(value),
+                                                          )
+                                                        }
+                                                      />
+                                                      </div>
+                                                    </div>
+                                                  </details>
+                                                );
+                                              },
+                                            )}
+                                          </div>
+                                          {hasKnownVideoControls ? (
+                                            <>
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Transparencia del filtro (
+                                                  {
+                                                    selectedSectionVideoOverlayOpacity
+                                                  }
+                                                  %)
+                                                </label>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                  <PanelRangeInput
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    value={
+                                                      selectedSectionVideoOverlayOpacity
+                                                    }
+                                                    onChange={(value) =>
+                                                      updateField(
+                                                        selectedSectionVideoOverlayOpacityKey,
+                                                        String(value),
+                                                      )
+                                                    }
+                                                  />
+                                                </div>
+                                              </div>
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Posicion X (
+                                                  {Math.round(
+                                                    selectedSectionVideoPositionX,
+                                                  )}
+                                                  %)
+                                                </label>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                  <PanelRangeInput
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    value={
+                                                      selectedSectionVideoPositionX
+                                                    }
+                                                    onChange={(value) =>
+                                                      updateField(
+                                                        selectedSectionVideoPositionXKey,
+                                                        String(value),
+                                                      )
+                                                    }
+                                                  />
+                                                </div>
+                                              </div>
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Posicion Y (
+                                                  {Math.round(
+                                                    selectedSectionVideoPositionY,
+                                                  )}
+                                                  %)
+                                                </label>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                  <PanelRangeInput
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    value={
+                                                      selectedSectionVideoPositionY
+                                                    }
+                                                    onChange={(value) =>
+                                                      updateField(
+                                                        selectedSectionVideoPositionYKey,
+                                                        String(value),
+                                                      )
+                                                    }
+                                                  />
+                                                </div>
+                                              </div>
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Zoom (
+                                                  {selectedSectionVideoZoom.toFixed(
+                                                    2,
+                                                  )}
+                                                  x)
+                                                </label>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                  <PanelRangeInput
+                                                    min={1}
+                                                    max={3}
+                                                    step={0.05}
+                                                    value={selectedSectionVideoZoom}
+                                                    onChange={(value) =>
+                                                      updateField(
+                                                        selectedSectionVideoZoomKey,
+                                                        String(value),
+                                                      )
+                                                    }
+                                                  />
+                                                </div>
+                                              </div>
+                                            </>
+                                          ) : null}
+                                        </>
+                                      ) : isMultiline ? (
+                                        <Textarea
+                                          value={
+                                            textMap[item.textKey] ??
+                                            baseField?.defaultValue ??
+                                            extraDefaults?.text ??
+                                            ""
+                                          }
+                                          onChange={(event) =>
+                                            updateField(
+                                              item.textKey,
+                                              event.target.value,
+                                            )
+                                          }
+                                          rows={4}
+                                        />
                                       ) : (
-                                        <Badge variant="secondary">Base</Badge>
+                                        <Input
+                                          value={
+                                            textMap[item.textKey] ??
+                                            baseField?.defaultValue ??
+                                            extraDefaults?.text ??
+                                            ""
+                                          }
+                                          onChange={(event) =>
+                                            updateField(
+                                              item.textKey,
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
                                       )}
                                     </div>
-                                  );
-                                })
-                              ) : (
-                                <p className="text-xs text-muted-foreground">
-                                  No hay elementos extra en esta seccion.
-                                </p>
-                              )}
-
-                              <div className="grid grid-cols-[1fr_auto] gap-2">
-                                <select
-                                  className="h-9 rounded-md border bg-background px-3 text-sm"
-                                  value={newExtraType}
-                                  onChange={(event) =>
-                                    setNewExtraType(
-                                      event.target
-                                        .value as SectionExtraElementType,
-                                    )
-                                  }
-                                >
-                                  <option value="title">Titulo</option>
-                                  <option value="text">Texto</option>
-                                  <option value="button">Boton</option>
-                                </select>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  onClick={() =>
-                                    addExtraElement(
-                                      selectedSection.id,
-                                      newExtraType,
-                                    )
-                                  }
-                                >
-                                  Agregar
-                                </Button>
-                              </div>
+                                  </details>
+                                );
+                              })}
                             </div>
                           </>
                         ) : null}
                       </div>
 
-                      <div className="order-1 space-y-3 rounded-lg border p-3">
-                        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                          Navegacion de elementos
-                        </p>
-                        <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-2">
-                          <Button
-                            type="button"
-                            size="xs"
-                            variant="ghost"
-                            onClick={() => goToAdjacentItem("prev")}
-                            disabled={activeItemIndex <= 0}
-                          >
-                            <ChevronLeft />
-                          </Button>
-                          <span className="mx-auto w-40 truncate text-center text-sm text-muted-foreground">
-                            {activeItemIndex >= 0
-                              ? activeSectionItems[activeItemIndex]?.label
-                              : "Sin elemento"}
-                          </span>
-                          <Button
-                            type="button"
-                            size="xs"
-                            variant="ghost"
-                            onClick={() => goToAdjacentItem("next")}
-                            disabled={
-                              activeItemIndex < 0 ||
-                              activeItemIndex >= activeSectionItems.length - 1
-                            }
-                          >
-                            <ChevronRight />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="order-3 space-y-3 rounded-lg border p-3">
-                        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                          Campo seleccionado
-                        </p>
-                        {selectedFieldContext ? (
-                          <>
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                {selectedFieldContext.section.name}
-                              </p>
-                              <p className="text-sm font-semibold">
-                                {selectedFieldContext.field.label}
-                              </p>
-                            </div>
-
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-muted-foreground">
-                                Texto
-                              </label>
-                              {selectedFieldContext.section.type === "video" &&
-                              selectedFieldContext.field.key === "url" ? (
-                                <select
-                                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                                  value={
-                                    VIDEO_ASSET_OPTIONS.includes(
-                                      (textMap[selectedFieldContext.key] ??
-                                        "") as (typeof VIDEO_ASSET_OPTIONS)[number],
-                                    )
-                                      ? (textMap[
-                                          selectedFieldContext.key
-                                        ] as (typeof VIDEO_ASSET_OPTIONS)[number])
-                                      : "/assets/vid2.mp4"
-                                  }
-                                  onChange={(event) =>
-                                    updateField(
-                                      selectedFieldContext.key,
-                                      event.target.value,
-                                    )
-                                  }
-                                >
-                                  {VIDEO_ASSET_OPTIONS.map((videoPath) => (
-                                    <option key={videoPath} value={videoPath}>
-                                      {videoPath.replace("/assets/", "")}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : selectedFieldContext.field.multiline ? (
-                                <Textarea
-                                  value={
-                                    textMap[selectedFieldContext.key] ?? ""
-                                  }
-                                  onChange={(event) =>
-                                    updateField(
-                                      selectedFieldContext.key,
-                                      event.target.value,
-                                    )
-                                  }
-                                  rows={4}
-                                />
-                              ) : (
-                                <Input
-                                  value={
-                                    textMap[selectedFieldContext.key] ?? ""
-                                  }
-                                  onChange={(event) =>
-                                    updateField(
-                                      selectedFieldContext.key,
-                                      event.target.value,
-                                    )
-                                  }
-                                />
-                              )}
-                            </div>
-
-                            <div className="grid grid-cols-[1fr_1fr] gap-2">
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">
-                                  Tamano (px)
-                                </label>
-                                <Input
-                                  type="number"
-                                  min={10}
-                                  max={96}
-                                  step={1}
-                                  value={
-                                    textMap[selectedFieldContext.sizeKey] ??
-                                    String(
-                                      selectedFieldContext.field.defaultSize,
-                                    )
-                                  }
-                                  onChange={(event) =>
-                                    updateField(
-                                      selectedFieldContext.sizeKey,
-                                      event.target.value,
-                                    )
-                                  }
-                                />
-                              </div>
-
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">
-                                  Color
-                                </label>
-                                <div className="flex gap-2">
-                                  <Input
-                                    type="color"
-                                    className="h-10 w-14 p-1"
-                                    value={
-                                      textMap[selectedFieldContext.colorKey] ||
-                                      "#000000"
-                                    }
-                                    onChange={(event) =>
-                                      updateField(
-                                        selectedFieldContext.colorKey,
-                                        event.target.value,
-                                      )
-                                    }
-                                  />
-                                  <Input
-                                    value={
-                                      textMap[selectedFieldContext.colorKey] ??
-                                      ""
-                                    }
-                                    placeholder="#000000"
-                                    onChange={(event) =>
-                                      updateField(
-                                        selectedFieldContext.colorKey,
-                                        event.target.value,
-                                      )
-                                    }
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-[1fr_1fr] gap-2">
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">
-                                  Fuente
-                                </label>
-                                <select
-                                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                                  value={
-                                    textMap[
-                                      selectedFieldContext.fontFamilyKey
-                                    ] ?? "montserrat"
-                                  }
-                                  onChange={(event) =>
-                                    updateField(
-                                      selectedFieldContext.fontFamilyKey,
-                                      event.target.value,
-                                    )
-                                  }
-                                >
-                                  <option value="montserrat">Montserrat</option>
-                                  <option value="nunito">Nunito</option>
-                                  <option value="fira-sans">Fira Sans</option>
-                                </select>
-                              </div>
-
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">
-                                  Weight
-                                </label>
-                                <select
-                                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                                  value={
-                                    textMap[
-                                      selectedFieldContext.fontWeightKey
-                                    ] ?? "500"
-                                  }
-                                  onChange={(event) =>
-                                    updateField(
-                                      selectedFieldContext.fontWeightKey,
-                                      event.target.value,
-                                    )
-                                  }
-                                >
-                                  <option value="400">400</option>
-                                  <option value="500">500</option>
-                                  <option value="600">600</option>
-                                  <option value="700">700</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            {(() => {
-                              const marginMode = getSpacingModeValue(
-                                textMap[selectedFieldContext.marginModeKey],
-                              );
-                              const paddingMode = getSpacingModeValue(
-                                textMap[selectedFieldContext.paddingModeKey],
-                              );
-
-                              return (
-                                <>
-                                  <div className="space-y-2 rounded-md border bg-muted/20 p-2">
-                                    <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                      Margin
-                                    </p>
-                                    <div className="space-y-1.5">
-                                      <label className="text-xs font-medium text-muted-foreground">
-                                        Margin mode
-                                      </label>
-                                      <div className="flex gap-3 rounded-md border px-3 py-2 text-xs">
-                                        <label className="inline-flex items-center gap-1">
-                                          <input
-                                            type="radio"
-                                            name={`${selectedFieldContext.key}-margin-mode`}
-                                            checked={marginMode === "all"}
-                                            onChange={() =>
-                                              updateField(
-                                                selectedFieldContext.marginModeKey,
-                                                "all",
-                                              )
-                                            }
-                                          />
-                                          All
-                                        </label>
-                                        <label className="inline-flex items-center gap-1">
-                                          <input
-                                            type="radio"
-                                            name={`${selectedFieldContext.key}-margin-mode`}
-                                            checked={marginMode === "axis"}
-                                            onChange={() =>
-                                              updateField(
-                                                selectedFieldContext.marginModeKey,
-                                                "axis",
-                                              )
-                                            }
-                                          />
-                                          Axis
-                                        </label>
-                                        <label className="inline-flex items-center gap-1">
-                                          <input
-                                            type="radio"
-                                            name={`${selectedFieldContext.key}-margin-mode`}
-                                            checked={marginMode === "sides"}
-                                            onChange={() =>
-                                              updateField(
-                                                selectedFieldContext.marginModeKey,
-                                                "sides",
-                                              )
-                                            }
-                                          />
-                                          Sides
-                                        </label>
-                                      </div>
-                                    </div>
-
-                                    {marginMode === "all" ? (
-                                      <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-muted-foreground">
-                                          Margin
-                                        </label>
-                                        <Input
-                                          type="number"
-                                          min={0}
-                                          max={120}
-                                          step={1}
-                                          value={
-                                            textMap[
-                                              selectedFieldContext.marginKey
-                                            ] ?? ""
-                                          }
-                                          onChange={(event) =>
-                                            updateField(
-                                              selectedFieldContext.marginKey,
-                                              event.target.value,
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                    ) : null}
-                                    {marginMode === "axis" ? (
-                                      <div className="grid grid-cols-[1fr_1fr] gap-2">
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Margin X
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext.marginXKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.marginXKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Margin Y
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext.marginYKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.marginYKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      </div>
-                                    ) : null}
-                                    {marginMode === "sides" ? (
-                                      <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-2">
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Mt
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext
-                                                  .marginTopKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.marginTopKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Mr
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext
-                                                  .marginRightKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.marginRightKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Mb
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext
-                                                  .marginBottomKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.marginBottomKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Ml
-                                          </label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            max={120}
-                                            step={1}
-                                            value={
-                                              textMap[
-                                                selectedFieldContext
-                                                  .marginLeftKey
-                                              ] ?? ""
-                                            }
-                                            onChange={(event) =>
-                                              updateField(
-                                                selectedFieldContext.marginLeftKey,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      </div>
-                                    ) : null}
-                                  </div>
-
-                                  <div className="space-y-2 rounded-md border bg-muted/20 p-2">
-                                    <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                      Padding
-                                    </p>
-                                    <div className="space-y-1.5">
-                                      <label className="text-xs font-medium text-muted-foreground">
-                                        Padding mode
-                                      </label>
-                                      <div className="flex gap-3 rounded-md border px-3 py-2 text-xs">
-                                        <label className="inline-flex items-center gap-1">
-                                          <input
-                                            type="radio"
-                                            name={`${selectedFieldContext.key}-padding-mode`}
-                                            checked={paddingMode === "all"}
-                                            onChange={() =>
-                                              updateField(
-                                                selectedFieldContext.paddingModeKey,
-                                                "all",
-                                              )
-                                            }
-                                          />
-                                          All
-                                        </label>
-                                        <label className="inline-flex items-center gap-1">
-                                          <input
-                                            type="radio"
-                                            name={`${selectedFieldContext.key}-padding-mode`}
-                                            checked={paddingMode === "axis"}
-                                            onChange={() =>
-                                              updateField(
-                                                selectedFieldContext.paddingModeKey,
-                                                "axis",
-                                              )
-                                            }
-                                          />
-                                          Axis
-                                        </label>
-                                        <label className="inline-flex items-center gap-1">
-                                          <input
-                                            type="radio"
-                                            name={`${selectedFieldContext.key}-padding-mode`}
-                                            checked={paddingMode === "sides"}
-                                            onChange={() =>
-                                              updateField(
-                                                selectedFieldContext.paddingModeKey,
-                                                "sides",
-                                              )
-                                            }
-                                          />
-                                          Sides
-                                        </label>
-                                      </div>
-                                    </div>
-
-                                    {paddingMode === "all" ? (
-                                      <SliderValueControl
-                                        label="Padding"
-                                        value={getNumberValue(
-                                          textMap[
-                                            selectedFieldContext.paddingKey
-                                          ],
-                                          0,
-                                        )}
-                                        onChange={(value) =>
-                                          updateField(
-                                            selectedFieldContext.paddingKey,
-                                            String(value),
-                                          )
-                                        }
-                                      />
-                                    ) : null}
-                                    {paddingMode === "axis" ? (
-                                      <div className="grid grid-cols-1 gap-2">
-                                        <SliderValueControl
-                                          label="Px"
-                                          value={getNumberValue(
-                                            textMap[
-                                              selectedFieldContext.paddingXKey
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              selectedFieldContext.paddingXKey,
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                        <SliderValueControl
-                                          label="Py"
-                                          value={getNumberValue(
-                                            textMap[
-                                              selectedFieldContext.paddingYKey
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              selectedFieldContext.paddingYKey,
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                    ) : null}
-                                    {paddingMode === "sides" ? (
-                                      <div className="grid grid-cols-1 gap-2">
-                                        <SliderValueControl
-                                          label="Pt"
-                                          value={getNumberValue(
-                                            textMap[
-                                              selectedFieldContext.paddingTopKey
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              selectedFieldContext.paddingTopKey,
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                        <SliderValueControl
-                                          label="Pr"
-                                          value={getNumberValue(
-                                            textMap[
-                                              selectedFieldContext
-                                                .paddingRightKey
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              selectedFieldContext.paddingRightKey,
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                        <SliderValueControl
-                                          label="Pb"
-                                          value={getNumberValue(
-                                            textMap[
-                                              selectedFieldContext
-                                                .paddingBottomKey
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              selectedFieldContext.paddingBottomKey,
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                        <SliderValueControl
-                                          label="Pl"
-                                          value={getNumberValue(
-                                            textMap[
-                                              selectedFieldContext
-                                                .paddingLeftKey
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              selectedFieldContext.paddingLeftKey,
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </>
-                              );
-                            })()}
-
-                            <div className="flex justify-end">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  updateField(selectedFieldContext.colorKey, "")
-                                }
-                              >
-                                Reset color
-                              </Button>
-                            </div>
-                          </>
-                        ) : (
-                          <p className="text-xs text-muted-foreground">
-                            Selecciona un texto en la vista previa para
-                            editarlo.
-                          </p>
-                        )}
-                      </div>
                     </div>
 
                     <div
                       className={cn(
-                        "absolute inset-0 space-y-4 overflow-y-auto p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden transition-transform duration-300 ease-out",
+                        "h-full min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
                         !isSectionSettingsView && "hidden",
-                        isSectionSettingsView
-                          ? "translate-x-0"
-                          : "translate-x-full",
                       )}
                     >
                       <div className="flex items-center justify-between">

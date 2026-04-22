@@ -7,6 +7,36 @@ import { getLandingFieldPaddingStyle } from "@/modules/landing/types/landing-tex
 import { getSectionBackgroundStyle } from "@/modules/landing/views/utils/section-style";
 import type { LandingSectionComponentProps } from "@/modules/landing/views/sections/types";
 
+function getVideoTextItemsKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__video_text_items");
+}
+
+function getVideoTextFieldKey(
+  sectionId: string,
+  textId: string,
+  field: "content" | "size" | "color" | "weight" | "align" | "position_x" | "position_y",
+) {
+  return getSectionFieldKey(sectionId, `__video_text_${textId}_${field}`);
+}
+
+function parseVideoTextItems(textMap: Record<string, string>, sectionId: string) {
+  const raw = textMap[getVideoTextItemsKey(sectionId)];
+  if (!raw) {
+    return [] as string[];
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return [] as string[];
+    }
+    return parsed.filter(
+      (item): item is string => typeof item === "string" && item.trim().length > 0,
+    );
+  } catch {
+    return [] as string[];
+  }
+}
+
 export function VideoSection({
   section,
   textMap,
@@ -41,6 +71,7 @@ export function VideoSection({
     ? Math.min(100, Math.max(0, positionYRaw))
     : 50;
   const zoom = Number.isFinite(zoomRaw) ? Math.min(300, Math.max(100, zoomRaw)) : 100;
+  const videoTextItems = parseVideoTextItems(textMap, section.id);
 
   const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
   const sectionPaddingStyle = getLandingFieldPaddingStyle(
@@ -81,6 +112,66 @@ export function VideoSection({
           className="pointer-events-none absolute inset-0 bg-black"
           style={{ opacity: overlayOpacity / 100 }}
         />
+        {videoTextItems.map((textId) => {
+          const content = textMap[getVideoTextFieldKey(section.id, textId, "content")] ?? "";
+          if (!content.trim()) {
+            return null;
+          }
+          const sizeRaw = Number.parseInt(
+            textMap[getVideoTextFieldKey(section.id, textId, "size")] ?? "",
+            10,
+          );
+          const positionXRaw = Number.parseInt(
+            textMap[getVideoTextFieldKey(section.id, textId, "position_x")] ?? "",
+            10,
+          );
+          const positionYRaw = Number.parseInt(
+            textMap[getVideoTextFieldKey(section.id, textId, "position_y")] ?? "",
+            10,
+          );
+          const color =
+            textMap[getVideoTextFieldKey(section.id, textId, "color")] || "#ffffff";
+          const weight =
+            textMap[getVideoTextFieldKey(section.id, textId, "weight")] || "700";
+          const alignRaw = textMap[getVideoTextFieldKey(section.id, textId, "align")];
+          const align =
+            alignRaw === "left" || alignRaw === "right" || alignRaw === "center"
+              ? alignRaw
+              : "center";
+          const size = Number.isFinite(sizeRaw) ? Math.min(120, Math.max(12, sizeRaw)) : 44;
+          const positionX = Number.isFinite(positionXRaw)
+            ? Math.min(100, Math.max(0, positionXRaw))
+            : 50;
+          const positionY = Number.isFinite(positionYRaw)
+            ? Math.min(100, Math.max(0, positionYRaw))
+            : 50;
+
+          return (
+            <div
+              key={textId}
+              className="pointer-events-none absolute z-10 w-full max-w-[min(92vw,900px)] px-4"
+              style={{
+                left: `${positionX}%`,
+                top: `${positionY}%`,
+                transform: "translate(-50%, -50%)",
+                textAlign: align,
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  color,
+                  fontSize: `${size}px`,
+                  fontWeight: Number.parseInt(weight, 10) || 700,
+                  lineHeight: 1.1,
+                  textShadow: "0 2px 14px rgba(0,0,0,0.45)",
+                }}
+              >
+                {content}
+              </p>
+            </div>
+          );
+        })}
       </div>
       <SectionExtras
         section={section}
