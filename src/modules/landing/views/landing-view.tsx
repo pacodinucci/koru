@@ -35,6 +35,7 @@ function SectionRenderer({
   previewMode,
   selectedFieldId,
   onSelectField,
+  onMoveSectionExtraPosition,
 }: SectionRendererProps) {
   switch (section.type) {
     case "hero":
@@ -45,6 +46,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
     case "cards":
@@ -55,6 +57,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
     case "story":
@@ -65,6 +68,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
     case "gallery":
@@ -75,6 +79,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
     case "image-grid":
@@ -85,6 +90,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
     case "video":
@@ -95,6 +101,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
     case "footer":
@@ -105,6 +112,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
     default:
@@ -118,6 +126,7 @@ export function LandingView({
   previewMode,
   selectedFieldId,
   onSelectField,
+  onMoveSectionExtraPosition,
 }: LandingViewProps) {
   const completeMap = ensureLandingDefaults(textMap);
   const structure = parseLandingStructure(completeMap);
@@ -143,6 +152,7 @@ export function LandingView({
             previewMode={previewMode}
             selectedFieldId={selectedFieldId}
             onSelectField={onSelectField}
+            onMoveSectionExtraPosition={onMoveSectionExtraPosition}
           />
         </div>
       ))}

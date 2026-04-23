@@ -7,6 +7,10 @@ import {
   getSectionBackgroundPositionXKey,
   getSectionBackgroundPositionYKey,
   getSectionBackgroundZoomKey,
+  getSectionBorderColorKey,
+  getSectionBorderRadiusKey,
+  getSectionBorderStyleKey,
+  getSectionBorderWidthKey,
   parseSectionItemsOrder,
 } from "@/modules/landing/config/landing-sections";
 import type { CSSProperties } from "react";
@@ -29,13 +33,25 @@ export function getSectionBackgroundStyle(
   textMap: LandingTextMap,
   sectionId: string,
 ): CSSProperties {
-  const mode = textMap[getSectionBackgroundModeKey(sectionId)]?.trim();
+  const rawMode = textMap[getSectionBackgroundModeKey(sectionId)]?.trim();
+  const image = textMap[getSectionBackgroundImageKey(sectionId)]?.trim();
+  const color = textMap[getSectionBackgroundColorKey(sectionId)]?.trim();
+  const gradient = textMap[getSectionBackgroundGradientKey(sectionId)]?.trim();
+  const mode =
+    rawMode === "image" || rawMode === "color" || rawMode === "gradient"
+      ? rawMode
+      : image
+        ? "image"
+        : gradient
+          ? "gradient"
+          : color
+            ? "color"
+            : null;
   if (!mode) {
     return {};
   }
 
   if (mode === "image") {
-    const image = textMap[getSectionBackgroundImageKey(sectionId)]?.trim();
     if (!image) {
       return {};
     }
@@ -70,7 +86,6 @@ export function getSectionBackgroundStyle(
   }
 
   if (mode === "color") {
-    const color = textMap[getSectionBackgroundColorKey(sectionId)]?.trim();
     if (!color) {
       return {};
     }
@@ -81,8 +96,6 @@ export function getSectionBackgroundStyle(
   }
 
   if (mode === "gradient") {
-    const gradient =
-      textMap[getSectionBackgroundGradientKey(sectionId)]?.trim();
     if (!gradient) {
       return {};
     }
@@ -105,3 +118,39 @@ export function hasBackgroundImageLayer(style: CSSProperties) {
   );
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+export function getSectionBorderStyle(
+  textMap: LandingTextMap,
+  sectionId: string,
+): CSSProperties {
+  const widthRaw = textMap[getSectionBorderWidthKey(sectionId)];
+  const colorRaw = textMap[getSectionBorderColorKey(sectionId)]?.trim();
+  const radiusRaw = textMap[getSectionBorderRadiusKey(sectionId)];
+  const styleRaw = textMap[getSectionBorderStyleKey(sectionId)]?.trim();
+
+  const hasAnyValue =
+    widthRaw != null || colorRaw != null || radiusRaw != null || styleRaw != null;
+  if (!hasAnyValue) {
+    return {};
+  }
+
+  const parsedWidth = Number.parseFloat(widthRaw ?? "");
+  const width = Number.isFinite(parsedWidth) ? clamp(parsedWidth, 0, 24) : 1;
+  const parsedRadius = Number.parseFloat(radiusRaw ?? "");
+  const radius = Number.isFinite(parsedRadius) ? clamp(parsedRadius, 0, 120) : 0;
+  const style =
+    styleRaw === "dashed" || styleRaw === "dotted" || styleRaw === "none"
+      ? styleRaw
+      : "solid";
+  const color = colorRaw && colorRaw.length > 0 ? colorRaw : "#0000001a";
+
+  return {
+    borderStyle: style,
+    borderColor: color,
+    borderWidth: `${width}px`,
+    borderRadius: radius > 0 ? `${radius}px` : undefined,
+  };
+}

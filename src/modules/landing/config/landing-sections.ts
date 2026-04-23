@@ -34,7 +34,13 @@ export type LandingSectionInstance = {
   name: string;
 };
 
-export type SectionExtraElementType = "title" | "text" | "button";
+export type SectionExtraElementType =
+  | "title"
+  | "text"
+  | "button"
+  | "image"
+  | "line-vertical"
+  | "line-horizontal";
 
 export type SectionExtraElement = {
   id: string;
@@ -309,27 +315,7 @@ export const landingSectionCatalog: Record<
   footer: {
     type: "footer",
     label: "Footer",
-    fields: [
-      { key: "brand", label: "Marca", defaultValue: "Koru", defaultSize: 38 },
-      {
-        key: "campus",
-        label: "Titulo campus",
-        defaultValue: "Campus Koru",
-        defaultSize: 38,
-      },
-      {
-        key: "mail",
-        label: "Email",
-        defaultValue: "hola@koru.academy",
-        defaultSize: 24,
-      },
-      {
-        key: "legal",
-        label: "Texto legal",
-        defaultValue: "(c) 2026 Koru - Organismo Social de Aprendizaje",
-        defaultSize: 20,
-      },
-    ],
+    fields: [],
   },
 };
 
@@ -376,6 +362,31 @@ export function getSectionBackgroundPositionXKey(sectionId: string) {
 
 export function getSectionBackgroundPositionYKey(sectionId: string) {
   return getSectionFieldKey(sectionId, "__background_position_y");
+}
+
+export function getSectionBorderWidthKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__border_width");
+}
+
+export function getSectionBorderColorKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__border_color");
+}
+
+export function getSectionBorderRadiusKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__border_radius");
+}
+
+export function getSectionBorderStyleKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__border_style");
+}
+
+export function getSectionFooterHeightKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__footer_height");
+}
+
+// Legacy alias to avoid breaking previously stored content keys.
+export function getSectionFooterMinHeightKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__footer_min_height");
 }
 
 export function getSectionGalleryVariantKey(sectionId: string) {
@@ -441,6 +452,14 @@ export function getSectionExtraTextKey(sectionId: string, extraId: string) {
   return getSectionFieldKey(sectionId, `extra.${extraId}.text`);
 }
 
+export function getSectionExtraPositionXKey(sectionId: string, extraId: string) {
+  return getSectionFieldKey(sectionId, `extra.${extraId}.position_x`);
+}
+
+export function getSectionExtraPositionYKey(sectionId: string, extraId: string) {
+  return getSectionFieldKey(sectionId, `extra.${extraId}.position_y`);
+}
+
 export function parseSectionExtraElements(
   textMap: LandingTextMap,
   sectionId: string,
@@ -458,7 +477,10 @@ export function parseSectionExtraElements(
         typeof item.id === "string" &&
         (item.type === "title" ||
           item.type === "text" ||
-          item.type === "button"),
+          item.type === "button" ||
+          item.type === "image" ||
+          item.type === "line-vertical" ||
+          item.type === "line-horizontal"),
     );
   } catch {
     return [];

@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { getSectionFieldKey } from "@/modules/landing/config/landing-sections";
 import {
@@ -15,6 +16,7 @@ import { getFieldStyle, renderField, selectableClass } from "@/modules/landing/v
 import {
   getOrder,
   getSectionBackgroundStyle,
+  getSectionBorderStyle,
   getSectionOrderMap,
   hasBackgroundImageLayer,
 } from "@/modules/landing/views/utils/section-style";
@@ -61,12 +63,20 @@ export function ImageGridSection({
     getSectionFieldKey(section.id, "__section_padding"),
   );
   const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
+  const sectionBorderStyle = getSectionBorderStyle(textMap, section.id);
   const hasImageLayer = hasBackgroundImageLayer(sectionBackgroundStyle);
+  const sectionStyle: CSSProperties = hasImageLayer
+    ? sectionBorderStyle
+    : {
+        backgroundColor: "#eef0dd",
+        ...sectionBackgroundStyle,
+        ...sectionBorderStyle,
+      };
 
   return (
     <section
-      className="relative isolate overflow-hidden border-y border-black/10 bg-[#eef0dd]"
-      style={hasImageLayer ? undefined : sectionBackgroundStyle}
+      className="relative isolate overflow-hidden border-y border-black/10"
+      style={hasImageLayer ? undefined : sectionStyle}
     >
       {hasImageLayer ? (
         <div
@@ -131,4 +141,3 @@ export function ImageGridSection({
     </section>
   );
 }
-

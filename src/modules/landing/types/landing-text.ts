@@ -1,10 +1,25 @@
 export type LandingTextMap = Record<string, string>;
 export type LandingFontFamily = "montserrat" | "nunito" | "fira-sans";
+export type LandingButtonVariant =
+  | "default"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "destructive"
+  | "link"
+  | "custom";
+export type LandingFieldBorderStyle = "solid" | "dashed" | "dotted" | "none";
 
 export type LandingPreviewBindings = {
   previewMode?: boolean;
   selectedFieldId?: string | null;
   onSelectField?: (fieldId: string) => void;
+  onMoveSectionExtraPosition?: (
+    sectionId: string,
+    extraId: string,
+    positionX: number,
+    positionY: number,
+  ) => void;
 };
 
 export function getLandingFieldSizeKey(fieldId: string) {
@@ -15,12 +30,40 @@ export function getLandingFieldColorKey(fieldId: string) {
   return `${fieldId}__color`;
 }
 
+export function getLandingFieldBackgroundColorKey(fieldId: string) {
+  return `${fieldId}__bg_color`;
+}
+
+export function getLandingFieldBorderColorKey(fieldId: string) {
+  return `${fieldId}__border_color`;
+}
+
+export function getLandingFieldBorderWidthKey(fieldId: string) {
+  return `${fieldId}__border_width`;
+}
+
+export function getLandingFieldBorderRadiusKey(fieldId: string) {
+  return `${fieldId}__border_radius`;
+}
+
+export function getLandingFieldBorderStyleKey(fieldId: string) {
+  return `${fieldId}__border_style`;
+}
+
 export function getLandingFieldFontFamilyKey(fieldId: string) {
   return `${fieldId}__font_family`;
 }
 
 export function getLandingFieldFontWeightKey(fieldId: string) {
   return `${fieldId}__font_weight`;
+}
+
+export function getLandingFieldButtonVariantKey(fieldId: string) {
+  return `${fieldId}__button_variant`;
+}
+
+export function getLandingFieldLineWidthKey(fieldId: string) {
+  return `${fieldId}__line_width`;
 }
 
 export function getLandingFieldMarginKey(fieldId: string) {
@@ -101,21 +144,44 @@ export function getLandingFieldFontSize(
     return fallbackPx;
   }
 
-  return Math.min(96, Math.max(10, parsed));
+  return Math.min(800, Math.max(10, parsed));
 }
 
-export function getLandingFieldColor(textMap: LandingTextMap, fieldId: string) {
-  const raw = textMap[getLandingFieldColorKey(fieldId)]?.trim();
-  if (!raw) {
+function getValidHexColor(raw: string | undefined) {
+  const normalized = raw?.trim();
+  if (!normalized) {
     return null;
   }
 
-  const isHex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw);
+  const isHex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(normalized);
   if (isHex) {
-    return raw;
+    return normalized;
   }
 
   return null;
+}
+
+export function getLandingFieldColor(textMap: LandingTextMap, fieldId: string) {
+  return getValidHexColor(textMap[getLandingFieldColorKey(fieldId)]);
+}
+
+export function getLandingFieldBackgroundColor(
+  textMap: LandingTextMap,
+  fieldId: string,
+) {
+  const raw = textMap[getLandingFieldBackgroundColorKey(fieldId)]?.trim();
+  if (raw === "transparent") {
+    return raw;
+  }
+
+  return getValidHexColor(raw);
+}
+
+export function getLandingFieldBorderColor(
+  textMap: LandingTextMap,
+  fieldId: string,
+) {
+  return getValidHexColor(textMap[getLandingFieldBorderColorKey(fieldId)]);
 }
 
 export function getLandingFieldFontFamily(
@@ -144,11 +210,101 @@ export function getLandingFieldFontWeight(
     return null;
   }
 
-  if (parsed === 400 || parsed === 500 || parsed === 600 || parsed === 700) {
+  if (parsed >= 100 && parsed <= 900 && parsed % 100 === 0) {
     return parsed;
   }
 
   return null;
+}
+
+export function getLandingFieldButtonVariant(
+  textMap: LandingTextMap,
+  fieldId: string,
+): LandingButtonVariant {
+  const raw = textMap[getLandingFieldButtonVariantKey(fieldId)]?.trim();
+  if (
+    raw === "default" ||
+    raw === "outline" ||
+    raw === "secondary" ||
+    raw === "ghost" ||
+    raw === "destructive" ||
+    raw === "link" ||
+    raw === "custom"
+  ) {
+    return raw;
+  }
+
+  return "default";
+}
+
+function getBoundedOptionalNumber(
+  textMap: LandingTextMap,
+  key: string,
+  min: number,
+  max: number,
+) {
+  const raw = textMap[key];
+  if (raw == null || raw.trim() === "") {
+    return null;
+  }
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return Math.min(max, Math.max(min, parsed));
+}
+
+export function getLandingFieldBorderWidth(
+  textMap: LandingTextMap,
+  fieldId: string,
+) {
+  return getBoundedOptionalNumber(
+    textMap,
+    getLandingFieldBorderWidthKey(fieldId),
+    0,
+    20,
+  );
+}
+
+export function getLandingFieldBorderRadius(
+  textMap: LandingTextMap,
+  fieldId: string,
+) {
+  return getBoundedOptionalNumber(
+    textMap,
+    getLandingFieldBorderRadiusKey(fieldId),
+    0,
+    80,
+  );
+}
+
+export function getLandingFieldBorderStyle(
+  textMap: LandingTextMap,
+  fieldId: string,
+): LandingFieldBorderStyle | null {
+  const raw = textMap[getLandingFieldBorderStyleKey(fieldId)]?.trim();
+  if (raw === "solid" || raw === "dashed" || raw === "dotted" || raw === "none") {
+    return raw;
+  }
+
+  return null;
+}
+
+export function getLandingFieldLineWidth(
+  textMap: LandingTextMap,
+  fieldId: string,
+  fallbackPx = 1,
+) {
+  const raw = textMap[getLandingFieldLineWidthKey(fieldId)];
+  const parsed = Number(raw);
+
+  if (!Number.isFinite(parsed)) {
+    return fallbackPx;
+  }
+
+  return Math.min(40, Math.max(1, parsed));
 }
 
 function getLandingFieldSpacing(

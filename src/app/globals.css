@@ -56,6 +56,14 @@
   --brand-500: #7c63c9;
   --brand-300: #cfc4f3;
 
+  --complement-900: #343c11;
+  --complement-800: #56660c;
+  --complement-700: #a8bb55;
+  --comlement-700: var(--complement-700);
+  --complement-600: #d6e68e;
+  --complement-500: #f5ffc9;
+  --complement-300: #f8ffd8;
+
   --background: #f6f7fb;
   --foreground: #111827;
   --card: #ffffff;
@@ -326,8 +334,8 @@
   border-radius: 0;
   background: linear-gradient(
     to right,
-    #22c3ff 0%,
-    #22c3ff var(--panel-range-progress, 50%),
+    var(--complement-700) 0%,
+    var(--complement-700) var(--panel-range-progress, 50%),
     #111111 var(--panel-range-progress, 50%),
     #111111 100%
   );
@@ -361,7 +369,7 @@
 .panel-range-input::-moz-range-progress {
   height: 4px;
   border-radius: 0;
-  background: #22c3ff;
+  background: var(--complement-700);
 }
 
 .panel-range-input::-moz-range-thumb {
@@ -371,4 +379,27 @@
   border-radius: 1px;
   background: linear-gradient(to bottom, #4b5563, #1f2937);
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+}
+
+.panel-accordion,
+.panel-accordion-inner {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.panel-accordion[open],
+.panel-accordion-inner[open] {
+  background-color: color-mix(in srgb, var(--brand-900) 10%, transparent);
+  padding: 2px;
+}
+
+.panel-accordion > summary,
+.panel-accordion-inner > summary {
+  padding: 0.6rem 0.85rem;
+}
+
+.panel-accordion > summary + *,
+.panel-accordion-inner > summary + * {
+  padding: 0 0.85rem 0.75rem;
 }

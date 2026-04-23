@@ -8,6 +8,7 @@ import { getFieldStyle, renderField, selectableClass } from "@/modules/landing/v
 import {
   getOrder,
   getSectionBackgroundStyle,
+  getSectionBorderStyle,
   getSectionOrderMap,
   hasBackgroundImageLayer,
 } from "@/modules/landing/views/utils/section-style";
@@ -41,12 +42,16 @@ export function StorySection({
     getSectionFieldKey(section.id, "__section_padding"),
   );
   const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
+  const sectionBorderStyle = getSectionBorderStyle(textMap, section.id);
   const hasImageLayer = hasBackgroundImageLayer(sectionBackgroundStyle);
+  const sectionStyle = hasImageLayer
+    ? sectionBorderStyle
+    : { ...sectionBackgroundStyle, ...sectionBorderStyle };
 
   return (
     <section
       className="relative isolate flex min-h-screen items-center overflow-hidden border-y border-black/10 bg-[#ece9df]"
-      style={hasImageLayer ? undefined : sectionBackgroundStyle}
+      style={sectionStyle}
     >
       {hasImageLayer ? (
         <div
@@ -110,4 +115,3 @@ export function StorySection({
     </section>
   );
 }
-

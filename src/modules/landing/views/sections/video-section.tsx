@@ -4,7 +4,10 @@ import type { CSSProperties } from "react";
 import { SectionExtras } from "@/modules/landing/views/components/section-extras";
 import { getSectionFieldKey } from "@/modules/landing/config/landing-sections";
 import { getLandingFieldPaddingStyle } from "@/modules/landing/types/landing-text";
-import { getSectionBackgroundStyle } from "@/modules/landing/views/utils/section-style";
+import {
+  getSectionBackgroundStyle,
+  getSectionBorderStyle,
+} from "@/modules/landing/views/utils/section-style";
 import type { LandingSectionComponentProps } from "@/modules/landing/views/sections/types";
 
 function getVideoTextItemsKey(sectionId: string) {
@@ -74,12 +77,14 @@ export function VideoSection({
   const videoTextItems = parseVideoTextItems(textMap, section.id);
 
   const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
+  const sectionBorderStyle = getSectionBorderStyle(textMap, section.id);
   const sectionPaddingStyle = getLandingFieldPaddingStyle(
     textMap,
     getSectionFieldKey(section.id, "__section_padding"),
   );
   const sectionStyle: CSSProperties = {
     ...sectionBackgroundStyle,
+    ...sectionBorderStyle,
     ...sectionPaddingStyle,
     transform: undefined,
     transformOrigin: undefined,
