@@ -21,6 +21,7 @@ export function FooterSection({
   previewMode,
   selectedFieldId,
   onSelectField,
+  responsiveMode,
   onMoveSectionExtraPosition,
 }: LandingSectionComponentProps) {
   const orderMap = getSectionOrderMap(textMap, section.id);
@@ -61,7 +62,7 @@ export function FooterSection({
         />
       ) : null}
       <div
-        className="flex h-full w-full flex-col justify-center px-3 py-14 md:px-5 lg:px-7"
+        className="flex h-full w-full flex-col justify-start px-3 py-14 md:px-5 lg:px-7"
         style={sectionPaddingStyle}
       >
         <SectionExtras
@@ -70,6 +71,7 @@ export function FooterSection({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
           orderMap={orderMap}
         />

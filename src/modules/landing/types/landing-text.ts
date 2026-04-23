@@ -1,5 +1,6 @@
 export type LandingTextMap = Record<string, string>;
 export type LandingFontFamily = "montserrat" | "nunito" | "fira-sans";
+export type LandingResponsiveMode = "large" | "medium" | "tablet" | "mobile";
 export type LandingButtonVariant =
   | "default"
   | "outline"
@@ -14,16 +15,115 @@ export type LandingPreviewBindings = {
   previewMode?: boolean;
   selectedFieldId?: string | null;
   onSelectField?: (fieldId: string) => void;
+  responsiveMode?: LandingResponsiveMode;
   onMoveSectionExtraPosition?: (
     sectionId: string,
     extraId: string,
     positionX: number,
     positionY: number,
+    mode: LandingResponsiveMode,
   ) => void;
 };
 
+const RESPONSIVE_MODE_SUFFIX_REGEX = /__(large|medium|tablet|mobile)$/;
+
+export function getResponsiveOverrideKey(
+  fieldId: string,
+  mode: LandingResponsiveMode,
+) {
+  return `${fieldId}__${mode}`;
+}
+
+export function isResponsiveScopedFieldId(fieldId: string) {
+  if (!fieldId) {
+    return false;
+  }
+
+  if (
+    fieldId.includes("__extras") ||
+    fieldId.includes("__items_order") ||
+    fieldId.includes("__video_text_items")
+  ) {
+    return false;
+  }
+
+  if (/\.extra\.[^.]+\.text$/.test(fieldId)) {
+    return false;
+  }
+
+  if (
+    /\.url$/.test(fieldId) ||
+    /\.title$/.test(fieldId) ||
+    /\.body$/.test(fieldId) ||
+    /\.kicker$/.test(fieldId) ||
+    /\.quote$/.test(fieldId) ||
+    /\.cta$/.test(fieldId) ||
+    /\.item\d+$/.test(fieldId) ||
+    /\.card\d+_(title|body)$/.test(fieldId)
+  ) {
+    return false;
+  }
+
+  if (fieldId.includes("__") || fieldId.includes(".position_")) {
+    return true;
+  }
+
+  return false;
+}
+
+export function getResponsiveModeFromWidth(
+  width: number,
+): LandingResponsiveMode {
+  if (width >= 1280) {
+    return "large";
+  }
+  if (width >= 1024) {
+    return "medium";
+  }
+  if (width >= 768) {
+    return "tablet";
+  }
+  return "mobile";
+}
+
+export function createResponsiveScopedTextMap(
+  textMap: LandingTextMap,
+  mode: LandingResponsiveMode,
+): LandingTextMap {
+  if (mode === "large") {
+    return textMap;
+  }
+
+  return new Proxy(textMap, {
+    get(target, prop, receiver) {
+      if (typeof prop !== "string") {
+        return Reflect.get(target, prop, receiver);
+      }
+      if (RESPONSIVE_MODE_SUFFIX_REGEX.test(prop)) {
+        return Reflect.get(target, prop, receiver);
+      }
+      if (!isResponsiveScopedFieldId(prop)) {
+        return Reflect.get(target, prop, receiver);
+      }
+      const overrideKey = getResponsiveOverrideKey(prop, mode);
+      const overrideValue = Reflect.get(target, overrideKey, receiver);
+      if (overrideValue != null && String(overrideValue).trim() !== "") {
+        return overrideValue;
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  }) as LandingTextMap;
+}
+
 export function getLandingFieldSizeKey(fieldId: string) {
   return `${fieldId}__size`;
+}
+
+export function getLandingFieldResponsiveSizeKey(
+  fieldId: string,
+  mode: LandingResponsiveMode,
+) {
+  return `${fieldId}__size_${mode}`;
 }
 
 export function getLandingFieldColorKey(fieldId: string) {
@@ -136,8 +236,15 @@ export function getLandingFieldFontSize(
   textMap: LandingTextMap,
   fieldId: string,
   fallbackPx: number,
+  responsiveMode?: LandingResponsiveMode,
 ) {
-  const raw = textMap[getLandingFieldSizeKey(fieldId)];
+  const mode =
+    responsiveMode ??
+    (typeof window !== "undefined"
+      ? getResponsiveModeFromWidth(window.innerWidth)
+      : "large");
+  const responsiveRaw = textMap[getLandingFieldResponsiveSizeKey(fieldId, mode)];
+  const raw = responsiveRaw ?? textMap[getLandingFieldSizeKey(fieldId)];
   const parsed = Number(raw);
 
   if (!Number.isFinite(parsed)) {

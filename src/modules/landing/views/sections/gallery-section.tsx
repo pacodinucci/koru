@@ -111,6 +111,7 @@ export function GallerySection({
   previewMode,
   selectedFieldId,
   onSelectField,
+  responsiveMode,
 }: LandingSectionComponentProps) {
   const title = renderField(
     section,
@@ -118,6 +119,7 @@ export function GallerySection({
     "Galeria de experiencias",
     40,
     textMap,
+    responsiveMode,
   );
   const body = renderField(
     section,
@@ -125,9 +127,17 @@ export function GallerySection({
     "Momentos de aprendizaje",
     18,
     textMap,
+    responsiveMode,
   );
   const items = [1, 2, 3, 4].map((index) =>
-    renderField(section, `item${index}`, `Item ${index}`, 18, textMap),
+    renderField(
+      section,
+      `item${index}`,
+      `Item ${index}`,
+      18,
+      textMap,
+      responsiveMode,
+    ),
   );
   const itemImages = [1, 2, 3, 4].map(
     (index) =>
@@ -568,6 +578,7 @@ export function GallerySection({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           orderMap={orderMap}
         />
       </div>

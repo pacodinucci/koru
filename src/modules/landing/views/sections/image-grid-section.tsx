@@ -28,12 +28,18 @@ export function ImageGridSection({
   previewMode,
   selectedFieldId,
   onSelectField,
+  responsiveMode,
 }: LandingSectionComponentProps) {
   const sharedTextStyleKey = getSectionFieldKey(section.id, "__cards_text_style");
   const sharedTextStyleField = {
     key: sharedTextStyleKey,
     value: "",
-    fontSize: getLandingFieldFontSize(textMap, sharedTextStyleKey, 22),
+    fontSize: getLandingFieldFontSize(
+      textMap,
+      sharedTextStyleKey,
+      22,
+      responsiveMode,
+    ),
     color: getLandingFieldColor(textMap, sharedTextStyleKey),
     fontFamily: getLandingFieldFontFamily(textMap, sharedTextStyleKey),
     fontWeight: getLandingFieldFontWeight(textMap, sharedTextStyleKey),
@@ -41,7 +47,14 @@ export function ImageGridSection({
     paddingStyle: getLandingFieldPaddingStyle(textMap, sharedTextStyleKey),
   };
   const cards = Array.from({ length: 12 }, (_, index) =>
-    renderField(section, `item${index + 1}`, `Card ${index + 1}`, 22, textMap),
+    renderField(
+      section,
+      `item${index + 1}`,
+      `Card ${index + 1}`,
+      22,
+      textMap,
+      responsiveMode,
+    ),
   );
   const imageUrls = [
     "/assets/img1.jpg",
@@ -135,6 +148,7 @@ export function ImageGridSection({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           orderMap={orderMap}
         />
       </div>

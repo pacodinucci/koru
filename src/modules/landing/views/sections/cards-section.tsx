@@ -20,14 +20,23 @@ export function CardsSection({
   previewMode,
   selectedFieldId,
   onSelectField,
+  responsiveMode,
 }: LandingSectionComponentProps) {
-  const kicker = renderField(section, "kicker", "NUESTRA MIRADA", 12, textMap);
+  const kicker = renderField(
+    section,
+    "kicker",
+    "NUESTRA MIRADA",
+    12,
+    textMap,
+    responsiveMode,
+  );
   const title = renderField(
     section,
     "title",
     "Pedagogias alternativas",
     40,
     textMap,
+    responsiveMode,
   );
   const body = renderField(
     section,
@@ -35,6 +44,7 @@ export function CardsSection({
     "Comunidad y transformacion.",
     18,
     textMap,
+    responsiveMode,
   );
   const cards = [1, 2, 3].map((index) => ({
     title: renderField(
@@ -43,8 +53,16 @@ export function CardsSection({
       `Card ${index}`,
       30,
       textMap,
+      responsiveMode,
     ),
-    body: renderField(section, `card${index}_body`, "Descripcion", 18, textMap),
+    body: renderField(
+      section,
+      `card${index}_body`,
+      "Descripcion",
+      18,
+      textMap,
+      responsiveMode,
+    ),
   }));
   const orderMap = getSectionOrderMap(textMap, section.id);
   const sectionPaddingStyle = getLandingFieldPaddingStyle(
@@ -173,6 +191,7 @@ export function CardsSection({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           orderMap={orderMap}
         />
       </div>

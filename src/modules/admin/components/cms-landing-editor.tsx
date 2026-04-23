@@ -53,6 +53,8 @@ import {
   getSectionExtraTextKey,
   getSectionExtraPositionXKey,
   getSectionExtraPositionYKey,
+  getSectionExtraResponsivePositionXKey,
+  getSectionExtraResponsivePositionYKey,
   getSectionExtrasKey,
   getSectionFieldKey,
   getSectionFooterHeightKey,
@@ -67,6 +69,7 @@ import {
   type LandingSectionType,
 } from "@/modules/landing/config/landing-sections";
 import {
+  createResponsiveScopedTextMap,
   getLandingFieldBackgroundColorKey,
   getLandingFieldBorderColorKey,
   getLandingFieldBorderRadiusKey,
@@ -85,7 +88,11 @@ import {
   getLandingFieldPaddingTopKey,
   getLandingFieldPaddingXKey,
   getLandingFieldPaddingYKey,
+  getResponsiveOverrideKey,
+  isResponsiveScopedFieldId,
   getLandingFieldSizeKey,
+  getLandingFieldResponsiveSizeKey,
+  type LandingResponsiveMode,
   type SpacingMode,
 } from "@/modules/landing/types/landing-text";
 import { publishCmsAction } from "@/modules/cms/server/cms-text.actions";
@@ -569,6 +576,12 @@ const PREVIEW_ZOOM_MAX = 200;
 const PREVIEW_ZOOM_STEP = 10;
 const PREVIEW_ZOOM_DEFAULT = 100;
 const PREVIEW_ZOOM_BASE_SCALE = 0.7;
+const PREVIEW_CANVAS_WIDTH: Record<LandingResponsiveMode, number> = {
+  large: 1440,
+  medium: 1200,
+  tablet: 834,
+  mobile: 390,
+};
 const VIDEO_ASSET_OPTIONS = [
   "/assets/vid1.mp4",
   "/assets/vid2.mp4",
@@ -602,7 +615,7 @@ const BRAND_COMPLEMENT_COLOR_OPTIONS = [
 
 export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
   const initialStructure = parseLandingStructure(initialTextMap);
-  const [textMap, setTextMap] = useState<LandingTextMap>(() =>
+  const [rawTextMap, setTextMap] = useState<LandingTextMap>(() =>
     ensureLandingDefaults(initialTextMap),
   );
   const [structure, setStructure] =
@@ -624,6 +637,8 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     null,
   );
   const [previewZoom, setPreviewZoom] = useState(PREVIEW_ZOOM_DEFAULT);
+  const [responsiveEditMode, setResponsiveEditMode] =
+    useState<LandingResponsiveMode>("large");
   const [previewViewportHeight, setPreviewViewportHeight] = useState(0);
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const nextExtraIdRef = useRef(1);
@@ -633,6 +648,11 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     previewViewportHeight > 0 && effectivePreviewScale > 0
       ? previewViewportHeight / effectivePreviewScale
       : undefined;
+  const previewCanvasWidth = PREVIEW_CANVAS_WIDTH[responsiveEditMode];
+  const textMap = useMemo<LandingTextMap>(
+    () => createResponsiveScopedTextMap(rawTextMap, responsiveEditMode),
+    [rawTextMap, responsiveEditMode],
+  );
 
   function clampPreviewZoom(value: number) {
     return clamp(value, PREVIEW_ZOOM_MIN, PREVIEW_ZOOM_MAX);
@@ -972,6 +992,35 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     return [...ordered, ...missing];
   }, [selectedSectionId, structure, activeSectionExtras, textMap]);
 
+  function getExtraPositionXFieldKey(sectionId: string, extraId: string) {
+    if (responsiveEditMode === "large") {
+      return getSectionExtraPositionXKey(sectionId, extraId);
+    }
+    return getSectionExtraResponsivePositionXKey(
+      sectionId,
+      extraId,
+      responsiveEditMode,
+    );
+  }
+
+  function getExtraPositionYFieldKey(sectionId: string, extraId: string) {
+    if (responsiveEditMode === "large") {
+      return getSectionExtraPositionYKey(sectionId, extraId);
+    }
+    return getSectionExtraResponsivePositionYKey(
+      sectionId,
+      extraId,
+      responsiveEditMode,
+    );
+  }
+
+  function getExtraSizeFieldKey(textKey: string) {
+    if (responsiveEditMode === "large") {
+      return getLandingFieldSizeKey(textKey);
+    }
+    return getLandingFieldResponsiveSizeKey(textKey, responsiveEditMode);
+  }
+
   function resolveTopLevelAccordionId(
     sectionId: string | null,
     fieldId: string | null,
@@ -1012,9 +1061,18 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
   }
 
   function updateField(fieldId: string, value: string) {
+    const isExplicitResponsiveKey =
+      fieldId.endsWith(`__${responsiveEditMode}`) ||
+      fieldId.endsWith(`_${responsiveEditMode}`);
+    const resolvedFieldId =
+      responsiveEditMode !== "large" &&
+      isResponsiveScopedFieldId(fieldId) &&
+      !isExplicitResponsiveKey
+        ? getResponsiveOverrideKey(fieldId, responsiveEditMode)
+        : fieldId;
     setTextMap((previous) => ({
       ...previous,
-      [fieldId]: value,
+      [resolvedFieldId]: value,
     }));
   }
 
@@ -1279,15 +1337,24 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     extraId: string,
     positionX: number,
     positionY: number,
+    mode: LandingResponsiveMode,
   ) {
     const nextX = clamp(Math.round(positionX), 0, 100);
     const nextY = clamp(Math.round(positionY), 0, 100);
     const textKey = getSectionExtraTextKey(sectionId, extraId);
+    const positionXKey =
+      mode === "large"
+        ? getSectionExtraPositionXKey(sectionId, extraId)
+        : getSectionExtraResponsivePositionXKey(sectionId, extraId, mode);
+    const positionYKey =
+      mode === "large"
+        ? getSectionExtraPositionYKey(sectionId, extraId)
+        : getSectionExtraResponsivePositionYKey(sectionId, extraId, mode);
 
     setTextMap((previous) => ({
       ...previous,
-      [getSectionExtraPositionXKey(sectionId, extraId)]: String(nextX),
-      [getSectionExtraPositionYKey(sectionId, extraId)]: String(nextY),
+      [positionXKey]: String(nextX),
+      [positionYKey]: String(nextY),
     }));
 
     setSelectedSectionId(sectionId);
@@ -1299,7 +1366,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
 
   async function handlePublish() {
     const payload = {
-      ...textMap,
+      ...rawTextMap,
       [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
     };
     const result = await publishCmsAction(payload);
@@ -1519,6 +1586,29 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                           Configurar secciones
                         </Button>
                       </div>
+
+                      {selectedSection ? (
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-muted-foreground">
+                            Edicion responsive
+                          </label>
+                          <PanelRadioGroup
+                            name="footer-responsive-mode"
+                            value={responsiveEditMode}
+                            options={[
+                              { value: "large", label: "Grande" },
+                              { value: "medium", label: "Mediana" },
+                              { value: "tablet", label: "Tablet" },
+                              { value: "mobile", label: "Movil" },
+                            ]}
+                            onChange={(nextValue) =>
+                              setResponsiveEditMode(
+                                nextValue as LandingResponsiveMode,
+                              )
+                            }
+                          />
+                        </div>
+                      ) : null}
 
                       <div className="order-2 space-y-3">
                         {selectedSection ? (
@@ -2410,6 +2500,22 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                   textMap[
                                     getLandingFieldButtonVariantKey(item.textKey)
                                   ] ?? "default";
+                                const extraSizeKey =
+                                  item.kind === "extra"
+                                    ? getExtraSizeFieldKey(item.textKey)
+                                    : null;
+                                const extraPositionXKey = item.extraId
+                                  ? getExtraPositionXFieldKey(
+                                      selectedSection.id,
+                                      item.extraId,
+                                    )
+                                  : null;
+                                const extraPositionYKey = item.extraId
+                                  ? getExtraPositionYFieldKey(
+                                      selectedSection.id,
+                                      item.extraId,
+                                    )
+                                  : null;
                                 const isVideoUrlItem =
                                   selectedSection.type === "video" &&
                                   item.kind === "base" &&
@@ -2852,11 +2958,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                           <SliderValueControl
                                             label="Tamano"
                                             value={getNumberValue(
-                                              textMap[
-                                                getLandingFieldSizeKey(
-                                                  item.textKey,
-                                                )
-                                              ],
+                                              textMap[extraSizeKey!],
                                               extraDefaults?.size ?? 24,
                                               12,
                                               800,
@@ -2865,9 +2967,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             max={800}
                                             onChange={(value) =>
                                               updateField(
-                                                getLandingFieldSizeKey(
-                                                  item.textKey,
-                                                ),
+                                                extraSizeKey!,
                                                 String(value),
                                               )
                                             }
@@ -2875,12 +2975,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                           <SliderValueControl
                                             label="Posicion X"
                                             value={getNumberValue(
-                                              textMap[
-                                                getSectionExtraPositionXKey(
-                                                  selectedSection.id,
-                                                  item.extraId,
-                                                )
-                                              ],
+                                              textMap[extraPositionXKey!],
                                               50,
                                               0,
                                               100,
@@ -2889,10 +2984,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             max={100}
                                             onChange={(value) =>
                                               updateField(
-                                                getSectionExtraPositionXKey(
-                                                  selectedSection.id,
-                                                  item.extraId,
-                                                ),
+                                                extraPositionXKey!,
                                                 String(value),
                                               )
                                             }
@@ -2900,12 +2992,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                           <SliderValueControl
                                             label="Posicion Y"
                                             value={getNumberValue(
-                                              textMap[
-                                                getSectionExtraPositionYKey(
-                                                  selectedSection.id,
-                                                  item.extraId,
-                                                )
-                                              ],
+                                              textMap[extraPositionYKey!],
                                               50,
                                               0,
                                               100,
@@ -2914,10 +3001,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             max={100}
                                             onChange={(value) =>
                                               updateField(
-                                                getSectionExtraPositionYKey(
-                                                  selectedSection.id,
-                                                  item.extraId,
-                                                ),
+                                                extraPositionYKey!,
                                                 String(value),
                                               )
                                             }
@@ -3284,11 +3368,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                           <SliderValueControl
                                             label="Tamano"
                                             value={getNumberValue(
-                                              textMap[
-                                                getLandingFieldSizeKey(
-                                                  item.textKey,
-                                                )
-                                              ],
+                                              textMap[extraSizeKey!],
                                               extraDefaults?.size ?? 24,
                                               12,
                                               800,
@@ -3297,9 +3377,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             max={800}
                                             onChange={(value) =>
                                               updateField(
-                                                getLandingFieldSizeKey(
-                                                  item.textKey,
-                                                ),
+                                                extraSizeKey!,
                                                 String(value),
                                               )
                                             }
@@ -3331,12 +3409,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                           <SliderValueControl
                                             label="Posicion X"
                                             value={getNumberValue(
-                                              textMap[
-                                                getSectionExtraPositionXKey(
-                                                  selectedSection.id,
-                                                  item.extraId,
-                                                )
-                                              ],
+                                              textMap[extraPositionXKey!],
                                               50,
                                               0,
                                               100,
@@ -3345,10 +3418,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             max={100}
                                             onChange={(value) =>
                                               updateField(
-                                                getSectionExtraPositionXKey(
-                                                  selectedSection.id,
-                                                  item.extraId,
-                                                ),
+                                                extraPositionXKey!,
                                                 String(value),
                                               )
                                             }
@@ -3356,12 +3426,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                           <SliderValueControl
                                             label="Posicion Y"
                                             value={getNumberValue(
-                                              textMap[
-                                                getSectionExtraPositionYKey(
-                                                  selectedSection.id,
-                                                  item.extraId,
-                                                )
-                                              ],
+                                              textMap[extraPositionYKey!],
                                               50,
                                               0,
                                               100,
@@ -3370,10 +3435,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                                             max={100}
                                             onChange={(value) =>
                                               updateField(
-                                                getSectionExtraPositionYKey(
-                                                  selectedSection.id,
-                                                  item.extraId,
-                                                ),
+                                                extraPositionYKey!,
                                                 String(value),
                                               )
                                             }
@@ -3521,10 +3583,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
           ref={previewScrollRef}
           className="relative h-[78vh] overflow-auto rounded-xl border bg-muted/20"
         >
-          <div className="w-full min-w-0">
+          <div className="flex min-w-full justify-center p-2">
             <div
               className="origin-top-left"
-              style={{ zoom: effectivePreviewScale }}
+              style={{ zoom: effectivePreviewScale, width: `${previewCanvasWidth}px` }}
             >
               <div
                 onClickCapture={(event) => {
@@ -3540,11 +3602,12 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
               >
                 <LandingView
                   textMap={{
-                    ...textMap,
+                    ...rawTextMap,
                     [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
                   }}
                   previewViewportHeight={previewViewportHeightForContent}
                   previewMode
+                  responsiveMode={responsiveEditMode}
                   selectedFieldId={selectedFieldId}
                   onSelectField={handleSelectField}
                   onMoveSectionExtraPosition={handleMoveSectionExtraPosition}

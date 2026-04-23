@@ -1,11 +1,19 @@
 "use client";
 
-import { useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   getSectionExtraPositionXKey,
   getSectionExtraPositionYKey,
+  getSectionExtraResponsivePositionXKey,
+  getSectionExtraResponsivePositionYKey,
   getSectionExtraTextKey,
   parseSectionExtraElements,
   type SectionExtraElementType,
@@ -24,7 +32,9 @@ import {
   getLandingFieldFontWeight,
   getLandingFieldMarginStyle,
   getLandingFieldPaddingStyle,
+  getLandingFieldResponsiveSizeKey,
   type LandingPreviewBindings,
+  type LandingResponsiveMode,
   type LandingTextMap,
 } from "@/modules/landing/types/landing-text";
 import { getFieldStyle, selectableClass } from "@/modules/landing/views/utils/field";
@@ -61,11 +71,52 @@ export function SectionExtras({
   previewMode,
   selectedFieldId,
   onSelectField,
+  responsiveMode,
   onMoveSectionExtraPosition,
   orderMap,
 }: SectionExtrasProps) {
   const extras = parseSectionExtraElements(textMap, section.id);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const RESPONSIVE_BASE_WIDTH = 1200;
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || section.type !== "footer") {
+      return;
+    }
+
+    const updateWidth = () => {
+      setContainerWidth(container.clientWidth);
+    };
+
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(container);
+    window.addEventListener("resize", updateWidth);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, [section.type]);
+
+  const footerResponsiveScale = 1;
+  const footerTextResponsiveScale =
+    section.type === "footer"
+      ? Math.min(1, Math.max(0.18, containerWidth / RESPONSIVE_BASE_WIDTH))
+      : 1;
+  const isFooterNarrowLayout = false;
+  const activeResponsiveMode: LandingResponsiveMode =
+    responsiveMode ??
+    (containerWidth >= 1280
+      ? "large"
+      : containerWidth >= 1024
+        ? "medium"
+        : containerWidth >= 768
+          ? "tablet"
+          : "mobile");
 
   if (extras.length === 0) {
     return null;
@@ -76,7 +127,9 @@ export function SectionExtras({
       ref={containerRef}
       className={cn(
         section.type === "footer"
-          ? "relative min-h-[220px]"
+          ? isFooterNarrowLayout
+            ? "flex flex-col gap-3"
+            : "relative min-h-[220px]"
           : "mt-8 space-y-4",
       )}
     >
@@ -98,6 +151,13 @@ export function SectionExtras({
         .map((extra) => {
           const key = getSectionExtraTextKey(section.id, extra.id);
           const defaults = getExtraDefault(extra.type);
+          const responsiveSizeRaw = textMap[
+            getLandingFieldResponsiveSizeKey(key, activeResponsiveMode)
+          ];
+          const parsedResponsiveSize = Number(responsiveSizeRaw);
+          const resolvedFontSize = Number.isFinite(parsedResponsiveSize)
+            ? Math.min(800, Math.max(10, parsedResponsiveSize))
+            : getLandingFieldFontSize(textMap, key, defaults.size);
           const order = getOrder(
             orderMap ?? new Map(),
             `extra:${extra.id}`,
@@ -106,19 +166,31 @@ export function SectionExtras({
           const field = {
             key,
             value: textMap[key] ?? defaults.text,
-            fontSize: getLandingFieldFontSize(textMap, key, defaults.size),
+            fontSize: resolvedFontSize,
             color: getLandingFieldColor(textMap, key),
             fontFamily: getLandingFieldFontFamily(textMap, key),
             fontWeight: getLandingFieldFontWeight(textMap, key),
             marginStyle: getLandingFieldMarginStyle(textMap, key),
             paddingStyle: getLandingFieldPaddingStyle(textMap, key),
           };
+          const positionXKey = getSectionExtraPositionXKey(section.id, extra.id);
+          const positionYKey = getSectionExtraPositionYKey(section.id, extra.id);
+          const responsivePositionXKey = getSectionExtraResponsivePositionXKey(
+            section.id,
+            extra.id,
+            activeResponsiveMode,
+          );
+          const responsivePositionYKey = getSectionExtraResponsivePositionYKey(
+            section.id,
+            extra.id,
+            activeResponsiveMode,
+          );
           const positionX = Number.parseInt(
-            textMap[getSectionExtraPositionXKey(section.id, extra.id)] ?? "50",
+            textMap[responsivePositionXKey] ?? textMap[positionXKey] ?? "50",
             10,
           );
           const positionY = Number.parseInt(
-            textMap[getSectionExtraPositionYKey(section.id, extra.id)] ?? "50",
+            textMap[responsivePositionYKey] ?? textMap[positionYKey] ?? "50",
             10,
           );
           const clampedX = Number.isFinite(positionX)
@@ -127,16 +199,50 @@ export function SectionExtras({
           const clampedY = Number.isFinite(positionY)
             ? Math.min(100, Math.max(0, positionY))
             : 50;
+          const shouldScaleElementWithTransform =
+            section.type === "footer" &&
+            !isFooterNarrowLayout &&
+            extra.type !== "text";
           const positionedStyle: CSSProperties =
             section.type === "footer"
+              ? isFooterNarrowLayout
+                ? {
+                    position: "relative",
+                    left: 0,
+                    top: 0,
+                    transform: "none",
+                    alignSelf: "flex-start",
+                    marginLeft: 0,
+                    maxWidth: "100%",
+                  }
+                : {
+                    position: "absolute",
+                    left: `${clampedX}%`,
+                    top: `${clampedY}%`,
+                    transform:
+                      shouldScaleElementWithTransform && footerResponsiveScale < 1
+                        ? `translate(-50%, -50%) scale(${footerResponsiveScale})`
+                        : "translate(-50%, -50%)",
+                    transformOrigin: "center center",
+                  }
+              : {};
+          const responsiveFooterTextStyle: CSSProperties =
+            section.type === "footer" && extra.type === "text"
               ? {
-                  position: "absolute",
-                  left: `${clampedX}%`,
-                  top: `${clampedY}%`,
-                  transform: "translate(-50%, -50%)",
+                  fontSize: `${Math.max(
+                    12,
+                    Math.round(field.fontSize * footerTextResponsiveScale),
+                  )}px`,
+                  lineHeight: 1.15,
+                  maxWidth: isFooterNarrowLayout
+                    ? "100%"
+                    : `${Math.max(140, Math.round(containerWidth * 0.9))}px`,
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
                 }
               : {};
-          const isDraggableInPreview = previewMode && section.type === "footer";
+          const isDraggableInPreview =
+            previewMode && section.type === "footer" && !isFooterNarrowLayout;
           const extraTextKey = getSectionExtraTextKey(section.id, extra.id);
 
           const handlePointerDown = (event: ReactPointerEvent<HTMLElement>) => {
@@ -183,6 +289,7 @@ export function SectionExtras({
                 extra.id,
                 Math.round(nextX),
                 Math.round(nextY),
+                activeResponsiveMode,
               );
             };
 
@@ -357,13 +464,18 @@ export function SectionExtras({
             <p
               key={extra.id}
               className={cn(
-                "leading-7 text-black/75",
+                section.type === "footer" ? "text-black/75" : "leading-7 text-black/75",
                 isDraggableInPreview && "cursor-grab active:cursor-grabbing",
                 selectableClass(selectedFieldId === field.key, previewMode),
               )}
               onClick={() => onSelectField?.(field.key)}
               onPointerDown={handlePointerDown}
-              style={{ ...getFieldStyle(field), ...positionedStyle, order }}
+              style={{
+                ...getFieldStyle(field),
+                ...responsiveFooterTextStyle,
+                ...positionedStyle,
+                order,
+              }}
             >
               {field.value}
             </p>

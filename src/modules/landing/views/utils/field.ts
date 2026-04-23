@@ -8,6 +8,7 @@ import {
   getLandingFieldMarginStyle,
   getLandingFieldPaddingStyle,
   type LandingFontFamily,
+  type LandingResponsiveMode,
   type LandingTextMap,
 } from "@/modules/landing/types/landing-text";
 import type { CSSProperties } from "react";
@@ -37,12 +38,13 @@ export function renderField(
   fallback: string,
   fallbackSize: number,
   textMap: LandingTextMap,
+  responsiveMode?: LandingResponsiveMode,
 ): LandingRenderableField {
   const key = getSectionFieldKey(section.id, fieldKey);
   return {
     key,
     value: textMap[key] ?? fallback,
-    fontSize: getLandingFieldFontSize(textMap, key, fallbackSize),
+    fontSize: getLandingFieldFontSize(textMap, key, fallbackSize, responsiveMode),
     color: getLandingFieldColor(textMap, key),
     fontFamily: getLandingFieldFontFamily(textMap, key),
     fontWeight: getLandingFieldFontWeight(textMap, key),
@@ -73,4 +75,3 @@ export function getFieldStyle(field: LandingRenderableField): CSSProperties {
     ...(field.color ? { color: field.color } : null),
   };
 }
-

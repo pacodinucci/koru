@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { LandingNav } from "@/modules/landing/components/landing-nav";
 import {
   ensureLandingDefaults,
@@ -8,8 +8,13 @@ import {
   type LandingSectionInstance,
 } from "@/modules/landing/config/landing-sections";
 import type {
+  LandingResponsiveMode,
   LandingPreviewBindings,
   LandingTextMap,
+} from "@/modules/landing/types/landing-text";
+import {
+  createResponsiveScopedTextMap,
+  getResponsiveModeFromWidth,
 } from "@/modules/landing/types/landing-text";
 import { CardsSection } from "@/modules/landing/views/sections/cards-section";
 import { FooterSection } from "@/modules/landing/views/sections/footer-section";
@@ -35,6 +40,7 @@ function SectionRenderer({
   previewMode,
   selectedFieldId,
   onSelectField,
+  responsiveMode,
   onMoveSectionExtraPosition,
 }: SectionRendererProps) {
   switch (section.type) {
@@ -46,6 +52,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
@@ -57,6 +64,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
@@ -68,6 +76,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
@@ -79,6 +88,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
@@ -90,6 +100,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
@@ -101,6 +112,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
@@ -112,6 +124,7 @@ function SectionRenderer({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
@@ -126,10 +139,43 @@ export function LandingView({
   previewMode,
   selectedFieldId,
   onSelectField,
+  responsiveMode,
   onMoveSectionExtraPosition,
 }: LandingViewProps) {
   const completeMap = ensureLandingDefaults(textMap);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [rootWidth, setRootWidth] = useState(0);
+  const effectiveResponsiveMode: LandingResponsiveMode =
+    responsiveMode ??
+    getResponsiveModeFromWidth(
+      rootWidth > 0
+        ? rootWidth
+        : typeof window !== "undefined"
+          ? window.innerWidth
+          : 1400,
+    );
+
+  const responsiveMap = createResponsiveScopedTextMap(
+    completeMap,
+    effectiveResponsiveMode,
+  );
   const structure = parseLandingStructure(completeMap);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) {
+      return;
+    }
+    const update = () => setRootWidth(root.clientWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(root);
+    window.addEventListener("resize", update);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
   const previewRootStyle: CSSProperties | undefined =
     previewMode && previewViewportHeight
       ? ({
@@ -139,6 +185,7 @@ export function LandingView({
 
   return (
     <div
+      ref={rootRef}
       className="min-h-screen bg-[#f4efe5] text-black"
       data-landing-preview={previewMode ? "true" : undefined}
       style={previewRootStyle}
@@ -148,10 +195,11 @@ export function LandingView({
         <div key={section.id} data-preview-section-id={section.id}>
           <SectionRenderer
             section={section}
-            textMap={completeMap}
+            textMap={responsiveMap}
             previewMode={previewMode}
             selectedFieldId={selectedFieldId}
             onSelectField={onSelectField}
+            responsiveMode={effectiveResponsiveMode}
             onMoveSectionExtraPosition={onMoveSectionExtraPosition}
           />
         </div>

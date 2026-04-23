@@ -20,6 +20,7 @@ export function HeroSection({
   previewMode,
   selectedFieldId,
   onSelectField,
+  responsiveMode,
 }: LandingSectionComponentProps) {
   const kicker = renderField(
     section,
@@ -27,6 +28,7 @@ export function HeroSection({
     "BIENVENID@S A KORU OSA",
     12,
     textMap,
+    responsiveMode,
   );
   const title = renderField(
     section,
@@ -34,6 +36,7 @@ export function HeroSection({
     "En Koru, entendemos la educacion como un organismo vivo.",
     56,
     textMap,
+    responsiveMode,
   );
   const body = renderField(
     section,
@@ -41,8 +44,16 @@ export function HeroSection({
     "Nuestro cuerpo escolar no es un molde rigido, sino una forma cambiante.",
     20,
     textMap,
+    responsiveMode,
   );
-  const cta = renderField(section, "cta", "Haz una donación", 14, textMap);
+  const cta = renderField(
+    section,
+    "cta",
+    "Haz una donación",
+    14,
+    textMap,
+    responsiveMode,
+  );
   const orderMap = getSectionOrderMap(textMap, section.id);
   const sectionPaddingStyle = getLandingFieldPaddingStyle(
     textMap,
@@ -140,6 +151,7 @@ export function HeroSection({
             previewMode={previewMode}
             selectedFieldId={selectedFieldId}
             onSelectField={onSelectField}
+            responsiveMode={responsiveMode}
             orderMap={orderMap}
           />
         </div>

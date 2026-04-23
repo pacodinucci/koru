@@ -460,6 +460,24 @@ export function getSectionExtraPositionYKey(sectionId: string, extraId: string) 
   return getSectionFieldKey(sectionId, `extra.${extraId}.position_y`);
 }
 
+export type SectionResponsiveMode = "large" | "medium" | "tablet" | "mobile";
+
+export function getSectionExtraResponsivePositionXKey(
+  sectionId: string,
+  extraId: string,
+  mode: SectionResponsiveMode,
+) {
+  return getSectionFieldKey(sectionId, `extra.${extraId}.position_x_${mode}`);
+}
+
+export function getSectionExtraResponsivePositionYKey(
+  sectionId: string,
+  extraId: string,
+  mode: SectionResponsiveMode,
+) {
+  return getSectionFieldKey(sectionId, `extra.${extraId}.position_y_${mode}`);
+}
+
 export function parseSectionExtraElements(
   textMap: LandingTextMap,
   sectionId: string,

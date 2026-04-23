@@ -44,6 +44,7 @@ export function VideoSection({
   section,
   textMap,
   previewMode,
+  responsiveMode,
 }: LandingSectionComponentProps) {
   const videoUrlKey = getSectionFieldKey(section.id, "url");
   const videoOverlayOpacityKey = getSectionFieldKey(
@@ -182,6 +183,7 @@ export function VideoSection({
         section={section}
         textMap={textMap}
         previewMode={previewMode}
+        responsiveMode={responsiveMode}
       />
     </section>
   );

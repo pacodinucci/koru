@@ -20,6 +20,7 @@ export function StorySection({
   previewMode,
   selectedFieldId,
   onSelectField,
+  responsiveMode,
 }: LandingSectionComponentProps) {
   const title = renderField(
     section,
@@ -27,14 +28,23 @@ export function StorySection({
     "Una practica educativa",
     40,
     textMap,
+    responsiveMode,
   );
-  const body = renderField(section, "body", "Descripcion", 18, textMap);
+  const body = renderField(
+    section,
+    "body",
+    "Descripcion",
+    18,
+    textMap,
+    responsiveMode,
+  );
   const quote = renderField(
     section,
     "quote",
     "Koru es abrazo, tribu y transformacion.",
     26,
     textMap,
+    responsiveMode,
   );
   const orderMap = getSectionOrderMap(textMap, section.id);
   const sectionPaddingStyle = getLandingFieldPaddingStyle(
@@ -109,6 +119,7 @@ export function StorySection({
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
           orderMap={orderMap}
         />
       </div>
