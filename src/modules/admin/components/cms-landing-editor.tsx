@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
-  SlidersHorizontal,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type CSSProperties,
+} from "react";
+import { createPortal } from "react-dom";
+import {
   ChevronRight,
   ChevronsRight,
   ChevronLeft,
@@ -11,6 +18,10 @@ import {
   Minus,
   Plus,
   RotateCcw,
+  Monitor,
+  Laptop,
+  Tablet,
+  Smartphone,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -23,9 +34,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { useAdminEditorPanel } from "@/modules/admin/components/admin-editor-panel";
 import {
   LANDING_STRUCTURE_KEY,
   ensureLandingDefaults,
@@ -102,6 +114,7 @@ type LandingTextMap = Record<string, string>;
 
 type CmsLandingEditorProps = {
   initialTextMap: LandingTextMap;
+  frameVariant?: "default" | "flush";
 };
 
 type SectionItem = {
@@ -239,7 +252,8 @@ type PanelRangeInputProps = {
 
 type PanelRadioGroupOption = {
   value: string;
-  label: string;
+  label: ReactNode;
+  srLabel?: string;
 };
 
 type PanelRadioGroupProps = {
@@ -282,8 +296,15 @@ function PanelRangeInput({
     onChange(Number(next.toFixed(decimals)));
   };
 
+
+
   return (
-    <div className={cn("grid grid-cols-[26px_1fr_26px] items-center gap-2", className)}>
+    <div
+      className={cn(
+        "grid grid-cols-[26px_1fr_26px] items-center gap-2",
+        className,
+      )}
+    >
       <button
         type="button"
         className="panel-range-stepper"
@@ -340,6 +361,7 @@ function PanelRadioGroup({
         <label
           key={option.value}
           className="inline-flex cursor-pointer items-center gap-2 text-xs"
+          title={option.srLabel}
         >
           <input
             type="radio"
@@ -353,6 +375,9 @@ function PanelRadioGroup({
             <span className="h-2.5 w-2.5 rounded-full bg-transparent transition-colors peer-checked:bg-[var(--complement-700)]" />
           </span>
           <span className="font-medium text-foreground/90">{option.label}</span>
+          {option.srLabel ? (
+            <span className="sr-only">{option.srLabel}</span>
+          ) : null}
         </label>
       ))}
     </div>
@@ -407,7 +432,9 @@ function PanelColorControl({
               <button
                 key={color}
                 type="button"
-                aria-label={isTransparent ? "Color transparente" : `Color ${color}`}
+                aria-label={
+                  isTransparent ? "Color transparente" : `Color ${color}`
+                }
                 className={cn(
                   "rounded-sm border border-black/30",
                   isActive && "ring-2 ring-primary ring-offset-1",
@@ -417,7 +444,9 @@ function PanelColorControl({
                   backgroundImage: isTransparent
                     ? "linear-gradient(45deg, #d1d5db 25%, transparent 25%, transparent 75%, #d1d5db 75%, #d1d5db), linear-gradient(45deg, #d1d5db 25%, transparent 25%, transparent 75%, #d1d5db 75%, #d1d5db)"
                     : undefined,
-                  backgroundPosition: isTransparent ? "0 0, 4px 4px" : undefined,
+                  backgroundPosition: isTransparent
+                    ? "0 0, 4px 4px"
+                    : undefined,
                   backgroundSize: isTransparent ? "8px 8px" : undefined,
                   width: "18px",
                   height: "18px",
@@ -553,7 +582,10 @@ function getSectionVideoTextFieldKey(
   return getSectionFieldKey(sectionId, `__video_text_${textId}_${field}`);
 }
 
-function parseSectionVideoTextItems(textMap: LandingTextMap, sectionId: string) {
+function parseSectionVideoTextItems(
+  textMap: LandingTextMap,
+  sectionId: string,
+) {
   const raw = textMap[getSectionVideoTextItemsKey(sectionId)];
   if (!raw) {
     return [] as string[];
@@ -564,7 +596,8 @@ function parseSectionVideoTextItems(textMap: LandingTextMap, sectionId: string) 
       return [] as string[];
     }
     return parsed.filter(
-      (item): item is string => typeof item === "string" && item.trim().length > 0,
+      (item): item is string =>
+        typeof item === "string" && item.trim().length > 0,
     );
   } catch {
     return [] as string[];
@@ -575,7 +608,7 @@ const PREVIEW_ZOOM_MIN = 30;
 const PREVIEW_ZOOM_MAX = 200;
 const PREVIEW_ZOOM_STEP = 10;
 const PREVIEW_ZOOM_DEFAULT = 100;
-const PREVIEW_ZOOM_BASE_SCALE = 0.7;
+const PREVIEW_ZOOM_BASE_SCALE = 0.62;
 const PREVIEW_CANVAS_WIDTH: Record<LandingResponsiveMode, number> = {
   large: 1440,
   medium: 1200,
@@ -613,7 +646,10 @@ const BRAND_COMPLEMENT_COLOR_OPTIONS = [
   ...COMPLEMENT_COLOR_OPTIONS,
 ] as const;
 
-export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
+export function CmsLandingEditor({
+  initialTextMap,
+  frameVariant = "default",
+}: CmsLandingEditorProps) {
   const initialStructure = parseLandingStructure(initialTextMap);
   const [rawTextMap, setTextMap] = useState<LandingTextMap>(() =>
     ensureLandingDefaults(initialTextMap),
@@ -627,11 +663,10 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
   const [newSectionType, setNewSectionType] =
     useState<LandingSectionType>("hero");
   const [statusMessage, setStatusMessage] = useState("");
-  const [panelOpen, setPanelOpen] = useState(false);
   const [isSectionSettingsView, setIsSectionSettingsView] = useState(false);
-  const [openPanelAccordionId, setOpenPanelAccordionId] = useState<string | null>(
-    null,
-  );
+  const [openPanelAccordionId, setOpenPanelAccordionId] = useState<
+    string | null
+  >(null);
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
   const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(
     null,
@@ -640,7 +675,16 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
   const [responsiveEditMode, setResponsiveEditMode] =
     useState<LandingResponsiveMode>("large");
   const [previewViewportHeight, setPreviewViewportHeight] = useState(0);
+  const { open: sidebarOpen } = useSidebar();
+  const {
+    open: panelOpen,
+    setOpen: setPanelOpen,
+    portalTarget,
+  } = useAdminEditorPanel();
+  const compactPreviewSpacing = sidebarOpen && panelOpen;
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
+  const panelRootRef = useRef<HTMLDivElement | null>(null);
+  const panelBodyScrollRef = useRef<HTMLDivElement | null>(null);
   const nextExtraIdRef = useRef(1);
   const nextVideoTextIdRef = useRef(1);
   const effectivePreviewScale = (previewZoom / 100) * PREVIEW_ZOOM_BASE_SCALE;
@@ -695,6 +739,32 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
       window.removeEventListener("resize", updateViewportHeight);
     };
   }, []);
+
+  useEffect(() => {
+    const root = panelRootRef.current;
+    const panelBody = panelBodyScrollRef.current;
+    if (!root || !panelBody || !panelOpen) {
+      return;
+    }
+
+    const onWheel = (event: WheelEvent) => {
+      if (event.deltaY === 0) {
+        return;
+      }
+      const target = event.target as HTMLElement | null;
+      if (target && panelBody.contains(target)) {
+        return;
+      }
+
+      panelBody.scrollTop += event.deltaY;
+      event.preventDefault();
+    };
+
+    root.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      root.removeEventListener("wheel", onWheel);
+    };
+  }, [panelOpen]);
 
   const activeSectionId = selectedSectionId ?? structure[0]?.id ?? null;
   const selectedSection = useMemo(
@@ -890,14 +960,18 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     ? clamp(selectedSectionVideoPositionYRaw, 0, 100)
     : 50;
   const selectedSectionVideoZoomRaw = Number.parseFloat(
-    selectedSectionVideoZoomKey ? (textMap[selectedSectionVideoZoomKey] ?? "") : "",
+    selectedSectionVideoZoomKey
+      ? (textMap[selectedSectionVideoZoomKey] ?? "")
+      : "",
   );
   const selectedSectionVideoZoom = Number.isFinite(selectedSectionVideoZoomRaw)
     ? clamp(selectedSectionVideoZoomRaw, 1, 3)
     : 1;
   const selectedSectionVideoTextItems = useMemo(
     () =>
-      selectedSection ? parseSectionVideoTextItems(textMap, selectedSection.id) : [],
+      selectedSection
+        ? parseSectionVideoTextItems(textMap, selectedSection.id)
+        : [],
     [selectedSection, textMap],
   );
   const selectedSectionGalleryVariant = selectedSectionGalleryVariantKey
@@ -1211,7 +1285,8 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     setTextMap((previous) => ({
       ...previous,
       [getSectionVideoTextItemsKey(sectionId)]: JSON.stringify(nextItems),
-      [getSectionVideoTextFieldKey(sectionId, itemId, "content")]: "Nuevo texto",
+      [getSectionVideoTextFieldKey(sectionId, itemId, "content")]:
+        "Nuevo texto",
       [getSectionVideoTextFieldKey(sectionId, itemId, "size")]: "44",
       [getSectionVideoTextFieldKey(sectionId, itemId, "color")]: "#ffffff",
       [getSectionVideoTextFieldKey(sectionId, itemId, "weight")]: "700",
@@ -1374,11 +1449,2306 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
       result.ok ? "Cambios publicados en landing." : "No se pudo publicar.",
     );
   }
+  const panelPortal = portalTarget
+              ? createPortal(
+                  <div
+                    ref={panelRootRef}
+                    className="font-fira relative h-full overflow-visible"
+                  >
+                    <button
+                      type="button"
+                      className="panel-close-float absolute top-1/2 -left-10 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/65 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+                      onClick={() => setPanelOpen(false)}
+                      aria-label="Cerrar panel"
+                    >
+                      <ChevronsRight className="h-4 w-4" />
+                    </button>
+                    <div className="flex h-full min-h-0 flex-col">
+                      <div className="border-b">
+                        <div
+                          className="h-14 w-full overflow-hidden"
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            flexWrap: "nowrap",
+                          }}
+                        >
+                          <div
+                            className="flex h-full min-w-0 items-center justify-center gap-4 border-r px-2"
+                            style={{ flex: "0 0 50%", maxWidth: "50%" }}
+                          >
+                            <Button
+                              type="button"
+                              size="icon-sm"
+                              variant="ghost"
+                              className="h-8 w-8 rounded-md"
+                              onClick={() => goToAdjacentSection("prev")}
+                              disabled={activeSectionIndex <= 0}
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <span className="max-w-[120px] truncate text-center text-sm font-medium">
+                              {activeSectionId
+                                ? structure[activeSectionIndex]?.name
+                                : "Sección actual"}
+                            </span>
+                            <Button
+                              type="button"
+                              size="icon-sm"
+                              variant="ghost"
+                              className="h-8 w-8 rounded-md"
+                              onClick={() => goToAdjacentSection("next")}
+                              disabled={
+                                activeSectionIndex < 0 ||
+                                activeSectionIndex >= structure.length - 1
+                              }
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          <div
+                            className="h-full min-w-0"
+                            style={{ flex: "0 0 50%", maxWidth: "50%" }}
+                          >
+                            <button
+                              type="button"
+                              className="block h-full w-full rounded-none border-0"
+                              style={{
+                                backgroundColor: "#059669",
+                                color: "#ffffff",
+                              }}
+                              onClick={handlePublish}
+                            >
+                              Publicar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        ref={panelBodyScrollRef}
+                        className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                      >
+                        <div
+                          className={cn(
+                            "h-full min-h-0 flex flex-col gap-4 p-4",
+                            isSectionSettingsView && "hidden",
+                          )}
+                        >
+                          {statusMessage ? (
+                            <p className="text-xs text-muted-foreground">
+                              {statusMessage}
+                            </p>
+                          ) : null}
+
+                          <div className="flex items-center justify-between gap-2">
+                            {selectedSection?.type === "footer" ? (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger
+                                  render={
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                    />
+                                  }
+                                >
+                                  Agregar elemento
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start">
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      addExtraElement(
+                                        selectedSection.id,
+                                        "text",
+                                      )
+                                    }
+                                  >
+                                    Texto
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      addExtraElement(
+                                        selectedSection.id,
+                                        "button",
+                                      )
+                                    }
+                                  >
+                                    Boton
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      addExtraElement(
+                                        selectedSection.id,
+                                        "image",
+                                      )
+                                    }
+                                  >
+                                    Imagen
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      addExtraElement(
+                                        selectedSection.id,
+                                        "line-vertical",
+                                      )
+                                    }
+                                  >
+                                    Linea vertical
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      addExtraElement(
+                                        selectedSection.id,
+                                        "line-horizontal",
+                                      )
+                                    }
+                                  >
+                                    Linea horizontal
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            ) : (
+                              <div />
+                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setIsSectionSettingsView(true)}
+                            >
+                              Configurar secciones
+                            </Button>
+                          </div>
+
+                          {selectedSection ? (
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Edicion responsive
+                              </label>
+                    <PanelRadioGroup
+                      name="footer-responsive-mode"
+                      value={responsiveEditMode}
+                      options={[
+                        {
+                          value: "large",
+                          label: <Monitor className="h-4 w-4" />,
+                          srLabel: "Grande",
+                        },
+                        {
+                          value: "medium",
+                          label: <Laptop className="h-4 w-4" />,
+                          srLabel: "Mediana",
+                        },
+                        {
+                          value: "tablet",
+                          label: <Tablet className="h-4 w-4" />,
+                          srLabel: "Tablet",
+                        },
+                        {
+                          value: "mobile",
+                          label: <Smartphone className="h-4 w-4" />,
+                          srLabel: "Movil",
+                        },
+                      ]}
+                      onChange={(nextValue) =>
+                        setResponsiveEditMode(
+                          nextValue as LandingResponsiveMode,
+                                  )
+                                }
+                              />
+                            </div>
+                          ) : null}
+
+                          <div className="order-2 space-y-3">
+                            {selectedSection ? (
+                              <>
+                                <details
+                                  className="panel-accordion"
+                                  open={
+                                    openPanelAccordionId === "top:attributes"
+                                  }
+                                >
+                                  <summary
+                                    className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+                                    onClick={(event) => {
+                                      event.preventDefault();
+                                      toggleTopLevelAccordion("top:attributes");
+                                    }}
+                                  >
+                                    Atributos generales de seccion
+                                  </summary>
+                                  <div className="mt-2 space-y-3">
+                                    <p className="text-xs text-muted-foreground">
+                                      Tipo:{" "}
+                                      {
+                                        landingSectionCatalog[
+                                          selectedSection.type
+                                        ].label
+                                      }
+                                    </p>
+
+                                    {selectedSection.type === "gallery" &&
+                                    selectedSectionGalleryVariantKey ? (
+                                      <details className="panel-accordion panel-accordion-inner">
+                                        <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                          Version de galeria
+                                        </summary>
+                                        <PanelRadioGroup
+                                          name={`${selectedSection.id}-gallery-variant`}
+                                          value={selectedSectionGalleryVariant}
+                                          options={[
+                                            { value: "grid", label: "Grid" },
+                                            {
+                                              value: "carousel",
+                                              label: "Carousel",
+                                            },
+                                            {
+                                              value: "stacked",
+                                              label: "Stacked",
+                                            },
+                                            {
+                                              value: "editorial",
+                                              label: "Editorial",
+                                            },
+                                          ]}
+                                          onChange={(nextValue) =>
+                                            updateField(
+                                              selectedSectionGalleryVariantKey,
+                                              nextValue,
+                                            )
+                                          }
+                                        />
+
+                                        {selectedSectionGalleryVariant ===
+                                          "grid" &&
+                                        selectedSectionGalleryGridImageShapeKey ? (
+                                          <div className="space-y-2 rounded-md border bg-background p-2">
+                                            <label className="text-xs font-medium text-muted-foreground">
+                                              Forma de imagen en grid
+                                            </label>
+                                            <PanelRadioGroup
+                                              name={`${selectedSection.id}-gallery-grid-shape`}
+                                              value={
+                                                selectedSectionGalleryGridImageShape
+                                              }
+                                              options={[
+                                                {
+                                                  value: "square",
+                                                  label: "Cuadrada",
+                                                },
+                                                {
+                                                  value: "portrait",
+                                                  label: "Vertical",
+                                                },
+                                                {
+                                                  value: "landscape",
+                                                  label: "Horizontal",
+                                                },
+                                              ]}
+                                              onChange={(nextValue) =>
+                                                updateField(
+                                                  selectedSectionGalleryGridImageShapeKey,
+                                                  nextValue,
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                        ) : null}
+
+                                        {selectedSectionGalleryCaptionContainerOpacityKey &&
+                                        selectedSectionGalleryCaptionContainerPaddingXKey &&
+                                        selectedSectionGalleryCaptionContainerPaddingYKey ? (
+                                          <div className="space-y-2 rounded-md border bg-background p-2">
+                                            <label className="text-xs font-medium text-muted-foreground">
+                                              Contenedor de texto
+                                            </label>
+                                            <div className="space-y-1.5">
+                                              <label className="text-xs font-medium text-muted-foreground">
+                                                Opacidad de fondo (
+                                                {
+                                                  selectedSectionGalleryCaptionContainerOpacity
+                                                }
+                                                %)
+                                              </label>
+                                              <div className="grid grid-cols-[1fr_84px] gap-2">
+                                                <PanelRangeInput
+                                                  min={0}
+                                                  max={100}
+                                                  step={1}
+                                                  value={
+                                                    selectedSectionGalleryCaptionContainerOpacity
+                                                  }
+                                                  onChange={(value) =>
+                                                    updateField(
+                                                      selectedSectionGalleryCaptionContainerOpacityKey,
+                                                      String(value),
+                                                    )
+                                                  }
+                                                />
+                                                <Input
+                                                  type="number"
+                                                  min={0}
+                                                  max={100}
+                                                  step={1}
+                                                  value={
+                                                    selectedSectionGalleryCaptionContainerOpacity
+                                                  }
+                                                  onChange={(event) =>
+                                                    updateField(
+                                                      selectedSectionGalleryCaptionContainerOpacityKey,
+                                                      event.target.value,
+                                                    )
+                                                  }
+                                                />
+                                              </div>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                              <SliderValueControl
+                                                label="Padding X"
+                                                value={
+                                                  selectedSectionGalleryCaptionContainerPaddingX
+                                                }
+                                                min={0}
+                                                max={80}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    selectedSectionGalleryCaptionContainerPaddingXKey,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                              <SliderValueControl
+                                                label="Padding Y"
+                                                value={
+                                                  selectedSectionGalleryCaptionContainerPaddingY
+                                                }
+                                                min={0}
+                                                max={80}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    selectedSectionGalleryCaptionContainerPaddingYKey,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                            </div>
+                                          </div>
+                                        ) : null}
+
+                                        {(selectedSectionGalleryVariant ===
+                                          "carousel" ||
+                                          selectedSectionGalleryVariant ===
+                                            "stacked") &&
+                                        selectedSectionGalleryAutoplaySecondsKey ? (
+                                          <div className="space-y-2">
+                                            <div className="space-y-1.5">
+                                              <label className="text-xs font-medium text-muted-foreground">
+                                                Autoplay (
+                                                {
+                                                  selectedSectionGalleryAutoplaySeconds
+                                                }
+                                                s)
+                                              </label>
+                                              <div className="grid grid-cols-[1fr_84px] gap-2">
+                                                <PanelRangeInput
+                                                  min={0}
+                                                  max={10}
+                                                  step={1}
+                                                  value={
+                                                    selectedSectionGalleryAutoplaySeconds
+                                                  }
+                                                  onChange={(value) =>
+                                                    updateField(
+                                                      selectedSectionGalleryAutoplaySecondsKey,
+                                                      String(value),
+                                                    )
+                                                  }
+                                                />
+                                                <Input
+                                                  type="number"
+                                                  min={0}
+                                                  max={10}
+                                                  step={1}
+                                                  value={
+                                                    selectedSectionGalleryAutoplaySeconds
+                                                  }
+                                                  onChange={(event) =>
+                                                    updateField(
+                                                      selectedSectionGalleryAutoplaySecondsKey,
+                                                      event.target.value,
+                                                    )
+                                                  }
+                                                />
+                                              </div>
+                                              <p className="text-[11px] text-muted-foreground">
+                                                0 desactiva el avance
+                                                automatico.
+                                              </p>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                              <label className="text-xs font-medium text-muted-foreground">
+                                                Imagenes del carrusel
+                                              </label>
+                                              {selectedSectionGalleryItemImageKeys.map(
+                                                (imageKey, imageIndex) => {
+                                                  const titleKey =
+                                                    selectedSectionGalleryItemTitleKeys[
+                                                      imageIndex
+                                                    ];
+                                                  const modeKey =
+                                                    selectedSectionGalleryItemCaptionModeKeys[
+                                                      imageIndex
+                                                    ];
+                                                  const subtitleKey =
+                                                    selectedSectionGalleryItemSubtitleKeys[
+                                                      imageIndex
+                                                    ];
+                                                  const mode =
+                                                    selectedSectionGalleryItemCaptionModes[
+                                                      imageIndex
+                                                    ] ?? "title";
+
+                                                  return (
+                                                    <div
+                                                      key={imageKey}
+                                                      className="space-y-2 rounded-md border bg-background p-2"
+                                                    >
+                                                      <p className="text-[11px] font-medium text-muted-foreground uppercase">
+                                                        Imagen {imageIndex + 1}
+                                                      </p>
+                                                      <Input
+                                                        placeholder="https://... (URL imagen)"
+                                                        value={
+                                                          textMap[imageKey] ??
+                                                          ""
+                                                        }
+                                                        onChange={(event) =>
+                                                          updateField(
+                                                            imageKey,
+                                                            event.target.value,
+                                                          )
+                                                        }
+                                                      />
+                                                      <Input
+                                                        placeholder="Titulo"
+                                                        value={
+                                                          textMap[titleKey] ??
+                                                          ""
+                                                        }
+                                                        onChange={(event) =>
+                                                          updateField(
+                                                            titleKey,
+                                                            event.target.value,
+                                                          )
+                                                        }
+                                                      />
+                                                      <select
+                                                        className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                                        value={mode}
+                                                        onChange={(event) =>
+                                                          updateField(
+                                                            modeKey,
+                                                            event.target.value,
+                                                          )
+                                                        }
+                                                      >
+                                                        <option value="none">
+                                                          Sin texto
+                                                        </option>
+                                                        <option value="title">
+                                                          Solo titulo
+                                                        </option>
+                                                        <option value="title-subtitle">
+                                                          Titulo + subtitulo
+                                                        </option>
+                                                      </select>
+                                                      {mode ===
+                                                      "title-subtitle" ? (
+                                                        <Input
+                                                          placeholder="Subtitulo"
+                                                          value={
+                                                            textMap[
+                                                              subtitleKey
+                                                            ] ?? ""
+                                                          }
+                                                          onChange={(event) =>
+                                                            updateField(
+                                                              subtitleKey,
+                                                              event.target
+                                                                .value,
+                                                            )
+                                                          }
+                                                        />
+                                                      ) : null}
+                                                    </div>
+                                                  );
+                                                },
+                                              )}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                      </details>
+                                    ) : null}
+
+                                    {selectedSectionBackgroundModeKey &&
+                                    selectedSectionBackgroundImageKey &&
+                                    selectedSectionBackgroundColorKey &&
+                                    selectedSectionBackgroundGradientKey &&
+                                    selectedSectionBackgroundZoomKey &&
+                                    selectedSectionBackgroundPositionXKey &&
+                                    selectedSectionBackgroundPositionYKey ? (
+                                      <details className="panel-accordion panel-accordion-inner">
+                                        <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                          Fondo de seccion
+                                        </summary>
+                                        <div className="mt-2 space-y-2">
+                                          <PanelRadioGroup
+                                            name={`${selectedSection.id}-background-mode`}
+                                            value={
+                                              selectedSectionBackgroundMode
+                                            }
+                                            options={[
+                                              {
+                                                value: "image",
+                                                label: "Imagen",
+                                              },
+                                              {
+                                                value: "color",
+                                                label: "Color",
+                                              },
+                                              {
+                                                value: "gradient",
+                                                label: "Gradient",
+                                              },
+                                            ]}
+                                            onChange={(nextValue) =>
+                                              updateField(
+                                                selectedSectionBackgroundModeKey,
+                                                nextValue,
+                                              )
+                                            }
+                                          />
+
+                                          {selectedSectionBackgroundMode ===
+                                          "image" ? (
+                                            <div className="space-y-2">
+                                              <Input
+                                                placeholder="https://..."
+                                                value={
+                                                  textMap[
+                                                    selectedSectionBackgroundImageKey
+                                                  ] ?? ""
+                                                }
+                                                onChange={(event) =>
+                                                  updateField(
+                                                    selectedSectionBackgroundImageKey,
+                                                    event.target.value,
+                                                  )
+                                                }
+                                              />
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Zoom (
+                                                  {selectedSectionBackgroundZoom.toFixed(
+                                                    2,
+                                                  )}
+                                                  x)
+                                                </label>
+                                                <div className="grid grid-cols-[1fr_84px] gap-2">
+                                                  <PanelRangeInput
+                                                    min={1}
+                                                    max={3}
+                                                    step={0.05}
+                                                    value={
+                                                      selectedSectionBackgroundZoom
+                                                    }
+                                                    onChange={(value) =>
+                                                      updateField(
+                                                        selectedSectionBackgroundZoomKey,
+                                                        String(value),
+                                                      )
+                                                    }
+                                                  />
+                                                  <Input
+                                                    type="number"
+                                                    min={1}
+                                                    max={3}
+                                                    step={0.05}
+                                                    value={
+                                                      selectedSectionBackgroundZoom
+                                                    }
+                                                    onChange={(event) =>
+                                                      updateField(
+                                                        selectedSectionBackgroundZoomKey,
+                                                        event.target.value,
+                                                      )
+                                                    }
+                                                  />
+                                                </div>
+                                              </div>
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Posicion X (
+                                                  {Math.round(
+                                                    selectedSectionBackgroundPositionX,
+                                                  )}
+                                                  %)
+                                                </label>
+                                                <div className="grid grid-cols-[1fr_84px] gap-2">
+                                                  <PanelRangeInput
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    value={
+                                                      selectedSectionBackgroundPositionX
+                                                    }
+                                                    onChange={(value) =>
+                                                      updateField(
+                                                        selectedSectionBackgroundPositionXKey,
+                                                        String(value),
+                                                      )
+                                                    }
+                                                  />
+                                                  <Input
+                                                    type="number"
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    value={Math.round(
+                                                      selectedSectionBackgroundPositionX,
+                                                    )}
+                                                    onChange={(event) =>
+                                                      updateField(
+                                                        selectedSectionBackgroundPositionXKey,
+                                                        event.target.value,
+                                                      )
+                                                    }
+                                                  />
+                                                </div>
+                                              </div>
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Posicion Y (
+                                                  {Math.round(
+                                                    selectedSectionBackgroundPositionY,
+                                                  )}
+                                                  %)
+                                                </label>
+                                                <div className="grid grid-cols-[1fr_84px] gap-2">
+                                                  <PanelRangeInput
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    value={
+                                                      selectedSectionBackgroundPositionY
+                                                    }
+                                                    onChange={(value) =>
+                                                      updateField(
+                                                        selectedSectionBackgroundPositionYKey,
+                                                        String(value),
+                                                      )
+                                                    }
+                                                  />
+                                                  <Input
+                                                    type="number"
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    value={Math.round(
+                                                      selectedSectionBackgroundPositionY,
+                                                    )}
+                                                    onChange={(event) =>
+                                                      updateField(
+                                                        selectedSectionBackgroundPositionYKey,
+                                                        event.target.value,
+                                                      )
+                                                    }
+                                                  />
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ) : null}
+
+                                          {selectedSectionBackgroundMode ===
+                                          "color" ? (
+                                            <PanelColorControl
+                                              value={
+                                                textMap[
+                                                  selectedSectionBackgroundColorKey
+                                                ]
+                                              }
+                                              defaultValue="#f4efe5"
+                                              placeholder="#f4efe5"
+                                              includeTransparentOption
+                                              onChange={(nextColor) =>
+                                                updateField(
+                                                  selectedSectionBackgroundColorKey,
+                                                  nextColor,
+                                                )
+                                              }
+                                            />
+                                          ) : null}
+
+                                          {selectedSectionBackgroundMode ===
+                                          "gradient" ? (
+                                            <Input
+                                              placeholder="linear-gradient(135deg, #d9e8d4, #f4efe5)"
+                                              value={
+                                                textMap[
+                                                  selectedSectionBackgroundGradientKey
+                                                ] ?? ""
+                                              }
+                                              onChange={(event) =>
+                                                updateField(
+                                                  selectedSectionBackgroundGradientKey,
+                                                  event.target.value,
+                                                )
+                                              }
+                                            />
+                                          ) : null}
+
+                                          <div className="flex justify-end">
+                                            <Button
+                                              type="button"
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={() => {
+                                                updateField(
+                                                  selectedSectionBackgroundModeKey,
+                                                  "color",
+                                                );
+                                                updateField(
+                                                  selectedSectionBackgroundZoomKey,
+                                                  "1",
+                                                );
+                                                updateField(
+                                                  selectedSectionBackgroundPositionXKey,
+                                                  "50",
+                                                );
+                                                updateField(
+                                                  selectedSectionBackgroundPositionYKey,
+                                                  "50",
+                                                );
+                                              }}
+                                            >
+                                              Reset fondo
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </details>
+                                    ) : null}
+
+                                    {selectedSectionBorderWidthKey &&
+                                    selectedSectionBorderColorKey &&
+                                    selectedSectionBorderRadiusKey &&
+                                    selectedSectionBorderStyleKey ? (
+                                      <details className="panel-accordion panel-accordion-inner">
+                                        <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                          Bordes de seccion
+                                        </summary>
+                                        <div className="mt-2 space-y-2">
+                                          <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-muted-foreground">
+                                              Estilo
+                                            </label>
+                                            <select
+                                              className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                              value={selectedSectionBorderStyle}
+                                              onChange={(event) =>
+                                                updateField(
+                                                  selectedSectionBorderStyleKey,
+                                                  event.target.value,
+                                                )
+                                              }
+                                            >
+                                              <option value="solid">
+                                                Solid
+                                              </option>
+                                              <option value="dashed">
+                                                Dashed
+                                              </option>
+                                              <option value="dotted">
+                                                Dotted
+                                              </option>
+                                              <option value="none">None</option>
+                                            </select>
+                                          </div>
+                                          <SliderValueControl
+                                            label="Ancho"
+                                            value={selectedSectionBorderWidth}
+                                            min={0}
+                                            max={24}
+                                            onChange={(value) =>
+                                              updateField(
+                                                selectedSectionBorderWidthKey,
+                                                String(value),
+                                              )
+                                            }
+                                          />
+                                          <SliderValueControl
+                                            label="Radio"
+                                            value={selectedSectionBorderRadius}
+                                            min={0}
+                                            max={120}
+                                            onChange={(value) =>
+                                              updateField(
+                                                selectedSectionBorderRadiusKey,
+                                                String(value),
+                                              )
+                                            }
+                                          />
+                                          <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-muted-foreground">
+                                              Color
+                                            </label>
+                                            <PanelColorControl
+                                              value={
+                                                textMap[
+                                                  selectedSectionBorderColorKey
+                                                ]
+                                              }
+                                              defaultValue="#d1d5db"
+                                              placeholder="#d1d5db"
+                                              onChange={(nextColor) =>
+                                                updateField(
+                                                  selectedSectionBorderColorKey,
+                                                  nextColor,
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                          <div className="flex justify-end">
+                                            <Button
+                                              type="button"
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={() => {
+                                                updateField(
+                                                  selectedSectionBorderStyleKey,
+                                                  "solid",
+                                                );
+                                                updateField(
+                                                  selectedSectionBorderWidthKey,
+                                                  "1",
+                                                );
+                                                updateField(
+                                                  selectedSectionBorderRadiusKey,
+                                                  "0",
+                                                );
+                                              }}
+                                            >
+                                              Reset borde
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </details>
+                                    ) : null}
+
+                                    {selectedSection.type === "footer" &&
+                                    selectedSectionFooterHeightKey ? (
+                                      <details className="panel-accordion panel-accordion-inner">
+                                        <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                          Altura
+                                        </summary>
+                                        <div className="mt-2 space-y-2">
+                                          <SliderValueControl
+                                            label="Altura"
+                                            value={selectedSectionFooterHeight}
+                                            min={180}
+                                            max={1200}
+                                            onChange={(value) =>
+                                              updateField(
+                                                selectedSectionFooterHeightKey,
+                                                String(value),
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                      </details>
+                                    ) : null}
+
+                                    {selectedSectionPaddingFieldId ? (
+                                      <details className="panel-accordion panel-accordion-inner">
+                                        <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                          Padding de seccion
+                                        </summary>
+                                        <div className="space-y-1.5">
+                                          <label className="text-xs font-medium text-muted-foreground">
+                                            Modo
+                                          </label>
+                                          <PanelRadioGroup
+                                            name={`${selectedSectionPaddingFieldId}-padding-mode`}
+                                            value={selectedSectionPaddingMode}
+                                            options={[
+                                              { value: "all", label: "All" },
+                                              { value: "axis", label: "Axis" },
+                                              {
+                                                value: "sides",
+                                                label: "Sides",
+                                              },
+                                            ]}
+                                            onChange={(nextValue) =>
+                                              updateField(
+                                                getLandingFieldPaddingModeKey(
+                                                  selectedSectionPaddingFieldId,
+                                                ),
+                                                nextValue,
+                                              )
+                                            }
+                                          />
+                                        </div>
+
+                                        {selectedSectionPaddingMode ===
+                                        "all" ? (
+                                          <SliderValueControl
+                                            label="Padding"
+                                            value={getNumberValue(
+                                              textMap[
+                                                getLandingFieldPaddingKey(
+                                                  selectedSectionPaddingFieldId,
+                                                )
+                                              ],
+                                              0,
+                                            )}
+                                            onChange={(value) =>
+                                              updateField(
+                                                getLandingFieldPaddingKey(
+                                                  selectedSectionPaddingFieldId,
+                                                ),
+                                                String(value),
+                                              )
+                                            }
+                                          />
+                                        ) : null}
+
+                                        {selectedSectionPaddingMode ===
+                                        "axis" ? (
+                                          <div className="grid grid-cols-1 gap-2">
+                                            <SliderValueControl
+                                              label="Px"
+                                              value={getNumberValue(
+                                                textMap[
+                                                  getLandingFieldPaddingXKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  )
+                                                ],
+                                                0,
+                                              )}
+                                              onChange={(value) =>
+                                                updateField(
+                                                  getLandingFieldPaddingXKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  ),
+                                                  String(value),
+                                                )
+                                              }
+                                            />
+                                            <SliderValueControl
+                                              label="Py"
+                                              value={getNumberValue(
+                                                textMap[
+                                                  getLandingFieldPaddingYKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  )
+                                                ],
+                                                0,
+                                              )}
+                                              onChange={(value) =>
+                                                updateField(
+                                                  getLandingFieldPaddingYKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  ),
+                                                  String(value),
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                        ) : null}
+
+                                        {selectedSectionPaddingMode ===
+                                        "sides" ? (
+                                          <div className="grid grid-cols-1 gap-2">
+                                            <SliderValueControl
+                                              label="Pt"
+                                              value={getNumberValue(
+                                                textMap[
+                                                  getLandingFieldPaddingTopKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  )
+                                                ],
+                                                0,
+                                              )}
+                                              onChange={(value) =>
+                                                updateField(
+                                                  getLandingFieldPaddingTopKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  ),
+                                                  String(value),
+                                                )
+                                              }
+                                            />
+                                            <SliderValueControl
+                                              label="Pr"
+                                              value={getNumberValue(
+                                                textMap[
+                                                  getLandingFieldPaddingRightKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  )
+                                                ],
+                                                0,
+                                              )}
+                                              onChange={(value) =>
+                                                updateField(
+                                                  getLandingFieldPaddingRightKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  ),
+                                                  String(value),
+                                                )
+                                              }
+                                            />
+                                            <SliderValueControl
+                                              label="Pb"
+                                              value={getNumberValue(
+                                                textMap[
+                                                  getLandingFieldPaddingBottomKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  )
+                                                ],
+                                                0,
+                                              )}
+                                              onChange={(value) =>
+                                                updateField(
+                                                  getLandingFieldPaddingBottomKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  ),
+                                                  String(value),
+                                                )
+                                              }
+                                            />
+                                            <SliderValueControl
+                                              label="Pl"
+                                              value={getNumberValue(
+                                                textMap[
+                                                  getLandingFieldPaddingLeftKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  )
+                                                ],
+                                                0,
+                                              )}
+                                              onChange={(value) =>
+                                                updateField(
+                                                  getLandingFieldPaddingLeftKey(
+                                                    selectedSectionPaddingFieldId,
+                                                  ),
+                                                  String(value),
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                        ) : null}
+                                      </details>
+                                    ) : null}
+                                  </div>
+                                </details>
+
+                                <div className="space-y-2">
+                                  {activeSectionItems.map((item) => {
+                                    const baseFieldKey =
+                                      item.kind === "base"
+                                        ? item.id.replace(/^base:/, "")
+                                        : null;
+                                    const baseField = baseFieldKey
+                                      ? landingSectionCatalog[
+                                          selectedSection.type
+                                        ].fields.find(
+                                          (field) => field.key === baseFieldKey,
+                                        )
+                                      : null;
+                                    const extraItem = item.extraId
+                                      ? activeSectionExtras.find(
+                                          (entry) => entry.id === item.extraId,
+                                        )
+                                      : null;
+                                    const extraDefaults = extraItem
+                                      ? getExtraDefaults(extraItem.type)
+                                      : null;
+                                    const isMultiline =
+                                      baseField?.multiline ??
+                                      extraDefaults?.multiline ??
+                                      false;
+                                    const isLineExtra =
+                                      extraItem?.type === "line-vertical" ||
+                                      extraItem?.type === "line-horizontal";
+                                    const isButtonExtra =
+                                      extraItem?.type === "button";
+                                    const buttonVariantValue =
+                                      textMap[
+                                        getLandingFieldButtonVariantKey(
+                                          item.textKey,
+                                        )
+                                      ] ?? "default";
+                                    const extraSizeKey =
+                                      item.kind === "extra"
+                                        ? getExtraSizeFieldKey(item.textKey)
+                                        : null;
+                                    const extraPositionXKey = item.extraId
+                                      ? getExtraPositionXFieldKey(
+                                          selectedSection.id,
+                                          item.extraId,
+                                        )
+                                      : null;
+                                    const extraPositionYKey = item.extraId
+                                      ? getExtraPositionYFieldKey(
+                                          selectedSection.id,
+                                          item.extraId,
+                                        )
+                                      : null;
+                                    const isVideoUrlItem =
+                                      selectedSection.type === "video" &&
+                                      item.kind === "base" &&
+                                      baseFieldKey === "url";
+                                    const hasKnownVideoControls =
+                                      isVideoUrlItem &&
+                                      selectedSectionVideoOverlayOpacityKey &&
+                                      selectedSectionVideoPositionXKey &&
+                                      selectedSectionVideoPositionYKey &&
+                                      selectedSectionVideoZoomKey;
+
+                                    return (
+                                      <details
+                                        key={`config-${item.id}`}
+                                        className="panel-accordion"
+                                        open={
+                                          openPanelAccordionId ===
+                                          `top:item:${item.id}`
+                                        }
+                                      >
+                                        <summary
+                                          className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+                                          onClick={(event) => {
+                                            event.preventDefault();
+                                            toggleTopLevelAccordion(
+                                              `top:item:${item.id}`,
+                                            );
+                                          }}
+                                        >
+                                          {item.label}
+                                          {item.kind === "extra" &&
+                                          item.extraId ? (
+                                            <span className="float-right inline-flex items-center">
+                                              <Button
+                                                type="button"
+                                                size="icon-sm"
+                                                variant="ghost"
+                                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                                onClick={(event) => {
+                                                  event.preventDefault();
+                                                  event.stopPropagation();
+                                                  removeExtraElement(
+                                                    selectedSection.id,
+                                                    item.extraId!,
+                                                  );
+                                                }}
+                                                aria-label="Eliminar elemento"
+                                                title="Eliminar elemento"
+                                              >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                              </Button>
+                                            </span>
+                                          ) : null}
+                                        </summary>
+                                        <div className="mt-2 space-y-2">
+                                          {isVideoUrlItem ? (
+                                            <>
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Archivo de video
+                                                </label>
+                                                <select
+                                                  className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                                  value={
+                                                    VIDEO_ASSET_OPTIONS.includes(
+                                                      (textMap[item.textKey] ??
+                                                        "") as (typeof VIDEO_ASSET_OPTIONS)[number],
+                                                    )
+                                                      ? ((textMap[
+                                                          item.textKey
+                                                        ] ??
+                                                          "/assets/vid2.mp4") as (typeof VIDEO_ASSET_OPTIONS)[number])
+                                                      : "/assets/vid2.mp4"
+                                                  }
+                                                  onChange={(event) =>
+                                                    updateField(
+                                                      item.textKey,
+                                                      event.target.value,
+                                                    )
+                                                  }
+                                                >
+                                                  {VIDEO_ASSET_OPTIONS.map(
+                                                    (videoPath) => (
+                                                      <option
+                                                        key={videoPath}
+                                                        value={videoPath}
+                                                      >
+                                                        {videoPath.replace(
+                                                          "/assets/",
+                                                          "",
+                                                        )}
+                                                      </option>
+                                                    ),
+                                                  )}
+                                                </select>
+                                              </div>
+                                              <div className="space-y-2 rounded-md border p-2">
+                                                <button
+                                                  type="button"
+                                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                                  onClick={() =>
+                                                    addVideoTextItem(
+                                                      selectedSection.id,
+                                                    )
+                                                  }
+                                                >
+                                                  <Plus className="h-3.5 w-3.5" />
+                                                  Agregar texto
+                                                </button>
+                                                {selectedSectionVideoTextItems.map(
+                                                  (videoTextId, index) => {
+                                                    const contentKey =
+                                                      getSectionVideoTextFieldKey(
+                                                        selectedSection.id,
+                                                        videoTextId,
+                                                        "content",
+                                                      );
+                                                    const sizeKey =
+                                                      getSectionVideoTextFieldKey(
+                                                        selectedSection.id,
+                                                        videoTextId,
+                                                        "size",
+                                                      );
+                                                    const colorKey =
+                                                      getSectionVideoTextFieldKey(
+                                                        selectedSection.id,
+                                                        videoTextId,
+                                                        "color",
+                                                      );
+                                                    const weightKey =
+                                                      getSectionVideoTextFieldKey(
+                                                        selectedSection.id,
+                                                        videoTextId,
+                                                        "weight",
+                                                      );
+                                                    const positionXKey =
+                                                      getSectionVideoTextFieldKey(
+                                                        selectedSection.id,
+                                                        videoTextId,
+                                                        "position_x",
+                                                      );
+                                                    const positionYKey =
+                                                      getSectionVideoTextFieldKey(
+                                                        selectedSection.id,
+                                                        videoTextId,
+                                                        "position_y",
+                                                      );
+                                                    const textSize =
+                                                      getNumberValue(
+                                                        textMap[sizeKey],
+                                                        44,
+                                                        12,
+                                                        120,
+                                                      );
+                                                    const textPositionX =
+                                                      getNumberValue(
+                                                        textMap[positionXKey],
+                                                        50,
+                                                        0,
+                                                        100,
+                                                      );
+                                                    const textPositionY =
+                                                      getNumberValue(
+                                                        textMap[positionYKey],
+                                                        50,
+                                                        0,
+                                                        100,
+                                                      );
+                                                    const textWeight =
+                                                      getNumberValue(
+                                                        textMap[weightKey],
+                                                        700,
+                                                        400,
+                                                        900,
+                                                      );
+
+                                                    return (
+                                                      <details
+                                                        key={videoTextId}
+                                                        className="panel-accordion panel-accordion-inner"
+                                                      >
+                                                        <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                                          Texto {index + 1}
+                                                        </summary>
+                                                        <div className="mt-2 space-y-2">
+                                                          <div className="flex justify-end">
+                                                            <Button
+                                                              type="button"
+                                                              size="sm"
+                                                              variant="ghost"
+                                                              className="h-7 px-2 text-destructive hover:text-destructive"
+                                                              onClick={() =>
+                                                                removeVideoTextItem(
+                                                                  selectedSection.id,
+                                                                  videoTextId,
+                                                                )
+                                                              }
+                                                            >
+                                                              <Trash2 className="mr-1 h-3.5 w-3.5" />
+                                                              Eliminar
+                                                            </Button>
+                                                          </div>
+                                                          <div className="space-y-1.5">
+                                                            <label className="text-xs font-medium text-muted-foreground">
+                                                              Contenido
+                                                            </label>
+                                                            <Textarea
+                                                              value={
+                                                                textMap[
+                                                                  contentKey
+                                                                ] ?? ""
+                                                              }
+                                                              onChange={(
+                                                                event,
+                                                              ) =>
+                                                                updateField(
+                                                                  contentKey,
+                                                                  event.target
+                                                                    .value,
+                                                                )
+                                                              }
+                                                              rows={3}
+                                                              placeholder="Escribi el texto sobre el video"
+                                                            />
+                                                          </div>
+                                                          <div className="space-y-1.5">
+                                                            <label className="text-xs font-medium text-muted-foreground">
+                                                              Color
+                                                            </label>
+                                                            <PanelColorControl
+                                                              value={
+                                                                textMap[
+                                                                  colorKey
+                                                                ]
+                                                              }
+                                                              defaultValue="#ffffff"
+                                                              placeholder="#ffffff"
+                                                              colorInputClassName="h-9"
+                                                              onChange={(
+                                                                nextColor,
+                                                              ) =>
+                                                                updateField(
+                                                                  colorKey,
+                                                                  nextColor,
+                                                                )
+                                                              }
+                                                            />
+                                                          </div>
+                                                          <div className="space-y-1.5">
+                                                            <label className="text-xs font-medium text-muted-foreground">
+                                                              Weight (
+                                                              {textWeight})
+                                                            </label>
+                                                            <PanelRangeInput
+                                                              min={400}
+                                                              max={900}
+                                                              step={100}
+                                                              value={textWeight}
+                                                              onChange={(
+                                                                value,
+                                                              ) =>
+                                                                updateField(
+                                                                  weightKey,
+                                                                  String(value),
+                                                                )
+                                                              }
+                                                            />
+                                                          </div>
+                                                          <div className="space-y-1.5">
+                                                            <label className="text-xs font-medium text-muted-foreground">
+                                                              Tamaño (
+                                                              {textSize}px)
+                                                            </label>
+                                                            <PanelRangeInput
+                                                              min={12}
+                                                              max={120}
+                                                              step={1}
+                                                              value={textSize}
+                                                              onChange={(
+                                                                value,
+                                                              ) =>
+                                                                updateField(
+                                                                  sizeKey,
+                                                                  String(value),
+                                                                )
+                                                              }
+                                                            />
+                                                          </div>
+                                                          <div className="space-y-1.5">
+                                                            <label className="text-xs font-medium text-muted-foreground">
+                                                              Posicion X (
+                                                              {textPositionX}%)
+                                                            </label>
+                                                            <PanelRangeInput
+                                                              min={0}
+                                                              max={100}
+                                                              step={1}
+                                                              value={
+                                                                textPositionX
+                                                              }
+                                                              onChange={(
+                                                                value,
+                                                              ) =>
+                                                                updateField(
+                                                                  positionXKey,
+                                                                  String(value),
+                                                                )
+                                                              }
+                                                            />
+                                                          </div>
+                                                          <div className="space-y-1.5">
+                                                            <label className="text-xs font-medium text-muted-foreground">
+                                                              Posicion Y (
+                                                              {textPositionY}%)
+                                                            </label>
+                                                            <PanelRangeInput
+                                                              min={0}
+                                                              max={100}
+                                                              step={1}
+                                                              value={
+                                                                textPositionY
+                                                              }
+                                                              onChange={(
+                                                                value,
+                                                              ) =>
+                                                                updateField(
+                                                                  positionYKey,
+                                                                  String(value),
+                                                                )
+                                                              }
+                                                            />
+                                                          </div>
+                                                        </div>
+                                                      </details>
+                                                    );
+                                                  },
+                                                )}
+                                              </div>
+                                              {hasKnownVideoControls ? (
+                                                <>
+                                                  <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium text-muted-foreground">
+                                                      Transparencia del filtro (
+                                                      {
+                                                        selectedSectionVideoOverlayOpacity
+                                                      }
+                                                      %)
+                                                    </label>
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                      <PanelRangeInput
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={
+                                                          selectedSectionVideoOverlayOpacity
+                                                        }
+                                                        onChange={(value) =>
+                                                          updateField(
+                                                            selectedSectionVideoOverlayOpacityKey,
+                                                            String(value),
+                                                          )
+                                                        }
+                                                      />
+                                                    </div>
+                                                  </div>
+                                                  <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium text-muted-foreground">
+                                                      Posicion X (
+                                                      {Math.round(
+                                                        selectedSectionVideoPositionX,
+                                                      )}
+                                                      %)
+                                                    </label>
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                      <PanelRangeInput
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={
+                                                          selectedSectionVideoPositionX
+                                                        }
+                                                        onChange={(value) =>
+                                                          updateField(
+                                                            selectedSectionVideoPositionXKey,
+                                                            String(value),
+                                                          )
+                                                        }
+                                                      />
+                                                    </div>
+                                                  </div>
+                                                  <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium text-muted-foreground">
+                                                      Posicion Y (
+                                                      {Math.round(
+                                                        selectedSectionVideoPositionY,
+                                                      )}
+                                                      %)
+                                                    </label>
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                      <PanelRangeInput
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={
+                                                          selectedSectionVideoPositionY
+                                                        }
+                                                        onChange={(value) =>
+                                                          updateField(
+                                                            selectedSectionVideoPositionYKey,
+                                                            String(value),
+                                                          )
+                                                        }
+                                                      />
+                                                    </div>
+                                                  </div>
+                                                  <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium text-muted-foreground">
+                                                      Zoom (
+                                                      {selectedSectionVideoZoom.toFixed(
+                                                        2,
+                                                      )}
+                                                      x)
+                                                    </label>
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                      <PanelRangeInput
+                                                        min={1}
+                                                        max={3}
+                                                        step={0.05}
+                                                        value={
+                                                          selectedSectionVideoZoom
+                                                        }
+                                                        onChange={(value) =>
+                                                          updateField(
+                                                            selectedSectionVideoZoomKey,
+                                                            String(value),
+                                                          )
+                                                        }
+                                                      />
+                                                    </div>
+                                                  </div>
+                                                </>
+                                              ) : null}
+                                            </>
+                                          ) : isLineExtra ? (
+                                            <p className="text-xs text-muted-foreground">
+                                              Este elemento no requiere texto.
+                                              Ajusta tamano, color y margen en
+                                              este panel.
+                                            </p>
+                                          ) : isMultiline ? (
+                                            <Textarea
+                                              value={
+                                                textMap[item.textKey] ??
+                                                baseField?.defaultValue ??
+                                                extraDefaults?.text ??
+                                                ""
+                                              }
+                                              onChange={(event) =>
+                                                updateField(
+                                                  item.textKey,
+                                                  event.target.value,
+                                                )
+                                              }
+                                              rows={4}
+                                            />
+                                          ) : (
+                                            <Input
+                                              value={
+                                                textMap[item.textKey] ??
+                                                baseField?.defaultValue ??
+                                                extraDefaults?.text ??
+                                                ""
+                                              }
+                                              onChange={(event) =>
+                                                updateField(
+                                                  item.textKey,
+                                                  event.target.value,
+                                                )
+                                              }
+                                            />
+                                          )}
+                                          {item.kind === "extra" &&
+                                          item.extraId &&
+                                          extraItem?.type !== "text" ? (
+                                            <>
+                                              <SliderValueControl
+                                                label="Tamano"
+                                                value={getNumberValue(
+                                                  textMap[extraSizeKey!],
+                                                  extraDefaults?.size ?? 24,
+                                                  12,
+                                                  800,
+                                                )}
+                                                min={12}
+                                                max={800}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    extraSizeKey!,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              <SliderValueControl
+                                                label="Posicion X"
+                                                value={getNumberValue(
+                                                  textMap[extraPositionXKey!],
+                                                  50,
+                                                  0,
+                                                  100,
+                                                )}
+                                                min={0}
+                                                max={100}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    extraPositionXKey!,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              <SliderValueControl
+                                                label="Posicion Y"
+                                                value={getNumberValue(
+                                                  textMap[extraPositionYKey!],
+                                                  50,
+                                                  0,
+                                                  100,
+                                                )}
+                                                min={0}
+                                                max={100}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    extraPositionYKey!,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              {isLineExtra ? (
+                                                <>
+                                                  <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium text-muted-foreground">
+                                                      Color
+                                                    </label>
+                                                    <PanelColorControl
+                                                      value={
+                                                        textMap[
+                                                          getLandingFieldColorKey(
+                                                            item.textKey,
+                                                          )
+                                                        ]
+                                                      }
+                                                      defaultValue="#111827"
+                                                      placeholder="#111827"
+                                                      showPaletteLabel={false}
+                                                      onChange={(nextColor) =>
+                                                        updateField(
+                                                          getLandingFieldColorKey(
+                                                            item.textKey,
+                                                          ),
+                                                          nextColor,
+                                                        )
+                                                      }
+                                                    />
+                                                  </div>
+                                                  <SliderValueControl
+                                                    label="Ancho"
+                                                    value={getNumberValue(
+                                                      textMap[
+                                                        getLandingFieldLineWidthKey(
+                                                          item.textKey,
+                                                        )
+                                                      ],
+                                                      1,
+                                                      1,
+                                                      40,
+                                                    )}
+                                                    min={1}
+                                                    max={40}
+                                                    onChange={(value) =>
+                                                      updateField(
+                                                        getLandingFieldLineWidthKey(
+                                                          item.textKey,
+                                                        ),
+                                                        String(value),
+                                                      )
+                                                    }
+                                                  />
+                                                </>
+                                              ) : null}
+                                              {isButtonExtra ? (
+                                                <>
+                                                  <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium text-muted-foreground">
+                                                      Estilo de boton
+                                                    </label>
+                                                    <select
+                                                      className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                                      value={
+                                                        textMap[
+                                                          getLandingFieldButtonVariantKey(
+                                                            item.textKey,
+                                                          )
+                                                        ] ?? "default"
+                                                      }
+                                                      onChange={(event) =>
+                                                        updateField(
+                                                          getLandingFieldButtonVariantKey(
+                                                            item.textKey,
+                                                          ),
+                                                          event.target.value,
+                                                        )
+                                                      }
+                                                    >
+                                                      <option value="default">
+                                                        Default
+                                                      </option>
+                                                      <option value="outline">
+                                                        Outline
+                                                      </option>
+                                                      <option value="secondary">
+                                                        Secondary
+                                                      </option>
+                                                      <option value="ghost">
+                                                        Ghost
+                                                      </option>
+                                                      <option value="destructive">
+                                                        Destructive
+                                                      </option>
+                                                      <option value="link">
+                                                        Link
+                                                      </option>
+                                                      <option value="custom">
+                                                        Custom
+                                                      </option>
+                                                    </select>
+                                                  </div>
+                                                  {buttonVariantValue ===
+                                                  "custom" ? (
+                                                    <>
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Fuente
+                                                        </label>
+                                                        <select
+                                                          className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                                          value={
+                                                            textMap[
+                                                              getLandingFieldFontFamilyKey(
+                                                                item.textKey,
+                                                              )
+                                                            ] ?? "fira-sans"
+                                                          }
+                                                          onChange={(event) =>
+                                                            updateField(
+                                                              getLandingFieldFontFamilyKey(
+                                                                item.textKey,
+                                                              ),
+                                                              event.target
+                                                                .value,
+                                                            )
+                                                          }
+                                                        >
+                                                          <option value="fira-sans">
+                                                            Fira Sans
+                                                          </option>
+                                                          <option value="montserrat">
+                                                            Montserrat
+                                                          </option>
+                                                          <option value="nunito">
+                                                            Nunito
+                                                          </option>
+                                                        </select>
+                                                      </div>
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Color de texto
+                                                        </label>
+                                                        <PanelColorControl
+                                                          value={
+                                                            textMap[
+                                                              getLandingFieldColorKey(
+                                                                item.textKey,
+                                                              )
+                                                            ]
+                                                          }
+                                                          defaultValue="#ffffff"
+                                                          placeholder="#ffffff"
+                                                          showPaletteLabel={
+                                                            false
+                                                          }
+                                                          onChange={(
+                                                            nextColor,
+                                                          ) =>
+                                                            updateField(
+                                                              getLandingFieldColorKey(
+                                                                item.textKey,
+                                                              ),
+                                                              nextColor,
+                                                            )
+                                                          }
+                                                        />
+                                                      </div>
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Color de fondo
+                                                        </label>
+                                                        <PanelColorControl
+                                                          value={
+                                                            textMap[
+                                                              getLandingFieldBackgroundColorKey(
+                                                                item.textKey,
+                                                              )
+                                                            ]
+                                                          }
+                                                          defaultValue="#1d4ed8"
+                                                          placeholder="#1d4ed8"
+                                                          showPaletteLabel={
+                                                            false
+                                                          }
+                                                          includeTransparentOption
+                                                          onChange={(
+                                                            nextColor,
+                                                          ) =>
+                                                            updateField(
+                                                              getLandingFieldBackgroundColorKey(
+                                                                item.textKey,
+                                                              ),
+                                                              nextColor,
+                                                            )
+                                                          }
+                                                        />
+                                                      </div>
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Color de borde
+                                                        </label>
+                                                        <PanelColorControl
+                                                          value={
+                                                            textMap[
+                                                              getLandingFieldBorderColorKey(
+                                                                item.textKey,
+                                                              )
+                                                            ]
+                                                          }
+                                                          defaultValue="#1f2937"
+                                                          placeholder="#1f2937"
+                                                          showPaletteLabel={
+                                                            false
+                                                          }
+                                                          onChange={(
+                                                            nextColor,
+                                                          ) =>
+                                                            updateField(
+                                                              getLandingFieldBorderColorKey(
+                                                                item.textKey,
+                                                              ),
+                                                              nextColor,
+                                                            )
+                                                          }
+                                                        />
+                                                      </div>
+                                                      <SliderValueControl
+                                                        label="Ancho de borde"
+                                                        value={getNumberValue(
+                                                          textMap[
+                                                            getLandingFieldBorderWidthKey(
+                                                              item.textKey,
+                                                            )
+                                                          ],
+                                                          1,
+                                                          0,
+                                                          20,
+                                                        )}
+                                                        min={0}
+                                                        max={20}
+                                                        onChange={(value) =>
+                                                          updateField(
+                                                            getLandingFieldBorderWidthKey(
+                                                              item.textKey,
+                                                            ),
+                                                            String(value),
+                                                          )
+                                                        }
+                                                      />
+                                                      <div className="space-y-1.5">
+                                                        <label className="text-xs font-medium text-muted-foreground">
+                                                          Estilo de borde
+                                                        </label>
+                                                        <select
+                                                          className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                                          value={
+                                                            textMap[
+                                                              getLandingFieldBorderStyleKey(
+                                                                item.textKey,
+                                                              )
+                                                            ] ?? "solid"
+                                                          }
+                                                          onChange={(event) =>
+                                                            updateField(
+                                                              getLandingFieldBorderStyleKey(
+                                                                item.textKey,
+                                                              ),
+                                                              event.target
+                                                                .value,
+                                                            )
+                                                          }
+                                                        >
+                                                          <option value="solid">
+                                                            Solid
+                                                          </option>
+                                                          <option value="dashed">
+                                                            Dashed
+                                                          </option>
+                                                          <option value="dotted">
+                                                            Dotted
+                                                          </option>
+                                                          <option value="none">
+                                                            None
+                                                          </option>
+                                                        </select>
+                                                      </div>
+                                                      <SliderValueControl
+                                                        label="Radio de borde"
+                                                        value={getNumberValue(
+                                                          textMap[
+                                                            getLandingFieldBorderRadiusKey(
+                                                              item.textKey,
+                                                            )
+                                                          ],
+                                                          8,
+                                                          0,
+                                                          80,
+                                                        )}
+                                                        min={0}
+                                                        max={80}
+                                                        onChange={(value) =>
+                                                          updateField(
+                                                            getLandingFieldBorderRadiusKey(
+                                                              item.textKey,
+                                                            ),
+                                                            String(value),
+                                                          )
+                                                        }
+                                                      />
+                                                    </>
+                                                  ) : null}
+                                                </>
+                                              ) : null}
+                                            </>
+                                          ) : null}
+                                          {item.kind === "extra" &&
+                                          extraItem?.type === "text" ? (
+                                            <>
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Fuente
+                                                </label>
+                                                <select
+                                                  className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                                  value={
+                                                    textMap[
+                                                      getLandingFieldFontFamilyKey(
+                                                        item.textKey,
+                                                      )
+                                                    ] ?? "fira-sans"
+                                                  }
+                                                  onChange={(event) =>
+                                                    updateField(
+                                                      getLandingFieldFontFamilyKey(
+                                                        item.textKey,
+                                                      ),
+                                                      event.target.value,
+                                                    )
+                                                  }
+                                                >
+                                                  <option value="fira-sans">
+                                                    Fira Sans
+                                                  </option>
+                                                  <option value="montserrat">
+                                                    Montserrat
+                                                  </option>
+                                                  <option value="nunito">
+                                                    Nunito
+                                                  </option>
+                                                </select>
+                                              </div>
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Color
+                                                </label>
+                                                <PanelColorControl
+                                                  value={
+                                                    textMap[
+                                                      getLandingFieldColorKey(
+                                                        item.textKey,
+                                                      )
+                                                    ]
+                                                  }
+                                                  defaultValue="#111827"
+                                                  placeholder="#111827"
+                                                  showPaletteLabel={false}
+                                                  onChange={(nextColor) =>
+                                                    updateField(
+                                                      getLandingFieldColorKey(
+                                                        item.textKey,
+                                                      ),
+                                                      nextColor,
+                                                    )
+                                                  }
+                                                />
+                                              </div>
+                                              <SliderValueControl
+                                                label="Tamano"
+                                                value={getNumberValue(
+                                                  textMap[extraSizeKey!],
+                                                  extraDefaults?.size ?? 24,
+                                                  12,
+                                                  800,
+                                                )}
+                                                min={12}
+                                                max={800}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    extraSizeKey!,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              <SliderValueControl
+                                                label="Weight"
+                                                value={getNumberValue(
+                                                  textMap[
+                                                    getLandingFieldFontWeightKey(
+                                                      item.textKey,
+                                                    )
+                                                  ],
+                                                  400,
+                                                  100,
+                                                  900,
+                                                )}
+                                                min={100}
+                                                max={900}
+                                                step={100}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    getLandingFieldFontWeightKey(
+                                                      item.textKey,
+                                                    ),
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              <SliderValueControl
+                                                label="Posicion X"
+                                                value={getNumberValue(
+                                                  textMap[extraPositionXKey!],
+                                                  50,
+                                                  0,
+                                                  100,
+                                                )}
+                                                min={0}
+                                                max={100}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    extraPositionXKey!,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              <SliderValueControl
+                                                label="Posicion Y"
+                                                value={getNumberValue(
+                                                  textMap[extraPositionYKey!],
+                                                  50,
+                                                  0,
+                                                  100,
+                                                )}
+                                                min={0}
+                                                max={100}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    extraPositionYKey!,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                            </>
+                                          ) : null}
+                                        </div>
+                                      </details>
+                                    );
+                                  })}
+                                </div>
+                              </>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <div
+                          className={cn(
+                            "h-full min-h-0 space-y-4 p-4",
+                            !isSectionSettingsView && "hidden",
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setIsSectionSettingsView(false)}
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                              Volver
+                            </Button>
+                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                              Configuracion de secciones
+                            </p>
+                          </div>
+
+                          <div className="space-y-3 rounded-lg border p-3">
+                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                              Orden de secciones
+                            </p>
+                            {structure.map((section) => (
+                              <div
+                                key={section.id}
+                                draggable
+                                onDragStart={(event) => {
+                                  setDraggedSectionId(section.id);
+                                  event.dataTransfer.setData(
+                                    "text/plain",
+                                    section.id,
+                                  );
+                                  event.dataTransfer.effectAllowed = "move";
+                                }}
+                                onDragOver={(event) => {
+                                  event.preventDefault();
+                                  event.dataTransfer.dropEffect = "move";
+                                  setDragOverSectionId(section.id);
+                                }}
+                                onDrop={(event) => {
+                                  event.preventDefault();
+                                  const sourceId =
+                                    draggedSectionId ||
+                                    event.dataTransfer.getData("text/plain");
+                                  if (sourceId) {
+                                    reorderSections(sourceId, section.id);
+                                  }
+                                  setDraggedSectionId(null);
+                                  setDragOverSectionId(null);
+                                }}
+                                onDragEnd={() => {
+                                  setDraggedSectionId(null);
+                                  setDragOverSectionId(null);
+                                }}
+                                className={cn(
+                                  "flex items-center gap-2 rounded-md border bg-background px-2 py-2 text-sm",
+                                  dragOverSectionId === section.id &&
+                                    "border-primary bg-primary/5",
+                                )}
+                              >
+                                <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" />
+                                <button
+                                  type="button"
+                                  className="min-w-0 flex-1 truncate text-left"
+                                  onClick={() => focusSection(section.id)}
+                                >
+                                  {section.name}
+                                </button>
+                                <Badge variant="outline">
+                                  {landingSectionCatalog[section.type].label}
+                                </Badge>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() => removeSection(section.id)}
+                                  disabled={structure.length <= 1}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">
+                                    Remove section
+                                  </span>
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="space-y-3 rounded-lg border p-3">
+                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                              Agregar nueva seccion
+                            </p>
+                            <div className="grid grid-cols-[1fr_auto] gap-2">
+                              <select
+                                className="h-9 rounded-md border bg-background px-3 text-sm"
+                                value={newSectionType}
+                                onChange={(event) =>
+                                  setNewSectionType(
+                                    event.target.value as LandingSectionType,
+                                  )
+                                }
+                              >
+                                {Object.values(landingSectionCatalog).map(
+                                  (item) => (
+                                    <option key={item.type} value={item.type}>
+                                      {item.label}
+                                    </option>
+                                  ),
+                                )}
+                              </select>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={addSection}
+                              >
+                                Add
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>,
+                  portalTarget,
+                )
+              : null;
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="border-b">
-        <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base">
+    <Card
+      className={cn(
+        "overflow-hidden",
+        frameVariant === "flush" &&
+          "flex h-full min-h-0 flex-col rounded-none border-0 shadow-none",
+      )}
+    >
+      <CardHeader
+        className={cn(
+          "border-b",
+          frameVariant === "flush" && "rounded-none px-0",
+        )}
+      >
+        <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base px-4">
           <span>Landing builder (edicion inline)</span>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 rounded-md border bg-background px-1 py-1">
@@ -1431,2162 +3801,39 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
                 <span className="sr-only">Resetear zoom</span>
               </Button>
             </div>
-            <Sheet
-              open={panelOpen}
-              onOpenChange={setPanelOpen}
-              modal={false}
-              disablePointerDismissal
-            >
-              <SheetTrigger
-                render={<Button type="button" size="sm" variant="outline" />}
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                Abrir panel de edición
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="font-fira w-full overflow-visible border-l-0 p-0 sm:max-w-[460px]"
-                showOverlay={false}
-                showCloseButton={false}
-              >
-                <button
-                  type="button"
-                  className="panel-close-float absolute top-1/2 -left-10 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/65 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
-                  onClick={() => setPanelOpen(false)}
-                  aria-label="Cerrar panel"
-                >
-                  <ChevronsRight className="h-4 w-4" />
-                </button>
-                <div className="flex h-full min-h-0 flex-col">
-                  <div className="border-b">
-                    <div
-                      className="h-14 w-full overflow-hidden"
-                      style={{ display: "flex", flexDirection: "row", flexWrap: "nowrap" }}
-                    >
-                      <div
-                        className="flex h-full min-w-0 items-center justify-center gap-4 border-r px-2"
-                        style={{ flex: "0 0 50%", maxWidth: "50%" }}
-                      >
-                        <Button
-                          type="button"
-                          size="icon-sm"
-                          variant="ghost"
-                          className="h-8 w-8 rounded-md"
-                          onClick={() => goToAdjacentSection("prev")}
-                          disabled={activeSectionIndex <= 0}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <span className="max-w-[120px] truncate text-center text-sm font-medium">
-                          {activeSectionId
-                            ? structure[activeSectionIndex]?.name
-                            : "Sección actual"}
-                        </span>
-                        <Button
-                          type="button"
-                          size="icon-sm"
-                          variant="ghost"
-                          className="h-8 w-8 rounded-md"
-                          onClick={() => goToAdjacentSection("next")}
-                          disabled={
-                            activeSectionIndex < 0 ||
-                            activeSectionIndex >= structure.length - 1
-                          }
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div
-                        className="h-full min-w-0"
-                        style={{ flex: "0 0 50%", maxWidth: "50%" }}
-                      >
-                        <button
-                          type="button"
-                          className="block h-full w-full rounded-none border-0"
-                          style={{ backgroundColor: "#059669", color: "#ffffff" }}
-                          onClick={handlePublish}
-                        >
-                          Publicar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="relative flex-1 min-h-0 overflow-hidden">
-                    <div
-                      className={cn(
-                        "h-full min-h-0 flex flex-col gap-4 overflow-y-auto overscroll-contain p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-                        isSectionSettingsView && "hidden",
-                      )}
-                    >
-                      {statusMessage ? (
-                        <p className="text-xs text-muted-foreground">
-                          {statusMessage}
-                        </p>
-                      ) : null}
-
-                      <div className="flex items-center justify-between gap-2">
-                        {selectedSection?.type === "footer" ? (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button type="button" size="sm" variant="outline" />
-                              }
-                            >
-                              Agregar elemento
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  addExtraElement(selectedSection.id, "text")
-                                }
-                              >
-                                Texto
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  addExtraElement(selectedSection.id, "button")
-                                }
-                              >
-                                Boton
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  addExtraElement(selectedSection.id, "image")
-                                }
-                              >
-                                Imagen
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  addExtraElement(selectedSection.id, "line-vertical")
-                                }
-                              >
-                                Linea vertical
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  addExtraElement(selectedSection.id, "line-horizontal")
-                                }
-                              >
-                                Linea horizontal
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        ) : (
-                          <div />
-                        )}
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setIsSectionSettingsView(true)}
-                        >
-                          Configurar secciones
-                        </Button>
-                      </div>
-
-                      {selectedSection ? (
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-medium text-muted-foreground">
-                            Edicion responsive
-                          </label>
-                          <PanelRadioGroup
-                            name="footer-responsive-mode"
-                            value={responsiveEditMode}
-                            options={[
-                              { value: "large", label: "Grande" },
-                              { value: "medium", label: "Mediana" },
-                              { value: "tablet", label: "Tablet" },
-                              { value: "mobile", label: "Movil" },
-                            ]}
-                            onChange={(nextValue) =>
-                              setResponsiveEditMode(
-                                nextValue as LandingResponsiveMode,
-                              )
-                            }
-                          />
-                        </div>
-                      ) : null}
-
-                      <div className="order-2 space-y-3">
-                        {selectedSection ? (
-                          <>
-                            <details
-                              className="panel-accordion"
-                              open={openPanelAccordionId === "top:attributes"}
-                            >
-                              <summary
-                                className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
-                                onClick={(event) => {
-                                  event.preventDefault();
-                                  toggleTopLevelAccordion("top:attributes");
-                                }}
-                              >
-                                Atributos generales de seccion
-                              </summary>
-                              <div className="mt-2 space-y-3">
-                                <p className="text-xs text-muted-foreground">
-                                  Tipo:{" "}
-                                  {
-                                    landingSectionCatalog[selectedSection.type]
-                                      .label
-                                  }
-                                </p>
-
-                                {selectedSection.type === "gallery" &&
-                                selectedSectionGalleryVariantKey ? (
-                                  <details className="panel-accordion panel-accordion-inner">
-                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                      Version de galeria
-                                    </summary>
-                                    <PanelRadioGroup
-                                      name={`${selectedSection.id}-gallery-variant`}
-                                      value={selectedSectionGalleryVariant}
-                                      options={[
-                                        { value: "grid", label: "Grid" },
-                                        {
-                                          value: "carousel",
-                                          label: "Carousel",
-                                        },
-                                        { value: "stacked", label: "Stacked" },
-                                        {
-                                          value: "editorial",
-                                          label: "Editorial",
-                                        },
-                                      ]}
-                                      onChange={(nextValue) =>
-                                        updateField(
-                                          selectedSectionGalleryVariantKey,
-                                          nextValue,
-                                        )
-                                      }
-                                    />
-
-                                    {selectedSectionGalleryVariant === "grid" &&
-                                    selectedSectionGalleryGridImageShapeKey ? (
-                                      <div className="space-y-2 rounded-md border bg-background p-2">
-                                        <label className="text-xs font-medium text-muted-foreground">
-                                          Forma de imagen en grid
-                                        </label>
-                                        <PanelRadioGroup
-                                          name={`${selectedSection.id}-gallery-grid-shape`}
-                                          value={selectedSectionGalleryGridImageShape}
-                                          options={[
-                                            {
-                                              value: "square",
-                                              label: "Cuadrada",
-                                            },
-                                            {
-                                              value: "portrait",
-                                              label: "Vertical",
-                                            },
-                                            {
-                                              value: "landscape",
-                                              label: "Horizontal",
-                                            },
-                                          ]}
-                                          onChange={(nextValue) =>
-                                            updateField(
-                                              selectedSectionGalleryGridImageShapeKey,
-                                              nextValue,
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                    ) : null}
-
-                                    {selectedSectionGalleryCaptionContainerOpacityKey &&
-                                    selectedSectionGalleryCaptionContainerPaddingXKey &&
-                                    selectedSectionGalleryCaptionContainerPaddingYKey ? (
-                                      <div className="space-y-2 rounded-md border bg-background p-2">
-                                        <label className="text-xs font-medium text-muted-foreground">
-                                          Contenedor de texto
-                                        </label>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Opacidad de fondo (
-                                            {
-                                              selectedSectionGalleryCaptionContainerOpacity
-                                            }
-                                            %)
-                                          </label>
-                                          <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <PanelRangeInput
-                                              min={0}
-                                              max={100}
-                                              step={1}
-                                              value={
-                                                selectedSectionGalleryCaptionContainerOpacity
-                                              }
-                                              onChange={(value) =>
-                                                updateField(
-                                                  selectedSectionGalleryCaptionContainerOpacityKey,
-                                                  String(value),
-                                                )
-                                              }
-                                            />
-                                            <Input
-                                              type="number"
-                                              min={0}
-                                              max={100}
-                                              step={1}
-                                              value={
-                                                selectedSectionGalleryCaptionContainerOpacity
-                                              }
-                                              onChange={(event) =>
-                                                updateField(
-                                                  selectedSectionGalleryCaptionContainerOpacityKey,
-                                                  event.target.value,
-                                                )
-                                              }
-                                            />
-                                          </div>
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <SliderValueControl
-                                            label="Padding X"
-                                            value={
-                                              selectedSectionGalleryCaptionContainerPaddingX
-                                            }
-                                            min={0}
-                                            max={80}
-                                            onChange={(value) =>
-                                              updateField(
-                                                selectedSectionGalleryCaptionContainerPaddingXKey,
-                                                String(value),
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <SliderValueControl
-                                            label="Padding Y"
-                                            value={
-                                              selectedSectionGalleryCaptionContainerPaddingY
-                                            }
-                                            min={0}
-                                            max={80}
-                                            onChange={(value) =>
-                                              updateField(
-                                                selectedSectionGalleryCaptionContainerPaddingYKey,
-                                                String(value),
-                                              )
-                                            }
-                                          />
-                                        </div>
-                                      </div>
-                                    ) : null}
-
-                                    {(selectedSectionGalleryVariant ===
-                                      "carousel" ||
-                                      selectedSectionGalleryVariant ===
-                                        "stacked") &&
-                                    selectedSectionGalleryAutoplaySecondsKey ? (
-                                      <div className="space-y-2">
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Autoplay (
-                                            {
-                                              selectedSectionGalleryAutoplaySeconds
-                                            }
-                                            s)
-                                          </label>
-                                          <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <PanelRangeInput
-                                              min={0}
-                                              max={10}
-                                              step={1}
-                                              value={
-                                                selectedSectionGalleryAutoplaySeconds
-                                              }
-                                              onChange={(value) =>
-                                                updateField(
-                                                  selectedSectionGalleryAutoplaySecondsKey,
-                                                  String(value),
-                                                )
-                                              }
-                                            />
-                                            <Input
-                                              type="number"
-                                              min={0}
-                                              max={10}
-                                              step={1}
-                                              value={
-                                                selectedSectionGalleryAutoplaySeconds
-                                              }
-                                              onChange={(event) =>
-                                                updateField(
-                                                  selectedSectionGalleryAutoplaySecondsKey,
-                                                  event.target.value,
-                                                )
-                                              }
-                                            />
-                                          </div>
-                                          <p className="text-[11px] text-muted-foreground">
-                                            0 desactiva el avance automatico.
-                                          </p>
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Imagenes del carrusel
-                                          </label>
-                                          {selectedSectionGalleryItemImageKeys.map(
-                                            (imageKey, imageIndex) => {
-                                              const titleKey =
-                                                selectedSectionGalleryItemTitleKeys[
-                                                  imageIndex
-                                                ];
-                                              const modeKey =
-                                                selectedSectionGalleryItemCaptionModeKeys[
-                                                  imageIndex
-                                                ];
-                                              const subtitleKey =
-                                                selectedSectionGalleryItemSubtitleKeys[
-                                                  imageIndex
-                                                ];
-                                              const mode =
-                                                selectedSectionGalleryItemCaptionModes[
-                                                  imageIndex
-                                                ] ?? "title";
-
-                                              return (
-                                                <div
-                                                  key={imageKey}
-                                                  className="space-y-2 rounded-md border bg-background p-2"
-                                                >
-                                                  <p className="text-[11px] font-medium text-muted-foreground uppercase">
-                                                    Imagen {imageIndex + 1}
-                                                  </p>
-                                                  <Input
-                                                    placeholder="https://... (URL imagen)"
-                                                    value={
-                                                      textMap[imageKey] ?? ""
-                                                    }
-                                                    onChange={(event) =>
-                                                      updateField(
-                                                        imageKey,
-                                                        event.target.value,
-                                                      )
-                                                    }
-                                                  />
-                                                  <Input
-                                                    placeholder="Titulo"
-                                                    value={
-                                                      textMap[titleKey] ?? ""
-                                                    }
-                                                    onChange={(event) =>
-                                                      updateField(
-                                                        titleKey,
-                                                        event.target.value,
-                                                      )
-                                                    }
-                                                  />
-                                                  <select
-                                                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                                                    value={mode}
-                                                    onChange={(event) =>
-                                                      updateField(
-                                                        modeKey,
-                                                        event.target.value,
-                                                      )
-                                                    }
-                                                  >
-                                                    <option value="none">
-                                                      Sin texto
-                                                    </option>
-                                                    <option value="title">
-                                                      Solo titulo
-                                                    </option>
-                                                    <option value="title-subtitle">
-                                                      Titulo + subtitulo
-                                                    </option>
-                                                  </select>
-                                                  {mode === "title-subtitle" ? (
-                                                    <Input
-                                                      placeholder="Subtitulo"
-                                                      value={
-                                                        textMap[subtitleKey] ??
-                                                        ""
-                                                      }
-                                                      onChange={(event) =>
-                                                        updateField(
-                                                          subtitleKey,
-                                                          event.target.value,
-                                                        )
-                                                      }
-                                                    />
-                                                  ) : null}
-                                                </div>
-                                              );
-                                            },
-                                          )}
-                                        </div>
-                                      </div>
-                                    ) : null}
-                                  </details>
-                                ) : null}
-
-                                {selectedSectionBackgroundModeKey &&
-                                selectedSectionBackgroundImageKey &&
-                                selectedSectionBackgroundColorKey &&
-                                selectedSectionBackgroundGradientKey &&
-                                selectedSectionBackgroundZoomKey &&
-                                selectedSectionBackgroundPositionXKey &&
-                                selectedSectionBackgroundPositionYKey ? (
-                                  <details className="panel-accordion panel-accordion-inner">
-                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                      Fondo de seccion
-                                    </summary>
-                                    <div className="mt-2 space-y-2">
-                                    <PanelRadioGroup
-                                      name={`${selectedSection.id}-background-mode`}
-                                      value={selectedSectionBackgroundMode}
-                                      options={[
-                                        { value: "image", label: "Imagen" },
-                                        { value: "color", label: "Color" },
-                                        {
-                                          value: "gradient",
-                                          label: "Gradient",
-                                        },
-                                      ]}
-                                      onChange={(nextValue) =>
-                                        updateField(
-                                          selectedSectionBackgroundModeKey,
-                                          nextValue,
-                                        )
-                                      }
-                                    />
-
-                                    {selectedSectionBackgroundMode ===
-                                    "image" ? (
-                                      <div className="space-y-2">
-                                        <Input
-                                          placeholder="https://..."
-                                          value={
-                                            textMap[
-                                              selectedSectionBackgroundImageKey
-                                            ] ?? ""
-                                          }
-                                          onChange={(event) =>
-                                            updateField(
-                                              selectedSectionBackgroundImageKey,
-                                              event.target.value,
-                                            )
-                                          }
-                                        />
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Zoom (
-                                            {selectedSectionBackgroundZoom.toFixed(
-                                              2,
-                                            )}
-                                            x)
-                                          </label>
-                                          <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <PanelRangeInput
-                                              min={1}
-                                              max={3}
-                                              step={0.05}
-                                              value={
-                                                selectedSectionBackgroundZoom
-                                              }
-                                              onChange={(value) =>
-                                                updateField(
-                                                  selectedSectionBackgroundZoomKey,
-                                                  String(value),
-                                                )
-                                              }
-                                            />
-                                            <Input
-                                              type="number"
-                                              min={1}
-                                              max={3}
-                                              step={0.05}
-                                              value={
-                                                selectedSectionBackgroundZoom
-                                              }
-                                              onChange={(event) =>
-                                                updateField(
-                                                  selectedSectionBackgroundZoomKey,
-                                                  event.target.value,
-                                                )
-                                              }
-                                            />
-                                          </div>
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Posicion X (
-                                            {Math.round(
-                                              selectedSectionBackgroundPositionX,
-                                            )}
-                                            %)
-                                          </label>
-                                          <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <PanelRangeInput
-                                              min={0}
-                                              max={100}
-                                              step={1}
-                                              value={
-                                                selectedSectionBackgroundPositionX
-                                              }
-                                              onChange={(value) =>
-                                                updateField(
-                                                  selectedSectionBackgroundPositionXKey,
-                                                  String(value),
-                                                )
-                                              }
-                                            />
-                                            <Input
-                                              type="number"
-                                              min={0}
-                                              max={100}
-                                              step={1}
-                                              value={Math.round(
-                                                selectedSectionBackgroundPositionX,
-                                              )}
-                                              onChange={(event) =>
-                                                updateField(
-                                                  selectedSectionBackgroundPositionXKey,
-                                                  event.target.value,
-                                                )
-                                              }
-                                            />
-                                          </div>
-                                        </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-xs font-medium text-muted-foreground">
-                                            Posicion Y (
-                                            {Math.round(
-                                              selectedSectionBackgroundPositionY,
-                                            )}
-                                            %)
-                                          </label>
-                                          <div className="grid grid-cols-[1fr_84px] gap-2">
-                                            <PanelRangeInput
-                                              min={0}
-                                              max={100}
-                                              step={1}
-                                              value={
-                                                selectedSectionBackgroundPositionY
-                                              }
-                                              onChange={(value) =>
-                                                updateField(
-                                                  selectedSectionBackgroundPositionYKey,
-                                                  String(value),
-                                                )
-                                              }
-                                            />
-                                            <Input
-                                              type="number"
-                                              min={0}
-                                              max={100}
-                                              step={1}
-                                              value={Math.round(
-                                                selectedSectionBackgroundPositionY,
-                                              )}
-                                              onChange={(event) =>
-                                                updateField(
-                                                  selectedSectionBackgroundPositionYKey,
-                                                  event.target.value,
-                                                )
-                                              }
-                                            />
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ) : null}
-
-                                    {selectedSectionBackgroundMode ===
-                                    "color" ? (
-                                      <PanelColorControl
-                                        value={
-                                          textMap[
-                                            selectedSectionBackgroundColorKey
-                                          ]
-                                        }
-                                        defaultValue="#f4efe5"
-                                        placeholder="#f4efe5"
-                                        includeTransparentOption
-                                        onChange={(nextColor) =>
-                                          updateField(
-                                            selectedSectionBackgroundColorKey,
-                                            nextColor,
-                                          )
-                                        }
-                                      />
-                                    ) : null}
-
-                                    {selectedSectionBackgroundMode ===
-                                    "gradient" ? (
-                                      <Input
-                                        placeholder="linear-gradient(135deg, #d9e8d4, #f4efe5)"
-                                        value={
-                                          textMap[
-                                            selectedSectionBackgroundGradientKey
-                                          ] ?? ""
-                                        }
-                                        onChange={(event) =>
-                                          updateField(
-                                            selectedSectionBackgroundGradientKey,
-                                            event.target.value,
-                                          )
-                                        }
-                                      />
-                                    ) : null}
-
-                                    <div className="flex justify-end">
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => {
-                                          updateField(
-                                            selectedSectionBackgroundModeKey,
-                                            "color",
-                                          );
-                                          updateField(
-                                            selectedSectionBackgroundZoomKey,
-                                            "1",
-                                          );
-                                          updateField(
-                                            selectedSectionBackgroundPositionXKey,
-                                            "50",
-                                          );
-                                          updateField(
-                                            selectedSectionBackgroundPositionYKey,
-                                            "50",
-                                          );
-                                        }}
-                                      >
-                                        Reset fondo
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  </details>
-                                ) : null}
-
-                                {selectedSectionBorderWidthKey &&
-                                selectedSectionBorderColorKey &&
-                                selectedSectionBorderRadiusKey &&
-                                selectedSectionBorderStyleKey ? (
-                                  <details className="panel-accordion panel-accordion-inner">
-                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                      Bordes de seccion
-                                    </summary>
-                                    <div className="mt-2 space-y-2">
-                                      <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-muted-foreground">
-                                          Estilo
-                                        </label>
-                                        <select
-                                          className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                                          value={selectedSectionBorderStyle}
-                                          onChange={(event) =>
-                                            updateField(
-                                              selectedSectionBorderStyleKey,
-                                              event.target.value,
-                                            )
-                                          }
-                                        >
-                                          <option value="solid">Solid</option>
-                                          <option value="dashed">Dashed</option>
-                                          <option value="dotted">Dotted</option>
-                                          <option value="none">None</option>
-                                        </select>
-                                      </div>
-                                      <SliderValueControl
-                                        label="Ancho"
-                                        value={selectedSectionBorderWidth}
-                                        min={0}
-                                        max={24}
-                                        onChange={(value) =>
-                                          updateField(
-                                            selectedSectionBorderWidthKey,
-                                            String(value),
-                                          )
-                                        }
-                                      />
-                                      <SliderValueControl
-                                        label="Radio"
-                                        value={selectedSectionBorderRadius}
-                                        min={0}
-                                        max={120}
-                                        onChange={(value) =>
-                                          updateField(
-                                            selectedSectionBorderRadiusKey,
-                                            String(value),
-                                          )
-                                        }
-                                      />
-                                      <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-muted-foreground">
-                                          Color
-                                        </label>
-                                        <PanelColorControl
-                                          value={
-                                            textMap[selectedSectionBorderColorKey]
-                                          }
-                                          defaultValue="#d1d5db"
-                                          placeholder="#d1d5db"
-                                          onChange={(nextColor) =>
-                                            updateField(
-                                              selectedSectionBorderColorKey,
-                                              nextColor,
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                      <div className="flex justify-end">
-                                        <Button
-                                          type="button"
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() => {
-                                            updateField(
-                                              selectedSectionBorderStyleKey,
-                                              "solid",
-                                            );
-                                            updateField(
-                                              selectedSectionBorderWidthKey,
-                                              "1",
-                                            );
-                                            updateField(
-                                              selectedSectionBorderRadiusKey,
-                                              "0",
-                                            );
-                                          }}
-                                        >
-                                          Reset borde
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </details>
-                                ) : null}
-
-                                {selectedSection.type === "footer" &&
-                                selectedSectionFooterHeightKey ? (
-                                  <details className="panel-accordion panel-accordion-inner">
-                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                      Altura
-                                    </summary>
-                                    <div className="mt-2 space-y-2">
-                                      <SliderValueControl
-                                        label="Altura"
-                                        value={selectedSectionFooterHeight}
-                                        min={180}
-                                        max={1200}
-                                        onChange={(value) =>
-                                          updateField(
-                                            selectedSectionFooterHeightKey,
-                                            String(value),
-                                          )
-                                        }
-                                      />
-                                    </div>
-                                  </details>
-                                ) : null}
-
-                                {selectedSectionPaddingFieldId ? (
-                                  <details className="panel-accordion panel-accordion-inner">
-                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                      Padding de seccion
-                                    </summary>
-                                    <div className="space-y-1.5">
-                                      <label className="text-xs font-medium text-muted-foreground">
-                                        Modo
-                                      </label>
-                                      <PanelRadioGroup
-                                        name={`${selectedSectionPaddingFieldId}-padding-mode`}
-                                        value={selectedSectionPaddingMode}
-                                        options={[
-                                          { value: "all", label: "All" },
-                                          { value: "axis", label: "Axis" },
-                                          { value: "sides", label: "Sides" },
-                                        ]}
-                                        onChange={(nextValue) =>
-                                          updateField(
-                                            getLandingFieldPaddingModeKey(
-                                              selectedSectionPaddingFieldId,
-                                            ),
-                                            nextValue,
-                                          )
-                                        }
-                                      />
-                                    </div>
-
-                                    {selectedSectionPaddingMode === "all" ? (
-                                      <SliderValueControl
-                                        label="Padding"
-                                        value={getNumberValue(
-                                          textMap[
-                                            getLandingFieldPaddingKey(
-                                              selectedSectionPaddingFieldId,
-                                            )
-                                          ],
-                                          0,
-                                        )}
-                                        onChange={(value) =>
-                                          updateField(
-                                            getLandingFieldPaddingKey(
-                                              selectedSectionPaddingFieldId,
-                                            ),
-                                            String(value),
-                                          )
-                                        }
-                                      />
-                                    ) : null}
-
-                                    {selectedSectionPaddingMode === "axis" ? (
-                                      <div className="grid grid-cols-1 gap-2">
-                                        <SliderValueControl
-                                          label="Px"
-                                          value={getNumberValue(
-                                            textMap[
-                                              getLandingFieldPaddingXKey(
-                                                selectedSectionPaddingFieldId,
-                                              )
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              getLandingFieldPaddingXKey(
-                                                selectedSectionPaddingFieldId,
-                                              ),
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                        <SliderValueControl
-                                          label="Py"
-                                          value={getNumberValue(
-                                            textMap[
-                                              getLandingFieldPaddingYKey(
-                                                selectedSectionPaddingFieldId,
-                                              )
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              getLandingFieldPaddingYKey(
-                                                selectedSectionPaddingFieldId,
-                                              ),
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                    ) : null}
-
-                                    {selectedSectionPaddingMode === "sides" ? (
-                                      <div className="grid grid-cols-1 gap-2">
-                                        <SliderValueControl
-                                          label="Pt"
-                                          value={getNumberValue(
-                                            textMap[
-                                              getLandingFieldPaddingTopKey(
-                                                selectedSectionPaddingFieldId,
-                                              )
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              getLandingFieldPaddingTopKey(
-                                                selectedSectionPaddingFieldId,
-                                              ),
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                        <SliderValueControl
-                                          label="Pr"
-                                          value={getNumberValue(
-                                            textMap[
-                                              getLandingFieldPaddingRightKey(
-                                                selectedSectionPaddingFieldId,
-                                              )
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              getLandingFieldPaddingRightKey(
-                                                selectedSectionPaddingFieldId,
-                                              ),
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                        <SliderValueControl
-                                          label="Pb"
-                                          value={getNumberValue(
-                                            textMap[
-                                              getLandingFieldPaddingBottomKey(
-                                                selectedSectionPaddingFieldId,
-                                              )
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              getLandingFieldPaddingBottomKey(
-                                                selectedSectionPaddingFieldId,
-                                              ),
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                        <SliderValueControl
-                                          label="Pl"
-                                          value={getNumberValue(
-                                            textMap[
-                                              getLandingFieldPaddingLeftKey(
-                                                selectedSectionPaddingFieldId,
-                                              )
-                                            ],
-                                            0,
-                                          )}
-                                          onChange={(value) =>
-                                            updateField(
-                                              getLandingFieldPaddingLeftKey(
-                                                selectedSectionPaddingFieldId,
-                                              ),
-                                              String(value),
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                    ) : null}
-                                  </details>
-                                ) : null}
-                              </div>
-                            </details>
-
-                            <div className="space-y-2">
-                              {activeSectionItems.map((item) => {
-                                const baseFieldKey =
-                                  item.kind === "base"
-                                    ? item.id.replace(/^base:/, "")
-                                    : null;
-                                const baseField = baseFieldKey
-                                  ? landingSectionCatalog[
-                                      selectedSection.type
-                                    ].fields.find(
-                                      (field) => field.key === baseFieldKey,
-                                    )
-                                  : null;
-                                const extraItem = item.extraId
-                                  ? activeSectionExtras.find(
-                                      (entry) => entry.id === item.extraId,
-                                    )
-                                  : null;
-                                const extraDefaults = extraItem
-                                  ? getExtraDefaults(extraItem.type)
-                                  : null;
-                                const isMultiline =
-                                  baseField?.multiline ??
-                                  extraDefaults?.multiline ??
-                                  false;
-                                const isLineExtra =
-                                  extraItem?.type === "line-vertical" ||
-                                  extraItem?.type === "line-horizontal";
-                                const isButtonExtra = extraItem?.type === "button";
-                                const buttonVariantValue =
-                                  textMap[
-                                    getLandingFieldButtonVariantKey(item.textKey)
-                                  ] ?? "default";
-                                const extraSizeKey =
-                                  item.kind === "extra"
-                                    ? getExtraSizeFieldKey(item.textKey)
-                                    : null;
-                                const extraPositionXKey = item.extraId
-                                  ? getExtraPositionXFieldKey(
-                                      selectedSection.id,
-                                      item.extraId,
-                                    )
-                                  : null;
-                                const extraPositionYKey = item.extraId
-                                  ? getExtraPositionYFieldKey(
-                                      selectedSection.id,
-                                      item.extraId,
-                                    )
-                                  : null;
-                                const isVideoUrlItem =
-                                  selectedSection.type === "video" &&
-                                  item.kind === "base" &&
-                                  baseFieldKey === "url";
-                                const hasKnownVideoControls =
-                                  isVideoUrlItem &&
-                                  selectedSectionVideoOverlayOpacityKey &&
-                                  selectedSectionVideoPositionXKey &&
-                                  selectedSectionVideoPositionYKey &&
-                                  selectedSectionVideoZoomKey;
-
-                                return (
-                                  <details
-                                    key={`config-${item.id}`}
-                                    className="panel-accordion"
-                                    open={
-                                      openPanelAccordionId === `top:item:${item.id}`
-                                    }
-                                   >
-                                    <summary
-                                      className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
-                                      onClick={(event) => {
-                                        event.preventDefault();
-                                        toggleTopLevelAccordion(`top:item:${item.id}`);
-                                      }}
-                                    >
-                                      {item.label}
-                                      {item.kind === "extra" && item.extraId ? (
-                                        <span className="float-right inline-flex items-center">
-                                          <Button
-                                            type="button"
-                                            size="icon-sm"
-                                            variant="ghost"
-                                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                                            onClick={(event) => {
-                                              event.preventDefault();
-                                              event.stopPropagation();
-                                              removeExtraElement(
-                                                selectedSection.id,
-                                                item.extraId!,
-                                              );
-                                            }}
-                                            aria-label="Eliminar elemento"
-                                            title="Eliminar elemento"
-                                          >
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                          </Button>
-                                        </span>
-                                      ) : null}
-                                    </summary>
-                                    <div className="mt-2 space-y-2">
-                                      {isVideoUrlItem ? (
-                                        <>
-                                          <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-muted-foreground">
-                                              Archivo de video
-                                            </label>
-                                            <select
-                                              className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                                              value={
-                                                VIDEO_ASSET_OPTIONS.includes(
-                                                  (textMap[item.textKey] ??
-                                                    "") as (typeof VIDEO_ASSET_OPTIONS)[number],
-                                                )
-                                                  ? ((textMap[item.textKey] ??
-                                                      "/assets/vid2.mp4") as (typeof VIDEO_ASSET_OPTIONS)[number])
-                                                  : "/assets/vid2.mp4"
-                                              }
-                                              onChange={(event) =>
-                                                updateField(
-                                                  item.textKey,
-                                                  event.target.value,
-                                                )
-                                              }
-                                            >
-                                              {VIDEO_ASSET_OPTIONS.map(
-                                                (videoPath) => (
-                                                  <option
-                                                    key={videoPath}
-                                                    value={videoPath}
-                                                  >
-                                                    {videoPath.replace(
-                                                      "/assets/",
-                                                      "",
-                                                    )}
-                                                  </option>
-                                                ),
-                                              )}
-                                            </select>
-                                          </div>
-                                          <div className="space-y-2 rounded-md border p-2">
-                                            <button
-                                              type="button"
-                                              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                                              onClick={() =>
-                                                addVideoTextItem(selectedSection.id)
-                                              }
-                                            >
-                                              <Plus className="h-3.5 w-3.5" />
-                                              Agregar texto
-                                            </button>
-                                            {selectedSectionVideoTextItems.map(
-                                              (videoTextId, index) => {
-                                                const contentKey = getSectionVideoTextFieldKey(
-                                                  selectedSection.id,
-                                                  videoTextId,
-                                                  "content",
-                                                );
-                                                const sizeKey = getSectionVideoTextFieldKey(
-                                                  selectedSection.id,
-                                                  videoTextId,
-                                                  "size",
-                                                );
-                                                const colorKey = getSectionVideoTextFieldKey(
-                                                  selectedSection.id,
-                                                  videoTextId,
-                                                  "color",
-                                                );
-                                                const weightKey = getSectionVideoTextFieldKey(
-                                                  selectedSection.id,
-                                                  videoTextId,
-                                                  "weight",
-                                                );
-                                                const positionXKey =
-                                                  getSectionVideoTextFieldKey(
-                                                    selectedSection.id,
-                                                    videoTextId,
-                                                    "position_x",
-                                                  );
-                                                const positionYKey =
-                                                  getSectionVideoTextFieldKey(
-                                                    selectedSection.id,
-                                                    videoTextId,
-                                                    "position_y",
-                                                  );
-                                                const textSize = getNumberValue(
-                                                  textMap[sizeKey],
-                                                  44,
-                                                  12,
-                                                  120,
-                                                );
-                                                const textPositionX = getNumberValue(
-                                                  textMap[positionXKey],
-                                                  50,
-                                                  0,
-                                                  100,
-                                                );
-                                                const textPositionY = getNumberValue(
-                                                  textMap[positionYKey],
-                                                  50,
-                                                  0,
-                                                  100,
-                                                );
-                                                const textWeight = getNumberValue(
-                                                  textMap[weightKey],
-                                                  700,
-                                                  400,
-                                                  900,
-                                                );
-
-                                                return (
-                                                  <details
-                                                    key={videoTextId}
-                                                    className="panel-accordion panel-accordion-inner"
-                                                   >
-                                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                                                      Texto {index + 1}
-                                                    </summary>
-                                                    <div className="mt-2 space-y-2">
-                                                      <div className="flex justify-end">
-                                                        <Button
-                                                          type="button"
-                                                          size="sm"
-                                                          variant="ghost"
-                                                          className="h-7 px-2 text-destructive hover:text-destructive"
-                                                          onClick={() =>
-                                                            removeVideoTextItem(
-                                                              selectedSection.id,
-                                                              videoTextId,
-                                                            )
-                                                          }
-                                                        >
-                                                          <Trash2 className="mr-1 h-3.5 w-3.5" />
-                                                          Eliminar
-                                                        </Button>
-                                                      </div>
-                                                      <div className="space-y-1.5">
-                                                        <label className="text-xs font-medium text-muted-foreground">
-                                                          Contenido
-                                                        </label>
-                                                        <Textarea
-                                                          value={
-                                                            textMap[contentKey] ??
-                                                            ""
-                                                          }
-                                                          onChange={(event) =>
-                                                            updateField(
-                                                              contentKey,
-                                                              event.target.value,
-                                                            )
-                                                          }
-                                                          rows={3}
-                                                          placeholder="Escribi el texto sobre el video"
-                                                        />
-                                                      </div>
-                                                      <div className="space-y-1.5">
-                                                        <label className="text-xs font-medium text-muted-foreground">
-                                                          Color
-                                                        </label>
-                                                        <PanelColorControl
-                                                          value={textMap[colorKey]}
-                                                          defaultValue="#ffffff"
-                                                          placeholder="#ffffff"
-                                                          colorInputClassName="h-9"
-                                                          onChange={(nextColor) =>
-                                                            updateField(
-                                                              colorKey,
-                                                              nextColor,
-                                                            )
-                                                          }
-                                                        />
-                                                      </div>
-                                                      <div className="space-y-1.5">
-                                                        <label className="text-xs font-medium text-muted-foreground">
-                                                          Weight ({textWeight})
-                                                        </label>
-                                                      <PanelRangeInput
-                                                        min={400}
-                                                        max={900}
-                                                        step={100}
-                                                        value={textWeight}
-                                                        onChange={(value) =>
-                                                          updateField(
-                                                            weightKey,
-                                                            String(value),
-                                                          )
-                                                        }
-                                                      />
-                                                      </div>
-                                                      <div className="space-y-1.5">
-                                                        <label className="text-xs font-medium text-muted-foreground">
-                                                          Tamaño ({textSize}px)
-                                                        </label>
-                                                      <PanelRangeInput
-                                                        min={12}
-                                                        max={120}
-                                                        step={1}
-                                                        value={textSize}
-                                                        onChange={(value) =>
-                                                          updateField(
-                                                            sizeKey,
-                                                            String(value),
-                                                          )
-                                                        }
-                                                      />
-                                                      </div>
-                                                      <div className="space-y-1.5">
-                                                        <label className="text-xs font-medium text-muted-foreground">
-                                                          Posicion X ({textPositionX}%)
-                                                        </label>
-                                                      <PanelRangeInput
-                                                        min={0}
-                                                        max={100}
-                                                        step={1}
-                                                        value={textPositionX}
-                                                        onChange={(value) =>
-                                                          updateField(
-                                                            positionXKey,
-                                                            String(value),
-                                                          )
-                                                        }
-                                                      />
-                                                      </div>
-                                                      <div className="space-y-1.5">
-                                                        <label className="text-xs font-medium text-muted-foreground">
-                                                          Posicion Y ({textPositionY}%)
-                                                        </label>
-                                                      <PanelRangeInput
-                                                        min={0}
-                                                        max={100}
-                                                        step={1}
-                                                        value={textPositionY}
-                                                        onChange={(value) =>
-                                                          updateField(
-                                                            positionYKey,
-                                                            String(value),
-                                                          )
-                                                        }
-                                                      />
-                                                      </div>
-                                                    </div>
-                                                  </details>
-                                                );
-                                              },
-                                            )}
-                                          </div>
-                                          {hasKnownVideoControls ? (
-                                            <>
-                                              <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-muted-foreground">
-                                                  Transparencia del filtro (
-                                                  {
-                                                    selectedSectionVideoOverlayOpacity
-                                                  }
-                                                  %)
-                                                </label>
-                                                <div className="grid grid-cols-1 gap-2">
-                                                  <PanelRangeInput
-                                                    min={0}
-                                                    max={100}
-                                                    step={1}
-                                                    value={
-                                                      selectedSectionVideoOverlayOpacity
-                                                    }
-                                                    onChange={(value) =>
-                                                      updateField(
-                                                        selectedSectionVideoOverlayOpacityKey,
-                                                        String(value),
-                                                      )
-                                                    }
-                                                  />
-                                                </div>
-                                              </div>
-                                              <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-muted-foreground">
-                                                  Posicion X (
-                                                  {Math.round(
-                                                    selectedSectionVideoPositionX,
-                                                  )}
-                                                  %)
-                                                </label>
-                                                <div className="grid grid-cols-1 gap-2">
-                                                  <PanelRangeInput
-                                                    min={0}
-                                                    max={100}
-                                                    step={1}
-                                                    value={
-                                                      selectedSectionVideoPositionX
-                                                    }
-                                                    onChange={(value) =>
-                                                      updateField(
-                                                        selectedSectionVideoPositionXKey,
-                                                        String(value),
-                                                      )
-                                                    }
-                                                  />
-                                                </div>
-                                              </div>
-                                              <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-muted-foreground">
-                                                  Posicion Y (
-                                                  {Math.round(
-                                                    selectedSectionVideoPositionY,
-                                                  )}
-                                                  %)
-                                                </label>
-                                                <div className="grid grid-cols-1 gap-2">
-                                                  <PanelRangeInput
-                                                    min={0}
-                                                    max={100}
-                                                    step={1}
-                                                    value={
-                                                      selectedSectionVideoPositionY
-                                                    }
-                                                    onChange={(value) =>
-                                                      updateField(
-                                                        selectedSectionVideoPositionYKey,
-                                                        String(value),
-                                                      )
-                                                    }
-                                                  />
-                                                </div>
-                                              </div>
-                                              <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-muted-foreground">
-                                                  Zoom (
-                                                  {selectedSectionVideoZoom.toFixed(
-                                                    2,
-                                                  )}
-                                                  x)
-                                                </label>
-                                                <div className="grid grid-cols-1 gap-2">
-                                                  <PanelRangeInput
-                                                    min={1}
-                                                    max={3}
-                                                    step={0.05}
-                                                    value={selectedSectionVideoZoom}
-                                                    onChange={(value) =>
-                                                      updateField(
-                                                        selectedSectionVideoZoomKey,
-                                                        String(value),
-                                                      )
-                                                    }
-                                                  />
-                                                </div>
-                                              </div>
-                                            </>
-                                          ) : null}
-                                        </>
-                                      ) : isLineExtra ? (
-                                        <p className="text-xs text-muted-foreground">
-                                          Este elemento no requiere texto. Ajusta tamano, color y margen en este panel.
-                                        </p>
-                                      ) : isMultiline ? (
-                                        <Textarea
-                                          value={
-                                            textMap[item.textKey] ??
-                                            baseField?.defaultValue ??
-                                            extraDefaults?.text ??
-                                            ""
-                                          }
-                                          onChange={(event) =>
-                                            updateField(
-                                              item.textKey,
-                                              event.target.value,
-                                            )
-                                          }
-                                          rows={4}
-                                        />
-                                      ) : (
-                                        <Input
-                                          value={
-                                            textMap[item.textKey] ??
-                                            baseField?.defaultValue ??
-                                            extraDefaults?.text ??
-                                            ""
-                                          }
-                                          onChange={(event) =>
-                                            updateField(
-                                              item.textKey,
-                                              event.target.value,
-                                            )
-                                          }
-                                        />
-                                      )}
-                                      {item.kind === "extra" &&
-                                      item.extraId &&
-                                      extraItem?.type !== "text" ? (
-                                        <>
-                                          <SliderValueControl
-                                            label="Tamano"
-                                            value={getNumberValue(
-                                              textMap[extraSizeKey!],
-                                              extraDefaults?.size ?? 24,
-                                              12,
-                                              800,
-                                            )}
-                                            min={12}
-                                            max={800}
-                                            onChange={(value) =>
-                                              updateField(
-                                                extraSizeKey!,
-                                                String(value),
-                                              )
-                                            }
-                                          />
-                                          <SliderValueControl
-                                            label="Posicion X"
-                                            value={getNumberValue(
-                                              textMap[extraPositionXKey!],
-                                              50,
-                                              0,
-                                              100,
-                                            )}
-                                            min={0}
-                                            max={100}
-                                            onChange={(value) =>
-                                              updateField(
-                                                extraPositionXKey!,
-                                                String(value),
-                                              )
-                                            }
-                                          />
-                                          <SliderValueControl
-                                            label="Posicion Y"
-                                            value={getNumberValue(
-                                              textMap[extraPositionYKey!],
-                                              50,
-                                              0,
-                                              100,
-                                            )}
-                                            min={0}
-                                            max={100}
-                                            onChange={(value) =>
-                                              updateField(
-                                                extraPositionYKey!,
-                                                String(value),
-                                              )
-                                            }
-                                          />
-                                          {isLineExtra ? (
-                                            <>
-                                              <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-muted-foreground">
-                                                  Color
-                                                </label>
-                                                <PanelColorControl
-                                                  value={
-                                                    textMap[
-                                                      getLandingFieldColorKey(
-                                                        item.textKey,
-                                                      )
-                                                    ]
-                                                  }
-                                                  defaultValue="#111827"
-                                                  placeholder="#111827"
-                                                  showPaletteLabel={false}
-                                                  onChange={(nextColor) =>
-                                                    updateField(
-                                                      getLandingFieldColorKey(
-                                                        item.textKey,
-                                                      ),
-                                                      nextColor,
-                                                    )
-                                                  }
-                                                />
-                                              </div>
-                                              <SliderValueControl
-                                                label="Ancho"
-                                                value={getNumberValue(
-                                                  textMap[
-                                                    getLandingFieldLineWidthKey(
-                                                      item.textKey,
-                                                    )
-                                                  ],
-                                                  1,
-                                                  1,
-                                                  40,
-                                                )}
-                                                min={1}
-                                                max={40}
-                                                onChange={(value) =>
-                                                  updateField(
-                                                    getLandingFieldLineWidthKey(
-                                                      item.textKey,
-                                                    ),
-                                                    String(value),
-                                                  )
-                                                }
-                                              />
-                                            </>
-                                          ) : null}
-                                          {isButtonExtra ? (
-                                            <>
-                                              <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-muted-foreground">
-                                                  Estilo de boton
-                                                </label>
-                                                <select
-                                                  className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                                                  value={
-                                                    textMap[
-                                                      getLandingFieldButtonVariantKey(
-                                                        item.textKey,
-                                                      )
-                                                    ] ?? "default"
-                                                  }
-                                                  onChange={(event) =>
-                                                    updateField(
-                                                      getLandingFieldButtonVariantKey(
-                                                        item.textKey,
-                                                      ),
-                                                      event.target.value,
-                                                    )
-                                                  }
-                                                >
-                                                  <option value="default">
-                                                    Default
-                                                  </option>
-                                                  <option value="outline">
-                                                    Outline
-                                                  </option>
-                                                  <option value="secondary">
-                                                    Secondary
-                                                  </option>
-                                                  <option value="ghost">
-                                                    Ghost
-                                                  </option>
-                                                  <option value="destructive">
-                                                    Destructive
-                                                  </option>
-                                                  <option value="link">
-                                                    Link
-                                                  </option>
-                                                  <option value="custom">
-                                                    Custom
-                                                  </option>
-                                                </select>
-                                              </div>
-                                              {buttonVariantValue === "custom" ? (
-                                                <>
-                                                  <div className="space-y-1.5">
-                                                    <label className="text-xs font-medium text-muted-foreground">
-                                                      Fuente
-                                                    </label>
-                                                    <select
-                                                      className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                                                      value={
-                                                        textMap[
-                                                          getLandingFieldFontFamilyKey(
-                                                            item.textKey,
-                                                          )
-                                                        ] ?? "fira-sans"
-                                                      }
-                                                      onChange={(event) =>
-                                                        updateField(
-                                                          getLandingFieldFontFamilyKey(
-                                                            item.textKey,
-                                                          ),
-                                                          event.target.value,
-                                                        )
-                                                      }
-                                                    >
-                                                      <option value="fira-sans">
-                                                        Fira Sans
-                                                      </option>
-                                                      <option value="montserrat">
-                                                        Montserrat
-                                                      </option>
-                                                      <option value="nunito">
-                                                        Nunito
-                                                      </option>
-                                                    </select>
-                                                  </div>
-                                                  <div className="space-y-1.5">
-                                                    <label className="text-xs font-medium text-muted-foreground">
-                                                      Color de texto
-                                                    </label>
-                                                    <PanelColorControl
-                                                      value={
-                                                        textMap[
-                                                          getLandingFieldColorKey(
-                                                            item.textKey,
-                                                          )
-                                                        ]
-                                                      }
-                                                      defaultValue="#ffffff"
-                                                      placeholder="#ffffff"
-                                                      showPaletteLabel={false}
-                                                      onChange={(nextColor) =>
-                                                        updateField(
-                                                          getLandingFieldColorKey(
-                                                            item.textKey,
-                                                          ),
-                                                          nextColor,
-                                                        )
-                                                      }
-                                                    />
-                                                  </div>
-                                                  <div className="space-y-1.5">
-                                                    <label className="text-xs font-medium text-muted-foreground">
-                                                      Color de fondo
-                                                    </label>
-                                                    <PanelColorControl
-                                                      value={
-                                                        textMap[
-                                                          getLandingFieldBackgroundColorKey(
-                                                            item.textKey,
-                                                          )
-                                                        ]
-                                                      }
-                                                      defaultValue="#1d4ed8"
-                                                      placeholder="#1d4ed8"
-                                                      showPaletteLabel={false}
-                                                      includeTransparentOption
-                                                      onChange={(nextColor) =>
-                                                        updateField(
-                                                          getLandingFieldBackgroundColorKey(
-                                                            item.textKey,
-                                                          ),
-                                                          nextColor,
-                                                        )
-                                                      }
-                                                    />
-                                                  </div>
-                                                  <div className="space-y-1.5">
-                                                    <label className="text-xs font-medium text-muted-foreground">
-                                                      Color de borde
-                                                    </label>
-                                                    <PanelColorControl
-                                                      value={
-                                                        textMap[
-                                                          getLandingFieldBorderColorKey(
-                                                            item.textKey,
-                                                          )
-                                                        ]
-                                                      }
-                                                      defaultValue="#1f2937"
-                                                      placeholder="#1f2937"
-                                                      showPaletteLabel={false}
-                                                      onChange={(nextColor) =>
-                                                        updateField(
-                                                          getLandingFieldBorderColorKey(
-                                                            item.textKey,
-                                                          ),
-                                                          nextColor,
-                                                        )
-                                                      }
-                                                    />
-                                                  </div>
-                                                  <SliderValueControl
-                                                    label="Ancho de borde"
-                                                    value={getNumberValue(
-                                                      textMap[
-                                                        getLandingFieldBorderWidthKey(
-                                                          item.textKey,
-                                                        )
-                                                      ],
-                                                      1,
-                                                      0,
-                                                      20,
-                                                    )}
-                                                    min={0}
-                                                    max={20}
-                                                    onChange={(value) =>
-                                                      updateField(
-                                                        getLandingFieldBorderWidthKey(
-                                                          item.textKey,
-                                                        ),
-                                                        String(value),
-                                                      )
-                                                    }
-                                                  />
-                                                  <div className="space-y-1.5">
-                                                    <label className="text-xs font-medium text-muted-foreground">
-                                                      Estilo de borde
-                                                    </label>
-                                                    <select
-                                                      className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                                                      value={
-                                                        textMap[
-                                                          getLandingFieldBorderStyleKey(
-                                                            item.textKey,
-                                                          )
-                                                        ] ?? "solid"
-                                                      }
-                                                      onChange={(event) =>
-                                                        updateField(
-                                                          getLandingFieldBorderStyleKey(
-                                                            item.textKey,
-                                                          ),
-                                                          event.target.value,
-                                                        )
-                                                      }
-                                                    >
-                                                      <option value="solid">
-                                                        Solid
-                                                      </option>
-                                                      <option value="dashed">
-                                                        Dashed
-                                                      </option>
-                                                      <option value="dotted">
-                                                        Dotted
-                                                      </option>
-                                                      <option value="none">
-                                                        None
-                                                      </option>
-                                                    </select>
-                                                  </div>
-                                                  <SliderValueControl
-                                                    label="Radio de borde"
-                                                    value={getNumberValue(
-                                                      textMap[
-                                                        getLandingFieldBorderRadiusKey(
-                                                          item.textKey,
-                                                        )
-                                                      ],
-                                                      8,
-                                                      0,
-                                                      80,
-                                                    )}
-                                                    min={0}
-                                                    max={80}
-                                                    onChange={(value) =>
-                                                      updateField(
-                                                        getLandingFieldBorderRadiusKey(
-                                                          item.textKey,
-                                                        ),
-                                                        String(value),
-                                                      )
-                                                    }
-                                                  />
-                                                </>
-                                              ) : null}
-                                            </>
-                                          ) : null}
-                                        </>
-                                      ) : null}
-                                      {item.kind === "extra" &&
-                                      extraItem?.type === "text" ? (
-                                        <>
-                                          <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-muted-foreground">
-                                              Fuente
-                                            </label>
-                                            <select
-                                              className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                                              value={
-                                                textMap[
-                                                  getLandingFieldFontFamilyKey(
-                                                    item.textKey,
-                                                  )
-                                                ] ?? "fira-sans"
-                                              }
-                                              onChange={(event) =>
-                                                updateField(
-                                                  getLandingFieldFontFamilyKey(
-                                                    item.textKey,
-                                                  ),
-                                                  event.target.value,
-                                                )
-                                              }
-                                            >
-                                              <option value="fira-sans">
-                                                Fira Sans
-                                              </option>
-                                              <option value="montserrat">
-                                                Montserrat
-                                              </option>
-                                              <option value="nunito">
-                                                Nunito
-                                              </option>
-                                            </select>
-                                          </div>
-                                          <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-muted-foreground">
-                                              Color
-                                            </label>
-                                            <PanelColorControl
-                                              value={
-                                                textMap[
-                                                  getLandingFieldColorKey(
-                                                    item.textKey,
-                                                  )
-                                                ]
-                                              }
-                                              defaultValue="#111827"
-                                              placeholder="#111827"
-                                              showPaletteLabel={false}
-                                              onChange={(nextColor) =>
-                                                updateField(
-                                                  getLandingFieldColorKey(
-                                                    item.textKey,
-                                                  ),
-                                                  nextColor,
-                                                )
-                                              }
-                                            />
-                                          </div>
-                                          <SliderValueControl
-                                            label="Tamano"
-                                            value={getNumberValue(
-                                              textMap[extraSizeKey!],
-                                              extraDefaults?.size ?? 24,
-                                              12,
-                                              800,
-                                            )}
-                                            min={12}
-                                            max={800}
-                                            onChange={(value) =>
-                                              updateField(
-                                                extraSizeKey!,
-                                                String(value),
-                                              )
-                                            }
-                                          />
-                                          <SliderValueControl
-                                            label="Weight"
-                                            value={getNumberValue(
-                                              textMap[
-                                                getLandingFieldFontWeightKey(
-                                                  item.textKey,
-                                                )
-                                              ],
-                                              400,
-                                              100,
-                                              900,
-                                            )}
-                                            min={100}
-                                            max={900}
-                                            step={100}
-                                            onChange={(value) =>
-                                              updateField(
-                                                getLandingFieldFontWeightKey(
-                                                  item.textKey,
-                                                ),
-                                                String(value),
-                                              )
-                                            }
-                                          />
-                                          <SliderValueControl
-                                            label="Posicion X"
-                                            value={getNumberValue(
-                                              textMap[extraPositionXKey!],
-                                              50,
-                                              0,
-                                              100,
-                                            )}
-                                            min={0}
-                                            max={100}
-                                            onChange={(value) =>
-                                              updateField(
-                                                extraPositionXKey!,
-                                                String(value),
-                                              )
-                                            }
-                                          />
-                                          <SliderValueControl
-                                            label="Posicion Y"
-                                            value={getNumberValue(
-                                              textMap[extraPositionYKey!],
-                                              50,
-                                              0,
-                                              100,
-                                            )}
-                                            min={0}
-                                            max={100}
-                                            onChange={(value) =>
-                                              updateField(
-                                                extraPositionYKey!,
-                                                String(value),
-                                              )
-                                            }
-                                          />
-                                        </>
-                                      ) : null}
-                                    </div>
-                                  </details>
-                                );
-                              })}
-                            </div>
-                          </>
-                        ) : null}
-                      </div>
-
-                    </div>
-
-                    <div
-                      className={cn(
-                        "h-full min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-                        !isSectionSettingsView && "hidden",
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setIsSectionSettingsView(false)}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                          Volver
-                        </Button>
-                        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                          Configuracion de secciones
-                        </p>
-                      </div>
-
-                      <div className="space-y-3 rounded-lg border p-3">
-                        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                          Orden de secciones
-                        </p>
-                        {structure.map((section) => (
-                          <div
-                            key={section.id}
-                            draggable
-                            onDragStart={(event) => {
-                              setDraggedSectionId(section.id);
-                              event.dataTransfer.setData(
-                                "text/plain",
-                                section.id,
-                              );
-                              event.dataTransfer.effectAllowed = "move";
-                            }}
-                            onDragOver={(event) => {
-                              event.preventDefault();
-                              event.dataTransfer.dropEffect = "move";
-                              setDragOverSectionId(section.id);
-                            }}
-                            onDrop={(event) => {
-                              event.preventDefault();
-                              const sourceId =
-                                draggedSectionId ||
-                                event.dataTransfer.getData("text/plain");
-                              if (sourceId) {
-                                reorderSections(sourceId, section.id);
-                              }
-                              setDraggedSectionId(null);
-                              setDragOverSectionId(null);
-                            }}
-                            onDragEnd={() => {
-                              setDraggedSectionId(null);
-                              setDragOverSectionId(null);
-                            }}
-                            className={cn(
-                              "flex items-center gap-2 rounded-md border bg-background px-2 py-2 text-sm",
-                              dragOverSectionId === section.id &&
-                                "border-primary bg-primary/5",
-                            )}
-                          >
-                            <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" />
-                            <button
-                              type="button"
-                              className="min-w-0 flex-1 truncate text-left"
-                              onClick={() => focusSection(section.id)}
-                            >
-                              {section.name}
-                            </button>
-                            <Badge variant="outline">
-                              {landingSectionCatalog[section.type].label}
-                            </Badge>
-                            <Button
-                              type="button"
-                              size="icon-sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => removeSection(section.id)}
-                              disabled={structure.length <= 1}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Remove section</span>
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="space-y-3 rounded-lg border p-3">
-                        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                          Agregar nueva seccion
-                        </p>
-                        <div className="grid grid-cols-[1fr_auto] gap-2">
-                          <select
-                            className="h-9 rounded-md border bg-background px-3 text-sm"
-                            value={newSectionType}
-                            onChange={(event) =>
-                              setNewSectionType(
-                                event.target.value as LandingSectionType,
-                              )
-                            }
-                          >
-                            {Object.values(landingSectionCatalog).map(
-                              (item) => (
-                                <option key={item.type} value={item.type}>
-                                  {item.label}
-                                </option>
-                              ),
-                            )}
-                          </select>
-                          <Button type="button" size="sm" onClick={addSection}>
-                            Add
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+            {panelPortal}
           </div>
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="p-4">
+      <CardContent
+        className={cn(
+          "min-w-0 p-3 md:p-4",
+          frameVariant === "flush" && "flex-1 min-h-0 p-0",
+          compactPreviewSpacing && "p-1 md:p-1.5",
+        )}
+      >
         <div
           ref={previewScrollRef}
-          className="relative h-[78vh] overflow-auto rounded-xl border bg-muted/20"
+          className={cn(
+            "relative h-[74vh] w-full overflow-auto rounded-xl border bg-muted/20",
+            frameVariant === "flush" && "rounded-none border-0",
+            compactPreviewSpacing && "h-[72vh]",
+          )}
         >
-          <div className="flex min-w-full justify-center p-2">
+          <div
+            className={cn(
+              "flex w-full justify-center p-4",
+              frameVariant === "flush" && "p-0",
+              compactPreviewSpacing && "p-1 md:p-1.5",
+            )}
+          >
             <div
               className="origin-top-left"
-              style={{ zoom: effectivePreviewScale, width: `${previewCanvasWidth}px` }}
+              style={{
+                zoom: effectivePreviewScale,
+                width: `${previewCanvasWidth}px`,
+              }}
             >
               <div
                 onClickCapture={(event) => {
@@ -3620,3 +3867,7 @@ export function CmsLandingEditor({ initialTextMap }: CmsLandingEditorProps) {
     </Card>
   );
 }
+
+
+
+
