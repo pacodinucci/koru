@@ -82,6 +82,7 @@ import {
 } from "@/modules/landing/config/landing-sections";
 import {
   createResponsiveScopedTextMap,
+  getResponsiveFieldStorageKey,
   getLandingFieldBackgroundColorKey,
   getLandingFieldBorderColorKey,
   getLandingFieldBorderRadiusKey,
@@ -101,6 +102,7 @@ import {
   getLandingFieldPaddingXKey,
   getLandingFieldPaddingYKey,
   getResponsiveOverrideKey,
+  isExplicitResponsiveOverrideKey,
   isResponsiveScopedFieldId,
   getLandingFieldSizeKey,
   getLandingFieldResponsiveSizeKey,
@@ -645,6 +647,12 @@ const BRAND_COMPLEMENT_COLOR_OPTIONS = [
   ...BRAND_COLOR_OPTIONS,
   ...COMPLEMENT_COLOR_OPTIONS,
 ] as const;
+const RESPONSIVE_MODES: LandingResponsiveMode[] = [
+  "large",
+  "medium",
+  "tablet",
+  "mobile",
+];
 
 export function CmsLandingEditor({
   initialTextMap,
@@ -1067,9 +1075,6 @@ export function CmsLandingEditor({
   }, [selectedSectionId, structure, activeSectionExtras, textMap]);
 
   function getExtraPositionXFieldKey(sectionId: string, extraId: string) {
-    if (responsiveEditMode === "large") {
-      return getSectionExtraPositionXKey(sectionId, extraId);
-    }
     return getSectionExtraResponsivePositionXKey(
       sectionId,
       extraId,
@@ -1078,9 +1083,6 @@ export function CmsLandingEditor({
   }
 
   function getExtraPositionYFieldKey(sectionId: string, extraId: string) {
-    if (responsiveEditMode === "large") {
-      return getSectionExtraPositionYKey(sectionId, extraId);
-    }
     return getSectionExtraResponsivePositionYKey(
       sectionId,
       extraId,
@@ -1089,10 +1091,39 @@ export function CmsLandingEditor({
   }
 
   function getExtraSizeFieldKey(textKey: string) {
-    if (responsiveEditMode === "large") {
-      return getLandingFieldSizeKey(textKey);
-    }
     return getLandingFieldResponsiveSizeKey(textKey, responsiveEditMode);
+  }
+
+  function getResponsiveValueFromMap(
+    source: LandingTextMap,
+    fieldId: string,
+    mode: LandingResponsiveMode,
+  ) {
+    const storageKey = getResponsiveFieldStorageKey(fieldId, mode);
+    const overrideValue = source[storageKey];
+    if (overrideValue != null && String(overrideValue).trim() !== "") {
+      return overrideValue;
+    }
+    return source[fieldId];
+  }
+
+  function materializeResponsiveField(
+    source: LandingTextMap,
+    fieldId: string,
+  ) {
+    const next = { ...source };
+
+    for (const mode of RESPONSIVE_MODES) {
+      const storageKey = getResponsiveFieldStorageKey(fieldId, mode);
+      if (next[storageKey] == null || String(next[storageKey]).trim() === "") {
+        const currentValue = getResponsiveValueFromMap(source, fieldId, mode);
+        if (currentValue != null && String(currentValue).trim() !== "") {
+          next[storageKey] = currentValue;
+        }
+      }
+    }
+
+    return next;
   }
 
   function resolveTopLevelAccordionId(
@@ -1135,19 +1166,21 @@ export function CmsLandingEditor({
   }
 
   function updateField(fieldId: string, value: string) {
-    const isExplicitResponsiveKey =
-      fieldId.endsWith(`__${responsiveEditMode}`) ||
-      fieldId.endsWith(`_${responsiveEditMode}`);
+    const isExplicitResponsiveKey = isExplicitResponsiveOverrideKey(fieldId);
+    const shouldIsolateByBreakpoint = isResponsiveScopedFieldId(fieldId);
     const resolvedFieldId =
-      responsiveEditMode !== "large" &&
-      isResponsiveScopedFieldId(fieldId) &&
-      !isExplicitResponsiveKey
-        ? getResponsiveOverrideKey(fieldId, responsiveEditMode)
+      shouldIsolateByBreakpoint && !isExplicitResponsiveKey
+        ? getResponsiveFieldStorageKey(fieldId, responsiveEditMode)
         : fieldId;
-    setTextMap((previous) => ({
-      ...previous,
-      [resolvedFieldId]: value,
-    }));
+
+    setTextMap((previous) => {
+      const next = shouldIsolateByBreakpoint && !isExplicitResponsiveKey
+        ? materializeResponsiveField(previous, fieldId)
+        : { ...previous };
+
+      next[resolvedFieldId] = value;
+      return next;
+    });
   }
 
   function commitStructure(nextStructure: LandingSectionInstance[]) {
@@ -1241,6 +1274,16 @@ export function CmsLandingEditor({
           `extra:${extraId}`,
         ]),
       };
+
+      for (const mode of RESPONSIVE_MODES) {
+        next[getLandingFieldResponsiveSizeKey(textKey, mode)] = String(
+          defaults.size,
+        );
+        next[getSectionExtraResponsivePositionXKey(sectionId, extraId, mode)] =
+          "50";
+        next[getSectionExtraResponsivePositionYKey(sectionId, extraId, mode)] =
+          "50";
+      }
 
       if (type === "line-vertical" || type === "line-horizontal") {
         next[getLandingFieldLineWidthKey(textKey)] = "1";
@@ -1417,20 +1460,28 @@ export function CmsLandingEditor({
     const nextX = clamp(Math.round(positionX), 0, 100);
     const nextY = clamp(Math.round(positionY), 0, 100);
     const textKey = getSectionExtraTextKey(sectionId, extraId);
-    const positionXKey =
-      mode === "large"
-        ? getSectionExtraPositionXKey(sectionId, extraId)
-        : getSectionExtraResponsivePositionXKey(sectionId, extraId, mode);
-    const positionYKey =
-      mode === "large"
-        ? getSectionExtraPositionYKey(sectionId, extraId)
-        : getSectionExtraResponsivePositionYKey(sectionId, extraId, mode);
+    const basePositionXKey = getSectionExtraPositionXKey(sectionId, extraId);
+    const basePositionYKey = getSectionExtraPositionYKey(sectionId, extraId);
+    const positionXKey = getSectionExtraResponsivePositionXKey(
+      sectionId,
+      extraId,
+      mode,
+    );
+    const positionYKey = getSectionExtraResponsivePositionYKey(
+      sectionId,
+      extraId,
+      mode,
+    );
 
-    setTextMap((previous) => ({
-      ...previous,
-      [positionXKey]: String(nextX),
-      [positionYKey]: String(nextY),
-    }));
+    setTextMap((previous) => {
+      const next = materializeResponsiveField(previous, basePositionXKey);
+      const normalized = materializeResponsiveField(next, basePositionYKey);
+
+      normalized[positionXKey] = String(nextX);
+      normalized[positionYKey] = String(nextY);
+
+      return normalized;
+    });
 
     setSelectedSectionId(sectionId);
     setSelectedFieldId(textKey);
@@ -2556,7 +2607,268 @@ export function CmsLandingEditor({
                                 </details>
 
                                 <div className="space-y-2">
+                                  {selectedSection.type === "spore-stack" ? (
+                                    <div className="space-y-2">
+                                      {[1, 2, 3, 4].map((sporeIndex) => {
+                                        const baseKey = `spore${sporeIndex}`;
+                                        const xKey = getSectionFieldKey(
+                                          selectedSection.id,
+                                          `${baseKey}_x`,
+                                        );
+                                        const yKey = getSectionFieldKey(
+                                          selectedSection.id,
+                                          `${baseKey}_y`,
+                                        );
+                                        const sizeKey = getSectionFieldKey(
+                                          selectedSection.id,
+                                          `${baseKey}_size`,
+                                        );
+                                        const rotateKey = getSectionFieldKey(
+                                          selectedSection.id,
+                                          `${baseKey}_rotate`,
+                                        );
+                                        const opacityKey = getSectionFieldKey(
+                                          selectedSection.id,
+                                          `${baseKey}_opacity`,
+                                        );
+                                        const colorKey = getSectionFieldKey(
+                                          selectedSection.id,
+                                          `${baseKey}_color`,
+                                        );
+                                        const flipXKey = getSectionFieldKey(
+                                          selectedSection.id,
+                                          `${baseKey}_flip_x`,
+                                        );
+                                        const flipYKey = getSectionFieldKey(
+                                          selectedSection.id,
+                                          `${baseKey}_flip_y`,
+                                        );
+
+                                        return (
+                                          <details
+                                            key={`spore-accordion-${sporeIndex}`}
+                                            className="panel-accordion"
+                                            open={
+                                              openPanelAccordionId ===
+                                              `top:spore:${sporeIndex}`
+                                            }
+                                          >
+                                            <summary
+                                              className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+                                              onClick={(event) => {
+                                                event.preventDefault();
+                                                toggleTopLevelAccordion(
+                                                  `top:spore:${sporeIndex}`,
+                                                );
+                                              }}
+                                            >
+                                              Espora {sporeIndex}
+                                            </summary>
+                                            <div className="mt-2 space-y-2">
+                                              <SliderValueControl
+                                                label="Posicion X (%)"
+                                                value={getNumberValue(
+                                                  textMap[xKey],
+                                                  sporeIndex === 1
+                                                    ? 6
+                                                    : sporeIndex === 2
+                                                      ? 86
+                                                      : sporeIndex === 3
+                                                        ? 8
+                                                        : 72,
+                                                  -50,
+                                                  150,
+                                                )}
+                                                min={-50}
+                                                max={150}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    xKey,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              <SliderValueControl
+                                                label="Posicion Y (%)"
+                                                value={getNumberValue(
+                                                  textMap[yKey],
+                                                  sporeIndex === 1
+                                                    ? 6
+                                                    : sporeIndex === 2
+                                                      ? 22
+                                                      : sporeIndex === 3
+                                                        ? 55
+                                                        : 84,
+                                                  -50,
+                                                  150,
+                                                )}
+                                                min={-50}
+                                                max={150}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    yKey,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              <SliderValueControl
+                                                label="Tamano"
+                                                value={getNumberValue(
+                                                  textMap[sizeKey],
+                                                  sporeIndex === 1
+                                                    ? 6
+                                                    : sporeIndex === 2
+                                                      ? 21
+                                                      : sporeIndex === 3
+                                                        ? 25
+                                                        : 7,
+                                                  1,
+                                                  100,
+                                                )}
+                                                min={1}
+                                                max={100}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    sizeKey,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              <SliderValueControl
+                                                label="Rotacion"
+                                                value={getNumberValue(
+                                                  textMap[rotateKey],
+                                                  sporeIndex === 1
+                                                    ? -16
+                                                    : sporeIndex === 2
+                                                      ? 21
+                                                      : sporeIndex === 3
+                                                        ? -28
+                                                        : 14,
+                                                  -360,
+                                                  360,
+                                                )}
+                                                min={-360}
+                                                max={360}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    rotateKey,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              <SliderValueControl
+                                                label="Opacidad (0-100)"
+                                                value={getNumberValue(
+                                                  textMap[opacityKey],
+                                                  sporeIndex === 2 ||
+                                                    sporeIndex === 3
+                                                    ? 30
+                                                    : 10,
+                                                  0,
+                                                  100,
+                                                )}
+                                                min={0}
+                                                max={100}
+                                                onChange={(value) =>
+                                                  updateField(
+                                                    opacityKey,
+                                                    String(value),
+                                                  )
+                                                }
+                                              />
+                                              <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-muted-foreground">
+                                                  Color
+                                                </label>
+                                                <Input
+                                                  value={
+                                                    textMap[colorKey] ??
+                                                    (sporeIndex === 1
+                                                      ? "var(--brand-600)"
+                                                      : sporeIndex === 2
+                                                        ? "var(--complement-800)"
+                                                        : sporeIndex === 3
+                                                          ? "var(--brand-500)"
+                                                          : "var(--complement-700)")
+                                                  }
+                                                  placeholder="var(--brand-600) o #RRGGBB"
+                                                  onChange={(event) =>
+                                                    updateField(
+                                                      colorKey,
+                                                      event.target.value,
+                                                    )
+                                                  }
+                                                />
+                                              </div>
+                                              <div className="grid grid-cols-2 gap-2">
+                                                <div className="space-y-1.5">
+                                                  <label className="text-xs font-medium text-muted-foreground">
+                                                    Eje X
+                                                  </label>
+                                                  <select
+                                                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                                    value={
+                                                      textMap[flipXKey] ??
+                                                      (sporeIndex === 2 ||
+                                                      sporeIndex === 4
+                                                        ? "1"
+                                                        : "0")
+                                                    }
+                                                    onChange={(event) =>
+                                                      updateField(
+                                                        flipXKey,
+                                                        event.target.value,
+                                                      )
+                                                    }
+                                                  >
+                                                    <option value="0">
+                                                      Normal
+                                                    </option>
+                                                    <option value="1">
+                                                      Invertido
+                                                    </option>
+                                                  </select>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                  <label className="text-xs font-medium text-muted-foreground">
+                                                    Eje Y
+                                                  </label>
+                                                  <select
+                                                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                                    value={
+                                                      textMap[flipYKey] ??
+                                                      (sporeIndex === 3 ||
+                                                      sporeIndex === 4
+                                                        ? "1"
+                                                        : "0")
+                                                    }
+                                                    onChange={(event) =>
+                                                      updateField(
+                                                        flipYKey,
+                                                        event.target.value,
+                                                      )
+                                                    }
+                                                  >
+                                                    <option value="0">
+                                                      Normal
+                                                    </option>
+                                                    <option value="1">
+                                                      Invertido
+                                                    </option>
+                                                  </select>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </details>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : null}
                                   {activeSectionItems.map((item) => {
+                                    if (selectedSection.type === "spore-stack") {
+                                      return null;
+                                    }
                                     const baseFieldKey =
                                       item.kind === "base"
                                         ? item.id.replace(/^base:/, "")

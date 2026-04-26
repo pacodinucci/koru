@@ -17,12 +17,22 @@ function getVideoTextItemsKey(sectionId: string) {
 function getVideoTextFieldKey(
   sectionId: string,
   textId: string,
-  field: "content" | "size" | "color" | "weight" | "align" | "position_x" | "position_y",
+  field:
+    | "content"
+    | "size"
+    | "color"
+    | "weight"
+    | "align"
+    | "position_x"
+    | "position_y",
 ) {
   return getSectionFieldKey(sectionId, `__video_text_${textId}_${field}`);
 }
 
-function parseVideoTextItems(textMap: Record<string, string>, sectionId: string) {
+function parseVideoTextItems(
+  textMap: Record<string, string>,
+  sectionId: string,
+) {
   const raw = textMap[getVideoTextItemsKey(sectionId)];
   if (!raw) {
     return [] as string[];
@@ -33,7 +43,8 @@ function parseVideoTextItems(textMap: Record<string, string>, sectionId: string)
       return [] as string[];
     }
     return parsed.filter(
-      (item): item is string => typeof item === "string" && item.trim().length > 0,
+      (item): item is string =>
+        typeof item === "string" && item.trim().length > 0,
     );
   } catch {
     return [] as string[];
@@ -51,8 +62,14 @@ export function VideoSection({
     section.id,
     "__video_overlay_opacity",
   );
-  const videoPositionXKey = getSectionFieldKey(section.id, "__video_position_x");
-  const videoPositionYKey = getSectionFieldKey(section.id, "__video_position_y");
+  const videoPositionXKey = getSectionFieldKey(
+    section.id,
+    "__video_position_x",
+  );
+  const videoPositionYKey = getSectionFieldKey(
+    section.id,
+    "__video_position_y",
+  );
   const videoZoomKey = getSectionFieldKey(section.id, "__video_zoom");
   const configuredVideo = textMap[videoUrlKey]?.trim() ?? "";
   const videoSrc = /\.mp4$/i.test(configuredVideo)
@@ -74,7 +91,9 @@ export function VideoSection({
   const positionY = Number.isFinite(positionYRaw)
     ? Math.min(100, Math.max(0, positionYRaw))
     : 50;
-  const zoom = Number.isFinite(zoomRaw) ? Math.min(300, Math.max(100, zoomRaw)) : 100;
+  const zoom = Number.isFinite(zoomRaw)
+    ? Math.min(300, Math.max(100, zoomRaw))
+    : 100;
   const videoTextItems = parseVideoTextItems(textMap, section.id);
 
   const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
@@ -119,7 +138,8 @@ export function VideoSection({
           style={{ opacity: overlayOpacity / 100 }}
         />
         {videoTextItems.map((textId) => {
-          const content = textMap[getVideoTextFieldKey(section.id, textId, "content")] ?? "";
+          const content =
+            textMap[getVideoTextFieldKey(section.id, textId, "content")] ?? "";
           if (!content.trim()) {
             return null;
           }
@@ -128,23 +148,30 @@ export function VideoSection({
             10,
           );
           const positionXRaw = Number.parseInt(
-            textMap[getVideoTextFieldKey(section.id, textId, "position_x")] ?? "",
+            textMap[getVideoTextFieldKey(section.id, textId, "position_x")] ??
+              "",
             10,
           );
           const positionYRaw = Number.parseInt(
-            textMap[getVideoTextFieldKey(section.id, textId, "position_y")] ?? "",
+            textMap[getVideoTextFieldKey(section.id, textId, "position_y")] ??
+              "",
             10,
           );
           const color =
-            textMap[getVideoTextFieldKey(section.id, textId, "color")] || "#ffffff";
+            textMap[getVideoTextFieldKey(section.id, textId, "color")] ||
+            "#ffffff";
           const weight =
-            textMap[getVideoTextFieldKey(section.id, textId, "weight")] || "700";
-          const alignRaw = textMap[getVideoTextFieldKey(section.id, textId, "align")];
+            textMap[getVideoTextFieldKey(section.id, textId, "weight")] ||
+            "700";
+          const alignRaw =
+            textMap[getVideoTextFieldKey(section.id, textId, "align")];
           const align =
             alignRaw === "left" || alignRaw === "right" || alignRaw === "center"
               ? alignRaw
               : "center";
-          const size = Number.isFinite(sizeRaw) ? Math.min(120, Math.max(12, sizeRaw)) : 44;
+          const size = Number.isFinite(sizeRaw)
+            ? Math.min(120, Math.max(12, sizeRaw))
+            : 44;
           const positionX = Number.isFinite(positionXRaw)
             ? Math.min(100, Math.max(0, positionXRaw))
             : 50;

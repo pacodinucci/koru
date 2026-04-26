@@ -26,12 +26,38 @@ export type LandingPreviewBindings = {
 };
 
 const RESPONSIVE_MODE_SUFFIX_REGEX = /__(large|medium|tablet|mobile)$/;
+const RESPONSIVE_MODE_TRAILING_REGEX = /(?:__|_)(large|medium|tablet|mobile)$/;
+const RESPONSIVE_SIZE_KEY_REGEX = /__size$/;
+const RESPONSIVE_EXTRA_POSITION_KEY_REGEX =
+  /\.extra\.[^.]+\.position_(x|y)$/;
 
 export function getResponsiveOverrideKey(
   fieldId: string,
   mode: LandingResponsiveMode,
 ) {
   return `${fieldId}__${mode}`;
+}
+
+export function isExplicitResponsiveOverrideKey(fieldId: string) {
+  return RESPONSIVE_MODE_TRAILING_REGEX.test(fieldId);
+}
+
+export function getResponsiveFieldStorageKey(
+  fieldId: string,
+  mode: LandingResponsiveMode,
+) {
+  if (isExplicitResponsiveOverrideKey(fieldId)) {
+    return fieldId;
+  }
+
+  if (
+    RESPONSIVE_SIZE_KEY_REGEX.test(fieldId) ||
+    RESPONSIVE_EXTRA_POSITION_KEY_REGEX.test(fieldId)
+  ) {
+    return `${fieldId}_${mode}`;
+  }
+
+  return getResponsiveOverrideKey(fieldId, mode);
 }
 
 export function isResponsiveScopedFieldId(fieldId: string) {
@@ -90,22 +116,18 @@ export function createResponsiveScopedTextMap(
   textMap: LandingTextMap,
   mode: LandingResponsiveMode,
 ): LandingTextMap {
-  if (mode === "large") {
-    return textMap;
-  }
-
   return new Proxy(textMap, {
     get(target, prop, receiver) {
       if (typeof prop !== "string") {
         return Reflect.get(target, prop, receiver);
       }
-      if (RESPONSIVE_MODE_SUFFIX_REGEX.test(prop)) {
+      if (RESPONSIVE_MODE_SUFFIX_REGEX.test(prop) || /_(large|medium|tablet|mobile)$/.test(prop)) {
         return Reflect.get(target, prop, receiver);
       }
       if (!isResponsiveScopedFieldId(prop)) {
         return Reflect.get(target, prop, receiver);
       }
-      const overrideKey = getResponsiveOverrideKey(prop, mode);
+      const overrideKey = getResponsiveFieldStorageKey(prop, mode);
       const overrideValue = Reflect.get(target, overrideKey, receiver);
       if (overrideValue != null && String(overrideValue).trim() !== "") {
         return overrideValue;

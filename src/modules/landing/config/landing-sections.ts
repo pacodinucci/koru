@@ -10,6 +10,7 @@ export type LandingSectionType =
   | "cards"
   | "story"
   | "gallery"
+  | "spore-stack"
   | "image-grid"
   | "video"
   | "footer";
@@ -222,6 +223,204 @@ export const landingSectionCatalog: Record<
       },
     ],
   },
+  "spore-stack": {
+    type: "spore-stack",
+    label: "Spore Stack Section",
+    fields: [
+      {
+        key: "spore1_x",
+        label: "Espora 1 X (%)",
+        defaultValue: "6",
+        defaultSize: 14,
+      },
+      {
+        key: "spore1_y",
+        label: "Espora 1 Y (%)",
+        defaultValue: "6",
+        defaultSize: 14,
+      },
+      {
+        key: "spore1_size",
+        label: "Espora 1 tamano",
+        defaultValue: "6",
+        defaultSize: 14,
+      },
+      {
+        key: "spore1_rotate",
+        label: "Espora 1 rotacion",
+        defaultValue: "-16",
+        defaultSize: 14,
+      },
+      {
+        key: "spore1_opacity",
+        label: "Espora 1 opacidad (0-100)",
+        defaultValue: "10",
+        defaultSize: 14,
+      },
+      {
+        key: "spore1_color",
+        label: "Espora 1 color",
+        defaultValue: "var(--brand-600)",
+        defaultSize: 14,
+      },
+      {
+        key: "spore1_flip_x",
+        label: "Espora 1 flip X (0/1)",
+        defaultValue: "0",
+        defaultSize: 14,
+      },
+      {
+        key: "spore1_flip_y",
+        label: "Espora 1 flip Y (0/1)",
+        defaultValue: "0",
+        defaultSize: 14,
+      },
+      {
+        key: "spore2_x",
+        label: "Espora 2 X (%)",
+        defaultValue: "86",
+        defaultSize: 14,
+      },
+      {
+        key: "spore2_y",
+        label: "Espora 2 Y (%)",
+        defaultValue: "22",
+        defaultSize: 14,
+      },
+      {
+        key: "spore2_size",
+        label: "Espora 2 tamano",
+        defaultValue: "21",
+        defaultSize: 14,
+      },
+      {
+        key: "spore2_rotate",
+        label: "Espora 2 rotacion",
+        defaultValue: "21",
+        defaultSize: 14,
+      },
+      {
+        key: "spore2_opacity",
+        label: "Espora 2 opacidad (0-100)",
+        defaultValue: "30",
+        defaultSize: 14,
+      },
+      {
+        key: "spore2_color",
+        label: "Espora 2 color",
+        defaultValue: "var(--complement-800)",
+        defaultSize: 14,
+      },
+      {
+        key: "spore2_flip_x",
+        label: "Espora 2 flip X (0/1)",
+        defaultValue: "1",
+        defaultSize: 14,
+      },
+      {
+        key: "spore2_flip_y",
+        label: "Espora 2 flip Y (0/1)",
+        defaultValue: "0",
+        defaultSize: 14,
+      },
+      {
+        key: "spore3_x",
+        label: "Espora 3 X (%)",
+        defaultValue: "8",
+        defaultSize: 14,
+      },
+      {
+        key: "spore3_y",
+        label: "Espora 3 Y (%)",
+        defaultValue: "55",
+        defaultSize: 14,
+      },
+      {
+        key: "spore3_size",
+        label: "Espora 3 tamano",
+        defaultValue: "25",
+        defaultSize: 14,
+      },
+      {
+        key: "spore3_rotate",
+        label: "Espora 3 rotacion",
+        defaultValue: "-28",
+        defaultSize: 14,
+      },
+      {
+        key: "spore3_opacity",
+        label: "Espora 3 opacidad (0-100)",
+        defaultValue: "30",
+        defaultSize: 14,
+      },
+      {
+        key: "spore3_color",
+        label: "Espora 3 color",
+        defaultValue: "var(--brand-500)",
+        defaultSize: 14,
+      },
+      {
+        key: "spore3_flip_x",
+        label: "Espora 3 flip X (0/1)",
+        defaultValue: "0",
+        defaultSize: 14,
+      },
+      {
+        key: "spore3_flip_y",
+        label: "Espora 3 flip Y (0/1)",
+        defaultValue: "1",
+        defaultSize: 14,
+      },
+      {
+        key: "spore4_x",
+        label: "Espora 4 X (%)",
+        defaultValue: "72",
+        defaultSize: 14,
+      },
+      {
+        key: "spore4_y",
+        label: "Espora 4 Y (%)",
+        defaultValue: "84",
+        defaultSize: 14,
+      },
+      {
+        key: "spore4_size",
+        label: "Espora 4 tamano",
+        defaultValue: "7",
+        defaultSize: 14,
+      },
+      {
+        key: "spore4_rotate",
+        label: "Espora 4 rotacion",
+        defaultValue: "14",
+        defaultSize: 14,
+      },
+      {
+        key: "spore4_opacity",
+        label: "Espora 4 opacidad (0-100)",
+        defaultValue: "10",
+        defaultSize: 14,
+      },
+      {
+        key: "spore4_color",
+        label: "Espora 4 color",
+        defaultValue: "var(--complement-700)",
+        defaultSize: 14,
+      },
+      {
+        key: "spore4_flip_x",
+        label: "Espora 4 flip X (0/1)",
+        defaultValue: "1",
+        defaultSize: 14,
+      },
+      {
+        key: "spore4_flip_y",
+        label: "Espora 4 flip Y (0/1)",
+        defaultValue: "1",
+        defaultSize: 14,
+      },
+    ],
+  },
   "image-grid": {
     type: "image-grid",
     label: "Image Grid Section",
@@ -324,9 +523,39 @@ export const defaultLandingStructure: LandingSectionInstance[] = [
   { id: "cards-1", type: "cards", name: "Pilares en cards" },
   { id: "story-1", type: "story", name: "Historia Koru" },
   { id: "gallery-1", type: "gallery", name: "Galeria" },
+  { id: "spore-stack-1", type: "spore-stack", name: "Fondo de esporas" },
   { id: "video-1", type: "video", name: "Video Fullscreen" },
   { id: "footer-1", type: "footer", name: "Footer" },
 ];
+
+function ensureSporeStackSection(
+  structure: LandingSectionInstance[],
+): LandingSectionInstance[] {
+  if (structure.some((section) => section.type === "spore-stack")) {
+    return structure;
+  }
+
+  const sectionToInsert: LandingSectionInstance = {
+    id: "spore-stack-1",
+    type: "spore-stack",
+    name: "Fondo de esporas",
+  };
+  const next = [...structure];
+  const imageGridIndex = next.findIndex((section) => section.type === "image-grid");
+  if (imageGridIndex >= 0) {
+    next.splice(imageGridIndex, 0, sectionToInsert);
+    return next;
+  }
+
+  const footerIndex = next.findIndex((section) => section.type === "footer");
+  if (footerIndex >= 0) {
+    next.splice(footerIndex, 0, sectionToInsert);
+    return next;
+  }
+
+  next.push(sectionToInsert);
+  return next;
+}
 
 export function getSectionFieldKey(sectionId: string, fieldKey: string) {
   return `section.${sectionId}.${fieldKey}`;
@@ -546,7 +775,7 @@ export function parseLandingStructure(
 ): LandingSectionInstance[] {
   const raw = textMap[LANDING_STRUCTURE_KEY];
   if (!raw) {
-    return defaultLandingStructure;
+    return ensureSporeStackSection(defaultLandingStructure);
   }
 
   try {
@@ -560,9 +789,11 @@ export function parseLandingStructure(
         entry.type in landingSectionCatalog,
     );
 
-    return validated.length > 0 ? validated : defaultLandingStructure;
+    const parsedStructure =
+      validated.length > 0 ? validated : defaultLandingStructure;
+    return ensureSporeStackSection(parsedStructure);
   } catch {
-    return defaultLandingStructure;
+    return ensureSporeStackSection(defaultLandingStructure);
   }
 }
 

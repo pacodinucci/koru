@@ -21,6 +21,7 @@ import { FooterSection } from "@/modules/landing/views/sections/footer-section";
 import { GallerySection } from "@/modules/landing/views/sections/gallery-section";
 import { HeroSection } from "@/modules/landing/views/sections/hero-section";
 import { ImageGridSection } from "@/modules/landing/views/sections/image-grid-section";
+import { SporeFeatureStackSection } from "@/modules/landing/views/sections/spore-feature-stack-section";
 import { StorySection } from "@/modules/landing/views/sections/story-section";
 import { VideoSection } from "@/modules/landing/views/sections/video-section";
 
@@ -83,6 +84,18 @@ function SectionRenderer({
     case "gallery":
       return (
         <GallerySection
+          section={section}
+          textMap={textMap}
+          previewMode={previewMode}
+          selectedFieldId={selectedFieldId}
+          onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
+          onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+        />
+      );
+    case "spore-stack":
+      return (
+        <SporeFeatureStackSection
           section={section}
           textMap={textMap}
           previewMode={previewMode}
@@ -186,24 +199,26 @@ export function LandingView({
   return (
     <div
       ref={rootRef}
-      className="min-h-screen bg-[#f4efe5] text-black"
+      className="relative isolate min-h-screen overflow-hidden bg-[#f4efe5] text-black"
       data-landing-preview={previewMode ? "true" : undefined}
       style={previewRootStyle}
     >
-      <LandingNav />
-      {structure.map((section) => (
-        <div key={section.id} data-preview-section-id={section.id}>
-          <SectionRenderer
-            section={section}
-            textMap={responsiveMap}
-            previewMode={previewMode}
-            selectedFieldId={selectedFieldId}
-            onSelectField={onSelectField}
-            responsiveMode={effectiveResponsiveMode}
-            onMoveSectionExtraPosition={onMoveSectionExtraPosition}
-          />
-        </div>
-      ))}
+      <div className="relative z-[1]">
+        <LandingNav />
+        {structure.map((section) => (
+          <div key={section.id} data-preview-section-id={section.id}>
+            <SectionRenderer
+              section={section}
+              textMap={responsiveMap}
+              previewMode={previewMode}
+              selectedFieldId={selectedFieldId}
+              onSelectField={onSelectField}
+              responsiveMode={effectiveResponsiveMode}
+              onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
