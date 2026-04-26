@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useEffect,
@@ -13,6 +13,8 @@ import {
   ChevronRight,
   ChevronsRight,
   ChevronLeft,
+  ChevronUp,
+  ChevronDown,
   GripVertical,
   Trash2,
   Minus,
@@ -39,7 +41,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAdminEditorPanel } from "@/modules/admin/components/admin-editor-panel";
 import {
+  LANDING_BACKGROUND_SCOPES_KEY,
   LANDING_STRUCTURE_KEY,
+  parseLandingBackgroundScopes,
   ensureLandingDefaults,
   getSectionBackgroundColorKey,
   getSectionBackgroundGradientKey,
@@ -76,6 +80,7 @@ import {
   parseSectionExtraElements,
   parseSectionItemsOrder,
   parseLandingStructure,
+  type LandingBackgroundScope,
   type LandingSectionInstance,
   type SectionExtraElementType,
   type LandingSectionType,
@@ -101,7 +106,6 @@ import {
   getLandingFieldPaddingTopKey,
   getLandingFieldPaddingXKey,
   getLandingFieldPaddingYKey,
-  getResponsiveOverrideKey,
   isExplicitResponsiveOverrideKey,
   isResponsiveScopedFieldId,
   getLandingFieldSizeKey,
@@ -129,6 +133,10 @@ type SectionItem = {
 
 function createSectionId(type: LandingSectionType) {
   return `${type}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+}
+
+function createBackgroundScopeId() {
+  return `scope-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }
 
 function getTypeDefaults(type: LandingSectionType) {
@@ -232,6 +240,19 @@ function getNumberValue(
     return fallback;
   }
   return clamp(parsed, min, max);
+}
+
+function getSectionEstimatedHeightVh(type: LandingSectionType) {
+  switch (type) {
+    case "spore-stack":
+      return 200;
+    case "image-grid":
+      return 140;
+    case "footer":
+      return 60;
+    default:
+      return 100;
+  }
 }
 
 type SliderValueControlProps = {
@@ -659,9 +680,13 @@ export function CmsLandingEditor({
   frameVariant = "default",
 }: CmsLandingEditorProps) {
   const initialStructure = parseLandingStructure(initialTextMap);
+  const initialBackgroundScopes = parseLandingBackgroundScopes(initialTextMap);
   const [rawTextMap, setTextMap] = useState<LandingTextMap>(() =>
     ensureLandingDefaults(initialTextMap),
   );
+  const [backgroundScopes, setBackgroundScopes] = useState<
+    LandingBackgroundScope[]
+  >(initialBackgroundScopes);
   const [structure, setStructure] =
     useState<LandingSectionInstance[]>(initialStructure);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
@@ -672,10 +697,13 @@ export function CmsLandingEditor({
     useState<LandingSectionType>("hero");
   const [statusMessage, setStatusMessage] = useState("");
   const [isSectionSettingsView, setIsSectionSettingsView] = useState(false);
+  const [editingBackgroundScopeId, setEditingBackgroundScopeId] = useState<
+    string | null
+  >(null);
   const [openPanelAccordionId, setOpenPanelAccordionId] = useState<
     string | null
   >(null);
-  const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
+  const [dragOverScopeId, setDragOverScopeId] = useState<string | null>(null);
   const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(
     null,
   );
@@ -693,6 +721,8 @@ export function CmsLandingEditor({
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const panelRootRef = useRef<HTMLDivElement | null>(null);
   const panelBodyScrollRef = useRef<HTMLDivElement | null>(null);
+  const draggedScopeIdRef = useRef<string | null>(null);
+  const draggedSectionIdRef = useRef<string | null>(null);
   const nextExtraIdRef = useRef(1);
   const nextVideoTextIdRef = useRef(1);
   const effectivePreviewScale = (previewZoom / 100) * PREVIEW_ZOOM_BASE_SCALE;
@@ -701,6 +731,28 @@ export function CmsLandingEditor({
       ? previewViewportHeight / effectivePreviewScale
       : undefined;
   const previewCanvasWidth = PREVIEW_CANVAS_WIDTH[responsiveEditMode];
+  const fallbackScopeId = backgroundScopes[0]?.id ?? "scope-default";
+  const sectionHeightsByScope = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const section of structure) {
+      const scopeId = section.scopeId ?? fallbackScopeId;
+      map.set(
+        scopeId,
+        (map.get(scopeId) ?? 0) + getSectionEstimatedHeightVh(section.type),
+      );
+    }
+    return map;
+  }, [structure, fallbackScopeId]);
+  const sectionBuckets = useMemo(
+    () =>
+      backgroundScopes.map((scope) => ({
+        scope,
+        sections: structure.filter(
+          (section) => (section.scopeId ?? fallbackScopeId) === scope.id,
+        ),
+      })),
+    [backgroundScopes, structure, fallbackScopeId],
+  );
   const textMap = useMemo<LandingTextMap>(
     () => createResponsiveScopedTextMap(rawTextMap, responsiveEditMode),
     [rawTextMap, responsiveEditMode],
@@ -724,6 +776,36 @@ export function CmsLandingEditor({
 
   function handlePreviewZoomReset() {
     applyPreviewZoom(100);
+  }
+
+  function setDraggedScope(scopeId: string | null) {
+    draggedScopeIdRef.current = scopeId;
+  }
+
+  function setDraggedSection(sectionId: string | null) {
+    draggedSectionIdRef.current = sectionId;
+  }
+
+  function readDragPayload(
+    transfer: DataTransfer,
+  ): { type: "scope" | "section"; id: string } | null {
+    const raw = transfer.getData("application/x-koru-dnd");
+    if (!raw) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(raw) as { type?: string; id?: string };
+      if (
+        (parsed.type === "scope" || parsed.type === "section") &&
+        typeof parsed.id === "string" &&
+        parsed.id.length > 0
+      ) {
+        return { type: parsed.type, id: parsed.id };
+      }
+    } catch {
+      return null;
+    }
+    return null;
   }
 
   useEffect(() => {
@@ -778,6 +860,14 @@ export function CmsLandingEditor({
   const selectedSection = useMemo(
     () => structure.find((item) => item.id === activeSectionId) ?? null,
     [activeSectionId, structure],
+  );
+  const editingBackgroundScope = useMemo(
+    () =>
+      editingBackgroundScopeId
+        ? backgroundScopes.find((scope) => scope.id === editingBackgroundScopeId) ??
+          null
+        : null,
+    [backgroundScopes, editingBackgroundScopeId],
   );
   const activeSectionIndex = activeSectionId
     ? structure.findIndex((item) => item.id === activeSectionId)
@@ -1183,21 +1273,107 @@ export function CmsLandingEditor({
     });
   }
 
-  function commitStructure(nextStructure: LandingSectionInstance[]) {
-    setStructure(nextStructure);
+  function commitLayout(
+    nextStructure: LandingSectionInstance[],
+    nextScopes: LandingBackgroundScope[],
+  ) {
+    if (nextScopes.length === 0) {
+      return;
+    }
+
+    const fallbackScopeId = nextScopes[0].id;
+    const validScopeIds = new Set(nextScopes.map((scope) => scope.id));
+    const normalizedStructure = nextStructure.map((section) => ({
+      ...section,
+      scopeId:
+        section.scopeId && validScopeIds.has(section.scopeId)
+          ? section.scopeId
+          : fallbackScopeId,
+    }));
+
+    setBackgroundScopes(nextScopes);
+    setStructure(normalizedStructure);
     setTextMap((previous) => ({
       ...previous,
-      [LANDING_STRUCTURE_KEY]: JSON.stringify(nextStructure),
+      [LANDING_BACKGROUND_SCOPES_KEY]: JSON.stringify(nextScopes),
+      [LANDING_STRUCTURE_KEY]: JSON.stringify(normalizedStructure),
     }));
+  }
+
+  function commitStructure(nextStructure: LandingSectionInstance[]) {
+    commitLayout(nextStructure, backgroundScopes);
+  }
+
+  function commitBackgroundScopes(nextScopes: LandingBackgroundScope[]) {
+    commitLayout(structure, nextScopes);
+  }
+
+  function addBackgroundScope() {
+    const nextScope: LandingBackgroundScope = {
+      id: createBackgroundScopeId(),
+      name: `Fondo ${backgroundScopes.length + 1}`,
+      type: "none",
+      visualMode: "color",
+      color: "#ffffff",
+      gradient: "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
+      heightVh: 400,
+    };
+    commitBackgroundScopes([...backgroundScopes, nextScope]);
+  }
+
+  function updateBackgroundScope(
+    scopeId: string,
+    patch: Partial<LandingBackgroundScope>,
+  ) {
+    if (patch.heightVh !== undefined) {
+      const usedHeight = sectionHeightsByScope.get(scopeId) ?? 0;
+      if (patch.heightVh < usedHeight) {
+        setStatusMessage(
+          `No se puede bajar la altura: las secciones asignadas ocupan ${usedHeight}vh.`,
+        );
+        return;
+      }
+    }
+
+    const nextScopes = backgroundScopes.map((scope) =>
+      scope.id === scopeId ? { ...scope, ...patch } : scope,
+    );
+    commitBackgroundScopes(nextScopes);
+  }
+
+  function removeBackgroundScope(scopeId: string) {
+    if (backgroundScopes.length <= 1) {
+      return;
+    }
+    const nextScopes = backgroundScopes.filter((scope) => scope.id !== scopeId);
+    commitBackgroundScopes(nextScopes);
   }
 
   function addSection() {
     const id = createSectionId(newSectionType);
     const def = getTypeDefaults(newSectionType);
+    const fallbackScopeId =
+      selectedSection?.scopeId ??
+      backgroundScopes[0]?.id ??
+      parseLandingBackgroundScopes(rawTextMap)[0]?.id;
+    const targetScope = backgroundScopes.find(
+      (scope) => scope.id === fallbackScopeId,
+    );
+    const estimatedHeight = getSectionEstimatedHeightVh(newSectionType);
+    if (targetScope) {
+      const usedHeight = sectionHeightsByScope.get(targetScope.id) ?? 0;
+      if (usedHeight + estimatedHeight > targetScope.heightVh) {
+        setStatusMessage(
+          `No entra en "${targetScope.name}": capacidad ${targetScope.heightVh}vh, usado ${usedHeight}vh.`,
+        );
+        return;
+      }
+    }
     const newSection: LandingSectionInstance = {
       id,
       type: newSectionType,
       name: `${def.label} ${structure.filter((item) => item.type === newSectionType).length + 1}`,
+      scopeId: fallbackScopeId,
     };
     const nextStructure = [...structure, newSection];
 
@@ -1358,25 +1534,154 @@ export function CmsLandingEditor({
     });
   }
 
-  function reorderSections(sourceId: string, targetId: string) {
-    if (sourceId === targetId) {
+  function reorderBackgroundScopes(sourceScopeId: string, targetScopeId: string) {
+    if (sourceScopeId === targetScopeId) {
       return;
     }
 
-    const sourceIndex = structure.findIndex(
-      (section) => section.id === sourceId,
+    const sourceIndex = backgroundScopes.findIndex(
+      (scope) => scope.id === sourceScopeId,
     );
-    const targetIndex = structure.findIndex(
-      (section) => section.id === targetId,
+    const targetIndex = backgroundScopes.findIndex(
+      (scope) => scope.id === targetScopeId,
     );
 
     if (sourceIndex < 0 || targetIndex < 0) {
       return;
     }
 
+    const nextScopes = [...backgroundScopes];
+    const [scopeItem] = nextScopes.splice(sourceIndex, 1);
+    nextScopes.splice(targetIndex, 0, scopeItem);
+    commitBackgroundScopes(nextScopes);
+  }
+
+  function moveSectionToScope(
+    sourceSectionId: string,
+    targetScopeId: string,
+    targetSectionId?: string,
+  ) {
+    const sourceIndex = structure.findIndex(
+      (section) => section.id === sourceSectionId,
+    );
+    if (sourceIndex < 0) {
+      return;
+    }
+    const targetScope = backgroundScopes.find((scope) => scope.id === targetScopeId);
+    if (!targetScope) {
+      return;
+    }
+    const sourceSection = structure[sourceIndex];
+    const sourceHeight = getSectionEstimatedHeightVh(sourceSection.type);
+    const sourceCurrentScopeId = sourceSection.scopeId ?? fallbackScopeId;
+    const currentTargetUsed = sectionHeightsByScope.get(targetScopeId) ?? 0;
+    const targetUsedExcludingSource =
+      sourceCurrentScopeId === targetScopeId
+        ? currentTargetUsed - sourceHeight
+        : currentTargetUsed;
+    const requiredTargetHeight = targetUsedExcludingSource + sourceHeight;
+    const shouldExpandTargetScope = requiredTargetHeight > targetScope.heightVh;
+    const nextScopes = shouldExpandTargetScope
+      ? backgroundScopes.map((scope) =>
+          scope.id === targetScopeId
+            ? { ...scope, heightVh: requiredTargetHeight }
+            : scope,
+        )
+      : backgroundScopes;
+
     const next = [...structure];
-    const [item] = next.splice(sourceIndex, 1);
-    next.splice(targetIndex, 0, item);
+    const [removedSection] = next.splice(sourceIndex, 1);
+    const movedSection: LandingSectionInstance = {
+      ...removedSection,
+      scopeId: targetScopeId,
+    };
+
+    if (targetSectionId && targetSectionId !== sourceSectionId) {
+      const targetIndexBeforeMove = structure.findIndex(
+        (section) => section.id === targetSectionId,
+      );
+      const targetIndex = next.findIndex((section) => section.id === targetSectionId);
+      if (targetIndex >= 0) {
+        const isSameScopeMove = sourceCurrentScopeId === targetScopeId;
+        const movingDownWithinSameScope =
+          isSameScopeMove && targetIndexBeforeMove > sourceIndex;
+        const insertIndex = movingDownWithinSameScope
+          ? targetIndex + 1
+          : targetIndex;
+        next.splice(insertIndex, 0, movedSection);
+      } else {
+        next.push(movedSection);
+      }
+      if (shouldExpandTargetScope) {
+        commitLayout(next, nextScopes);
+        setStatusMessage(
+          `Se ajusto "${targetScope.name}" a ${requiredTargetHeight}vh para recibir la seccion.`,
+        );
+      } else {
+        commitStructure(next);
+      }
+      return;
+    }
+
+    let insertIndex = -1;
+    next.forEach((section, index) => {
+      if ((section.scopeId ?? fallbackScopeId) === targetScopeId) {
+        insertIndex = index + 1;
+      }
+    });
+
+    if (insertIndex >= 0) {
+      next.splice(insertIndex, 0, movedSection);
+    } else {
+      next.push(movedSection);
+    }
+
+    if (shouldExpandTargetScope) {
+      commitLayout(next, nextScopes);
+      setStatusMessage(
+        `Se ajusto "${targetScope.name}" a ${requiredTargetHeight}vh para recibir la seccion.`,
+      );
+      return;
+    }
+
+    commitStructure(next);
+  }
+
+  function reorderSectionWithinScope(
+    sectionId: string,
+    direction: "up" | "down",
+  ) {
+    const currentIndex = structure.findIndex((section) => section.id === sectionId);
+    if (currentIndex < 0) {
+      return;
+    }
+
+    const currentScopeId = structure[currentIndex].scopeId ?? fallbackScopeId;
+    const scopeIndexes = structure
+      .map((section, index) => ({
+        index,
+        scopeId: section.scopeId ?? fallbackScopeId,
+      }))
+      .filter((item) => item.scopeId === currentScopeId)
+      .map((item) => item.index);
+
+    const scopePosition = scopeIndexes.indexOf(currentIndex);
+    if (scopePosition < 0) {
+      return;
+    }
+
+    const targetScopePosition =
+      direction === "up" ? scopePosition - 1 : scopePosition + 1;
+    if (targetScopePosition < 0 || targetScopePosition >= scopeIndexes.length) {
+      return;
+    }
+
+    const targetIndex = scopeIndexes[targetScopePosition];
+    const next = [...structure];
+    const [moved] = next.splice(currentIndex, 1);
+    const adjustedTargetIndex =
+      currentIndex < targetIndex ? targetIndex - 1 : targetIndex;
+    next.splice(adjustedTargetIndex, 0, moved);
     commitStructure(next);
   }
 
@@ -1433,6 +1738,7 @@ export function CmsLandingEditor({
     setSelectedSectionId(section.id);
     setSelectedFieldId(fieldKey);
     setOpenPanelAccordionId(resolveTopLevelAccordionId(section.id, fieldKey));
+    setEditingBackgroundScopeId(null);
     setPanelOpen(true);
     setIsSectionSettingsView(false);
     scrollPreviewToSection(section.id);
@@ -1446,6 +1752,7 @@ export function CmsLandingEditor({
     }
     setSelectedFieldId(fieldId);
     setOpenPanelAccordionId(resolveTopLevelAccordionId(sectionId, fieldId));
+    setEditingBackgroundScopeId(null);
     setPanelOpen(true);
     setIsSectionSettingsView(false);
   }
@@ -1493,6 +1800,7 @@ export function CmsLandingEditor({
   async function handlePublish() {
     const payload = {
       ...rawTextMap,
+      [LANDING_BACKGROUND_SCOPES_KEY]: JSON.stringify(backgroundScopes),
       [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
     };
     const result = await publishCmsAction(payload);
@@ -1541,7 +1849,7 @@ export function CmsLandingEditor({
                             <span className="max-w-[120px] truncate text-center text-sm font-medium">
                               {activeSectionId
                                 ? structure[activeSectionIndex]?.name
-                                : "Sección actual"}
+                                : "SecciÃ³n actual"}
                             </span>
                             <Button
                               type="button"
@@ -1584,7 +1892,8 @@ export function CmsLandingEditor({
                         <div
                           className={cn(
                             "h-full min-h-0 flex flex-col gap-4 p-4",
-                            isSectionSettingsView && "hidden",
+                            (isSectionSettingsView || editingBackgroundScope) &&
+                              "hidden",
                           )}
                         >
                           {statusMessage ? (
@@ -1667,7 +1976,10 @@ export function CmsLandingEditor({
                               type="button"
                               size="sm"
                               variant="outline"
-                              onClick={() => setIsSectionSettingsView(true)}
+                              onClick={() => {
+                                setEditingBackgroundScopeId(null);
+                                setIsSectionSettingsView(true);
+                              }}
                             >
                               Configurar secciones
                             </Button>
@@ -3189,7 +3501,7 @@ export function CmsLandingEditor({
                                                           </div>
                                                           <div className="space-y-1.5">
                                                             <label className="text-xs font-medium text-muted-foreground">
-                                                              Tamaño (
+                                                              TamaÃ±o (
                                                               {textSize}px)
                                                             </label>
                                                             <PanelRangeInput
@@ -3919,7 +4231,8 @@ export function CmsLandingEditor({
                         <div
                           className={cn(
                             "h-full min-h-0 space-y-4 p-4",
-                            !isSectionSettingsView && "hidden",
+                            (!isSectionSettingsView || editingBackgroundScope) &&
+                              "hidden",
                           )}
                         >
                           <div className="flex items-center justify-between">
@@ -3938,71 +4251,247 @@ export function CmsLandingEditor({
                           </div>
 
                           <div className="space-y-3 rounded-lg border p-3">
-                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                              Orden de secciones
-                            </p>
-                            {structure.map((section) => (
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                                Fondos y secciones
+                              </p>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={addBackgroundScope}
+                              >
+                                <Plus className="mr-1 h-3.5 w-3.5" />
+                                Fondo
+                              </Button>
+                            </div>
+                            {sectionBuckets.map(({ scope, sections }) => (
                               <div
-                                key={section.id}
+                                key={scope.id}
                                 draggable
                                 onDragStart={(event) => {
-                                  setDraggedSectionId(section.id);
+                                  const target = event.target as HTMLElement;
+                                  if (
+                                    target.closest('[data-section-draggable="true"]')
+                                  ) {
+                                    return;
+                                  }
                                   event.dataTransfer.setData(
-                                    "text/plain",
-                                    section.id,
+                                    "application/x-koru-dnd",
+                                    JSON.stringify({
+                                      type: "scope",
+                                      id: scope.id,
+                                    }),
                                   );
+                                  setDraggedScope(scope.id);
+                                  setDraggedSection(null);
                                   event.dataTransfer.effectAllowed = "move";
                                 }}
                                 onDragOver={(event) => {
-                                  event.preventDefault();
-                                  event.dataTransfer.dropEffect = "move";
-                                  setDragOverSectionId(section.id);
+                                  const payload = readDragPayload(event.dataTransfer);
+                                  if (
+                                    draggedScopeIdRef.current ||
+                                    draggedSectionIdRef.current ||
+                                    payload
+                                  ) {
+                                    event.preventDefault();
+                                    event.dataTransfer.dropEffect = "move";
+                                    setDragOverScopeId(scope.id);
+                                  }
                                 }}
                                 onDrop={(event) => {
                                   event.preventDefault();
-                                  const sourceId =
-                                    draggedSectionId ||
-                                    event.dataTransfer.getData("text/plain");
-                                  if (sourceId) {
-                                    reorderSections(sourceId, section.id);
+                                  const payload = readDragPayload(event.dataTransfer);
+                                  const activeScopeId =
+                                    payload?.type === "scope"
+                                      ? payload.id
+                                      : draggedScopeIdRef.current;
+                                  const activeSectionId =
+                                    payload?.type === "section"
+                                      ? payload.id
+                                      : draggedSectionIdRef.current;
+                                  if (
+                                    activeScopeId &&
+                                    activeScopeId !== scope.id
+                                  ) {
+                                    reorderBackgroundScopes(
+                                      activeScopeId,
+                                      scope.id,
+                                    );
+                                  } else if (activeSectionId) {
+                                    moveSectionToScope(
+                                      activeSectionId,
+                                      scope.id,
+                                    );
                                   }
-                                  setDraggedSectionId(null);
+                                  setDraggedScope(null);
+                                  setDraggedSection(null);
+                                  setDragOverScopeId(null);
                                   setDragOverSectionId(null);
                                 }}
                                 onDragEnd={() => {
-                                  setDraggedSectionId(null);
+                                  setDraggedScope(null);
+                                  setDraggedSection(null);
+                                  setDragOverScopeId(null);
                                   setDragOverSectionId(null);
                                 }}
                                 className={cn(
-                                  "flex items-center gap-2 rounded-md border bg-background px-2 py-2 text-sm",
-                                  dragOverSectionId === section.id &&
+                                  "space-y-2 rounded-md border bg-background p-2",
+                                  dragOverScopeId === scope.id &&
                                     "border-primary bg-primary/5",
                                 )}
                               >
-                                <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" />
-                                <button
-                                  type="button"
-                                  className="min-w-0 flex-1 truncate text-left"
-                                  onClick={() => focusSection(section.id)}
-                                >
-                                  {section.name}
-                                </button>
-                                <Badge variant="outline">
-                                  {landingSectionCatalog[section.type].label}
-                                </Badge>
-                                <Button
-                                  type="button"
-                                  size="icon-sm"
-                                  variant="ghost"
-                                  className="text-destructive hover:text-destructive"
-                                  onClick={() => removeSection(section.id)}
-                                  disabled={structure.length <= 1}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">
-                                    Remove section
-                                  </span>
-                                </Button>
+                                <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
+                                  <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" />
+                                  <div className="min-w-0">
+                                    <p className="truncate text-sm font-medium">
+                                      {scope.name}
+                                    </p>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      {scope.type === "spore" ? "Esporas" : "Plano"} · Usado{" "}
+                                      {sectionHeightsByScope.get(scope.id) ?? 0}vh de{" "}
+                                      {scope.heightVh}vh
+                                    </p>
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setEditingBackgroundScopeId(scope.id);
+                                      setIsSectionSettingsView(true);
+                                    }}
+                                  >
+                                    Editar fondo
+                                  </Button>
+                                </div>
+                                <div className="space-y-2 pl-2">
+                                  {sections.length === 0 ? (
+                                    <div className="rounded-md border border-dashed p-2 text-xs text-muted-foreground">
+                                      Arrastra secciones aca
+                                    </div>
+                                  ) : (
+                                    sections.map((section) => (
+                                      <div
+                                        key={section.id}
+                                        data-section-draggable="true"
+                                        draggable
+                                        onDragStart={(event) => {
+                                          event.stopPropagation();
+                                          event.dataTransfer.setData(
+                                            "application/x-koru-dnd",
+                                            JSON.stringify({
+                                              type: "section",
+                                              id: section.id,
+                                            }),
+                                          );
+                                          setDraggedSection(section.id);
+                                          setDraggedScope(null);
+                                          event.dataTransfer.effectAllowed =
+                                            "move";
+                                        }}
+                                        onDragOver={(event) => {
+                                          event.preventDefault();
+                                          event.stopPropagation();
+                                          event.dataTransfer.dropEffect = "move";
+                                          setDragOverSectionId(section.id);
+                                          setDragOverScopeId(scope.id);
+                                        }}
+                                        onDrop={(event) => {
+                                          event.preventDefault();
+                                          event.stopPropagation();
+                                          const payload = readDragPayload(
+                                            event.dataTransfer,
+                                          );
+                                          const activeSectionId =
+                                            payload?.type === "section"
+                                              ? payload.id
+                                              : draggedSectionIdRef.current;
+                                          if (
+                                            activeSectionId &&
+                                            activeSectionId !== section.id
+                                          ) {
+                                            moveSectionToScope(
+                                              activeSectionId,
+                                              scope.id,
+                                              section.id,
+                                            );
+                                          }
+                                          setDraggedSection(null);
+                                          setDragOverSectionId(null);
+                                          setDragOverScopeId(null);
+                                        }}
+                                        onDragEnd={() => {
+                                          setDraggedSection(null);
+                                          setDragOverSectionId(null);
+                                          setDragOverScopeId(null);
+                                        }}
+                                        className={cn(
+                                          "grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-2 rounded-md border bg-background px-2 py-2 text-sm",
+                                          dragOverSectionId === section.id &&
+                                            "border-primary bg-primary/5",
+                                        )}
+                                      >
+                                        <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" />
+                                        <button
+                                          type="button"
+                                          className="min-w-0 flex-1 truncate text-left"
+                                          onClick={() => focusSection(section.id)}
+                                        >
+                                          {section.name}
+                                        </button>
+                                        <Badge variant="outline">
+                                          {landingSectionCatalog[section.type].label}
+                                        </Badge>
+                                        <div className="flex items-center gap-1">
+                                          <Button
+                                            type="button"
+                                            size="icon-sm"
+                                            variant="ghost"
+                                            onClick={() =>
+                                              reorderSectionWithinScope(
+                                                section.id,
+                                                "up",
+                                              )
+                                            }
+                                            disabled={sections[0]?.id === section.id}
+                                            title="Subir seccion"
+                                          >
+                                            <ChevronUp className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            type="button"
+                                            size="icon-sm"
+                                            variant="ghost"
+                                            onClick={() =>
+                                              reorderSectionWithinScope(
+                                                section.id,
+                                                "down",
+                                              )
+                                            }
+                                            disabled={
+                                              sections[sections.length - 1]?.id ===
+                                              section.id
+                                            }
+                                            title="Bajar seccion"
+                                          >
+                                            <ChevronDown className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                        <Button
+                                          type="button"
+                                          size="icon-sm"
+                                          variant="ghost"
+                                          className="text-destructive hover:text-destructive"
+                                          onClick={() => removeSection(section.id)}
+                                          disabled={structure.length <= 1}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -4038,6 +4527,160 @@ export function CmsLandingEditor({
                               </Button>
                             </div>
                           </div>
+                        </div>
+
+                        <div
+                          className={cn(
+                            "h-full min-h-0 space-y-4 p-4",
+                            !editingBackgroundScope && "hidden",
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingBackgroundScopeId(null)}
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                              Volver
+                            </Button>
+                            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                              Editar fondo
+                            </p>
+                          </div>
+
+                          {editingBackgroundScope ? (
+                            <div className="space-y-3 rounded-lg border p-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                  Nombre
+                                </label>
+                                <Input
+                                  value={editingBackgroundScope.name}
+                                  onChange={(event) =>
+                                    updateBackgroundScope(editingBackgroundScope.id, {
+                                      name: event.target.value,
+                                    })
+                                  }
+                                  placeholder="Nombre del fondo"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                  Tipo
+                                </label>
+                                <select
+                                  className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                                  value={editingBackgroundScope.type}
+                                  onChange={(event) =>
+                                    updateBackgroundScope(editingBackgroundScope.id, {
+                                      type: event.target.value as "none" | "spore",
+                                    })
+                                  }
+                                >
+                                  <option value="none">Plano</option>
+                                  <option value="spore">Esporas</option>
+                                </select>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1.5">
+                                  <label className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                    Visual
+                                  </label>
+                                  <select
+                                    className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                                    value={editingBackgroundScope.visualMode}
+                                    onChange={(event) =>
+                                      updateBackgroundScope(editingBackgroundScope.id, {
+                                        visualMode: event.target.value as
+                                          | "color"
+                                          | "gradient",
+                                      })
+                                    }
+                                  >
+                                    <option value="color">Color</option>
+                                    <option value="gradient">Gradiente</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                    Altura (vh)
+                                  </label>
+                                  <Input
+                                    type="number"
+                                    min={100}
+                                    max={2000}
+                                    value={editingBackgroundScope.heightVh}
+                                    onChange={(event) => {
+                                      const parsed = Number.parseInt(
+                                        event.target.value,
+                                        10,
+                                      );
+                                      if (Number.isFinite(parsed)) {
+                                        updateBackgroundScope(editingBackgroundScope.id, {
+                                          heightVh: Math.min(
+                                            2000,
+                                            Math.max(100, parsed),
+                                          ),
+                                        });
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                  {editingBackgroundScope.visualMode === "gradient"
+                                    ? "Gradiente CSS"
+                                    : "Color"}
+                                </label>
+                                <Input
+                                  value={
+                                    editingBackgroundScope.visualMode ===
+                                    "gradient"
+                                      ? editingBackgroundScope.gradient
+                                      : editingBackgroundScope.color
+                                  }
+                                  onChange={(event) =>
+                                    updateBackgroundScope(editingBackgroundScope.id, {
+                                      ...(editingBackgroundScope.visualMode ===
+                                      "gradient"
+                                        ? { gradient: event.target.value }
+                                        : { color: event.target.value }),
+                                    })
+                                  }
+                                  placeholder={
+                                    editingBackgroundScope.visualMode ===
+                                    "gradient"
+                                      ? "linear-gradient(180deg,#fff 0%,#f8f8f8 100%)"
+                                      : "#ffffff o var(--brand-600)"
+                                  }
+                                />
+                              </div>
+                              <p className="text-[11px] text-muted-foreground">
+                                Usado{" "}
+                                {sectionHeightsByScope.get(editingBackgroundScope.id) ??
+                                  0}
+                                vh de {editingBackgroundScope.heightVh}vh
+                              </p>
+                              <div className="pt-1">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() =>
+                                    removeBackgroundScope(editingBackgroundScope.id)
+                                  }
+                                  disabled={backgroundScopes.length <= 1}
+                                >
+                                  <Trash2 className="mr-1 h-4 w-4" />
+                                  Eliminar fondo
+                                </Button>
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -4162,6 +4805,8 @@ export function CmsLandingEditor({
                 <LandingView
                   textMap={{
                     ...rawTextMap,
+                    [LANDING_BACKGROUND_SCOPES_KEY]:
+                      JSON.stringify(backgroundScopes),
                     [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
                   }}
                   previewViewportHeight={previewViewportHeightForContent}
@@ -4179,6 +4824,7 @@ export function CmsLandingEditor({
     </Card>
   );
 }
+
 
 
 

@@ -64,12 +64,15 @@ const dashboardItems = [
   { title: "CMS", href: "/dashboard", icon: LayoutDashboard },
   { title: "Pages", href: "#", icon: FileText },
   { title: "Blog", href: "#", icon: NotebookPen },
-  { title: "Donations", href: "#", icon: HandCoins },
-  { title: "Security", href: "#", icon: ShieldCheck },
-  { title: "Settings", href: "#", icon: Settings },
+  { title: "Donaciones", href: "#", icon: HandCoins },
+  { title: "Seguridad", href: "#", icon: ShieldCheck },
+  { title: "Configuración", href: "#", icon: Settings },
 ] as const;
 
-export function DashboardShell({ userEmail, initialTextMap }: DashboardShellProps) {
+export function DashboardShell({
+  userEmail,
+  initialTextMap,
+}: DashboardShellProps) {
   return (
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon">
@@ -88,7 +91,9 @@ export function DashboardShell({ userEmail, initialTextMap }: DashboardShellProp
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className="text-slate-500">Navigation</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-slate-500">
+              Navigation
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {dashboardItems.map((item) => (
@@ -119,7 +124,9 @@ export function DashboardShell({ userEmail, initialTextMap }: DashboardShellProp
               }
             >
               <Avatar className="size-6">
-                <AvatarFallback>{userEmail.slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>
+                  {userEmail.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <span className="truncate text-sm">{userEmail}</span>
               <ChevronUp className="ml-auto h-4 w-4" />

@@ -4,6 +4,20 @@ import {
 } from "@/modules/landing/types/landing-text";
 
 export const LANDING_STRUCTURE_KEY = "__landing_structure";
+export const LANDING_BACKGROUND_SCOPES_KEY = "__landing_background_scopes";
+
+export type LandingBackgroundScopeType = "none" | "spore";
+export type LandingBackgroundVisualMode = "color" | "gradient";
+
+export type LandingBackgroundScope = {
+  id: string;
+  name: string;
+  type: LandingBackgroundScopeType;
+  visualMode: LandingBackgroundVisualMode;
+  color: string;
+  gradient: string;
+  heightVh: number;
+};
 
 export type LandingSectionType =
   | "hero"
@@ -33,6 +47,7 @@ export type LandingSectionInstance = {
   id: string;
   type: LandingSectionType;
   name: string;
+  scopeId?: string;
 };
 
 export type SectionExtraElementType =
@@ -523,39 +538,21 @@ export const defaultLandingStructure: LandingSectionInstance[] = [
   { id: "cards-1", type: "cards", name: "Pilares en cards" },
   { id: "story-1", type: "story", name: "Historia Koru" },
   { id: "gallery-1", type: "gallery", name: "Galeria" },
-  { id: "spore-stack-1", type: "spore-stack", name: "Fondo de esporas" },
   { id: "video-1", type: "video", name: "Video Fullscreen" },
   { id: "footer-1", type: "footer", name: "Footer" },
 ];
 
-function ensureSporeStackSection(
-  structure: LandingSectionInstance[],
-): LandingSectionInstance[] {
-  if (structure.some((section) => section.type === "spore-stack")) {
-    return structure;
-  }
-
-  const sectionToInsert: LandingSectionInstance = {
-    id: "spore-stack-1",
-    type: "spore-stack",
-    name: "Fondo de esporas",
-  };
-  const next = [...structure];
-  const imageGridIndex = next.findIndex((section) => section.type === "image-grid");
-  if (imageGridIndex >= 0) {
-    next.splice(imageGridIndex, 0, sectionToInsert);
-    return next;
-  }
-
-  const footerIndex = next.findIndex((section) => section.type === "footer");
-  if (footerIndex >= 0) {
-    next.splice(footerIndex, 0, sectionToInsert);
-    return next;
-  }
-
-  next.push(sectionToInsert);
-  return next;
-}
+export const defaultLandingBackgroundScopes: LandingBackgroundScope[] = [
+  {
+    id: "scope-default",
+    name: "Fondo base",
+    type: "none",
+    visualMode: "color",
+    color: "#ffffff",
+    gradient: "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
+    heightVh: 1000,
+  },
+];
 
 export function getSectionFieldKey(sectionId: string, fieldKey: string) {
   return `section.${sectionId}.${fieldKey}`;
@@ -751,14 +748,82 @@ export function parseSectionItemsOrder(
   }
 }
 
+export function parseLandingBackgroundScopes(
+  textMap: LandingTextMap,
+): LandingBackgroundScope[] {
+  const raw = textMap[LANDING_BACKGROUND_SCOPES_KEY];
+  if (!raw) {
+    return defaultLandingBackgroundScopes;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as LandingBackgroundScope[];
+    const validated = parsed.filter(
+      (entry) =>
+        entry &&
+        typeof entry.id === "string" &&
+        typeof entry.name === "string" &&
+        (entry.type === "none" || entry.type === "spore"),
+    );
+
+    if (validated.length === 0) {
+      return defaultLandingBackgroundScopes;
+    }
+
+    return validated.map((entry) => ({
+      id: entry.id,
+      name: entry.name,
+      type: entry.type,
+      visualMode:
+        entry.visualMode === "gradient" || entry.visualMode === "color"
+          ? entry.visualMode
+          : "color",
+      color: typeof entry.color === "string" ? entry.color : "#ffffff",
+      gradient:
+        typeof entry.gradient === "string"
+          ? entry.gradient
+          : "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
+      heightVh:
+        typeof entry.heightVh === "number" && Number.isFinite(entry.heightVh)
+          ? Math.min(2000, Math.max(100, Math.round(entry.heightVh)))
+          : 1000,
+    }));
+  } catch {
+    return defaultLandingBackgroundScopes;
+  }
+}
+
+function normalizeSectionScopeIds(
+  structure: LandingSectionInstance[],
+  scopes: LandingBackgroundScope[],
+): LandingSectionInstance[] {
+  const fallbackScopeId = scopes[0]?.id ?? "scope-default";
+  const validScopeIds = new Set(scopes.map((scope) => scope.id));
+
+  return structure.map((section) => ({
+    ...section,
+    scopeId:
+      section.scopeId && validScopeIds.has(section.scopeId)
+        ? section.scopeId
+        : fallbackScopeId,
+  }));
+}
+
 export function getDefaultLandingTextMap(
   structure: LandingSectionInstance[] = defaultLandingStructure,
 ): LandingTextMap {
+  const normalizedStructure = normalizeSectionScopeIds(
+    structure,
+    defaultLandingBackgroundScopes,
+  );
   const textMap: LandingTextMap = {
-    [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
+    [LANDING_STRUCTURE_KEY]: JSON.stringify(normalizedStructure),
+    [LANDING_BACKGROUND_SCOPES_KEY]: JSON.stringify(
+      defaultLandingBackgroundScopes,
+    ),
   };
 
-  for (const section of structure) {
+  for (const section of normalizedStructure) {
     const def = landingSectionCatalog[section.type];
     for (const field of def.fields) {
       const key = getSectionFieldKey(section.id, field.key);
@@ -773,9 +838,10 @@ export function getDefaultLandingTextMap(
 export function parseLandingStructure(
   textMap: LandingTextMap,
 ): LandingSectionInstance[] {
+  const scopes = parseLandingBackgroundScopes(textMap);
   const raw = textMap[LANDING_STRUCTURE_KEY];
   if (!raw) {
-    return ensureSporeStackSection(defaultLandingStructure);
+    return normalizeSectionScopeIds(defaultLandingStructure, scopes);
   }
 
   try {
@@ -791,18 +857,20 @@ export function parseLandingStructure(
 
     const parsedStructure =
       validated.length > 0 ? validated : defaultLandingStructure;
-    return ensureSporeStackSection(parsedStructure);
+    return normalizeSectionScopeIds(parsedStructure, scopes);
   } catch {
-    return ensureSporeStackSection(defaultLandingStructure);
+    return normalizeSectionScopeIds(defaultLandingStructure, scopes);
   }
 }
 
 export function ensureLandingDefaults(textMap: LandingTextMap): LandingTextMap {
+  const scopes = parseLandingBackgroundScopes(textMap);
   const structure = parseLandingStructure(textMap);
   const defaults = getDefaultLandingTextMap(structure);
   return {
     ...defaults,
     ...textMap,
+    [LANDING_BACKGROUND_SCOPES_KEY]: JSON.stringify(scopes),
     [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
   };
 }

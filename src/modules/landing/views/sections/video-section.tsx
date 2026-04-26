@@ -108,7 +108,7 @@ export function VideoSection({
     ...sectionPaddingStyle,
     transform: undefined,
     transformOrigin: undefined,
-    minHeight: "100vh",
+    minHeight: "var(--landing-vh, 100dvh)",
     boxSizing: "border-box",
   };
 

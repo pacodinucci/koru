@@ -144,8 +144,20 @@
   }
 }
 
+[data-landing-preview="true"] {
+  --landing-vh: var(--landing-preview-vh, 100dvh);
+}
+
 [data-landing-preview="true"] .min-h-screen {
-  min-height: var(--landing-preview-vh, 100vh) !important;
+  min-height: var(--landing-vh, 100dvh) !important;
+}
+
+[data-landing-preview="true"] .h-screen {
+  height: var(--landing-vh, 100dvh) !important;
+}
+
+[data-landing-preview="true"] .min-h-\[200vh\] {
+  min-height: calc(var(--landing-vh, 100dvh) * 2) !important;
 }
 
 .blog-editor-content img,

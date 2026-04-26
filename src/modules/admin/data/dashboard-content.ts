@@ -17,9 +17,9 @@ export const adminNavItems: AdminNavItem[] = [
   { title: "CMS", href: "/admin", icon: LayoutDashboardIcon },
   { title: "Blog", href: "/admin/blog", icon: NotebookPenIcon },
   { title: "Pages", href: "#", icon: BlocksIcon, badge: "12" },
-  { title: "Donations", href: "#", icon: WalletIcon, badge: "4" },
-  { title: "Security", href: "#", icon: ShieldCheckIcon },
-  { title: "Settings", href: "#", icon: Settings2Icon },
+  { title: "Donaciones", href: "#", icon: WalletIcon, badge: "4" },
+  { title: "Seguridad", href: "#", icon: ShieldCheckIcon },
+  { title: "Configuración", href: "#", icon: Settings2Icon },
 ];
 
 export const adminStats: AdminStat[] = [
