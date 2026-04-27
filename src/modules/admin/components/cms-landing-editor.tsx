@@ -35,6 +35,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CustomInputField } from "@/components/ui/custom-input-field";
 import { Input } from "@/components/ui/input";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,7 +43,18 @@ import { cn } from "@/lib/utils";
 import { useAdminEditorPanel } from "@/modules/admin/components/admin-editor-panel";
 import {
   LANDING_BACKGROUND_SCOPES_KEY,
+  LANDING_LAYOUT_FOOTER_BG_KEY,
+  LANDING_LAYOUT_FOOTER_HEIGHT_KEY,
+  LANDING_LAYOUT_FOOTER_TEXT_KEY,
+  LANDING_LAYOUT_NAV_BG_KEY,
+  LANDING_LAYOUT_NAV_HEIGHT_KEY,
+  LANDING_LAYOUT_NAV_LINKS_KEY,
+  LANDING_LAYOUT_NAV_LOGO_ALT_KEY,
+  LANDING_LAYOUT_NAV_LOGO_SRC_KEY,
+  LANDING_LAYOUT_NAV_TEXT_KEY,
+  LANDING_LAYOUT_PADDING_X_KEY,
   LANDING_STRUCTURE_KEY,
+  parseLandingLayoutNavLinks,
   parseLandingBackgroundScopes,
   ensureLandingDefaults,
   getSectionBackgroundColorKey,
@@ -121,6 +133,7 @@ type LandingTextMap = Record<string, string>;
 type CmsLandingEditorProps = {
   initialTextMap: LandingTextMap;
   frameVariant?: "default" | "flush";
+  editorMode?: "layout" | "page";
 };
 
 type SectionItem = {
@@ -130,6 +143,8 @@ type SectionItem = {
   kind: "base" | "extra";
   extraId?: string;
 };
+
+type LayoutSectionId = "layout-navbar" | "layout-body" | "layout-footer";
 
 function createSectionId(type: LandingSectionType) {
   return `${type}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -229,6 +244,34 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+function getLayoutPaddingX(raw: string | undefined) {
+  const parsed = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(parsed)) {
+    return 24;
+  }
+  return clamp(parsed, 0, 400);
+}
+
+function createLayoutNavLinkId() {
+  return `nav-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+}
+
+function getLayoutNavHeight(raw: string | undefined) {
+  const parsed = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(parsed)) {
+    return 96;
+  }
+  return clamp(parsed, 64, 180);
+}
+
+function getLayoutFooterHeight(raw: string | undefined) {
+  const parsed = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(parsed)) {
+    return 220;
+  }
+  return clamp(parsed, 120, 600);
+}
+
 function getNumberValue(
   raw: string | undefined,
   fallback: number,
@@ -253,6 +296,28 @@ function getSectionEstimatedHeightVh(type: LandingSectionType) {
     default:
       return 100;
   }
+}
+
+function getVideoSectionHeightVh(raw: string | undefined) {
+  const parsed = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(parsed)) {
+    return 100;
+  }
+  return clamp(parsed, 40, 300);
+}
+
+function getSectionEstimatedHeightVhForSection(
+  section: LandingSectionInstance,
+  textMap: LandingTextMap,
+) {
+  if (section.type === "video") {
+    return getVideoSectionHeightVh(
+      textMap[getSectionFieldKey(section.id, "__section_height")] ??
+        textMap[getSectionFieldKey(section.id, "__video_height")],
+    );
+  }
+
+  return getSectionEstimatedHeightVh(section.type);
 }
 
 type SliderValueControlProps = {
@@ -516,6 +581,17 @@ function SliderValueControl({
   );
 }
 
+function PanelInput(props: React.ComponentProps<typeof CustomInputField>) {
+  return (
+    <CustomInputField
+      wrapperClassName="space-y-0"
+      inputContainerClassName="border border-input bg-background"
+      className="h-9 px-2.5 text-sm"
+      {...props}
+    />
+  );
+}
+
 function getSectionBackgroundZoomValue(raw: string | undefined) {
   const parsed = Number.parseFloat(raw ?? "");
   if (!Number.isFinite(parsed)) {
@@ -678,8 +754,11 @@ const RESPONSIVE_MODES: LandingResponsiveMode[] = [
 export function CmsLandingEditor({
   initialTextMap,
   frameVariant = "default",
+  editorMode = "page",
 }: CmsLandingEditorProps) {
-  const initialStructure = parseLandingStructure(initialTextMap);
+  const initialStructure = parseLandingStructure(initialTextMap).filter(
+    (section) => section.type !== "footer",
+  );
   const initialBackgroundScopes = parseLandingBackgroundScopes(initialTextMap);
   const [rawTextMap, setTextMap] = useState<LandingTextMap>(() =>
     ensureLandingDefaults(initialTextMap),
@@ -695,6 +774,11 @@ export function CmsLandingEditor({
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [newSectionType, setNewSectionType] =
     useState<LandingSectionType>("hero");
+  const [selectedLayoutSectionId, setSelectedLayoutSectionId] =
+    useState<LayoutSectionId>("layout-body");
+  const [newSectionScopeId, setNewSectionScopeId] = useState<string | null>(
+    initialStructure[0]?.scopeId ?? initialBackgroundScopes[0]?.id ?? null,
+  );
   const [statusMessage, setStatusMessage] = useState("");
   const [isSectionSettingsView, setIsSectionSettingsView] = useState(false);
   const [editingBackgroundScopeId, setEditingBackgroundScopeId] = useState<
@@ -711,6 +795,8 @@ export function CmsLandingEditor({
   const [responsiveEditMode, setResponsiveEditMode] =
     useState<LandingResponsiveMode>("large");
   const [previewViewportHeight, setPreviewViewportHeight] = useState(0);
+  const [isDraggingLayoutBodyPadding, setIsDraggingLayoutBodyPadding] =
+    useState(false);
   const { open: sidebarOpen } = useSidebar();
   const {
     open: panelOpen,
@@ -731,18 +817,25 @@ export function CmsLandingEditor({
       ? previewViewportHeight / effectivePreviewScale
       : undefined;
   const previewCanvasWidth = PREVIEW_CANVAS_WIDTH[responsiveEditMode];
+  const previewRulerMarks = useMemo(() => Array.from({ length: 101 }, (_, i) => i), []);
+  const previewCanvasDisplayWidth = previewCanvasWidth * effectivePreviewScale;
   const fallbackScopeId = backgroundScopes[0]?.id ?? "scope-default";
+  const textMap = useMemo<LandingTextMap>(
+    () => createResponsiveScopedTextMap(rawTextMap, responsiveEditMode),
+    [rawTextMap, responsiveEditMode],
+  );
   const sectionHeightsByScope = useMemo(() => {
     const map = new Map<string, number>();
     for (const section of structure) {
       const scopeId = section.scopeId ?? fallbackScopeId;
       map.set(
         scopeId,
-        (map.get(scopeId) ?? 0) + getSectionEstimatedHeightVh(section.type),
+        (map.get(scopeId) ?? 0) +
+          getSectionEstimatedHeightVhForSection(section, textMap),
       );
     }
     return map;
-  }, [structure, fallbackScopeId]);
+  }, [structure, fallbackScopeId, textMap]);
   const sectionBuckets = useMemo(
     () =>
       backgroundScopes.map((scope) => ({
@@ -753,9 +846,9 @@ export function CmsLandingEditor({
       })),
     [backgroundScopes, structure, fallbackScopeId],
   );
-  const textMap = useMemo<LandingTextMap>(
-    () => createResponsiveScopedTextMap(rawTextMap, responsiveEditMode),
-    [rawTextMap, responsiveEditMode],
+  const sectionsInRenderOrder = useMemo(
+    () => sectionBuckets.flatMap((bucket) => bucket.sections),
+    [sectionBuckets],
   );
 
   function clampPreviewZoom(value: number) {
@@ -861,6 +954,36 @@ export function CmsLandingEditor({
     () => structure.find((item) => item.id === activeSectionId) ?? null,
     [activeSectionId, structure],
   );
+  const layoutSections = useMemo(
+    () =>
+      [
+        { id: "layout-navbar", name: "Navbar" },
+        { id: "layout-body", name: "Body" },
+        { id: "layout-footer", name: "Footer" },
+      ] as const,
+    [],
+  );
+  const selectedLayoutSectionIndex = layoutSections.findIndex(
+    (section) => section.id === selectedLayoutSectionId,
+  );
+  const addSectionTargetScopeId = useMemo(() => {
+    if (
+      newSectionScopeId &&
+      backgroundScopes.some((scope) => scope.id === newSectionScopeId)
+    ) {
+      return newSectionScopeId;
+    }
+
+    const selectedScopeId = selectedSection?.scopeId;
+    if (
+      selectedScopeId &&
+      backgroundScopes.some((scope) => scope.id === selectedScopeId)
+    ) {
+      return selectedScopeId;
+    }
+
+    return backgroundScopes[0]?.id ?? null;
+  }, [backgroundScopes, newSectionScopeId, selectedSection?.scopeId]);
   const editingBackgroundScope = useMemo(
     () =>
       editingBackgroundScopeId
@@ -870,7 +993,7 @@ export function CmsLandingEditor({
     [backgroundScopes, editingBackgroundScopeId],
   );
   const activeSectionIndex = activeSectionId
-    ? structure.findIndex((item) => item.id === activeSectionId)
+    ? sectionsInRenderOrder.findIndex((item) => item.id === activeSectionId)
     : -1;
   const selectedSectionPaddingFieldId = selectedSection
     ? getSectionFieldKey(selectedSection.id, "__section_padding")
@@ -1024,6 +1147,9 @@ export function CmsLandingEditor({
   const selectedSectionVideoZoomKey = selectedSection
     ? getSectionFieldKey(selectedSection.id, "__video_zoom")
     : null;
+  const selectedSectionVideoHeightKey = selectedSection
+    ? getSectionFieldKey(selectedSection.id, "__section_height")
+    : null;
   const selectedSectionVideoOverlayOpacityRaw = Number.parseInt(
     selectedSectionVideoOverlayOpacityKey
       ? (textMap[selectedSectionVideoOverlayOpacityKey] ?? "")
@@ -1065,6 +1191,23 @@ export function CmsLandingEditor({
   const selectedSectionVideoZoom = Number.isFinite(selectedSectionVideoZoomRaw)
     ? clamp(selectedSectionVideoZoomRaw, 1, 3)
     : 1;
+  const selectedSectionVideoHeight = getVideoSectionHeightVh(
+    selectedSectionVideoHeightKey
+      ? (textMap[selectedSectionVideoHeightKey] ??
+        (selectedSection
+          ? textMap[getSectionFieldKey(selectedSection.id, "__video_height")]
+          : undefined))
+      : undefined,
+  );
+  const layoutPaddingX = getLayoutPaddingX(textMap[LANDING_LAYOUT_PADDING_X_KEY]);
+  const layoutNavHeight = getLayoutNavHeight(textMap[LANDING_LAYOUT_NAV_HEIGHT_KEY]);
+  const layoutFooterHeight = getLayoutFooterHeight(
+    textMap[LANDING_LAYOUT_FOOTER_HEIGHT_KEY],
+  );
+  const layoutNavLinks = useMemo(
+    () => parseLandingLayoutNavLinks(textMap),
+    [textMap],
+  );
   const selectedSectionVideoTextItems = useMemo(
     () =>
       selectedSection
@@ -1273,6 +1416,48 @@ export function CmsLandingEditor({
     });
   }
 
+  function updateLayoutField(
+    fieldId: string,
+    value: string,
+    options?: { responsiveScoped?: boolean },
+  ) {
+    const useResponsiveScope = options?.responsiveScoped === true;
+    const isExplicitResponsiveKey = isExplicitResponsiveOverrideKey(fieldId);
+    const resolvedFieldId =
+      useResponsiveScope && !isExplicitResponsiveKey
+        ? getResponsiveFieldStorageKey(fieldId, responsiveEditMode)
+        : fieldId;
+
+    setTextMap((previous) => {
+      const next =
+        useResponsiveScope && !isExplicitResponsiveKey
+          ? materializeResponsiveField(previous, fieldId)
+          : { ...previous };
+      next[resolvedFieldId] = value;
+      return next;
+    });
+  }
+
+  function updateLayoutNavLinks(
+    updater: (
+      links: ReturnType<typeof parseLandingLayoutNavLinks>,
+    ) => ReturnType<typeof parseLandingLayoutNavLinks>,
+  ) {
+    setTextMap((previous) => {
+      const currentLinks = parseLandingLayoutNavLinks(previous);
+      const nextLinks = updater(currentLinks).map((item, index) => ({
+        id: item.id?.trim() || `nav-${index + 1}`,
+        label: item.label ?? "",
+        href: item.href ?? "#",
+      }));
+
+      return {
+        ...previous,
+        [LANDING_LAYOUT_NAV_LINKS_KEY]: JSON.stringify(nextLinks),
+      };
+    });
+  }
+
   function commitLayout(
     nextStructure: LandingSectionInstance[],
     nextScopes: LandingBackgroundScope[],
@@ -1352,40 +1537,42 @@ export function CmsLandingEditor({
   function addSection() {
     const id = createSectionId(newSectionType);
     const def = getTypeDefaults(newSectionType);
-    const fallbackScopeId =
+    const targetScopeId =
+      addSectionTargetScopeId ??
       selectedSection?.scopeId ??
       backgroundScopes[0]?.id ??
       parseLandingBackgroundScopes(rawTextMap)[0]?.id;
-    const targetScope = backgroundScopes.find(
-      (scope) => scope.id === fallbackScopeId,
-    );
-    const estimatedHeight = getSectionEstimatedHeightVh(newSectionType);
-    if (targetScope) {
-      const usedHeight = sectionHeightsByScope.get(targetScope.id) ?? 0;
-      if (usedHeight + estimatedHeight > targetScope.heightVh) {
-        setStatusMessage(
-          `No entra en "${targetScope.name}": capacidad ${targetScope.heightVh}vh, usado ${usedHeight}vh.`,
-        );
-        return;
-      }
+    const targetScope = backgroundScopes.find((scope) => scope.id === targetScopeId);
+    if (!targetScope) {
+      setStatusMessage("No hay un fondo destino valido para agregar la seccion.");
+      return;
     }
+    const estimatedHeight = getSectionEstimatedHeightVh(newSectionType);
+    const usedHeight = sectionHeightsByScope.get(targetScope.id) ?? 0;
+    const requiredHeight = usedHeight + estimatedHeight;
+    const shouldExpandTargetScope = requiredHeight > targetScope.heightVh;
+    const nextScopes = shouldExpandTargetScope
+      ? backgroundScopes.map((scope) =>
+          scope.id === targetScope.id
+            ? { ...scope, heightVh: requiredHeight }
+            : scope,
+        )
+      : backgroundScopes;
     const newSection: LandingSectionInstance = {
       id,
       type: newSectionType,
       name: `${def.label} ${structure.filter((item) => item.type === newSectionType).length + 1}`,
-      scopeId: fallbackScopeId,
+      scopeId: targetScopeId,
     };
     const nextStructure = [...structure, newSection];
+    commitLayout(nextStructure, nextScopes);
 
     setTextMap((previous) => {
-      const next: LandingTextMap = {
-        ...previous,
-        [LANDING_STRUCTURE_KEY]: JSON.stringify(nextStructure),
-        [getSectionExtrasKey(id)]: "[]",
-        [getSectionItemsOrderKey(id)]: JSON.stringify(
-          def.fields.map((field) => `base:${field.key}`),
-        ),
-      };
+      const next: LandingTextMap = { ...previous };
+      next[getSectionExtrasKey(id)] = "[]";
+      next[getSectionItemsOrderKey(id)] = JSON.stringify(
+        def.fields.map((field) => `base:${field.key}`),
+      );
 
       for (const field of def.fields) {
         const key = getSectionFieldKey(id, field.key);
@@ -1396,7 +1583,11 @@ export function CmsLandingEditor({
       return next;
     });
 
-    setStructure(nextStructure);
+    if (shouldExpandTargetScope) {
+      setStatusMessage(
+        `Se ajusto "${targetScope.name}" a ${requiredHeight}vh para agregar la seccion.`,
+      );
+    }
     setSelectedSectionId(id);
     if (def.fields.length > 0) {
       setSelectedFieldId(getSectionFieldKey(id, def.fields[0].key));
@@ -1572,7 +1763,10 @@ export function CmsLandingEditor({
       return;
     }
     const sourceSection = structure[sourceIndex];
-    const sourceHeight = getSectionEstimatedHeightVh(sourceSection.type);
+    const sourceHeight = getSectionEstimatedHeightVhForSection(
+      sourceSection,
+      textMap,
+    );
     const sourceCurrentScopeId = sourceSection.scopeId ?? fallbackScopeId;
     const currentTargetUsed = sectionHeightsByScope.get(targetScopeId) ?? 0;
     const targetUsedExcludingSource =
@@ -1692,12 +1886,30 @@ export function CmsLandingEditor({
 
     const nextIndex =
       direction === "next" ? activeSectionIndex + 1 : activeSectionIndex - 1;
-    const targetSection = structure[nextIndex];
+    const targetSection = sectionsInRenderOrder[nextIndex];
     if (!targetSection) {
       return;
     }
 
     focusSection(targetSection.id);
+  }
+
+  function goToAdjacentLayoutSection(direction: "prev" | "next") {
+    if (selectedLayoutSectionIndex < 0) {
+      setSelectedLayoutSectionId("layout-body");
+      return;
+    }
+
+    const nextIndex =
+      direction === "next"
+        ? selectedLayoutSectionIndex + 1
+        : selectedLayoutSectionIndex - 1;
+    const targetSection = layoutSections[nextIndex];
+    if (!targetSection) {
+      return;
+    }
+
+    setSelectedLayoutSectionId(targetSection.id);
   }
 
   function scrollPreviewToSection(sectionId: string) {
@@ -1797,6 +2009,16 @@ export function CmsLandingEditor({
     setIsSectionSettingsView(false);
   }
 
+  function handleLayoutBodyPaddingXChange(paddingX: number) {
+    const nextPaddingX = clamp(Math.round(paddingX), 0, 400);
+    updateLayoutField(LANDING_LAYOUT_PADDING_X_KEY, String(nextPaddingX), {
+      responsiveScoped: true,
+    });
+    setSelectedLayoutSectionId("layout-body");
+    setOpenPanelAccordionId("layout:attributes");
+    setPanelOpen(true);
+  }
+
   async function handlePublish() {
     const payload = {
       ...rawTextMap,
@@ -1812,7 +2034,7 @@ export function CmsLandingEditor({
               ? createPortal(
                   <div
                     ref={panelRootRef}
-                    className="font-fira relative h-full overflow-visible"
+                    className="font-fira relative h-full overflow-visible select-none [&_input]:select-text [&_textarea]:select-text"
                   >
                     <button
                       type="button"
@@ -1836,34 +2058,71 @@ export function CmsLandingEditor({
                             className="flex h-full min-w-0 items-center justify-center gap-4 border-r px-2"
                             style={{ flex: "0 0 50%", maxWidth: "50%" }}
                           >
-                            <Button
-                              type="button"
-                              size="icon-sm"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-md"
-                              onClick={() => goToAdjacentSection("prev")}
-                              disabled={activeSectionIndex <= 0}
-                            >
-                              <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <span className="max-w-[120px] truncate text-center text-sm font-medium">
-                              {activeSectionId
-                                ? structure[activeSectionIndex]?.name
-                                : "SecciÃ³n actual"}
-                            </span>
-                            <Button
-                              type="button"
-                              size="icon-sm"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-md"
-                              onClick={() => goToAdjacentSection("next")}
-                              disabled={
-                                activeSectionIndex < 0 ||
-                                activeSectionIndex >= structure.length - 1
-                              }
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
+                            {editorMode === "layout" ? (
+                              <>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 rounded-md"
+                                  onClick={() => goToAdjacentLayoutSection("prev")}
+                                  disabled={selectedLayoutSectionIndex <= 0}
+                                >
+                                  <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <span className="max-w-[120px] truncate text-center text-sm font-medium">
+                                  {layoutSections[selectedLayoutSectionIndex]?.name ??
+                                    "Layout"}
+                                </span>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 rounded-md"
+                                  onClick={() => goToAdjacentLayoutSection("next")}
+                                  disabled={
+                                    selectedLayoutSectionIndex < 0 ||
+                                    selectedLayoutSectionIndex >=
+                                      layoutSections.length - 1
+                                  }
+                                >
+                                  <ChevronRight className="h-4 w-4" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 rounded-md"
+                                  onClick={() => goToAdjacentSection("prev")}
+                                  disabled={activeSectionIndex <= 0}
+                                >
+                                  <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <span className="max-w-[120px] truncate text-center text-sm font-medium">
+                                  {activeSectionId
+                                    ? sectionsInRenderOrder[activeSectionIndex]
+                                        ?.name
+                                    : "SecciÃ³n actual"}
+                                </span>
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 rounded-md"
+                                  onClick={() => goToAdjacentSection("next")}
+                                  disabled={
+                                    activeSectionIndex < 0 ||
+                                    activeSectionIndex >=
+                                      sectionsInRenderOrder.length - 1
+                                  }
+                                >
+                                  <ChevronRight className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
                           </div>
 
                           <div
@@ -1892,6 +2151,7 @@ export function CmsLandingEditor({
                         <div
                           className={cn(
                             "h-full min-h-0 flex flex-col gap-4 p-4",
+                            editorMode === "layout" && "hidden",
                             (isSectionSettingsView || editingBackgroundScope) &&
                               "hidden",
                           )}
@@ -2150,7 +2410,7 @@ export function CmsLandingEditor({
                                                     )
                                                   }
                                                 />
-                                                <Input
+                                                <PanelInput
                                                   type="number"
                                                   min={0}
                                                   max={100}
@@ -2231,7 +2491,7 @@ export function CmsLandingEditor({
                                                     )
                                                   }
                                                 />
-                                                <Input
+                                                <PanelInput
                                                   type="number"
                                                   min={0}
                                                   max={10}
@@ -2283,7 +2543,7 @@ export function CmsLandingEditor({
                                                       <p className="text-[11px] font-medium text-muted-foreground uppercase">
                                                         Imagen {imageIndex + 1}
                                                       </p>
-                                                      <Input
+                                                      <PanelInput
                                                         placeholder="https://... (URL imagen)"
                                                         value={
                                                           textMap[imageKey] ??
@@ -2296,7 +2556,7 @@ export function CmsLandingEditor({
                                                           )
                                                         }
                                                       />
-                                                      <Input
+                                                      <PanelInput
                                                         placeholder="Titulo"
                                                         value={
                                                           textMap[titleKey] ??
@@ -2331,7 +2591,7 @@ export function CmsLandingEditor({
                                                       </select>
                                                       {mode ===
                                                       "title-subtitle" ? (
-                                                        <Input
+                                                        <PanelInput
                                                           placeholder="Subtitulo"
                                                           value={
                                                             textMap[
@@ -2399,7 +2659,7 @@ export function CmsLandingEditor({
                                           {selectedSectionBackgroundMode ===
                                           "image" ? (
                                             <div className="space-y-2">
-                                              <Input
+                                              <PanelInput
                                                 placeholder="https://..."
                                                 value={
                                                   textMap[
@@ -2436,7 +2696,7 @@ export function CmsLandingEditor({
                                                       )
                                                     }
                                                   />
-                                                  <Input
+                                                  <PanelInput
                                                     type="number"
                                                     min={1}
                                                     max={3}
@@ -2476,7 +2736,7 @@ export function CmsLandingEditor({
                                                       )
                                                     }
                                                   />
-                                                  <Input
+                                                  <PanelInput
                                                     type="number"
                                                     min={0}
                                                     max={100}
@@ -2516,7 +2776,7 @@ export function CmsLandingEditor({
                                                       )
                                                     }
                                                   />
-                                                  <Input
+                                                  <PanelInput
                                                     type="number"
                                                     min={0}
                                                     max={100}
@@ -2558,7 +2818,7 @@ export function CmsLandingEditor({
 
                                           {selectedSectionBackgroundMode ===
                                           "gradient" ? (
-                                            <Input
+                                            <PanelInput
                                               placeholder="linear-gradient(135deg, #d9e8d4, #f4efe5)"
                                               value={
                                                 textMap[
@@ -2726,6 +2986,29 @@ export function CmsLandingEditor({
                                             onChange={(value) =>
                                               updateField(
                                                 selectedSectionFooterHeightKey,
+                                                String(value),
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                      </details>
+                                    ) : null}
+
+                                    {selectedSection.type === "video" &&
+                                    selectedSectionVideoHeightKey ? (
+                                      <details className="panel-accordion panel-accordion-inner">
+                                        <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                          Altura de seccion
+                                        </summary>
+                                        <div className="mt-2 space-y-2">
+                                          <SliderValueControl
+                                            label="Altura (vh)"
+                                            value={selectedSectionVideoHeight}
+                                            min={40}
+                                            max={300}
+                                            onChange={(value) =>
+                                              updateField(
+                                                selectedSectionVideoHeightKey,
                                                 String(value),
                                               )
                                             }
@@ -3093,7 +3376,7 @@ export function CmsLandingEditor({
                                                 <label className="text-xs font-medium text-muted-foreground">
                                                   Color
                                                 </label>
-                                                <Input
+                                                <PanelInput
                                                   value={
                                                     textMap[colorKey] ??
                                                     (sporeIndex === 1
@@ -3697,7 +3980,7 @@ export function CmsLandingEditor({
                                               rows={4}
                                             />
                                           ) : (
-                                            <Input
+                                            <PanelInput
                                               value={
                                                 textMap[item.textKey] ??
                                                 baseField?.defaultValue ??
@@ -4500,7 +4783,7 @@ export function CmsLandingEditor({
                             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                               Agregar nueva seccion
                             </p>
-                            <div className="grid grid-cols-[1fr_auto] gap-2">
+                            <div className="space-y-2">
                               <select
                                 className="h-9 rounded-md border bg-background px-3 text-sm"
                                 value={newSectionType}
@@ -4512,21 +4795,475 @@ export function CmsLandingEditor({
                               >
                                 {Object.values(landingSectionCatalog).map(
                                   (item) => (
-                                    <option key={item.type} value={item.type}>
-                                      {item.label}
-                                    </option>
+                                    item.type !== "footer" ? (
+                                      <option key={item.type} value={item.type}>
+                                        {item.label}
+                                      </option>
+                                    ) : null
                                   ),
                                 )}
                               </select>
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={addSection}
+                              <select
+                                className="h-9 rounded-md border bg-background px-3 text-sm"
+                                value={addSectionTargetScopeId ?? ""}
+                                onChange={(event) =>
+                                  setNewSectionScopeId(event.target.value || null)
+                                }
                               >
-                                Add
-                              </Button>
+                                {backgroundScopes.map((scope) => (
+                                  <option key={scope.id} value={scope.id}>
+                                    {scope.name}
+                                  </option>
+                                ))}
+                              </select>
+                              <div className="flex justify-end">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={addSection}
+                                >
+                                  Add
+                                </Button>
+                              </div>
                             </div>
                           </div>
+                        </div>
+
+                        <div
+                          className={cn(
+                            "h-full min-h-0 space-y-4 p-4",
+                            editorMode !== "layout" && "hidden",
+                          )}
+                        >
+                          {statusMessage ? (
+                            <p className="text-xs text-muted-foreground">
+                              {statusMessage}
+                            </p>
+                          ) : null}
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-muted-foreground">
+                              Edicion responsive
+                            </label>
+                            <PanelRadioGroup
+                              name="layout-responsive-mode"
+                              value={responsiveEditMode}
+                              options={[
+                                {
+                                  value: "large",
+                                  label: <Monitor className="h-4 w-4" />,
+                                  srLabel: "Grande",
+                                },
+                                {
+                                  value: "medium",
+                                  label: <Laptop className="h-4 w-4" />,
+                                  srLabel: "Mediana",
+                                },
+                                {
+                                  value: "tablet",
+                                  label: <Tablet className="h-4 w-4" />,
+                                  srLabel: "Tablet",
+                                },
+                                {
+                                  value: "mobile",
+                                  label: <Smartphone className="h-4 w-4" />,
+                                  srLabel: "Movil",
+                                },
+                              ]}
+                              onChange={(nextValue) =>
+                                setResponsiveEditMode(
+                                  nextValue as LandingResponsiveMode,
+                                )
+                              }
+                            />
+                          </div>
+                          <details
+                            className="panel-accordion"
+                            open={openPanelAccordionId === "layout:attributes"}
+                          >
+                            <summary
+                              className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                toggleTopLevelAccordion("layout:attributes");
+                              }}
+                            >
+                              Atributos generales de seccion
+                            </summary>
+                            <div className="mt-2 space-y-3">
+                              <p className="text-xs text-muted-foreground">
+                                Seccion:{" "}
+                                {layoutSections[selectedLayoutSectionIndex]
+                                  ?.name ?? "Layout"}
+                              </p>
+
+                              {selectedLayoutSectionId === "layout-navbar" ? (
+                                <>
+                                  <details className="panel-accordion panel-accordion-inner">
+                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                      Colores
+                                    </summary>
+                                    <div className="mt-2 space-y-2 rounded-md border bg-background p-2">
+                                      <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-muted-foreground">
+                                          Fondo navbar
+                                        </label>
+                                        <PanelColorControl
+                                          value={
+                                            textMap[LANDING_LAYOUT_NAV_BG_KEY] ??
+                                            "#ffffff"
+                                          }
+                                          defaultValue="#ffffff"
+                                          showPaletteLabel={false}
+                                          onChange={(nextColor) =>
+                                            updateLayoutField(
+                                              LANDING_LAYOUT_NAV_BG_KEY,
+                                              nextColor,
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                      <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-muted-foreground">
+                                          Texto navbar
+                                        </label>
+                                        <PanelColorControl
+                                          value={
+                                            textMap[LANDING_LAYOUT_NAV_TEXT_KEY] ??
+                                            "#111111"
+                                          }
+                                          defaultValue="#111111"
+                                          showPaletteLabel={false}
+                                          onChange={(nextColor) =>
+                                            updateLayoutField(
+                                              LANDING_LAYOUT_NAV_TEXT_KEY,
+                                              nextColor,
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    </div>
+                                  </details>
+
+                                  <details className="panel-accordion panel-accordion-inner">
+                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                      Dimensiones
+                                    </summary>
+                                    <div className="mt-2 space-y-2 rounded-md border bg-background p-2">
+                                      <SliderValueControl
+                                        label="Altura navbar (px)"
+                                        value={layoutNavHeight}
+                                        min={64}
+                                        max={180}
+                                        step={1}
+                                        onChange={(nextValue) =>
+                                          updateLayoutField(
+                                            LANDING_LAYOUT_NAV_HEIGHT_KEY,
+                                            String(nextValue),
+                                          )
+                                        }
+                                      />
+                                      <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-muted-foreground">
+                                          Altura exacta (px)
+                                        </label>
+                                        <PanelInput
+                                          type="number"
+                                          min={64}
+                                          max={180}
+                                          value={layoutNavHeight}
+                                          onChange={(event) =>
+                                            updateLayoutField(
+                                              LANDING_LAYOUT_NAV_HEIGHT_KEY,
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    </div>
+                                  </details>
+                                </>
+                              ) : null}
+
+                              {selectedLayoutSectionId === "layout-body" ? (
+                                <details className="panel-accordion panel-accordion-inner">
+                                  <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                    Body
+                                  </summary>
+                                  <div className="mt-2 space-y-2 rounded-md border bg-background p-2">
+                                    <SliderValueControl
+                                      label="Padding X del body (px)"
+                                      value={layoutPaddingX}
+                                      min={0}
+                                      max={400}
+                                      step={1}
+                                      onChange={(nextValue) =>
+                                        updateLayoutField(
+                                          LANDING_LAYOUT_PADDING_X_KEY,
+                                          String(nextValue),
+                                          { responsiveScoped: true },
+                                        )
+                                      }
+                                    />
+                                    <div className="space-y-1.5">
+                                      <label className="text-xs font-medium text-muted-foreground">
+                                        Padding exacto (px)
+                                      </label>
+                                      <PanelInput
+                                        type="number"
+                                        min={0}
+                                        max={400}
+                                        value={layoutPaddingX}
+                                        onChange={(event) =>
+                                          updateLayoutField(
+                                            LANDING_LAYOUT_PADDING_X_KEY,
+                                            event.target.value,
+                                            { responsiveScoped: true },
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      El padding del body aplica al contenido de las
+                                      secciones, no al navbar/footer ni al ancho de
+                                      la seccion.
+                                    </p>
+                                  </div>
+                                </details>
+                              ) : null}
+
+                              {selectedLayoutSectionId === "layout-footer" ? (
+                                <>
+                                  <details className="panel-accordion panel-accordion-inner">
+                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                      Colores
+                                    </summary>
+                                    <div className="mt-2 space-y-2 rounded-md border bg-background p-2">
+                                      <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-muted-foreground">
+                                          Fondo footer
+                                        </label>
+                                        <PanelColorControl
+                                          value={
+                                            textMap[LANDING_LAYOUT_FOOTER_BG_KEY] ??
+                                            "#d8cfb6"
+                                          }
+                                          defaultValue="#d8cfb6"
+                                          showPaletteLabel={false}
+                                          onChange={(nextColor) =>
+                                            updateLayoutField(
+                                              LANDING_LAYOUT_FOOTER_BG_KEY,
+                                              nextColor,
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    </div>
+                                  </details>
+
+                                  <details className="panel-accordion panel-accordion-inner">
+                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                      Contenido
+                                    </summary>
+                                    <div className="mt-2 space-y-2 rounded-md border bg-background p-2">
+                                      <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-muted-foreground">
+                                          Texto footer
+                                        </label>
+                                        <PanelInput
+                                          value={
+                                            textMap[LANDING_LAYOUT_FOOTER_TEXT_KEY] ??
+                                            "Koru OSA"
+                                          }
+                                          onChange={(event) =>
+                                            updateLayoutField(
+                                              LANDING_LAYOUT_FOOTER_TEXT_KEY,
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    </div>
+                                  </details>
+
+                                  <details className="panel-accordion panel-accordion-inner">
+                                    <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                      Dimensiones
+                                    </summary>
+                                    <div className="mt-2 space-y-2 rounded-md border bg-background p-2">
+                                      <SliderValueControl
+                                        label="Altura footer (px)"
+                                        value={layoutFooterHeight}
+                                        min={120}
+                                        max={600}
+                                        step={1}
+                                        onChange={(nextValue) =>
+                                          updateLayoutField(
+                                            LANDING_LAYOUT_FOOTER_HEIGHT_KEY,
+                                            String(nextValue),
+                                          )
+                                        }
+                                      />
+                                      <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-muted-foreground">
+                                          Altura exacta (px)
+                                        </label>
+                                        <PanelInput
+                                          type="number"
+                                          min={120}
+                                          max={600}
+                                          value={layoutFooterHeight}
+                                          onChange={(event) =>
+                                            updateLayoutField(
+                                              LANDING_LAYOUT_FOOTER_HEIGHT_KEY,
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    </div>
+                                  </details>
+                                </>
+                              ) : null}
+                            </div>
+                          </details>
+
+                          {selectedLayoutSectionId === "layout-navbar" ? (
+                            <>
+                              <details className="panel-accordion" open>
+                                <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                  Logo
+                                </summary>
+                                <div className="mt-2 space-y-2 rounded-none border bg-background p-2">
+                                  <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-muted-foreground">
+                                      Logo URL
+                                    </label>
+                                    <PanelInput
+                                      value={
+                                        textMap[LANDING_LAYOUT_NAV_LOGO_SRC_KEY] ??
+                                        "/branding/koru-logo.png"
+                                      }
+                                      onChange={(event) =>
+                                        updateLayoutField(
+                                          LANDING_LAYOUT_NAV_LOGO_SRC_KEY,
+                                          event.target.value,
+                                        )
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-muted-foreground">
+                                      Logo alt
+                                    </label>
+                                    <PanelInput
+                                      value={
+                                        textMap[LANDING_LAYOUT_NAV_LOGO_ALT_KEY] ??
+                                        "Koru"
+                                      }
+                                      onChange={(event) =>
+                                        updateLayoutField(
+                                          LANDING_LAYOUT_NAV_LOGO_ALT_KEY,
+                                          event.target.value,
+                                        )
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                              </details>
+
+                              <details className="panel-accordion" open>
+                                <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                  Opciones
+                                </summary>
+                                <div className="mt-2 space-y-2 rounded-none border bg-muted/20 p-2">
+                                  {layoutNavLinks.map((item, index) => (
+                                    <details
+                                      key={item.id}
+                                      className="panel-accordion panel-accordion-inner"
+                                    >
+                                      <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                        Opcion {index + 1}
+                                      </summary>
+                                      <div className="mt-2 grid grid-cols-1 gap-2 rounded-none border bg-background p-2">
+                                        <div className="flex justify-end">
+                                          <Button
+                                            type="button"
+                                            size="icon-sm"
+                                            variant="ghost"
+                                            className="text-destructive hover:text-destructive"
+                                            onClick={() =>
+                                              updateLayoutNavLinks((links) =>
+                                                links.length <= 1
+                                                  ? links
+                                                  : links.filter(
+                                                      (entry) =>
+                                                        entry.id !== item.id,
+                                                    ),
+                                              )
+                                            }
+                                            disabled={layoutNavLinks.length <= 1}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                        <PanelInput
+                                          value={item.label}
+                                          onChange={(event) =>
+                                            updateLayoutNavLinks((links) =>
+                                              links.map((entry) =>
+                                                entry.id === item.id
+                                                  ? {
+                                                      ...entry,
+                                                      label: event.target.value,
+                                                    }
+                                                  : entry,
+                                              ),
+                                            )
+                                          }
+                                          placeholder="Texto"
+                                        />
+                                        <PanelInput
+                                          value={item.href}
+                                          onChange={(event) =>
+                                            updateLayoutNavLinks((links) =>
+                                              links.map((entry) =>
+                                                entry.id === item.id
+                                                  ? {
+                                                      ...entry,
+                                                      href: event.target.value,
+                                                    }
+                                                  : entry,
+                                              ),
+                                            )
+                                          }
+                                          placeholder="URL o ancla"
+                                        />
+                                      </div>
+                                    </details>
+                                  ))}
+                                  <div className="pt-1">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() =>
+                                        updateLayoutNavLinks((links) => [
+                                          ...links,
+                                          {
+                                            id: createLayoutNavLinkId(),
+                                            label: `Nueva opcion ${links.length + 1}`,
+                                            href: "#",
+                                          },
+                                        ])
+                                      }
+                                    >
+                                      Agregar opcion
+                                    </Button>
+                                  </div>
+                                </div>
+                              </details>
+                            </>
+                          ) : null}
                         </div>
 
                         <div
@@ -4556,7 +5293,7 @@ export function CmsLandingEditor({
                                 <label className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
                                   Nombre
                                 </label>
-                                <Input
+                                <PanelInput
                                   value={editingBackgroundScope.name}
                                   onChange={(event) =>
                                     updateBackgroundScope(editingBackgroundScope.id, {
@@ -4607,7 +5344,7 @@ export function CmsLandingEditor({
                                   <label className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
                                     Altura (vh)
                                   </label>
-                                  <Input
+                                  <PanelInput
                                     type="number"
                                     min={100}
                                     max={2000}
@@ -4635,7 +5372,7 @@ export function CmsLandingEditor({
                                     ? "Gradiente CSS"
                                     : "Color"}
                                 </label>
-                                <Input
+                                <PanelInput
                                   value={
                                     editingBackgroundScope.visualMode ===
                                     "gradient"
@@ -4704,7 +5441,11 @@ export function CmsLandingEditor({
         )}
       >
         <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base px-4">
-          <span>Landing builder (edicion inline)</span>
+          <span>
+            {editorMode === "layout"
+              ? "Layout builder (edicion global)"
+              : "Landing builder (edicion inline)"}
+          </span>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 rounded-md border bg-background px-1 py-1">
               <Button
@@ -4783,39 +5524,106 @@ export function CmsLandingEditor({
               compactPreviewSpacing && "p-1 md:p-1.5",
             )}
           >
-            <div
-              className="origin-top-left"
-              style={{
-                zoom: effectivePreviewScale,
-                width: `${previewCanvasWidth}px`,
-              }}
-            >
+            <div className="flex flex-col items-center gap-2">
               <div
-                onClickCapture={(event) => {
-                  const target = event.target as HTMLElement;
-                  if (
-                    target.closest("a") ||
-                    target.closest("button") ||
-                    target.closest("form")
-                  ) {
-                    event.preventDefault();
-                  }
+                className="pointer-events-none relative h-6 rounded-md border bg-background/95 shadow-sm"
+                style={{
+                  width: `${previewCanvasDisplayWidth}px`,
+                  minWidth: `${previewCanvasDisplayWidth}px`,
+                }}
+                aria-hidden
+              >
+                {isDraggingLayoutBodyPadding ? (
+                  <span className="absolute top-8 left-1/2 z-10 -translate-x-1/2 rounded-sm border border-[#374151]/30 bg-background px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-[#374151]">
+                    {layoutPaddingX}px
+                  </span>
+                ) : null}
+                {previewRulerMarks.map((mark) => {
+                  const isMajor = mark % 10 === 0;
+                  const isMedium = mark % 5 === 0;
+                  return (
+                    <div
+                      key={`vw-mark-${mark}`}
+                      className="absolute bottom-0"
+                      style={{
+                        left: `${mark}%`,
+                        transform: "translateX(-0.5px)",
+                      }}
+                    >
+                      <div
+                        className={cn(
+                          "w-px bg-[#374151]",
+                          isMajor
+                            ? "h-3 opacity-95"
+                            : isMedium
+                              ? "h-2 opacity-75"
+                              : "h-1 opacity-55",
+                        )}
+                      />
+                      {isMajor ? (
+                        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-medium tabular-nums text-[#374151]">
+                          {mark}
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              <div
+                className="origin-top-left"
+                style={{
+                  zoom: effectivePreviewScale,
+                  width: `${previewCanvasWidth}px`,
                 }}
               >
-                <LandingView
-                  textMap={{
-                    ...rawTextMap,
-                    [LANDING_BACKGROUND_SCOPES_KEY]:
-                      JSON.stringify(backgroundScopes),
-                    [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
+                <div
+                  onClickCapture={(event) => {
+                    const target = event.target as HTMLElement;
+                    if (
+                      target.closest("a") ||
+                      target.closest("button") ||
+                      target.closest("form")
+                    ) {
+                      event.preventDefault();
+                    }
                   }}
-                  previewViewportHeight={previewViewportHeightForContent}
-                  previewMode
-                  responsiveMode={responsiveEditMode}
-                  selectedFieldId={selectedFieldId}
-                  onSelectField={handleSelectField}
+                >
+                  <LandingView
+                    textMap={{
+                      ...rawTextMap,
+                      [LANDING_BACKGROUND_SCOPES_KEY]:
+                        JSON.stringify(backgroundScopes),
+                      [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
+                    }}
+                    previewViewportHeight={previewViewportHeightForContent}
+                    previewMode
+                    responsiveMode={responsiveEditMode}
+                    selectedFieldId={selectedFieldId}
+                    onSelectField={handleSelectField}
+                    selectedLayoutSectionId={
+                      editorMode === "layout" ? selectedLayoutSectionId : null
+                    }
+                    onSelectLayoutSection={
+                      editorMode === "layout"
+                        ? (sectionId) => {
+                            setSelectedLayoutSectionId(sectionId);
+                            setPanelOpen(true);
+                          }
+                        : undefined
+                    }
+                  onLayoutBodyPaddingXChange={
+                    editorMode === "layout"
+                      ? handleLayoutBodyPaddingXChange
+                      : undefined
+                  }
+                  onLayoutBodyPaddingXDragStateChange={
+                    editorMode === "layout"
+                      ? setIsDraggingLayoutBodyPadding
+                      : undefined
+                  }
                   onMoveSectionExtraPosition={handleMoveSectionExtraPosition}
                 />
+                </div>
               </div>
             </div>
           </div>
@@ -4824,6 +5632,8 @@ export function CmsLandingEditor({
     </Card>
   );
 }
+
+
 
 
 

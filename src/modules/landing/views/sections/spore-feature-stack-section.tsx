@@ -100,6 +100,11 @@ export function SporeFeatureStackSection({
   const sectionStyle = hasImageLayer
     ? sectionBorderStyle
     : { ...sectionBackgroundStyle, ...sectionBorderStyle };
+  const bodyPaddingStyle = {
+    paddingLeft: "var(--landing-body-padding-x, 24px)",
+    paddingRight: "var(--landing-body-padding-x, 24px)",
+    ...sectionPaddingStyle,
+  };
 
   return (
     <section
@@ -141,7 +146,7 @@ export function SporeFeatureStackSection({
           Seleccionar seccion de esporas
         </button>
       ) : null}
-      <div className="relative z-10 min-h-[200vh]" style={sectionPaddingStyle} />
+      <div className="relative z-10 min-h-[200vh]" style={bodyPaddingStyle} />
     </section>
   );
 }

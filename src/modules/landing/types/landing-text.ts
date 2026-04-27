@@ -15,6 +15,12 @@ export type LandingPreviewBindings = {
   previewMode?: boolean;
   selectedFieldId?: string | null;
   onSelectField?: (fieldId: string) => void;
+  selectedLayoutSectionId?: "layout-navbar" | "layout-body" | "layout-footer" | null;
+  onSelectLayoutSection?: (
+    sectionId: "layout-navbar" | "layout-body" | "layout-footer",
+  ) => void;
+  onLayoutBodyPaddingXChange?: (paddingX: number) => void;
+  onLayoutBodyPaddingXDragStateChange?: (isDragging: boolean) => void;
   responsiveMode?: LandingResponsiveMode;
   onMoveSectionExtraPosition?: (
     sectionId: string,
@@ -100,7 +106,8 @@ export function isResponsiveScopedFieldId(fieldId: string) {
 export function getResponsiveModeFromWidth(
   width: number,
 ): LandingResponsiveMode {
-  if (width >= 1280) {
+  // Keep "large" only for truly wide desktop viewports.
+  if (width >= 1920) {
     return "large";
   }
   if (width >= 1024) {
@@ -260,11 +267,7 @@ export function getLandingFieldFontSize(
   fallbackPx: number,
   responsiveMode?: LandingResponsiveMode,
 ) {
-  const mode =
-    responsiveMode ??
-    (typeof window !== "undefined"
-      ? getResponsiveModeFromWidth(window.innerWidth)
-      : "large");
+  const mode = responsiveMode ?? "large";
   const responsiveRaw = textMap[getLandingFieldResponsiveSizeKey(fieldId, mode)];
   const raw = responsiveRaw ?? textMap[getLandingFieldSizeKey(fieldId)];
   const parsed = Number(raw);

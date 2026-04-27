@@ -398,12 +398,18 @@
   border: 0;
   padding: 0;
   background: transparent;
+  border-radius: 0;
 }
 
 .panel-accordion[open],
 .panel-accordion-inner[open] {
   background-color: color-mix(in srgb, var(--brand-900) 10%, transparent);
-  padding: 2px;
+  padding: 6px;
+  border-radius: 0;
+}
+
+.panel-accordion-inner {
+  margin: 0.2rem 0 0.25rem;
 }
 
 .panel-accordion > summary,
@@ -413,5 +419,10 @@
 
 .panel-accordion > summary + *,
 .panel-accordion-inner > summary + * {
-  padding: 0 0.85rem 0.75rem;
+  padding: 0.2rem 1rem 0.95rem;
+}
+
+.panel-accordion-inner > summary + * {
+  padding-top: 0.1rem;
+  padding-bottom: 0.55rem;
 }
