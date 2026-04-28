@@ -9,6 +9,7 @@ type LandingNavProps = {
   logoSrc?: string;
   logoAlt?: string;
   links?: Array<{ label: string; href: string }>;
+  fixed?: boolean;
 };
 
 export function LandingNav({
@@ -18,12 +19,14 @@ export function LandingNav({
   paddingX = 24,
   logoSrc = "/branding/koru-logo.png",
   logoAlt = "Koru",
+  fixed = true,
   links = [
-    { label: "Quienes somos", href: "#metodo" },
-    { label: "Como acompanamos", href: "#niveles" },
-    { label: "Comunidad", href: "#comunidad" },
-    { label: "Escuela para familias", href: "#" },
-    { label: "Admisiones", href: "#" },
+    { label: "Quienes somos", href: "/quienes-somos" },
+    { label: "Como acompanamos", href: "/como-acompanamos" },
+    { label: "Comunidad", href: "/comunidad" },
+    { label: "Blog", href: "/blog" },
+    { label: "Escuela para familias", href: "/escuela-para-familias" },
+    { label: "Admisiones", href: "/admisiones" },
     { label: "Log In", href: "/sign-in" },
   ],
 }: LandingNavProps) {
@@ -31,7 +34,11 @@ export function LandingNav({
 
   return (
     <header
-      className="font-fira sticky top-0 z-20 backdrop-blur"
+      className={
+        fixed
+          ? "font-fira fixed inset-x-0 top-0 z-20 backdrop-blur"
+          : "font-fira sticky top-0 z-20 backdrop-blur"
+      }
       style={{ backgroundColor, color: textColor }}
     >
       <div

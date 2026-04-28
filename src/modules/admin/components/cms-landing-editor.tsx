@@ -127,6 +127,7 @@ import {
 } from "@/modules/landing/types/landing-text";
 import { publishCmsAction } from "@/modules/cms/server/cms-text.actions";
 import { LandingView } from "@/modules/landing/views/landing-view";
+import { LandingPageLayout } from "@/modules/landing/views/landing-page-layout";
 
 type LandingTextMap = Record<string, string>;
 
@@ -5588,7 +5589,7 @@ export function CmsLandingEditor({
                     }
                   }}
                 >
-                  <LandingView
+                  <LandingPageLayout
                     textMap={{
                       ...rawTextMap,
                       [LANDING_BACKGROUND_SCOPES_KEY]:
@@ -5598,8 +5599,6 @@ export function CmsLandingEditor({
                     previewViewportHeight={previewViewportHeightForContent}
                     previewMode
                     responsiveMode={responsiveEditMode}
-                    selectedFieldId={selectedFieldId}
-                    onSelectField={handleSelectField}
                     selectedLayoutSectionId={
                       editorMode === "layout" ? selectedLayoutSectionId : null
                     }
@@ -5611,18 +5610,31 @@ export function CmsLandingEditor({
                           }
                         : undefined
                     }
-                  onLayoutBodyPaddingXChange={
-                    editorMode === "layout"
-                      ? handleLayoutBodyPaddingXChange
-                      : undefined
-                  }
-                  onLayoutBodyPaddingXDragStateChange={
-                    editorMode === "layout"
-                      ? setIsDraggingLayoutBodyPadding
-                      : undefined
-                  }
-                  onMoveSectionExtraPosition={handleMoveSectionExtraPosition}
-                />
+                    onLayoutBodyPaddingXChange={
+                      editorMode === "layout"
+                        ? handleLayoutBodyPaddingXChange
+                        : undefined
+                    }
+                    onLayoutBodyPaddingXDragStateChange={
+                      editorMode === "layout"
+                        ? setIsDraggingLayoutBodyPadding
+                        : undefined
+                    }
+                  >
+                    <LandingView
+                      textMap={{
+                        ...rawTextMap,
+                        [LANDING_BACKGROUND_SCOPES_KEY]:
+                          JSON.stringify(backgroundScopes),
+                        [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
+                      }}
+                      previewMode
+                      responsiveMode={responsiveEditMode}
+                      selectedFieldId={selectedFieldId}
+                      onSelectField={handleSelectField}
+                      onMoveSectionExtraPosition={handleMoveSectionExtraPosition}
+                    />
+                  </LandingPageLayout>
                 </div>
               </div>
             </div>

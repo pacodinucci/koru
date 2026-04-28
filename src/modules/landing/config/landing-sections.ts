@@ -36,12 +36,13 @@ export type LandingLayoutNavLink = {
 
 function getDefaultLayoutNavLinks(): LandingLayoutNavLink[] {
   return [
-    { id: "nav-1", label: "Quienes somos", href: "#metodo" },
-    { id: "nav-2", label: "Como acompanamos", href: "#niveles" },
-    { id: "nav-3", label: "Comunidad", href: "#comunidad" },
-    { id: "nav-4", label: "Escuela para familias", href: "#" },
-    { id: "nav-5", label: "Admisiones", href: "#" },
-    { id: "nav-6", label: "Log In", href: "/sign-in" },
+    { id: "nav-1", label: "Quienes somos", href: "/quienes-somos" },
+    { id: "nav-2", label: "Como acompanamos", href: "/como-acompanamos" },
+    { id: "nav-3", label: "Comunidad", href: "/comunidad" },
+    { id: "nav-4", label: "Blog", href: "/blog" },
+    { id: "nav-5", label: "Escuela para familias", href: "/escuela-para-familias" },
+    { id: "nav-6", label: "Admisiones", href: "/admisiones" },
+    { id: "nav-7", label: "Log In", href: "/sign-in" },
   ];
 }
 
@@ -95,28 +96,33 @@ export function parseLandingLayoutNavLinks(
     {
       id: "nav-1",
       label: textMap[LANDING_LAYOUT_NAV_LINK1_LABEL_KEY] ?? "Quienes somos",
-      href: textMap[LANDING_LAYOUT_NAV_LINK1_HREF_KEY] ?? "#metodo",
+      href: textMap[LANDING_LAYOUT_NAV_LINK1_HREF_KEY] ?? "/quienes-somos",
     },
     {
       id: "nav-2",
       label: textMap[LANDING_LAYOUT_NAV_LINK2_LABEL_KEY] ?? "Como acompanamos",
-      href: textMap[LANDING_LAYOUT_NAV_LINK2_HREF_KEY] ?? "#niveles",
+      href: textMap[LANDING_LAYOUT_NAV_LINK2_HREF_KEY] ?? "/como-acompanamos",
     },
     {
       id: "nav-3",
       label: textMap[LANDING_LAYOUT_NAV_LINK3_LABEL_KEY] ?? "Comunidad",
-      href: textMap[LANDING_LAYOUT_NAV_LINK3_HREF_KEY] ?? "#comunidad",
+      href: textMap[LANDING_LAYOUT_NAV_LINK3_HREF_KEY] ?? "/comunidad",
+    },
+    {
+      id: "nav-blog",
+      label: "Blog",
+      href: "/blog",
     },
     {
       id: "nav-4",
       label:
         textMap[LANDING_LAYOUT_NAV_LINK4_LABEL_KEY] ?? "Escuela para familias",
-      href: textMap[LANDING_LAYOUT_NAV_LINK4_HREF_KEY] ?? "#",
+      href: textMap[LANDING_LAYOUT_NAV_LINK4_HREF_KEY] ?? "/escuela-para-familias",
     },
     {
       id: "nav-5",
       label: textMap[LANDING_LAYOUT_NAV_LINK5_LABEL_KEY] ?? "Admisiones",
-      href: textMap[LANDING_LAYOUT_NAV_LINK5_HREF_KEY] ?? "#",
+      href: textMap[LANDING_LAYOUT_NAV_LINK5_HREF_KEY] ?? "/admisiones",
     },
     {
       id: "nav-6",
@@ -955,15 +961,15 @@ export function getDefaultLandingTextMap(
     [LANDING_LAYOUT_NAV_LOGO_ALT_KEY]: "Koru",
     [LANDING_LAYOUT_NAV_LINKS_KEY]: JSON.stringify(getDefaultLayoutNavLinks()),
     [LANDING_LAYOUT_NAV_LINK1_LABEL_KEY]: "Quienes somos",
-    [LANDING_LAYOUT_NAV_LINK1_HREF_KEY]: "#metodo",
+    [LANDING_LAYOUT_NAV_LINK1_HREF_KEY]: "/quienes-somos",
     [LANDING_LAYOUT_NAV_LINK2_LABEL_KEY]: "Como acompanamos",
-    [LANDING_LAYOUT_NAV_LINK2_HREF_KEY]: "#niveles",
+    [LANDING_LAYOUT_NAV_LINK2_HREF_KEY]: "/como-acompanamos",
     [LANDING_LAYOUT_NAV_LINK3_LABEL_KEY]: "Comunidad",
-    [LANDING_LAYOUT_NAV_LINK3_HREF_KEY]: "#comunidad",
+    [LANDING_LAYOUT_NAV_LINK3_HREF_KEY]: "/comunidad",
     [LANDING_LAYOUT_NAV_LINK4_LABEL_KEY]: "Escuela para familias",
-    [LANDING_LAYOUT_NAV_LINK4_HREF_KEY]: "#",
+    [LANDING_LAYOUT_NAV_LINK4_HREF_KEY]: "/escuela-para-familias",
     [LANDING_LAYOUT_NAV_LINK5_LABEL_KEY]: "Admisiones",
-    [LANDING_LAYOUT_NAV_LINK5_HREF_KEY]: "#",
+    [LANDING_LAYOUT_NAV_LINK5_HREF_KEY]: "/admisiones",
     [LANDING_LAYOUT_NAV_LINK6_LABEL_KEY]: "Log In",
     [LANDING_LAYOUT_NAV_LINK6_HREF_KEY]: "/sign-in",
     [LANDING_LAYOUT_FOOTER_BG_KEY]: "#d8cfb6",
