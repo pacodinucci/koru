@@ -1,5 +1,7 @@
-﻿import Image from "next/image";
+import Image from "next/image";
 import Link from "next/link";
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 type LandingNavProps = {
   backgroundColor?: string;
@@ -10,7 +12,22 @@ type LandingNavProps = {
   logoAlt?: string;
   links?: Array<{ label: string; href: string }>;
   fixed?: boolean;
+  user?: {
+    name: string;
+    email: string;
+  } | null;
 };
+
+function getInitials(nameOrEmail: string) {
+  const parts = nameOrEmail.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) {
+    return "U";
+  }
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+}
 
 export function LandingNav({
   backgroundColor = "#ffffff",
@@ -20,6 +37,7 @@ export function LandingNav({
   logoSrc = "/branding/koru-logo.png",
   logoAlt = "Koru",
   fixed = true,
+  user = null,
   links = [
     { label: "Quienes somos", href: "/quienes-somos" },
     { label: "Como acompanamos", href: "/como-acompanamos" },
@@ -30,7 +48,23 @@ export function LandingNav({
     { label: "Log In", href: "/sign-in" },
   ],
 }: LandingNavProps) {
-  const navLinks = links.filter((item) => item.label.trim() !== "");
+  const navLinks = links.filter((item) => {
+    if (item.label.trim() === "") {
+      return false;
+    }
+
+    if (!user) {
+      return true;
+    }
+
+    const normalizedLabel = item.label.trim().toLowerCase();
+    const normalizedHref = (item.href ?? "").trim().toLowerCase();
+
+    return normalizedLabel !== "log in" && normalizedHref !== "/sign-in";
+  });
+
+  const userDisplay = user?.name?.trim() || user?.email || "Usuario";
+  const userInitials = getInitials(userDisplay);
 
   return (
     <header
@@ -72,6 +106,17 @@ export function LandingNav({
                   {item.label}
                 </a>
               ))}
+              {user ? (
+                <Link
+                  href="/family-dashboard"
+                  className="transition hover:opacity-70"
+                  aria-label="Ir a tu cuenta"
+                >
+                  <Avatar>
+                    <AvatarFallback>{userInitials}</AvatarFallback>
+                  </Avatar>
+                </Link>
+              ) : null}
             </nav>
           </div>
         </div>

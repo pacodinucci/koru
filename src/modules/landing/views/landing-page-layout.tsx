@@ -32,6 +32,10 @@ type LandingPageLayoutProps = {
   textMap: LandingTextMap;
   previewViewportHeight?: number;
   children: React.ReactNode;
+  user?: {
+    name: string;
+    email: string;
+  } | null;
 } & LandingPreviewBindings;
 
 function clamp(value: number, min: number, max: number) {
@@ -65,6 +69,7 @@ function getLayoutFooterHeight(raw: string | undefined) {
 export function LandingPageLayout({
   textMap,
   previewViewportHeight,
+  user = null,
   previewMode,
   selectedLayoutSectionId,
   onSelectLayoutSection,
@@ -250,6 +255,7 @@ export function LandingPageLayout({
             logoAlt={navLogoAlt}
             links={navLinks}
             fixed={!previewMode}
+            user={user}
           />
           {previewMode && onSelectLayoutSection ? (
             <button
