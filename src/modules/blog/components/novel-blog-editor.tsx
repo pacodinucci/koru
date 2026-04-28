@@ -1,6 +1,13 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   AlignCenterIcon,
   AlignJustifyIcon,
@@ -52,6 +59,28 @@ const DEFAULT_CONTENT: JSONContent = {
 type NovelBlogEditorProps = {
   jsonInputName?: string;
   htmlInputName?: string;
+  controlsInPanel?: boolean;
+  onReady?: (actions: NovelBlogEditorActions | null) => void;
+};
+
+export type NovelBlogEditorActions = {
+  insertParagraph: () => void;
+  insertHeading1: () => void;
+  insertHeading2: () => void;
+  insertHeading3: () => void;
+  insertBulletList: () => void;
+  insertOrderedList: () => void;
+  insertQuote: () => void;
+  alignLeft: () => void;
+  alignCenter: () => void;
+  alignRight: () => void;
+  alignJustify: () => void;
+  insertImageOriginal: () => void;
+  insertImageFixedWidth: () => void;
+  insertImageFixedHeight: () => void;
+  insertGallery2: () => void;
+  insertGallery3: () => void;
+  insertGallery4: () => void;
 };
 
 type ImageInsertMode = "original" | "preset-width" | "preset-height";
@@ -342,6 +371,8 @@ function createGalleryId() {
 export function NovelBlogEditor({
   jsonInputName = "contentJson",
   htmlInputName = "contentHtml",
+  controlsInPanel = false,
+  onReady,
 }: NovelBlogEditorProps) {
   const [jsonValue, setJsonValue] = useState<string>(JSON.stringify(DEFAULT_CONTENT));
   const [htmlValue, setHtmlValue] = useState<string>(
@@ -409,7 +440,7 @@ export function NovelBlogEditor({
     chain.insertContent({ type: "paragraph" }).run();
   }
 
-  function handleInsertGalleryStrip(cols: 2 | 3 | 4) {
+  const handleInsertGalleryStrip = useCallback((cols: 2 | 3 | 4) => {
     if (!editorRef.current) {
       setUploadNotice("Haz click dentro del editor antes de insertar la tira.");
       return;
@@ -417,9 +448,9 @@ export function NovelBlogEditor({
 
     setUploadNotice("");
     insertGalleryPlaceholders(editorRef.current, cols);
-  }
+  }, []);
 
-  function handleInsertSingleImage(mode: ImageInsertMode) {
+  const handleInsertSingleImage = useCallback((mode: ImageInsertMode) => {
     if (!editorRef.current) {
       setUploadNotice("Haz click dentro del editor antes de insertar una imagen.");
       return;
@@ -429,7 +460,126 @@ export function NovelBlogEditor({
     setPendingPlaceholderNode(null);
     setSingleImageMode(mode);
     imageFileInputRef.current?.click();
+  }, []);
+
+  function runEditorCommand(command: (editor: EditorInstance) => void) {
+    if (!editorRef.current) {
+      setUploadNotice("Haz click dentro del editor antes de insertar contenido.");
+      return;
+    }
+
+    setUploadNotice("");
+    command(editorRef.current);
   }
+
+  const editorActions = useMemo<NovelBlogEditorActions>(
+    () => ({
+      insertParagraph: () =>
+        runEditorCommand((editor) => {
+          editor.chain().focus().insertContent({ type: "paragraph" }).run();
+        }),
+      insertHeading1: () =>
+        runEditorCommand((editor) => {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "heading",
+              attrs: { level: 1 },
+              content: [{ type: "text", text: "Nuevo titulo H1" }],
+            })
+            .run();
+        }),
+      insertHeading2: () =>
+        runEditorCommand((editor) => {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "heading",
+              attrs: { level: 2 },
+              content: [{ type: "text", text: "Nuevo titulo H2" }],
+            })
+            .run();
+        }),
+      insertHeading3: () =>
+        runEditorCommand((editor) => {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "heading",
+              attrs: { level: 3 },
+              content: [{ type: "text", text: "Nuevo titulo H3" }],
+            })
+            .run();
+        }),
+      insertBulletList: () =>
+        runEditorCommand((editor) => {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "bulletList",
+              content: [{ type: "listItem", content: [{ type: "paragraph" }] }],
+            })
+            .run();
+        }),
+      insertOrderedList: () =>
+        runEditorCommand((editor) => {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "orderedList",
+              content: [{ type: "listItem", content: [{ type: "paragraph" }] }],
+            })
+            .run();
+        }),
+      insertQuote: () =>
+        runEditorCommand((editor) => {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "blockquote",
+              content: [{ type: "paragraph", content: [{ type: "text", text: "Nueva cita" }] }],
+            })
+            .run();
+        }),
+      alignLeft: () =>
+        runEditorCommand((editor) => {
+          editor.chain().focus().setTextAlign("left").run();
+        }),
+      alignCenter: () =>
+        runEditorCommand((editor) => {
+          editor.chain().focus().setTextAlign("center").run();
+        }),
+      alignRight: () =>
+        runEditorCommand((editor) => {
+          editor.chain().focus().setTextAlign("right").run();
+        }),
+      alignJustify: () =>
+        runEditorCommand((editor) => {
+          editor.chain().focus().setTextAlign("justify").run();
+        }),
+      insertImageOriginal: () => handleInsertSingleImage("original"),
+      insertImageFixedWidth: () => handleInsertSingleImage("preset-width"),
+      insertImageFixedHeight: () => handleInsertSingleImage("preset-height"),
+      insertGallery2: () => handleInsertGalleryStrip(2),
+      insertGallery3: () => handleInsertGalleryStrip(3),
+      insertGallery4: () => handleInsertGalleryStrip(4),
+    }),
+    [handleInsertGalleryStrip, handleInsertSingleImage],
+  );
+
+  useEffect(() => {
+    onReady?.(editorActions);
+
+    return () => {
+      onReady?.(null);
+    };
+  }, [editorActions, onReady]);
 
   function startEdgeResize(params: {
     nodePos: number;
@@ -758,7 +908,7 @@ export function NovelBlogEditor({
         >
           <ImageResizer />
 
-          <InlineTextAlignToolbar />
+          {!controlsInPanel ? <InlineTextAlignToolbar /> : null}
 
           <EditorBubble
             tippyOptions={{ placement: "top" }}
@@ -814,59 +964,61 @@ export function NovelBlogEditor({
         </EditorContent>
       </EditorRoot>
 
-      <div className="border-t bg-muted/10 px-3 py-2">
-        <p className="mb-2 text-xs text-muted-foreground">Imagenes</p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => handleInsertSingleImage("original")}
-            className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
-          >
-            <ImagesIcon className="h-3.5 w-3.5" />
-            Imagen original
-          </button>
-          <button
-            type="button"
-            onClick={() => handleInsertSingleImage("preset-width")}
-            className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
-          >
-            <ImagesIcon className="h-3.5 w-3.5" />
-            Imagen ancho fijo
-          </button>
-          <button
-            type="button"
-            onClick={() => handleInsertSingleImage("preset-height")}
-            className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
-          >
-            <ImagesIcon className="h-3.5 w-3.5" />
-            Imagen alto fijo
-          </button>
-          <button
-            type="button"
-            onClick={() => handleInsertGalleryStrip(2)}
-            className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
-          >
-            <ImagesIcon className="h-3.5 w-3.5" />
-            Tira 2 imagenes
-          </button>
-          <button
-            type="button"
-            onClick={() => handleInsertGalleryStrip(3)}
-            className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
-          >
-            <ImagesIcon className="h-3.5 w-3.5" />
-            Tira 3 imagenes
-          </button>
-          <button
-            type="button"
-            onClick={() => handleInsertGalleryStrip(4)}
-            className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
-          >
-            <ImagesIcon className="h-3.5 w-3.5" />
-            Tira 4 imagenes
-          </button>
+      {!controlsInPanel ? (
+        <div className="border-t bg-muted/10 px-3 py-2">
+          <p className="mb-2 text-xs text-muted-foreground">Imagenes</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => handleInsertSingleImage("original")}
+              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
+            >
+              <ImagesIcon className="h-3.5 w-3.5" />
+              Imagen original
+            </button>
+            <button
+              type="button"
+              onClick={() => handleInsertSingleImage("preset-width")}
+              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
+            >
+              <ImagesIcon className="h-3.5 w-3.5" />
+              Imagen ancho fijo
+            </button>
+            <button
+              type="button"
+              onClick={() => handleInsertSingleImage("preset-height")}
+              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
+            >
+              <ImagesIcon className="h-3.5 w-3.5" />
+              Imagen alto fijo
+            </button>
+            <button
+              type="button"
+              onClick={() => handleInsertGalleryStrip(2)}
+              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
+            >
+              <ImagesIcon className="h-3.5 w-3.5" />
+              Tira 2 imagenes
+            </button>
+            <button
+              type="button"
+              onClick={() => handleInsertGalleryStrip(3)}
+              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
+            >
+              <ImagesIcon className="h-3.5 w-3.5" />
+              Tira 3 imagenes
+            </button>
+            <button
+              type="button"
+              onClick={() => handleInsertGalleryStrip(4)}
+              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
+            >
+              <ImagesIcon className="h-3.5 w-3.5" />
+              Tira 4 imagenes
+            </button>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <SelectedImagePanel />
 
