@@ -65,6 +65,11 @@ export function HeroSection({
   const sectionStyle = hasImageLayer
     ? sectionBorderStyle
     : { ...sectionBackgroundStyle, ...sectionBorderStyle };
+  const bodyPaddingStyle = {
+    paddingLeft: "var(--landing-body-padding-x, 24px)",
+    paddingRight: "var(--landing-body-padding-x, 24px)",
+    ...sectionPaddingStyle,
+  };
 
   return (
     <section
@@ -81,8 +86,8 @@ export function HeroSection({
       <div className="absolute -left-20 top-10 h-64 w-64 rounded-full bg-[#d5e8d4]/60 blur-3xl" />
       <div className="absolute -right-20 bottom-10 h-64 w-64 rounded-full bg-[#c8d8f0]/70 blur-3xl" />
       <div
-        className="relative mx-auto grid w-full max-w-[92rem] gap-8 px-5 py-20 md:px-8 lg:grid-cols-[1.2fr_0.8fr] lg:px-12"
-        style={sectionPaddingStyle}
+        className="relative mx-auto grid w-full max-w-[92rem] gap-8 py-20 lg:grid-cols-[1.2fr_0.8fr]"
+        style={bodyPaddingStyle}
       >
         <div className="flex flex-col items-start">
           <p

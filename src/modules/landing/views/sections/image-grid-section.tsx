@@ -85,6 +85,11 @@ export function ImageGridSection({
         ...sectionBackgroundStyle,
         ...sectionBorderStyle,
       };
+  const bodyPaddingStyle = {
+    paddingLeft: "var(--landing-body-padding-x, 24px)",
+    paddingRight: "var(--landing-body-padding-x, 24px)",
+    ...sectionPaddingStyle,
+  };
 
   return (
     <section
@@ -99,8 +104,8 @@ export function ImageGridSection({
         />
       ) : null}
       <div
-        className="mx-auto w-full max-w-[110rem] px-4 py-14 md:px-6 lg:px-8"
-        style={sectionPaddingStyle}
+        className="mx-auto w-full max-w-[110rem] py-14"
+        style={bodyPaddingStyle}
       >
         <div
           className="grid grid-cols-4 gap-3 md:gap-4"

@@ -1,21 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { LandingNav } from "@/modules/landing/components/landing-nav";
+import { type CSSProperties, useMemo } from "react";
+import { SporeShape } from "@/components/spore-shape";
 import {
   ensureLandingDefaults,
+  parseLandingBackgroundScopes,
   parseLandingStructure,
+  type LandingBackgroundScope,
   type LandingSectionInstance,
 } from "@/modules/landing/config/landing-sections";
-import type {
-  LandingResponsiveMode,
-  LandingPreviewBindings,
-  LandingTextMap,
-} from "@/modules/landing/types/landing-text";
-import {
-  createResponsiveScopedTextMap,
-  getResponsiveModeFromWidth,
-} from "@/modules/landing/types/landing-text";
+import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
+import { createResponsiveScopedTextMap } from "@/modules/landing/types/landing-text";
 import { CardsSection } from "@/modules/landing/views/sections/cards-section";
 import { FooterSection } from "@/modules/landing/views/sections/footer-section";
 import { GallerySection } from "@/modules/landing/views/sections/gallery-section";
@@ -27,13 +22,101 @@ import { VideoSection } from "@/modules/landing/views/sections/video-section";
 
 type LandingViewProps = {
   textMap: LandingTextMap;
-  previewViewportHeight?: number;
 } & LandingPreviewBindings;
 
 type SectionRendererProps = {
   section: LandingSectionInstance;
   textMap: LandingTextMap;
 } & LandingPreviewBindings;
+
+type ScopedSectionGroup = {
+  scopeId: string;
+  sections: LandingSectionInstance[];
+};
+
+function groupSectionsByScope(
+  sections: LandingSectionInstance[],
+  scopeIdsInOrder: string[],
+): ScopedSectionGroup[] {
+  const groups = scopeIdsInOrder.map((scopeId) => ({
+    scopeId,
+    sections: [] as LandingSectionInstance[],
+  }));
+  const groupMap = new Map(groups.map((group) => [group.scopeId, group]));
+  const fallbackScopeId = scopeIdsInOrder[0] ?? "scope-default";
+
+  for (const section of sections) {
+    const resolvedScopeId =
+      section.scopeId && groupMap.has(section.scopeId)
+        ? section.scopeId
+        : fallbackScopeId;
+    groupMap.get(resolvedScopeId)?.sections.push(section);
+  }
+
+  return groups;
+}
+
+function ScopeBackground({
+  scope,
+  children,
+}: {
+  scope: LandingBackgroundScope;
+  children: React.ReactNode;
+}) {
+  const scopeHeight = `calc(var(--landing-vh, 100dvh) * ${scope.heightVh} / 100)`;
+  const backgroundStyle: CSSProperties =
+    scope.visualMode === "gradient"
+      ? { backgroundImage: scope.gradient, minHeight: scopeHeight }
+      : { backgroundColor: scope.color, minHeight: scopeHeight };
+
+  if (scope.type !== "spore") {
+    return (
+      <div className="relative isolate overflow-hidden" style={backgroundStyle}>
+        <div className="relative z-10">{children}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative isolate overflow-hidden" style={backgroundStyle}>
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+        <SporeShape
+          className="absolute -left-[9vw] top-[3vh] mix-blend-multiply"
+          size={6}
+          color="var(--brand-600)"
+          opacity={0.1}
+          rotate={-16}
+        />
+        <SporeShape
+          className="absolute right-[-8vw] top-[22vh] mix-blend-multiply"
+          size={21}
+          color="var(--complement-800)"
+          opacity={0.3}
+          rotate={21}
+          flipX
+        />
+        <SporeShape
+          className="absolute left-[8vw] top-[55%] mix-blend-multiply"
+          size={25}
+          color="var(--brand-500)"
+          opacity={0.3}
+          rotate={-28}
+          flipY
+        />
+        <SporeShape
+          className="absolute right-[6vw] bottom-[8%] mix-blend-multiply"
+          size={7}
+          color="var(--complement-700)"
+          opacity={0.1}
+          rotate={14}
+          flipX
+          flipY
+        />
+      </div>
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+}
 
 function SectionRenderer({
   section,
@@ -148,7 +231,6 @@ function SectionRenderer({
 
 export function LandingView({
   textMap,
-  previewViewportHeight,
   previewMode,
   selectedFieldId,
   onSelectField,
@@ -156,69 +238,59 @@ export function LandingView({
   onMoveSectionExtraPosition,
 }: LandingViewProps) {
   const completeMap = ensureLandingDefaults(textMap);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const [rootWidth, setRootWidth] = useState(0);
-  const effectiveResponsiveMode: LandingResponsiveMode =
-    responsiveMode ??
-    getResponsiveModeFromWidth(
-      rootWidth > 0
-        ? rootWidth
-        : typeof window !== "undefined"
-          ? window.innerWidth
-          : 1400,
-    );
-
+  const effectiveResponsiveMode = responsiveMode ?? "large";
   const responsiveMap = createResponsiveScopedTextMap(
     completeMap,
     effectiveResponsiveMode,
   );
-  const structure = parseLandingStructure(completeMap);
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) {
-      return;
-    }
-    const update = () => setRootWidth(root.clientWidth);
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(root);
-    window.addEventListener("resize", update);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", update);
-    };
-  }, []);
-  const previewRootStyle: CSSProperties | undefined =
-    previewMode && previewViewportHeight
-      ? ({
-          ["--landing-preview-vh" as string]: `${previewViewportHeight}px`,
-        } as CSSProperties)
-      : undefined;
+  const scopes = parseLandingBackgroundScopes(completeMap);
+  const scopeMap = new Map(scopes.map((scope) => [scope.id, scope]));
+  const structure = parseLandingStructure(completeMap).filter(
+    (section) => section.type !== "footer",
+  );
+  const groupedSections = useMemo(
+    () =>
+      groupSectionsByScope(
+        structure,
+        scopes.map((scope) => scope.id),
+      ),
+    [structure, scopes],
+  );
 
   return (
-    <div
-      ref={rootRef}
-      className="relative isolate min-h-screen overflow-hidden bg-[#f4efe5] text-black"
-      data-landing-preview={previewMode ? "true" : undefined}
-      style={previewRootStyle}
-    >
-      <div className="relative z-[1]">
-        <LandingNav />
-        {structure.map((section) => (
-          <div key={section.id} data-preview-section-id={section.id}>
-            <SectionRenderer
-              section={section}
-              textMap={responsiveMap}
-              previewMode={previewMode}
-              selectedFieldId={selectedFieldId}
-              onSelectField={onSelectField}
-              responsiveMode={effectiveResponsiveMode}
-              onMoveSectionExtraPosition={onMoveSectionExtraPosition}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
+    <>
+      {groupedSections.map((group, groupIndex) => {
+        const scope =
+          scopeMap.get(group.scopeId) ??
+          ({
+            id: group.scopeId,
+            name: "Fondo base",
+            type: "none",
+            visualMode: "color",
+            color: "#ffffff",
+            gradient: "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
+            heightVh: 1000,
+          } as const);
+
+        return (
+          <ScopeBackground key={`${group.scopeId}-${groupIndex}`} scope={scope}>
+            {group.sections.map((section) => (
+              <div key={section.id} data-preview-section-id={section.id}>
+                <SectionRenderer
+                  section={section}
+                  textMap={responsiveMap}
+                  previewMode={previewMode}
+                  selectedFieldId={selectedFieldId}
+                  onSelectField={onSelectField}
+                  responsiveMode={effectiveResponsiveMode}
+                  onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+                />
+              </div>
+            ))}
+          </ScopeBackground>
+        );
+      })}
+    </>
   );
 }
+

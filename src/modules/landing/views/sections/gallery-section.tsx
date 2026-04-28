@@ -154,6 +154,11 @@ export function GallerySection({
   const sectionStyle = hasImageLayer
     ? sectionBorderStyle
     : { ...sectionBackgroundStyle, ...sectionBorderStyle };
+  const bodyPaddingStyle = {
+    paddingLeft: "var(--landing-body-padding-x, 24px)",
+    paddingRight: "var(--landing-body-padding-x, 24px)",
+    ...sectionPaddingStyle,
+  };
   const galleryVariant = getGalleryVariantValue(
     textMap[getSectionGalleryVariantKey(section.id)],
   );
@@ -217,8 +222,8 @@ export function GallerySection({
         />
       ) : null}
       <div
-        className="mx-auto flex w-full max-w-[92rem] flex-col px-5 py-20 md:px-8 lg:px-12"
-        style={sectionPaddingStyle}
+        className="mx-auto flex w-full max-w-[92rem] flex-col py-20"
+        style={bodyPaddingStyle}
       >
         <h2
           className={cn(

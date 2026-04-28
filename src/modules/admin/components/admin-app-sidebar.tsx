@@ -1,6 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
+import {
+  ChevronDownIcon,
+  LayoutDashboardIcon,
+  NotebookPenIcon,
+  PanelsTopLeftIcon,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -13,9 +20,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { adminNavItems } from "@/modules/admin/data/dashboard-content";
-import { Badge } from "@/components/ui/badge";
 
 type AdminAppSidebarProps = {
   userEmail: string;
@@ -26,6 +34,19 @@ export function AdminAppSidebar({
   userEmail,
   currentPath,
 }: AdminAppSidebarProps) {
+  const isBlogActive = currentPath.startsWith("/admin/blog");
+  const isCmsActive =
+    currentPath === "/admin" || currentPath.startsWith("/admin/pages");
+  const [cmsOpen, setCmsOpen] = useState(isCmsActive);
+  const isCmsOpen = cmsOpen || isCmsActive;
+  const cmsItems = useMemo(
+    () => [
+      { title: "Layout", href: "/admin", icon: LayoutDashboardIcon },
+      { title: "Pages", href: "/admin/pages", icon: PanelsTopLeftIcon },
+    ],
+    [],
+  );
+
   return (
     <Sidebar
       variant="inset"
@@ -46,26 +67,44 @@ export function AdminAppSidebar({
           <SidebarGroupLabel className="text-slate-500">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {adminNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    isActive={item.href === currentPath}
-                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900 data-active:shadow-[inset_0_0_0_1px_rgba(148,163,184,0.35)]"
-                    render={<Link href={item.href} />}
-                  >
-                    <item.icon />
-                    <span>{item.title}</span>
-                    {item.badge ? (
-                      <Badge
-                        variant="secondary"
-                        className="ml-auto border border-slate-300 bg-slate-100 text-[0.7rem] text-slate-700"
-                      >
-                        {item.badge}
-                      </Badge>
-                    ) : null}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={isBlogActive}
+                  className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900 data-active:shadow-[inset_0_0_0_1px_rgba(148,163,184,0.35)]"
+                  render={<Link href="/admin/blog" />}
+                >
+                  <NotebookPenIcon />
+                  <span>Blog</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={isCmsActive}
+                  className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900 data-active:shadow-[inset_0_0_0_1px_rgba(148,163,184,0.35)]"
+                  onClick={() => setCmsOpen((previous) => !previous)}
+                >
+                  <LayoutDashboardIcon />
+                  <span>CMS</span>
+                  <ChevronDownIcon
+                    className={`ml-auto transition-transform ${isCmsOpen ? "rotate-180" : ""}`}
+                  />
+                </SidebarMenuButton>
+                {isCmsOpen ? (
+                  <SidebarMenuSub>
+                    {cmsItems.map((item) => (
+                      <SidebarMenuSubItem key={item.href}>
+                        <SidebarMenuSubButton
+                          isActive={currentPath === item.href}
+                          render={<Link href={item.href} />}
+                        >
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                ) : null}
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

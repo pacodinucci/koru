@@ -71,6 +71,7 @@ export function VideoSection({
     "__video_position_y",
   );
   const videoZoomKey = getSectionFieldKey(section.id, "__video_zoom");
+  const sectionHeightKey = getSectionFieldKey(section.id, "__section_height");
   const configuredVideo = textMap[videoUrlKey]?.trim() ?? "";
   const videoSrc = /\.mp4$/i.test(configuredVideo)
     ? configuredVideo
@@ -94,6 +95,14 @@ export function VideoSection({
   const zoom = Number.isFinite(zoomRaw)
     ? Math.min(300, Math.max(100, zoomRaw))
     : 100;
+  const heightRaw = Number.parseInt(
+    textMap[sectionHeightKey] ?? textMap[getSectionFieldKey(section.id, "__video_height")] ?? "",
+    10,
+  );
+  const heightVh = Number.isFinite(heightRaw)
+    ? Math.min(300, Math.max(40, heightRaw))
+    : 100;
+  const sectionHeight = `calc(var(--landing-vh, 100dvh) * ${heightVh} / 100)`;
   const videoTextItems = parseVideoTextItems(textMap, section.id);
 
   const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
@@ -108,7 +117,7 @@ export function VideoSection({
     ...sectionPaddingStyle,
     transform: undefined,
     transformOrigin: undefined,
-    minHeight: "100vh",
+    height: sectionHeight,
     boxSizing: "border-box",
   };
 
@@ -117,7 +126,7 @@ export function VideoSection({
       className="relative isolate w-full overflow-hidden"
       style={sectionStyle}
     >
-      <div className="relative h-screen w-full">
+      <div className="relative w-full" style={{ height: sectionHeight }}>
         <video
           key={videoSrc}
           className="block h-full w-full object-cover"

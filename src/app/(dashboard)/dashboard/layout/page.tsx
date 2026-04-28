@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { getCmsDraftTextMap } from "@/modules/cms/server/cms-text.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 
-export default async function DashboardPage() {
+export default async function DashboardLayoutPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -20,6 +20,7 @@ export default async function DashboardPage() {
     <DashboardShell
       userEmail={session.user.email}
       initialTextMap={initialTextMap}
+      editorMode="layout"
     />
   );
 }

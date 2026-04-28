@@ -75,6 +75,11 @@ export function CardsSection({
   const sectionStyle = hasImageLayer
     ? sectionBorderStyle
     : { ...sectionBackgroundStyle, ...sectionBorderStyle };
+  const bodyPaddingStyle = {
+    paddingLeft: "var(--landing-body-padding-x, 24px)",
+    paddingRight: "var(--landing-body-padding-x, 24px)",
+    ...sectionPaddingStyle,
+  };
   const orderedCards = cards
     .slice()
     .sort(
@@ -104,8 +109,8 @@ export function CardsSection({
         />
       ) : null}
       <div
-        className="mx-auto flex w-full max-w-[92rem] flex-col px-5 py-20 md:px-8 lg:px-12"
-        style={sectionPaddingStyle}
+        className="mx-auto flex w-full max-w-[92rem] flex-col py-20"
+        style={bodyPaddingStyle}
       >
         <p
           className={cn(

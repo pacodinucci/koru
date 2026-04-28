@@ -4,6 +4,152 @@ import {
 } from "@/modules/landing/types/landing-text";
 
 export const LANDING_STRUCTURE_KEY = "__landing_structure";
+export const LANDING_BACKGROUND_SCOPES_KEY = "__landing_background_scopes";
+export const LANDING_LAYOUT_PADDING_X_KEY = "__landing_layout_padding_x";
+export const LANDING_LAYOUT_NAV_BG_KEY = "__landing_layout_nav_bg";
+export const LANDING_LAYOUT_NAV_TEXT_KEY = "__landing_layout_nav_text";
+export const LANDING_LAYOUT_NAV_HEIGHT_KEY = "__landing_layout_nav_height";
+export const LANDING_LAYOUT_NAV_LOGO_SRC_KEY = "__landing_layout_nav_logo_src";
+export const LANDING_LAYOUT_NAV_LOGO_ALT_KEY = "__landing_layout_nav_logo_alt";
+export const LANDING_LAYOUT_NAV_LINKS_KEY = "__landing_layout_nav_links";
+export const LANDING_LAYOUT_NAV_LINK1_LABEL_KEY = "__landing_layout_nav_link1_label";
+export const LANDING_LAYOUT_NAV_LINK1_HREF_KEY = "__landing_layout_nav_link1_href";
+export const LANDING_LAYOUT_NAV_LINK2_LABEL_KEY = "__landing_layout_nav_link2_label";
+export const LANDING_LAYOUT_NAV_LINK2_HREF_KEY = "__landing_layout_nav_link2_href";
+export const LANDING_LAYOUT_NAV_LINK3_LABEL_KEY = "__landing_layout_nav_link3_label";
+export const LANDING_LAYOUT_NAV_LINK3_HREF_KEY = "__landing_layout_nav_link3_href";
+export const LANDING_LAYOUT_NAV_LINK4_LABEL_KEY = "__landing_layout_nav_link4_label";
+export const LANDING_LAYOUT_NAV_LINK4_HREF_KEY = "__landing_layout_nav_link4_href";
+export const LANDING_LAYOUT_NAV_LINK5_LABEL_KEY = "__landing_layout_nav_link5_label";
+export const LANDING_LAYOUT_NAV_LINK5_HREF_KEY = "__landing_layout_nav_link5_href";
+export const LANDING_LAYOUT_NAV_LINK6_LABEL_KEY = "__landing_layout_nav_link6_label";
+export const LANDING_LAYOUT_NAV_LINK6_HREF_KEY = "__landing_layout_nav_link6_href";
+export const LANDING_LAYOUT_FOOTER_BG_KEY = "__landing_layout_footer_bg";
+export const LANDING_LAYOUT_FOOTER_TEXT_KEY = "__landing_layout_footer_text";
+export const LANDING_LAYOUT_FOOTER_HEIGHT_KEY = "__landing_layout_footer_height";
+
+export type LandingLayoutNavLink = {
+  id: string;
+  label: string;
+  href: string;
+};
+
+function getDefaultLayoutNavLinks(): LandingLayoutNavLink[] {
+  return [
+    { id: "nav-1", label: "Quienes somos", href: "/quienes-somos" },
+    { id: "nav-2", label: "Como acompanamos", href: "/como-acompanamos" },
+    { id: "nav-3", label: "Comunidad", href: "/comunidad" },
+    { id: "nav-4", label: "Blog", href: "/blog" },
+    { id: "nav-5", label: "Escuela para familias", href: "/escuela-para-familias" },
+    { id: "nav-6", label: "Admisiones", href: "/admisiones" },
+    { id: "nav-7", label: "Log In", href: "/sign-in" },
+  ];
+}
+
+function normalizeLayoutNavLinks(raw: unknown) {
+  if (!Array.isArray(raw)) {
+    return null;
+  }
+
+  const normalized = raw
+    .map((entry, index) => {
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
+
+      const candidate = entry as Record<string, unknown>;
+      const label =
+        typeof candidate.label === "string" ? candidate.label.trim() : "";
+      const href =
+        typeof candidate.href === "string" ? candidate.href.trim() : "";
+      const idRaw = typeof candidate.id === "string" ? candidate.id.trim() : "";
+      const id = idRaw || `nav-${index + 1}`;
+
+      return {
+        id,
+        label,
+        href: href || "#",
+      } as LandingLayoutNavLink;
+    })
+    .filter((item): item is LandingLayoutNavLink => Boolean(item));
+
+  return normalized.length > 0 ? normalized : null;
+}
+
+export function parseLandingLayoutNavLinks(
+  textMap: LandingTextMap,
+): LandingLayoutNavLink[] {
+  const rawJson = textMap[LANDING_LAYOUT_NAV_LINKS_KEY];
+  if (rawJson) {
+    try {
+      const parsed = JSON.parse(rawJson);
+      const normalized = normalizeLayoutNavLinks(parsed);
+      if (normalized) {
+        return normalized;
+      }
+    } catch {
+      // Fallback to legacy keys/defaults when JSON is invalid.
+    }
+  }
+
+  const legacy = [
+    {
+      id: "nav-1",
+      label: textMap[LANDING_LAYOUT_NAV_LINK1_LABEL_KEY] ?? "Quienes somos",
+      href: textMap[LANDING_LAYOUT_NAV_LINK1_HREF_KEY] ?? "/quienes-somos",
+    },
+    {
+      id: "nav-2",
+      label: textMap[LANDING_LAYOUT_NAV_LINK2_LABEL_KEY] ?? "Como acompanamos",
+      href: textMap[LANDING_LAYOUT_NAV_LINK2_HREF_KEY] ?? "/como-acompanamos",
+    },
+    {
+      id: "nav-3",
+      label: textMap[LANDING_LAYOUT_NAV_LINK3_LABEL_KEY] ?? "Comunidad",
+      href: textMap[LANDING_LAYOUT_NAV_LINK3_HREF_KEY] ?? "/comunidad",
+    },
+    {
+      id: "nav-blog",
+      label: "Blog",
+      href: "/blog",
+    },
+    {
+      id: "nav-4",
+      label:
+        textMap[LANDING_LAYOUT_NAV_LINK4_LABEL_KEY] ?? "Escuela para familias",
+      href: textMap[LANDING_LAYOUT_NAV_LINK4_HREF_KEY] ?? "/escuela-para-familias",
+    },
+    {
+      id: "nav-5",
+      label: textMap[LANDING_LAYOUT_NAV_LINK5_LABEL_KEY] ?? "Admisiones",
+      href: textMap[LANDING_LAYOUT_NAV_LINK5_HREF_KEY] ?? "/admisiones",
+    },
+    {
+      id: "nav-6",
+      label: textMap[LANDING_LAYOUT_NAV_LINK6_LABEL_KEY] ?? "Log In",
+      href: textMap[LANDING_LAYOUT_NAV_LINK6_HREF_KEY] ?? "/sign-in",
+    },
+  ].filter((item) => item.label.trim() !== "");
+
+  if (legacy.length > 0) {
+    return legacy;
+  }
+
+  return getDefaultLayoutNavLinks();
+}
+
+export type LandingBackgroundScopeType = "none" | "spore";
+export type LandingBackgroundVisualMode = "color" | "gradient";
+
+export type LandingBackgroundScope = {
+  id: string;
+  name: string;
+  type: LandingBackgroundScopeType;
+  visualMode: LandingBackgroundVisualMode;
+  color: string;
+  gradient: string;
+  heightVh: number;
+};
 
 export type LandingSectionType =
   | "hero"
@@ -33,6 +179,7 @@ export type LandingSectionInstance = {
   id: string;
   type: LandingSectionType;
   name: string;
+  scopeId?: string;
 };
 
 export type SectionExtraElementType =
@@ -523,39 +670,21 @@ export const defaultLandingStructure: LandingSectionInstance[] = [
   { id: "cards-1", type: "cards", name: "Pilares en cards" },
   { id: "story-1", type: "story", name: "Historia Koru" },
   { id: "gallery-1", type: "gallery", name: "Galeria" },
-  { id: "spore-stack-1", type: "spore-stack", name: "Fondo de esporas" },
   { id: "video-1", type: "video", name: "Video Fullscreen" },
   { id: "footer-1", type: "footer", name: "Footer" },
 ];
 
-function ensureSporeStackSection(
-  structure: LandingSectionInstance[],
-): LandingSectionInstance[] {
-  if (structure.some((section) => section.type === "spore-stack")) {
-    return structure;
-  }
-
-  const sectionToInsert: LandingSectionInstance = {
-    id: "spore-stack-1",
-    type: "spore-stack",
-    name: "Fondo de esporas",
-  };
-  const next = [...structure];
-  const imageGridIndex = next.findIndex((section) => section.type === "image-grid");
-  if (imageGridIndex >= 0) {
-    next.splice(imageGridIndex, 0, sectionToInsert);
-    return next;
-  }
-
-  const footerIndex = next.findIndex((section) => section.type === "footer");
-  if (footerIndex >= 0) {
-    next.splice(footerIndex, 0, sectionToInsert);
-    return next;
-  }
-
-  next.push(sectionToInsert);
-  return next;
-}
+export const defaultLandingBackgroundScopes: LandingBackgroundScope[] = [
+  {
+    id: "scope-default",
+    name: "Fondo base",
+    type: "none",
+    visualMode: "color",
+    color: "#ffffff",
+    gradient: "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
+    heightVh: 1000,
+  },
+];
 
 export function getSectionFieldKey(sectionId: string, fieldKey: string) {
   return `section.${sectionId}.${fieldKey}`;
@@ -751,14 +880,104 @@ export function parseSectionItemsOrder(
   }
 }
 
+export function parseLandingBackgroundScopes(
+  textMap: LandingTextMap,
+): LandingBackgroundScope[] {
+  const raw = textMap[LANDING_BACKGROUND_SCOPES_KEY];
+  if (!raw) {
+    return defaultLandingBackgroundScopes;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as LandingBackgroundScope[];
+    const validated = parsed.filter(
+      (entry) =>
+        entry &&
+        typeof entry.id === "string" &&
+        typeof entry.name === "string" &&
+        (entry.type === "none" || entry.type === "spore"),
+    );
+
+    if (validated.length === 0) {
+      return defaultLandingBackgroundScopes;
+    }
+
+    return validated.map((entry) => ({
+      id: entry.id,
+      name: entry.name,
+      type: entry.type,
+      visualMode:
+        entry.visualMode === "gradient" || entry.visualMode === "color"
+          ? entry.visualMode
+          : "color",
+      color: typeof entry.color === "string" ? entry.color : "#ffffff",
+      gradient:
+        typeof entry.gradient === "string"
+          ? entry.gradient
+          : "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
+      heightVh:
+        typeof entry.heightVh === "number" && Number.isFinite(entry.heightVh)
+          ? Math.min(2000, Math.max(100, Math.round(entry.heightVh)))
+          : 1000,
+    }));
+  } catch {
+    return defaultLandingBackgroundScopes;
+  }
+}
+
+function normalizeSectionScopeIds(
+  structure: LandingSectionInstance[],
+  scopes: LandingBackgroundScope[],
+): LandingSectionInstance[] {
+  const fallbackScopeId = scopes[0]?.id ?? "scope-default";
+  const validScopeIds = new Set(scopes.map((scope) => scope.id));
+
+  return structure.map((section) => ({
+    ...section,
+    scopeId:
+      section.scopeId && validScopeIds.has(section.scopeId)
+        ? section.scopeId
+        : fallbackScopeId,
+  }));
+}
+
 export function getDefaultLandingTextMap(
   structure: LandingSectionInstance[] = defaultLandingStructure,
 ): LandingTextMap {
+  const normalizedStructure = normalizeSectionScopeIds(
+    structure,
+    defaultLandingBackgroundScopes,
+  );
   const textMap: LandingTextMap = {
-    [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
+    [LANDING_STRUCTURE_KEY]: JSON.stringify(normalizedStructure),
+    [LANDING_BACKGROUND_SCOPES_KEY]: JSON.stringify(
+      defaultLandingBackgroundScopes,
+    ),
+    [LANDING_LAYOUT_PADDING_X_KEY]: "24",
+    [LANDING_LAYOUT_NAV_BG_KEY]: "#ffffff",
+    [LANDING_LAYOUT_NAV_TEXT_KEY]: "#111111",
+    [LANDING_LAYOUT_NAV_HEIGHT_KEY]: "96",
+    [LANDING_LAYOUT_NAV_LOGO_SRC_KEY]: "/branding/koru-logo.png",
+    [LANDING_LAYOUT_NAV_LOGO_ALT_KEY]: "Koru",
+    [LANDING_LAYOUT_NAV_LINKS_KEY]: JSON.stringify(getDefaultLayoutNavLinks()),
+    [LANDING_LAYOUT_NAV_LINK1_LABEL_KEY]: "Quienes somos",
+    [LANDING_LAYOUT_NAV_LINK1_HREF_KEY]: "/quienes-somos",
+    [LANDING_LAYOUT_NAV_LINK2_LABEL_KEY]: "Como acompanamos",
+    [LANDING_LAYOUT_NAV_LINK2_HREF_KEY]: "/como-acompanamos",
+    [LANDING_LAYOUT_NAV_LINK3_LABEL_KEY]: "Comunidad",
+    [LANDING_LAYOUT_NAV_LINK3_HREF_KEY]: "/comunidad",
+    [LANDING_LAYOUT_NAV_LINK4_LABEL_KEY]: "Escuela para familias",
+    [LANDING_LAYOUT_NAV_LINK4_HREF_KEY]: "/escuela-para-familias",
+    [LANDING_LAYOUT_NAV_LINK5_LABEL_KEY]: "Admisiones",
+    [LANDING_LAYOUT_NAV_LINK5_HREF_KEY]: "/admisiones",
+    [LANDING_LAYOUT_NAV_LINK6_LABEL_KEY]: "Log In",
+    [LANDING_LAYOUT_NAV_LINK6_HREF_KEY]: "/sign-in",
+    [LANDING_LAYOUT_FOOTER_BG_KEY]: "#d8cfb6",
+    [LANDING_LAYOUT_FOOTER_TEXT_KEY]: "Koru OSA",
+    [LANDING_LAYOUT_FOOTER_HEIGHT_KEY]: "220",
   };
 
-  for (const section of structure) {
+  for (const section of normalizedStructure) {
     const def = landingSectionCatalog[section.type];
     for (const field of def.fields) {
       const key = getSectionFieldKey(section.id, field.key);
@@ -773,9 +992,10 @@ export function getDefaultLandingTextMap(
 export function parseLandingStructure(
   textMap: LandingTextMap,
 ): LandingSectionInstance[] {
+  const scopes = parseLandingBackgroundScopes(textMap);
   const raw = textMap[LANDING_STRUCTURE_KEY];
   if (!raw) {
-    return ensureSporeStackSection(defaultLandingStructure);
+    return normalizeSectionScopeIds(defaultLandingStructure, scopes);
   }
 
   try {
@@ -791,18 +1011,20 @@ export function parseLandingStructure(
 
     const parsedStructure =
       validated.length > 0 ? validated : defaultLandingStructure;
-    return ensureSporeStackSection(parsedStructure);
+    return normalizeSectionScopeIds(parsedStructure, scopes);
   } catch {
-    return ensureSporeStackSection(defaultLandingStructure);
+    return normalizeSectionScopeIds(defaultLandingStructure, scopes);
   }
 }
 
 export function ensureLandingDefaults(textMap: LandingTextMap): LandingTextMap {
+  const scopes = parseLandingBackgroundScopes(textMap);
   const structure = parseLandingStructure(textMap);
   const defaults = getDefaultLandingTextMap(structure);
   return {
     ...defaults,
     ...textMap,
+    [LANDING_BACKGROUND_SCOPES_KEY]: JSON.stringify(scopes),
     [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
   };
 }

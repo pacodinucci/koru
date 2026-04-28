@@ -1,8 +1,11 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
+  ChevronDown,
   ChevronUp,
   LayoutDashboard,
   FileText,
@@ -29,7 +32,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +51,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarSeparator,
   SidebarTrigger,
@@ -58,18 +63,24 @@ import type { LandingTextMap } from "@/modules/landing/types/landing-text";
 type DashboardShellProps = {
   userEmail: string;
   initialTextMap: LandingTextMap;
+  editorMode?: "layout" | "page";
 };
 
-const dashboardItems = [
-  { title: "CMS", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Pages", href: "#", icon: FileText },
-  { title: "Blog", href: "#", icon: NotebookPen },
-  { title: "Donations", href: "#", icon: HandCoins },
-  { title: "Security", href: "#", icon: ShieldCheck },
-  { title: "Settings", href: "#", icon: Settings },
-] as const;
+export function DashboardShell({
+  userEmail,
+  initialTextMap,
+  editorMode = "page",
+}: DashboardShellProps) {
+  const pathname = usePathname();
+  const isBlogActive = pathname.startsWith("/admin/blog");
+  const isCmsActive = pathname.startsWith("/dashboard");
+  const [cmsOpen, setCmsOpen] = useState(true);
+  const isCmsOpen = cmsOpen || isCmsActive;
+  const [pagesOpen, setPagesOpen] = useState(true);
+  const isLayoutActive = pathname.startsWith("/dashboard/layout");
+  const isLandingActive = pathname.startsWith("/dashboard/pages/landing");
+  const isPagesOpen = pagesOpen || isLandingActive;
 
-export function DashboardShell({ userEmail, initialTextMap }: DashboardShellProps) {
   return (
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon">
@@ -88,21 +99,102 @@ export function DashboardShell({ userEmail, initialTextMap }: DashboardShellProp
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className="text-slate-500">Navigation</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-slate-500">
+              Navigation
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {dashboardItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      isActive={item.title === "CMS"}
-                      className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
-                      render={<Link href={item.href} />}
-                    >
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={isBlogActive}
+                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                    render={<Link href="/admin/blog" />}
+                  >
+                    <NotebookPen />
+                    <span>Blog</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={isCmsActive}
+                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                    onClick={() => setCmsOpen((previous) => !previous)}
+                  >
+                    <LayoutDashboard />
+                    <span>CMS</span>
+                    <ChevronDown
+                      className={`ml-auto transition-transform ${isCmsOpen ? "rotate-180" : ""}`}
+                    />
+                  </SidebarMenuButton>
+
+                  {isCmsOpen ? (
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          isActive={isLayoutActive}
+                          render={<Link href="/dashboard/layout" />}
+                        >
+                          <LayoutDashboard />
+                          <span>Layout</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          isActive={isLandingActive || pathname.startsWith("/admin/pages")}
+                          onClick={() => setPagesOpen((previous) => !previous)}
+                        >
+                          <FileText />
+                          <span>Pages</span>
+                          <ChevronDown
+                            className={`ml-auto transition-transform ${isPagesOpen ? "rotate-180" : ""}`}
+                          />
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      {isPagesOpen ? (
+                        <SidebarMenuSub className="mx-6">
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              isActive={isLandingActive}
+                              render={<Link href="/dashboard/pages/landing" />}
+                            >
+                              <FileText />
+                              <span>Landing (/)</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        </SidebarMenuSub>
+                      ) : null}
+                    </SidebarMenuSub>
+                  ) : null}
+                </SidebarMenuItem>
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    render={<Link href="#" />}
+                  >
+                    <HandCoins />
+                    <span>Donaciones</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    render={<Link href="#" />}
+                  >
+                    <ShieldCheck />
+                    <span>Seguridad</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    render={<Link href="#" />}
+                  >
+                    <Settings />
+                    <span>Configuracion</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -119,7 +211,9 @@ export function DashboardShell({ userEmail, initialTextMap }: DashboardShellProp
               }
             >
               <Avatar className="size-6">
-                <AvatarFallback>{userEmail.slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>
+                  {userEmail.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <span className="truncate text-sm">{userEmail}</span>
               <ChevronUp className="ml-auto h-4 w-4" />
@@ -137,8 +231,8 @@ export function DashboardShell({ userEmail, initialTextMap }: DashboardShellProp
       </Sidebar>
 
       <SidebarInset className="h-svh overflow-hidden bg-slate-50">
-        <AdminEditorPanelProvider>
-          <DashboardCanvas initialTextMap={initialTextMap} />
+        <AdminEditorPanelProvider defaultOpen={editorMode === "layout"}>
+          <DashboardCanvas initialTextMap={initialTextMap} editorMode={editorMode} />
         </AdminEditorPanelProvider>
       </SidebarInset>
     </SidebarProvider>
@@ -147,8 +241,10 @@ export function DashboardShell({ userEmail, initialTextMap }: DashboardShellProp
 
 function DashboardCanvas({
   initialTextMap,
+  editorMode,
 }: {
   initialTextMap: LandingTextMap;
+  editorMode: "layout" | "page";
 }) {
   const { open, setOpen } = useAdminEditorPanel();
 
@@ -185,6 +281,7 @@ function DashboardCanvas({
           <CmsLandingEditor
             initialTextMap={initialTextMap}
             frameVariant="flush"
+            editorMode={editorMode}
           />
         </main>
       </AdminEditorPanelLayout>

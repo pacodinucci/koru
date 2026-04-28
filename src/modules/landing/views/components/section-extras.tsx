@@ -33,6 +33,7 @@ import {
   getLandingFieldMarginStyle,
   getLandingFieldPaddingStyle,
   getLandingFieldResponsiveSizeKey,
+  getResponsiveModeFromWidth,
   type LandingPreviewBindings,
   type LandingResponsiveMode,
   type LandingTextMap,
@@ -109,14 +110,7 @@ export function SectionExtras({
       : 1;
   const isFooterNarrowLayout = false;
   const activeResponsiveMode: LandingResponsiveMode =
-    responsiveMode ??
-    (containerWidth >= 1280
-      ? "large"
-      : containerWidth >= 1024
-        ? "medium"
-        : containerWidth >= 768
-          ? "tablet"
-          : "mobile");
+    responsiveMode ?? getResponsiveModeFromWidth(containerWidth);
 
   if (extras.length === 0) {
     return null;
@@ -157,7 +151,12 @@ export function SectionExtras({
           const parsedResponsiveSize = Number(responsiveSizeRaw);
           const resolvedFontSize = Number.isFinite(parsedResponsiveSize)
             ? Math.min(800, Math.max(10, parsedResponsiveSize))
-            : getLandingFieldFontSize(textMap, key, defaults.size);
+            : getLandingFieldFontSize(
+                textMap,
+                key,
+                defaults.size,
+                activeResponsiveMode,
+              );
           const order = getOrder(
             orderMap ?? new Map(),
             `extra:${extra.id}`,
