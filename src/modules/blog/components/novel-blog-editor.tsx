@@ -1070,6 +1070,8 @@ export function NovelBlogEditor({
               const attrs = node.attrs as {
                 isPlaceholder?: boolean;
                 galleryCols?: number;
+                width?: number | string | null;
+                height?: number | string | null;
               };
 
               if (!attrs.isPlaceholder) {
