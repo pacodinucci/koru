@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -31,10 +32,12 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { signOutAction } from "@/modules/auth/server/auth-actions";
 
 const mainItems = [
   { title: "Inicio", href: "/family-dashboard", icon: Home },
@@ -48,11 +51,41 @@ const supportItems = [
   { title: "Configuracion", href: "/family-dashboard/configuracion", icon: Settings2 },
 ];
 
-export function FamilySidebar() {
+type FamilySidebarProps = {
+  userName: string;
+  userEmail: string;
+};
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) {
+    return "U";
+  }
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+}
+
+export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
   const pathname = usePathname();
+  const userInitials = getInitials(userName);
 
   return (
     <Sidebar collapsible="icon" variant="inset">
+      <SidebarHeader>
+        <div className="flex items-center justify-center px-3 py-3 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-2">
+          <Image
+            src="/branding/koru-logo.png"
+            alt="Koru"
+            width={120}
+            height={34}
+            className="h-8 w-auto object-contain group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7"
+            priority
+          />
+        </div>
+      </SidebarHeader>
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Escuela para familias</SidebarGroupLabel>
@@ -106,11 +139,11 @@ export function FamilySidebar() {
                 size="lg"
               >
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg">FA</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">{userInitials}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Familia Koru</span>
-                  <span className="truncate text-xs">familia@koru.org</span>
+                  <span className="truncate font-semibold">{userName}</span>
+                  <span className="truncate text-xs">{userEmail}</span>
                 </div>
                 <ChevronUp className="ml-auto size-4" />
               </SidebarMenuButton>
@@ -124,11 +157,11 @@ export function FamilySidebar() {
                   <DropdownMenuLabel className="p-0 font-normal">
                     <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                       <Avatar className="h-8 w-8 rounded-lg">
-                        <AvatarFallback className="rounded-lg">FA</AvatarFallback>
+                        <AvatarFallback className="rounded-lg">{userInitials}</AvatarFallback>
                       </Avatar>
                       <div className="grid flex-1 text-left text-sm leading-tight">
-                        <span className="truncate font-semibold">Familia Koru</span>
-                        <span className="truncate text-xs">familia@koru.org</span>
+                        <span className="truncate font-semibold">{userName}</span>
+                        <span className="truncate text-xs">{userEmail}</span>
                       </div>
                     </div>
                   </DropdownMenuLabel>
@@ -143,10 +176,15 @@ export function FamilySidebar() {
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <LogOut />
-                  Cerrar sesion
-                </DropdownMenuItem>
+                <form action={signOutAction}>
+                  <button
+                    type="submit"
+                    className="group/dropdown-menu-item relative flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive"
+                  >
+                    <LogOut />
+                    Cerrar sesion
+                  </button>
+                </form>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

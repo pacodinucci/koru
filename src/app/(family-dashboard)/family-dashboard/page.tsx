@@ -1,5 +1,8 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { Bell, Search } from "lucide-react";
 
+import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,10 +12,21 @@ import {
 } from "@/components/ui/sidebar";
 import { FamilySidebar } from "@/modules/family-dashboard/components/family-sidebar";
 
-export default function FamilyDashboardPage() {
+export default async function FamilyDashboardPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    redirect("/sign-in");
+  }
+
+  const userName = session.user.name?.trim() || "Usuario";
+  const userEmail = session.user.email;
+
   return (
     <SidebarProvider>
-      <FamilySidebar />
+      <FamilySidebar userName={userName} userEmail={userEmail} />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
           <SidebarTrigger />
