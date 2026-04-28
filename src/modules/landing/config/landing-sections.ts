@@ -40,7 +40,7 @@ function getDefaultLayoutNavLinks(): LandingLayoutNavLink[] {
     { id: "nav-2", label: "Como acompanamos", href: "/como-acompanamos" },
     { id: "nav-3", label: "Comunidad", href: "/comunidad" },
     { id: "nav-4", label: "Blog", href: "/blog" },
-    { id: "nav-5", label: "Escuela para familias", href: "/escuela-para-familias" },
+    { id: "nav-5", label: "Escuela para familias", href: "/family-dashboard" },
     { id: "nav-6", label: "Admisiones", href: "/admisiones" },
     { id: "nav-7", label: "Log In", href: "/sign-in" },
   ];
@@ -117,7 +117,7 @@ export function parseLandingLayoutNavLinks(
       id: "nav-4",
       label:
         textMap[LANDING_LAYOUT_NAV_LINK4_LABEL_KEY] ?? "Escuela para familias",
-      href: textMap[LANDING_LAYOUT_NAV_LINK4_HREF_KEY] ?? "/escuela-para-familias",
+      href: textMap[LANDING_LAYOUT_NAV_LINK4_HREF_KEY] ?? "/family-dashboard",
     },
     {
       id: "nav-5",
@@ -967,7 +967,7 @@ export function getDefaultLandingTextMap(
     [LANDING_LAYOUT_NAV_LINK3_LABEL_KEY]: "Comunidad",
     [LANDING_LAYOUT_NAV_LINK3_HREF_KEY]: "/comunidad",
     [LANDING_LAYOUT_NAV_LINK4_LABEL_KEY]: "Escuela para familias",
-    [LANDING_LAYOUT_NAV_LINK4_HREF_KEY]: "/escuela-para-familias",
+    [LANDING_LAYOUT_NAV_LINK4_HREF_KEY]: "/family-dashboard",
     [LANDING_LAYOUT_NAV_LINK5_LABEL_KEY]: "Admisiones",
     [LANDING_LAYOUT_NAV_LINK5_HREF_KEY]: "/admisiones",
     [LANDING_LAYOUT_NAV_LINK6_LABEL_KEY]: "Log In",
