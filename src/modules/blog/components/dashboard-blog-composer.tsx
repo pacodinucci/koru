@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAdminEditorPanel } from "@/modules/admin/components/admin-editor-panel";
 import {
   NovelBlogEditor,
@@ -64,41 +63,6 @@ export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps)
                 {error}
               </p>
             ) : null}
-
-            <div className="space-y-1.5">
-              <label htmlFor={`${formId}-title`} className="text-xs font-medium text-slate-600">
-                Titulo
-              </label>
-              <Input id={`${formId}-title`} name="title" form={formId} placeholder="Titulo" required />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor={`${formId}-slug`} className="text-xs font-medium text-slate-600">
-                Slug
-              </label>
-              <Input
-                id={`${formId}-slug`}
-                name="slug"
-                form={formId}
-                placeholder="Opcional (se genera desde el titulo)"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor={`${formId}-status`} className="text-xs font-medium text-slate-600">
-                Estado
-              </label>
-              <select
-                id={`${formId}-status`}
-                name="status"
-                form={formId}
-                defaultValue={BlogPostStatus.DRAFT}
-                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              >
-                <option value={BlogPostStatus.DRAFT}>Borrador</option>
-                <option value={BlogPostStatus.PUBLISHED}>Publicado</option>
-              </select>
-            </div>
 
             <div className="space-y-2 rounded-lg border border-slate-200 p-3">
               <p className="text-[11px] font-medium tracking-wide text-slate-500 uppercase">
@@ -169,6 +133,14 @@ export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps)
                 Imagenes
               </p>
               <div className="grid grid-cols-2 gap-1.5">
+                <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertMosaic3()}>
+                  <ImagesIcon className="h-3.5 w-3.5" />
+                  Masonry x3
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertMosaic4()}>
+                  <ImagesIcon className="h-3.5 w-3.5" />
+                  Masonry x4
+                </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertImageOriginal()}>
                   <ImagesIcon className="h-3.5 w-3.5" />
                   Original
@@ -234,6 +206,7 @@ export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps)
     <>
       <form id={formId} action={createBlogPostAction} className="space-y-3">
         <input type="hidden" name="adminPath" value="/dashboard/blog" />
+        <input type="hidden" name="title" value="Titulo del post" />
         <section className="rounded-xl border border-slate-200 bg-white">
           <header className="flex items-center gap-2 border-b border-slate-200 px-4 py-3">
             <PenLineIcon className="h-4 w-4" />

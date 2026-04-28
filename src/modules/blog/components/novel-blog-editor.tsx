@@ -45,13 +45,24 @@ import {
   type SuggestionItem,
 } from "novel";
 import TextAlign from "@tiptap/extension-text-align";
+import { Node } from "@tiptap/core";
 
 const DEFAULT_CONTENT: JSONContent = {
   type: "doc",
   content: [
     {
+      type: "heading",
+      attrs: { level: 1 },
+      content: [{ type: "text", text: "Titulo del post" }],
+    },
+    {
+      type: "heading",
+      attrs: { level: 2 },
+      content: [{ type: "text", text: "Subtitulo del post" }],
+    },
+    {
       type: "paragraph",
-      content: [{ type: "text", text: "Escribe tu historia... usa / para insertar bloques" }],
+      content: [{ type: "text", text: "Empieza a escribir el contenido del post..." }],
     },
   ],
 };
@@ -61,6 +72,7 @@ type NovelBlogEditorProps = {
   htmlInputName?: string;
   controlsInPanel?: boolean;
   onReady?: (actions: NovelBlogEditorActions | null) => void;
+  onHtmlChange?: (html: string) => void;
 };
 
 export type NovelBlogEditorActions = {
@@ -81,12 +93,85 @@ export type NovelBlogEditorActions = {
   insertGallery2: () => void;
   insertGallery3: () => void;
   insertGallery4: () => void;
+  insertMosaic3: () => boolean;
+  insertMosaic4: () => boolean;
 };
 
 type ImageInsertMode = "original" | "preset-width" | "preset-height";
+type MasonryLayout = "masonry-3" | "masonry-4";
+type MasonryItem = {
+  slot: number;
+  src: string;
+  alt?: string;
+};
 
 const PRESET_WIDTH = 960;
 const PRESET_HEIGHT = 520;
+const MASONRY_PLACEHOLDER = "/blog-placeholder.svg";
+
+const MasonryGalleryNode = Node.create({
+  name: "masonryGallery",
+  group: "block",
+  atom: true,
+  draggable: true,
+  selectable: true,
+
+  addAttributes() {
+    return {
+      layout: {
+        default: "masonry-4",
+      },
+      items: {
+        default: [],
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'div[data-type="masonry-gallery"]',
+        getAttrs: (node) => {
+          const element = node as HTMLElement;
+          const layout = element.getAttribute("data-layout") ?? "masonry-4";
+          const rawItems = element.getAttribute("data-items") ?? "[]";
+          let items: MasonryItem[] = [];
+          try {
+            items = JSON.parse(rawItems) as MasonryItem[];
+          } catch {
+            items = [];
+          }
+
+          return { layout, items };
+        },
+      },
+    ];
+  },
+
+  renderHTML({ node }) {
+    const layout = String(node.attrs.layout ?? "masonry-4") as MasonryLayout;
+    const items = Array.isArray(node.attrs.items)
+      ? (node.attrs.items as MasonryItem[])
+      : [];
+
+    const attrs = {
+      "data-type": "masonry-gallery",
+      "data-layout": layout,
+      "data-items": JSON.stringify(items),
+    };
+
+    const children = items.map((item) => [
+      "img",
+      {
+        src: item.src,
+        alt: item.alt ?? `Imagen ${item.slot}`,
+        "data-slot": String(item.slot),
+      },
+    ]);
+
+    return ["div", attrs, ...children];
+  },
+});
 
 function getGallerySquareSize(cols: number) {
   if (cols === 2) {
@@ -96,6 +181,37 @@ function getGallerySquareSize(cols: number) {
     return 180;
   }
   return 150;
+}
+
+type GalleryLayout = "strip" | "mosaic-hero-3" | "mosaic-asym-4";
+
+function getGalleryLayoutSlotSize(
+  layout: GalleryLayout,
+  cols: number,
+  slot: number,
+) {
+  if (layout === "mosaic-hero-3") {
+    if (slot === 1) {
+      return { width: 560, height: 300 };
+    }
+    return { width: 270, height: 210 };
+  }
+
+  if (layout === "mosaic-asym-4") {
+    if (slot === 1) {
+      return { width: 340, height: 260 };
+    }
+    if (slot === 2) {
+      return { width: 220, height: 260 };
+    }
+    if (slot === 3) {
+      return { width: 220, height: 180 };
+    }
+    return { width: 340, height: 180 };
+  }
+
+  const size = getGallerySquareSize(cols);
+  return { width: size, height: size };
 }
 
 function buildPlaceholderSrc(label: string) {
@@ -131,6 +247,15 @@ const BlogImage = UpdatedImage.extend({
             return {};
           }
           return { "data-gallery-slot": String(attributes.gallerySlot) };
+        },
+      },
+      galleryLayout: {
+        default: "strip",
+        renderHTML: (attributes: { galleryLayout?: string | null }) => {
+          if (!attributes.galleryLayout) {
+            return {};
+          }
+          return { "data-gallery-layout": attributes.galleryLayout };
         },
       },
       isPlaceholder: {
@@ -373,10 +498,11 @@ export function NovelBlogEditor({
   htmlInputName = "contentHtml",
   controlsInPanel = false,
   onReady,
+  onHtmlChange,
 }: NovelBlogEditorProps) {
   const [jsonValue, setJsonValue] = useState<string>(JSON.stringify(DEFAULT_CONTENT));
   const [htmlValue, setHtmlValue] = useState<string>(
-    "<p>Escribe tu historia... usa / para insertar bloques</p>",
+    "<h1>Titulo del post</h1><h2>Subtitulo del post</h2><p>Empieza a escribir el contenido del post...</p>",
   );
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadNotice, setUploadNotice] = useState<string>("");
@@ -384,6 +510,12 @@ export function NovelBlogEditor({
   const [pendingPlaceholderNode, setPendingPlaceholderNode] = useState<{
     nodePos: number;
     cols: number;
+    width?: number;
+    height?: number;
+  } | null>(null);
+  const [pendingMasonrySlot, setPendingMasonrySlot] = useState<{
+    nodePos: number;
+    slot: number;
   } | null>(null);
 
   const editorRef = useRef<EditorInstance | null>(null);
@@ -417,37 +549,49 @@ export function NovelBlogEditor({
     return data.url;
   }
 
-  function insertGalleryPlaceholders(editor: EditorInstance, cols: 2 | 3 | 4) {
+  function insertGalleryPlaceholders(
+    editor: EditorInstance,
+    cols: 2 | 3 | 4,
+    layout: GalleryLayout = "strip",
+  ) {
     const galleryId = createGalleryId();
-    const size = getGallerySquareSize(cols);
 
-    const nodes = Array.from({ length: cols }).map((_, index) => ({
-      type: "image",
-      attrs: {
-        src: buildPlaceholderSrc(`Imagen ${index + 1}`),
-        galleryId,
-        galleryCols: cols,
-        gallerySlot: index + 1,
-        isPlaceholder: true,
-        width: size,
-        height: size,
-        imgAlign: "center",
-      },
-    }));
+    const nodes = Array.from({ length: cols }).map((_, index) => {
+      const slot = index + 1;
+      const { width, height } = getGalleryLayoutSlotSize(layout, cols, slot);
+
+      return {
+        type: "image",
+        attrs: {
+          src: buildPlaceholderSrc(`Imagen ${slot}`),
+          galleryId,
+          galleryCols: cols,
+          gallerySlot: slot,
+          galleryLayout: layout,
+          isPlaceholder: true,
+          width,
+          height,
+          imgAlign: "center",
+        },
+      };
+    });
 
     const chain = editor.chain().focus();
     nodes.forEach((node) => chain.insertContent(node));
     chain.insertContent({ type: "paragraph" }).run();
   }
 
-  const handleInsertGalleryStrip = useCallback((cols: 2 | 3 | 4) => {
+  const handleInsertGalleryStrip = useCallback((
+    cols: 2 | 3 | 4,
+    layout: GalleryLayout = "strip",
+  ) => {
     if (!editorRef.current) {
       setUploadNotice("Haz click dentro del editor antes de insertar la tira.");
       return;
     }
 
     setUploadNotice("");
-    insertGalleryPlaceholders(editorRef.current, cols);
+    insertGalleryPlaceholders(editorRef.current, cols, layout);
   }, []);
 
   const handleInsertSingleImage = useCallback((mode: ImageInsertMode) => {
@@ -458,8 +602,46 @@ export function NovelBlogEditor({
 
     setUploadNotice("");
     setPendingPlaceholderNode(null);
+    setPendingMasonrySlot(null);
     setSingleImageMode(mode);
     imageFileInputRef.current?.click();
+  }, []);
+
+  const handleInsertMasonryLayout = useCallback((layout: MasonryLayout) => {
+    if (!editorRef.current) {
+      setUploadNotice("Haz click dentro del editor antes de insertar el mosaico.");
+      return false;
+    }
+
+    const total = layout === "masonry-3" ? 3 : 4;
+    const items: MasonryItem[] = Array.from({ length: total }).map((_, index) => ({
+      slot: index + 1,
+      src: `${MASONRY_PLACEHOLDER}?slot=${index + 1}`,
+      alt: `Imagen ${index + 1}`,
+    }));
+
+    setUploadNotice("");
+    const editor = editorRef.current;
+    const endPos = editor.state.doc.content.size;
+    const inserted = editor.commands.insertContentAt(endPos, {
+      type: "masonryGallery",
+      attrs: {
+        layout,
+        items,
+      },
+    });
+
+    if (!inserted) {
+      setUploadNotice("No pudimos insertar el bloque masonry en esa posicion.");
+      return false;
+    }
+
+    editor.commands.insertContentAt(editor.state.doc.content.size, {
+      type: "paragraph",
+    });
+
+    editor.chain().focus("end").run();
+    return true;
   }, []);
 
   function runEditorCommand(command: (editor: EditorInstance) => void) {
@@ -569,8 +751,10 @@ export function NovelBlogEditor({
       insertGallery2: () => handleInsertGalleryStrip(2),
       insertGallery3: () => handleInsertGalleryStrip(3),
       insertGallery4: () => handleInsertGalleryStrip(4),
+      insertMosaic3: () => handleInsertMasonryLayout("masonry-3"),
+      insertMosaic4: () => handleInsertMasonryLayout("masonry-4"),
     }),
-    [handleInsertGalleryStrip, handleInsertSingleImage],
+    [handleInsertGalleryStrip, handleInsertMasonryLayout, handleInsertSingleImage],
   );
 
   useEffect(() => {
@@ -580,6 +764,10 @@ export function NovelBlogEditor({
       onReady?.(null);
     };
   }, [editorActions, onReady]);
+
+  useEffect(() => {
+    onHtmlChange?.(htmlValue);
+  }, [htmlValue, onHtmlChange]);
 
   function startEdgeResize(params: {
     nodePos: number;
@@ -706,6 +894,7 @@ export function NovelBlogEditor({
   const extensions = useMemo(
     () => [
       StarterKit,
+      MasonryGalleryNode,
       BlogImage.configure({
         inline: true,
       }),
@@ -758,6 +947,31 @@ export function NovelBlogEditor({
               return;
             }
 
+            if (pendingMasonrySlot) {
+              const currentNode = editorRef.current.state.doc.nodeAt(
+                pendingMasonrySlot.nodePos,
+              );
+              if (currentNode?.type.name === "masonryGallery") {
+                const currentItems = Array.isArray(currentNode.attrs.items)
+                  ? (currentNode.attrs.items as MasonryItem[])
+                  : [];
+                const nextItems = currentItems.map((item) =>
+                  item.slot === pendingMasonrySlot.slot
+                    ? { ...item, src: url, alt: item.alt ?? `Imagen ${item.slot}` }
+                    : item,
+                );
+
+                editorRef.current
+                  .chain()
+                  .focus()
+                  .setNodeSelection(pendingMasonrySlot.nodePos)
+                  .updateAttributes("masonryGallery", { items: nextItems })
+                  .run();
+              }
+              setPendingMasonrySlot(null);
+              return;
+            }
+
             if (pendingPlaceholderNode) {
               const size = getGallerySquareSize(pendingPlaceholderNode.cols);
 
@@ -768,8 +982,8 @@ export function NovelBlogEditor({
                 .updateAttributes("image", {
                   src: url,
                   isPlaceholder: false,
-                  width: size,
-                  height: size,
+                  width: pendingPlaceholderNode.width ?? size,
+                  height: pendingPlaceholderNode.height ?? size,
                   imgAlign: "center",
                 })
                 .run();
@@ -866,12 +1080,44 @@ export function NovelBlogEditor({
               setPendingPlaceholderNode({
                 nodePos,
                 cols: Number.isFinite(cols) ? cols : 2,
+                width:
+                  typeof attrs.width === "number"
+                    ? attrs.width
+                    : Number.parseInt(String(attrs.width ?? ""), 10) || undefined,
+                height:
+                  typeof attrs.height === "number"
+                    ? attrs.height
+                    : Number.parseInt(String(attrs.height ?? ""), 10) || undefined,
               });
               imageFileInputRef.current?.click();
               return true;
             },
             handleClick: (view, _pos, event) => {
               const target = event.target as HTMLElement | null;
+              const masonryImage = target?.closest(
+                '[data-type="masonry-gallery"] img[data-slot]',
+              ) as HTMLImageElement | null;
+              if (masonryImage) {
+                const slotRaw = masonryImage.getAttribute("data-slot") ?? "1";
+                const slot = Number.parseInt(slotRaw, 10);
+                const container = masonryImage.closest(
+                  '[data-type="masonry-gallery"]',
+                ) as HTMLElement | null;
+
+                if (!container) {
+                  return false;
+                }
+
+                const nodePos = view.posAtDOM(container, 0);
+                setPendingPlaceholderNode(null);
+                setPendingMasonrySlot({
+                  nodePos,
+                  slot: Number.isFinite(slot) ? slot : 1,
+                });
+                imageFileInputRef.current?.click();
+                return true;
+              }
+
               const image = target?.closest("img[data-placeholder='true']");
               if (!image) {
                 return false;
@@ -884,6 +1130,8 @@ export function NovelBlogEditor({
               setPendingPlaceholderNode({
                 nodePos,
                 cols: Number.isFinite(cols) ? cols : 2,
+                width: Number.parseInt(image.getAttribute("width") ?? "", 10) || undefined,
+                height: Number.parseInt(image.getAttribute("height") ?? "", 10) || undefined,
               });
 
               imageFileInputRef.current?.click();
