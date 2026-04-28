@@ -25,7 +25,7 @@ export function LandingNav({
     { label: "Como acompanamos", href: "/como-acompanamos" },
     { label: "Comunidad", href: "/comunidad" },
     { label: "Blog", href: "/blog" },
-    { label: "Escuela para familias", href: "/escuela-para-familias" },
+    { label: "Escuela para familias", href: "/family-dashboard" },
     { label: "Admisiones", href: "/admisiones" },
     { label: "Log In", href: "/sign-in" },
   ],
