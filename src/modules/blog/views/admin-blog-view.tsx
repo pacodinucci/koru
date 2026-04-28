@@ -1,12 +1,9 @@
 import Link from "next/link";
 
 import { BlogPostStatus } from "@prisma/client";
-import { PenLineIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -15,8 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { NovelBlogEditor } from "@/modules/blog/components/novel-blog-editor";
-import { createBlogPostAction } from "@/modules/blog/server/blog.actions";
+import { DashboardBlogComposer } from "@/modules/blog/components/dashboard-blog-composer";
 import { getAdminPosts } from "@/modules/blog/server/blog.repository";
 
 type AdminBlogViewProps = {
@@ -41,46 +37,7 @@ export async function AdminBlogView({ ok, error }: AdminBlogViewProps) {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <PenLineIcon className="h-4 w-4" />
-            Nuevo post
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={createBlogPostAction} className="grid gap-3">
-            {ok ? (
-              <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                {ok}
-              </p>
-            ) : null}
-            {error ? (
-              <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                {error}
-              </p>
-            ) : null}
-
-            <Input name="title" placeholder="Titulo" required />
-            <Input name="slug" placeholder="Slug (opcional, se genera desde el titulo)" />
-            <NovelBlogEditor />
-
-            <div className="grid gap-2 sm:grid-cols-[200px_auto] sm:items-center">
-              <select
-                name="status"
-                defaultValue={BlogPostStatus.DRAFT}
-                className="h-10 rounded-md border bg-background px-3 text-sm"
-              >
-                <option value={BlogPostStatus.DRAFT}>Borrador</option>
-                <option value={BlogPostStatus.PUBLISHED}>Publicado</option>
-              </select>
-              <Button type="submit" className="sm:w-fit">
-                Guardar post
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <DashboardBlogComposer ok={ok} error={error} />
 
       <Card>
         <CardHeader>

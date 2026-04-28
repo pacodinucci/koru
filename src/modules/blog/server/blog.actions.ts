@@ -41,14 +41,22 @@ function slugify(value: string) {
     .replace(/^-|-$/g, "");
 }
 
-function buildAdminError(message: string) {
-  const params = new URLSearchParams({ error: message });
-  return `/admin/blog?${params.toString()}`;
+function resolveAdminPath(formData: FormData) {
+  const raw = String(formData.get("adminPath") ?? "").trim();
+  if (raw === "/dashboard/blog" || raw === "/admin/blog") {
+    return raw;
+  }
+  return "/admin/blog";
 }
 
-function buildAdminSuccess(message: string) {
+function buildAdminError(message: string, adminPath: string) {
+  const params = new URLSearchParams({ error: message });
+  return `${adminPath}?${params.toString()}`;
+}
+
+function buildAdminSuccess(message: string, adminPath: string) {
   const params = new URLSearchParams({ ok: message });
-  return `/admin/blog?${params.toString()}`;
+  return `${adminPath}?${params.toString()}`;
 }
 
 function buildCommentPath(slug: string, message?: string) {
@@ -71,6 +79,7 @@ function stripHtml(value: string) {
 }
 
 export async function createBlogPostAction(formData: FormData) {
+  const adminPath = resolveAdminPath(formData);
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session) {
@@ -90,7 +99,7 @@ export async function createBlogPostAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(buildAdminError("Revisa los datos del post."));
+    redirect(buildAdminError("Revisa los datos del post.", adminPath));
   }
 
   const exists = await prisma.blogPost.findUnique({
@@ -99,20 +108,21 @@ export async function createBlogPostAction(formData: FormData) {
   });
 
   if (exists) {
-    redirect(buildAdminError("El slug ya existe."));
+    redirect(buildAdminError("El slug ya existe.", adminPath));
   }
 
   let parsedContentJson: Prisma.InputJsonValue = {};
   try {
     parsedContentJson = JSON.parse(parsed.data.contentJson) as Prisma.InputJsonValue;
   } catch {
-    redirect(buildAdminError("El contenido del post es invalido."));
+    redirect(buildAdminError("El contenido del post es invalido.", adminPath));
   }
 
   if (parsed.data.contentHtml.includes('data-placeholder=\"true\"')) {
     redirect(
       buildAdminError(
         "Completa todas las imagenes pendientes de la galeria antes de guardar.",
+        adminPath,
       ),
     );
   }
@@ -124,6 +134,7 @@ export async function createBlogPostAction(formData: FormData) {
     redirect(
       buildAdminError(
         "El post necesita mas contenido de texto para publicarse.",
+        adminPath,
       ),
     );
   }
@@ -148,8 +159,9 @@ export async function createBlogPostAction(formData: FormData) {
     revalidatePath(`/blog/${parsed.data.slug}`);
   }
   revalidatePath("/admin/blog");
+  revalidatePath("/dashboard/blog");
 
-  redirect(buildAdminSuccess("Post creado correctamente."));
+  redirect(buildAdminSuccess("Post creado correctamente.", adminPath));
 }
 
 export async function createBlogCommentAction(formData: FormData) {

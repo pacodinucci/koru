@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import type { ReactNode } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -62,17 +63,25 @@ import type { LandingTextMap } from "@/modules/landing/types/landing-text";
 
 type DashboardShellProps = {
   userEmail: string;
-  initialTextMap: LandingTextMap;
+  initialTextMap?: LandingTextMap;
   editorMode?: "layout" | "page";
+  breadcrumbPage?: string;
+  children?: ReactNode;
+  showPanelToggle?: boolean;
+  panelDefaultOpen?: boolean;
 };
 
 export function DashboardShell({
   userEmail,
   initialTextMap,
   editorMode = "page",
+  breadcrumbPage = "CMS",
+  children,
+  showPanelToggle = false,
+  panelDefaultOpen = false,
 }: DashboardShellProps) {
   const pathname = usePathname();
-  const isBlogActive = pathname.startsWith("/admin/blog");
+  const isBlogActive = pathname.startsWith("/dashboard/blog");
   const isCmsActive = pathname.startsWith("/dashboard");
   const [cmsOpen, setCmsOpen] = useState(true);
   const isCmsOpen = cmsOpen || isCmsActive;
@@ -108,7 +117,7 @@ export function DashboardShell({
                   <SidebarMenuButton
                     isActive={isBlogActive}
                     className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
-                    render={<Link href="/admin/blog" />}
+                    render={<Link href="/dashboard/blog" />}
                   >
                     <NotebookPen />
                     <span>Blog</span>
@@ -230,9 +239,20 @@ export function DashboardShell({
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="h-svh overflow-hidden bg-slate-50">
-        <AdminEditorPanelProvider defaultOpen={editorMode === "layout"}>
-          <DashboardCanvas initialTextMap={initialTextMap} editorMode={editorMode} />
+      <SidebarInset className="h-svh bg-slate-50 md:h-[calc(100svh-1rem)]">
+        <AdminEditorPanelProvider
+          defaultOpen={
+            panelDefaultOpen || editorMode === "layout"
+          }
+        >
+          <DashboardCanvas
+            initialTextMap={initialTextMap}
+            editorMode={editorMode}
+            breadcrumbPage={breadcrumbPage}
+            showPanelToggle={showPanelToggle}
+          >
+            {children}
+          </DashboardCanvas>
         </AdminEditorPanelProvider>
       </SidebarInset>
     </SidebarProvider>
@@ -242,11 +262,19 @@ export function DashboardShell({
 function DashboardCanvas({
   initialTextMap,
   editorMode,
+  breadcrumbPage,
+  children,
+  showPanelToggle,
 }: {
-  initialTextMap: LandingTextMap;
+  initialTextMap?: LandingTextMap;
   editorMode: "layout" | "page";
+  breadcrumbPage: string;
+  children?: ReactNode;
+  showPanelToggle: boolean;
 }) {
   const { open, setOpen } = useAdminEditorPanel();
+  const isCmsEditor = !children;
+  const canUsePanel = isCmsEditor || showPanelToggle;
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
@@ -259,32 +287,46 @@ function DashboardCanvas({
             <BreadcrumbItem>Dashboard</BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>CMS</BreadcrumbPage>
+              <BreadcrumbPage>{breadcrumbPage}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
-        <Button
-          type="button"
-          variant={open ? "secondary" : "ghost"}
-          size="icon-sm"
-          className="ml-auto"
-          onClick={() => setOpen(!open)}
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          <span className="sr-only">Toggle right sidebar</span>
-        </Button>
+        {canUsePanel ? (
+          <Button
+            type="button"
+            variant={open ? "secondary" : "ghost"}
+            size="icon-sm"
+            className="ml-auto"
+            onClick={() => setOpen(!open)}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            <span className="sr-only">Toggle right sidebar</span>
+          </Button>
+        ) : null}
       </header>
 
-      <AdminEditorPanelLayout className="min-h-0 h-full flex-1" variant="flush">
-        <main className="min-h-0 min-w-0 flex-1 overflow-hidden p-0">
-          <CmsLandingEditor
-            initialTextMap={initialTextMap}
-            frameVariant="flush"
-            editorMode={editorMode}
-          />
+      {isCmsEditor ? (
+        <AdminEditorPanelLayout className="min-h-0 h-full flex-1" variant="flush">
+          <main className="h-full min-h-0 min-w-0 overflow-hidden p-0">
+            <CmsLandingEditor
+              initialTextMap={initialTextMap ?? {}}
+              frameVariant="flush"
+              editorMode={editorMode}
+            />
+          </main>
+        </AdminEditorPanelLayout>
+      ) : canUsePanel ? (
+        <AdminEditorPanelLayout className="min-h-0 h-full flex-1" variant="flush">
+          <main className="h-full min-h-0 min-w-0 overflow-y-auto p-2 md:p-3 lg:p-4">
+            {children}
+          </main>
+        </AdminEditorPanelLayout>
+      ) : (
+        <main className="h-full min-h-0 min-w-0 overflow-y-auto p-2 md:p-3 lg:p-4">
+          {children}
         </main>
-      </AdminEditorPanelLayout>
+      )}
     </div>
   );
 }
