@@ -35,10 +35,10 @@ export function AdminAppSidebar({
   currentPath,
 }: AdminAppSidebarProps) {
   const isBlogActive = currentPath.startsWith("/admin/blog");
-  const isCmsActive =
-    currentPath === "/admin" || currentPath.startsWith("/admin/pages");
+  const isLayoutActive = currentPath === "/admin";
+  const isPagesActive = currentPath.startsWith("/admin/pages");
+  const isCmsActive = isLayoutActive || isPagesActive;
   const [cmsOpen, setCmsOpen] = useState(isCmsActive);
-  const isCmsOpen = cmsOpen || isCmsActive;
   const cmsItems = useMemo(
     () => [
       { title: "Layout", href: "/admin", icon: LayoutDashboardIcon },
@@ -86,15 +86,19 @@ export function AdminAppSidebar({
                   <LayoutDashboardIcon />
                   <span>CMS</span>
                   <ChevronDownIcon
-                    className={`ml-auto transition-transform ${isCmsOpen ? "rotate-180" : ""}`}
+                    className={`ml-auto transition-transform ${cmsOpen ? "rotate-180" : ""}`}
                   />
                 </SidebarMenuButton>
-                {isCmsOpen ? (
+                {cmsOpen ? (
                   <SidebarMenuSub>
                     {cmsItems.map((item) => (
                       <SidebarMenuSubItem key={item.href}>
                         <SidebarMenuSubButton
-                          isActive={currentPath === item.href}
+                          isActive={
+                            item.href === "/admin"
+                              ? isLayoutActive
+                              : isPagesActive
+                          }
                           render={<Link href={item.href} />}
                         >
                           <item.icon />

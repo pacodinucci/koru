@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { getCmsDraftTextMap } from "@/modules/cms/server/cms-text.repository";
+import { discoverPagesGroupRoutes } from "@/modules/admin/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 
 export default async function DashboardLayoutPage() {
@@ -15,10 +16,14 @@ export default async function DashboardLayoutPage() {
   }
 
   const initialTextMap = await getCmsDraftTextMap();
+  const cmsPages = (await discoverPagesGroupRoutes()).filter(
+    (page) => !page.isDynamic,
+  );
 
   return (
     <DashboardShell
       userEmail={session.user.email}
+      cmsPages={cmsPages}
       initialTextMap={initialTextMap}
       editorMode="layout"
     />
