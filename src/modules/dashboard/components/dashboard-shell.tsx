@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import {
@@ -63,7 +63,13 @@ import type { LandingTextMap } from "@/modules/landing/types/landing-text";
 
 type DashboardShellProps = {
   userEmail: string;
+  cmsPages?: Array<{
+    slug: string;
+    isDynamic?: boolean;
+  }>;
   initialTextMap?: LandingTextMap;
+  cmsPageSlug?: string;
+  cmsPreviewUrl?: string;
   editorMode?: "layout" | "page";
   breadcrumbPage?: string;
   children?: ReactNode;
@@ -73,7 +79,10 @@ type DashboardShellProps = {
 
 export function DashboardShell({
   userEmail,
+  cmsPages = [],
   initialTextMap,
+  cmsPageSlug = "/",
+  cmsPreviewUrl,
   editorMode = "page",
   breadcrumbPage = "CMS",
   children,
@@ -81,14 +90,24 @@ export function DashboardShell({
   panelDefaultOpen = false,
 }: DashboardShellProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentEditorSlug = searchParams.get("slug") ?? "/";
   const isBlogActive = pathname.startsWith("/dashboard/blog");
-  const isCmsActive = pathname.startsWith("/dashboard");
-  const [cmsOpen, setCmsOpen] = useState(true);
-  const isCmsOpen = cmsOpen || isCmsActive;
-  const [pagesOpen, setPagesOpen] = useState(true);
   const isLayoutActive = pathname.startsWith("/dashboard/layout");
+  const isPageEditorActive =
+    pathname.startsWith("/dashboard/pages/edit") ||
+    /^\/dashboard\/pages\/[^/]+$/.test(pathname);
+  const pathnamePageSegment = pathname.startsWith("/dashboard/pages/")
+    ? pathname.replace("/dashboard/pages/", "")
+    : "";
+  const currentPathSlug =
+    pathnamePageSegment && pathnamePageSegment !== "landing"
+      ? `/${decodeURIComponent(pathnamePageSegment)}`
+      : null;
   const isLandingActive = pathname.startsWith("/dashboard/pages/landing");
-  const isPagesOpen = pagesOpen || isLandingActive;
+  const isCmsActive = isLayoutActive || isLandingActive || isPageEditorActive;
+  const [cmsOpen, setCmsOpen] = useState(isCmsActive);
+  const [pagesOpen, setPagesOpen] = useState(isLandingActive);
 
   return (
     <SidebarProvider>
@@ -133,11 +152,11 @@ export function DashboardShell({
                     <LayoutDashboard />
                     <span>CMS</span>
                     <ChevronDown
-                      className={`ml-auto transition-transform ${isCmsOpen ? "rotate-180" : ""}`}
+                      className={`ml-auto transition-transform ${cmsOpen ? "rotate-180" : ""}`}
                     />
                   </SidebarMenuButton>
 
-                  {isCmsOpen ? (
+                  {cmsOpen ? (
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
@@ -150,27 +169,40 @@ export function DashboardShell({
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
-                          isActive={isLandingActive || pathname.startsWith("/admin/pages")}
+                          isActive={isLandingActive || isPageEditorActive}
                           onClick={() => setPagesOpen((previous) => !previous)}
                         >
                           <FileText />
                           <span>Pages</span>
                           <ChevronDown
-                            className={`ml-auto transition-transform ${isPagesOpen ? "rotate-180" : ""}`}
+                            className={`ml-auto transition-transform ${pagesOpen ? "rotate-180" : ""}`}
                           />
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
-                      {isPagesOpen ? (
+                      {pagesOpen ? (
                         <SidebarMenuSub className="mx-6">
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              isActive={isLandingActive}
-                              render={<Link href="/dashboard/pages/landing" />}
-                            >
-                              <FileText />
-                              <span>Landing (/)</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
+                          {cmsPages.map((page) => {
+                            const href =
+                              page.slug === "/"
+                                ? "/dashboard/pages/landing"
+                                : `/dashboard/pages/${encodeURIComponent(page.slug.slice(1))}`;
+                            const isCurrent =
+                              (pathname === "/dashboard/pages/edit" &&
+                                decodeURIComponent(currentEditorSlug) === page.slug) ||
+                              currentPathSlug === page.slug;
+
+                            return (
+                              <SidebarMenuSubItem key={page.slug}>
+                                <SidebarMenuSubButton
+                                  isActive={isCurrent}
+                                  render={<Link href={href} />}
+                                >
+                                  <FileText />
+                                  <span>{page.slug === "/" ? "Landing" : page.slug}</span>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
                         </SidebarMenuSub>
                       ) : null}
                     </SidebarMenuSub>
@@ -247,6 +279,8 @@ export function DashboardShell({
         >
           <DashboardCanvas
             initialTextMap={initialTextMap}
+            cmsPageSlug={cmsPageSlug}
+            cmsPreviewUrl={cmsPreviewUrl}
             editorMode={editorMode}
             breadcrumbPage={breadcrumbPage}
             showPanelToggle={showPanelToggle}
@@ -261,12 +295,16 @@ export function DashboardShell({
 
 function DashboardCanvas({
   initialTextMap,
+  cmsPageSlug,
+  cmsPreviewUrl,
   editorMode,
   breadcrumbPage,
   children,
   showPanelToggle,
 }: {
   initialTextMap?: LandingTextMap;
+  cmsPageSlug: string;
+  cmsPreviewUrl?: string;
   editorMode: "layout" | "page";
   breadcrumbPage: string;
   children?: ReactNode;
@@ -311,6 +349,8 @@ function DashboardCanvas({
           <main className="h-full min-h-0 min-w-0 overflow-hidden p-0">
             <CmsLandingEditor
               initialTextMap={initialTextMap ?? {}}
+              pageSlug={cmsPageSlug}
+              previewUrl={cmsPreviewUrl}
               frameVariant="flush"
               editorMode={editorMode}
             />

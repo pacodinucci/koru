@@ -26,7 +26,10 @@ import type {
   LandingResponsiveMode,
   LandingTextMap,
 } from "@/modules/landing/types/landing-text";
-import { createResponsiveScopedTextMap } from "@/modules/landing/types/landing-text";
+import {
+  createResponsiveScopedTextMap,
+  getResponsiveModeFromWidth,
+} from "@/modules/landing/types/landing-text";
 
 type LandingPageLayoutProps = {
   textMap: LandingTextMap;
@@ -81,7 +84,9 @@ export function LandingPageLayout({
   const completeMap = ensureLandingDefaults(textMap);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [rootWidth, setRootWidth] = useState(0);
-  const effectiveResponsiveMode: LandingResponsiveMode = responsiveMode ?? "large";
+  const [measuredMode, setMeasuredMode] = useState<LandingResponsiveMode>("large");
+  const effectiveResponsiveMode: LandingResponsiveMode =
+    responsiveMode ?? measuredMode;
   const responsiveMap = createResponsiveScopedTextMap(
     completeMap,
     effectiveResponsiveMode,
@@ -112,7 +117,13 @@ export function LandingPageLayout({
     if (!root) {
       return;
     }
-    const update = () => setRootWidth(root.clientWidth);
+    const update = () => {
+      const nextWidth = root.clientWidth;
+      setRootWidth(nextWidth);
+      if (!responsiveMode && nextWidth > 0) {
+        setMeasuredMode(getResponsiveModeFromWidth(nextWidth));
+      }
+    };
     update();
     const observer = new ResizeObserver(update);
     observer.observe(root);
@@ -122,7 +133,7 @@ export function LandingPageLayout({
       observer.disconnect();
       window.removeEventListener("resize", update);
     };
-  }, []);
+  }, [responsiveMode]);
 
   const handlePaddingGuidePointerDown = (
     event: ReactPointerEvent<HTMLButtonElement>,

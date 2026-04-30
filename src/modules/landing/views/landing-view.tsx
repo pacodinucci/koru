@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useMemo } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { SporeShape } from "@/components/spore-shape";
 import {
   ensureLandingDefaults,
@@ -10,7 +10,11 @@ import {
   type LandingSectionInstance,
 } from "@/modules/landing/config/landing-sections";
 import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
-import { createResponsiveScopedTextMap } from "@/modules/landing/types/landing-text";
+import {
+  createResponsiveScopedTextMap,
+  getResponsiveModeFromWidth,
+  type LandingResponsiveMode,
+} from "@/modules/landing/types/landing-text";
 import { CardsSection } from "@/modules/landing/views/sections/cards-section";
 import { FooterSection } from "@/modules/landing/views/sections/footer-section";
 import { GallerySection } from "@/modules/landing/views/sections/gallery-section";
@@ -238,7 +242,38 @@ export function LandingView({
   onMoveSectionExtraPosition,
 }: LandingViewProps) {
   const completeMap = ensureLandingDefaults(textMap);
-  const effectiveResponsiveMode = responsiveMode ?? "large";
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [measuredMode, setMeasuredMode] = useState<LandingResponsiveMode>("large");
+
+  useEffect(() => {
+    if (responsiveMode) {
+      return;
+    }
+
+    const root = rootRef.current;
+    if (!root) {
+      return;
+    }
+
+    const updateMode = () => {
+      const nextWidth = root.clientWidth;
+      if (nextWidth > 0) {
+        setMeasuredMode(getResponsiveModeFromWidth(nextWidth));
+      }
+    };
+
+    updateMode();
+    const observer = new ResizeObserver(updateMode);
+    observer.observe(root);
+    window.addEventListener("resize", updateMode);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateMode);
+    };
+  }, [responsiveMode]);
+
+  const effectiveResponsiveMode = responsiveMode ?? measuredMode;
   const responsiveMap = createResponsiveScopedTextMap(
     completeMap,
     effectiveResponsiveMode,
@@ -258,7 +293,7 @@ export function LandingView({
   );
 
   return (
-    <>
+    <div ref={rootRef}>
       {groupedSections.map((group, groupIndex) => {
         const scope =
           scopeMap.get(group.scopeId) ??
@@ -290,7 +325,6 @@ export function LandingView({
           </ScopeBackground>
         );
       })}
-    </>
+    </div>
   );
 }
-

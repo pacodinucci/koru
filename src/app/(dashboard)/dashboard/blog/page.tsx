@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { AdminBlogView } from "@/modules/blog/views/admin-blog-view";
+import { discoverPagesGroupRoutes } from "@/modules/admin/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 
 type DashboardBlogPageProps = {
@@ -24,10 +25,14 @@ export default async function DashboardBlogPage({
   }
 
   const { ok, error } = await searchParams;
+  const cmsPages = (await discoverPagesGroupRoutes()).filter(
+    (page) => !page.isDynamic,
+  );
 
   return (
     <DashboardShell
       userEmail={session.user.email}
+      cmsPages={cmsPages}
       breadcrumbPage="Blog"
       showPanelToggle
       panelDefaultOpen

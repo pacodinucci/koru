@@ -106,8 +106,10 @@ export function isResponsiveScopedFieldId(fieldId: string) {
 export function getResponsiveModeFromWidth(
   width: number,
 ): LandingResponsiveMode {
-  // Keep "large" only for truly wide desktop viewports.
-  if (width >= 1920) {
+  // Align with common CSS breakpoints used by the app:
+  // mobile < 768, tablet >= 768, medium >= 1024, large >= 2560.
+  // Product rule: notebook-class screens, including 1920px wide, map to "medium".
+  if (width >= 2560) {
     return "large";
   }
   if (width >= 1024) {
