@@ -1,9 +1,9 @@
-import { headers } from "next/headers";
+﻿import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { AdminBlogView } from "@/modules/blog/views/admin-blog-view";
-import { discoverPagesGroupRoutes } from "@/modules/admin/server/cms-pages.repository";
+import { DashboardBlogView } from "@/modules/blog/views/dashboard-blog-view";
+import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 
 type DashboardBlogPageProps = {
@@ -37,7 +37,8 @@ export default async function DashboardBlogPage({
       showPanelToggle
       panelDefaultOpen
     >
-      <AdminBlogView ok={ok} error={error} />
+      <DashboardBlogView ok={ok} error={error} />
     </DashboardShell>
   );
 }
+

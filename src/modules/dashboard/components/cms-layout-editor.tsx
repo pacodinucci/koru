@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useAdminEditorPanel } from "@/modules/admin/components/admin-editor-panel";
+import { useDashboardEditorPanel } from "@/modules/dashboard/components/dashboard-editor-panel";
 import { publishCmsAction } from "@/modules/cms/server/cms-text.actions";
 import {
   ensureLandingDefaults,
@@ -46,7 +46,7 @@ export function CmsLayoutEditor({ initialTextMap }: CmsLayoutEditorProps) {
   );
   const [statusMessage, setStatusMessage] = useState("");
   const [isPublishing, startPublishing] = useTransition();
-  const { setOpen: setPanelOpen, portalTarget } = useAdminEditorPanel();
+  const { setOpen: setPanelOpen, portalTarget } = useDashboardEditorPanel();
 
   const paddingX = parseNumber(textMap[LANDING_LAYOUT_PADDING_X_KEY], 24, 0, 160);
   const navHeight = parseNumber(textMap[LANDING_LAYOUT_NAV_HEIGHT_KEY], 96, 64, 180);
@@ -207,3 +207,4 @@ export function CmsLayoutEditor({ initialTextMap }: CmsLayoutEditorProps) {
     </Card>
   );
 }
+

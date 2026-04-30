@@ -39,7 +39,7 @@ import { Input } from "@/components/ui/input";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { useAdminEditorPanel } from "@/modules/admin/components/admin-editor-panel";
+import { useDashboardEditorPanel } from "@/modules/dashboard/components/dashboard-editor-panel";
 import { CmsPreviewFrame } from "@/modules/dashboard/components/cms-preview-frame";
 import {
   LANDING_BACKGROUND_SCOPES_KEY,
@@ -808,7 +808,7 @@ export function CmsLandingEditor({
     open: panelOpen,
     setOpen: setPanelOpen,
     portalTarget,
-  } = useAdminEditorPanel();
+  } = useDashboardEditorPanel();
   const compactPreviewSpacing = sidebarOpen && panelOpen;
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const panelRootRef = useRef<HTMLDivElement | null>(null);
@@ -5477,3 +5477,4 @@ export function CmsLandingEditor({
     </CmsPreviewFrame>
   );
 }
+

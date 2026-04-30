@@ -1,4 +1,4 @@
-import {
+﻿import {
   BlocksIcon,
   LayoutDashboardIcon,
   NotebookPenIcon,
@@ -8,28 +8,28 @@ import {
 } from "lucide-react";
 
 import type {
-  AdminNavItem,
-  AdminRecentPage,
-  AdminStat,
-} from "@/modules/admin/types/dashboard";
+  DashboardNavItem,
+  DashboardRecentPage,
+  DashboardStat,
+} from "@/modules/dashboard/types/dashboard";
 
-export const adminNavItems: AdminNavItem[] = [
-  { title: "CMS", href: "/admin", icon: LayoutDashboardIcon },
-  { title: "Blog", href: "/admin/blog", icon: NotebookPenIcon },
+export const DashboardNavItems: DashboardNavItem[] = [
+  { title: "CMS", href: "/dashboard", icon: LayoutDashboardIcon },
+  { title: "Blog", href: "/dashboard/blog", icon: NotebookPenIcon },
   { title: "Pages", href: "#", icon: BlocksIcon, badge: "12" },
   { title: "Donaciones", href: "#", icon: WalletIcon, badge: "4" },
   { title: "Seguridad", href: "#", icon: ShieldCheckIcon },
-  { title: "Configuración", href: "#", icon: Settings2Icon },
+  { title: "ConfiguraciÃ³n", href: "#", icon: Settings2Icon },
 ];
 
-export const adminStats: AdminStat[] = [
+export const DashboardStats: DashboardStat[] = [
   { label: "Published pages", value: "08", hint: "+2 this month" },
   { label: "Draft pages", value: "04", hint: "In editorial flow" },
   { label: "New donations", value: "16", hint: "Last 30 days" },
-  { label: "Active sessions", value: "03", hint: "Admin area" },
+  { label: "Active sessions", value: "03", hint: "Dashboard area" },
 ];
 
-export const adminRecentPages: AdminRecentPage[] = [
+export const DashboardRecentPages: DashboardRecentPage[] = [
   {
     title: "Home - Koru OSA",
     slug: "/",
@@ -55,3 +55,4 @@ export const adminRecentPages: AdminRecentPage[] = [
     updatedAt: "Mar 19, 09:02",
   },
 ];
+

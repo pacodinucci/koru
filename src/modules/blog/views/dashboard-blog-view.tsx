@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 
 import { BlogPostStatus } from "@prisma/client";
 
@@ -13,9 +13,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DashboardBlogComposer } from "@/modules/blog/components/dashboard-blog-composer";
-import { getAdminPosts } from "@/modules/blog/server/blog.repository";
+import { getDashboardPosts } from "@/modules/blog/server/blog.repository";
 
-type AdminBlogViewProps = {
+type DashboardBlogViewProps = {
   ok?: string;
   error?: string;
 };
@@ -32,8 +32,8 @@ function formatDate(date: Date | null) {
   });
 }
 
-export async function AdminBlogView({ ok, error }: AdminBlogViewProps) {
-  const posts = await getAdminPosts();
+export async function DashboardBlogView({ ok, error }: DashboardBlogViewProps) {
+  const posts = await getDashboardPosts();
 
   return (
     <div className="space-y-4">
@@ -91,3 +91,4 @@ export async function AdminBlogView({ ok, error }: AdminBlogViewProps) {
     </div>
   );
 }
+

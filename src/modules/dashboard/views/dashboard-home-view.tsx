@@ -1,13 +1,13 @@
-import { headers } from "next/headers";
+﻿import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { CmsLandingEditor } from "@/modules/admin/components/cms-landing-editor";
-import { AdminDashboardShell } from "@/modules/admin/components/admin-dashboard-shell";
+import { CmsLandingEditor } from "@/modules/dashboard/components/cms-landing-editor";
+import { DashboardShellLegacy } from "@/modules/dashboard/components/dashboard-shell-legacy";
 import { signOutAction } from "@/modules/auth/server/auth-actions";
 import { getCmsDraftTextMap } from "@/modules/cms/server/cms-text.repository";
 
-export async function AdminHomeView() {
+export async function DashboardHomeView() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -19,14 +19,16 @@ export async function AdminHomeView() {
   const initialTextMap = await getCmsDraftTextMap();
 
   return (
-    <AdminDashboardShell
+    <DashboardShellLegacy
       userEmail={session.user.email}
-      currentPath="/admin"
+      currentPath="/dashboard"
       breadcrumbPage="CMS"
       showEditingModeButton
       onSignOut={signOutAction}
     >
       <CmsLandingEditor initialTextMap={initialTextMap} />
-    </AdminDashboardShell>
+    </DashboardShellLegacy>
   );
 }
+
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -25,24 +25,24 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
-type AdminAppSidebarProps = {
+type DashboardAppSidebarProps = {
   userEmail: string;
   currentPath: string;
 };
 
-export function AdminAppSidebar({
+export function DashboardAppSidebar({
   userEmail,
   currentPath,
-}: AdminAppSidebarProps) {
-  const isBlogActive = currentPath.startsWith("/admin/blog");
-  const isLayoutActive = currentPath === "/admin";
-  const isPagesActive = currentPath.startsWith("/admin/pages");
+}: DashboardAppSidebarProps) {
+  const isBlogActive = currentPath.startsWith("/dashboard/blog");
+  const isLayoutActive = currentPath === "/dashboard";
+  const isPagesActive = currentPath.startsWith("/dashboard/pages");
   const isCmsActive = isLayoutActive || isPagesActive;
   const [cmsOpen, setCmsOpen] = useState(isCmsActive);
   const cmsItems = useMemo(
     () => [
-      { title: "Layout", href: "/admin", icon: LayoutDashboardIcon },
-      { title: "Pages", href: "/admin/pages", icon: PanelsTopLeftIcon },
+      { title: "Layout", href: "/dashboard", icon: LayoutDashboardIcon },
+      { title: "Pages", href: "/dashboard/pages", icon: PanelsTopLeftIcon },
     ],
     [],
   );
@@ -71,7 +71,7 @@ export function AdminAppSidebar({
                 <SidebarMenuButton
                   isActive={isBlogActive}
                   className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900 data-active:shadow-[inset_0_0_0_1px_rgba(148,163,184,0.35)]"
-                  render={<Link href="/admin/blog" />}
+                  render={<Link href="/dashboard/blog" />}
                 >
                   <NotebookPenIcon />
                   <span>Blog</span>
@@ -95,7 +95,7 @@ export function AdminAppSidebar({
                       <SidebarMenuSubItem key={item.href}>
                         <SidebarMenuSubButton
                           isActive={
-                            item.href === "/admin"
+                            item.href === "/dashboard"
                               ? isLayoutActive
                               : isPagesActive
                           }
@@ -125,3 +125,4 @@ export function AdminAppSidebar({
     </Sidebar>
   );
 }
+

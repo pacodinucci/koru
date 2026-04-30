@@ -1,19 +1,19 @@
-import type { LucideIcon } from "lucide-react";
+﻿import type { LucideIcon } from "lucide-react";
 
-export type AdminNavItem = {
+export type DashboardNavItem = {
   title: string;
   href: string;
   icon: LucideIcon;
   badge?: string;
 };
 
-export type AdminStat = {
+export type DashboardStat = {
   label: string;
   value: string;
   hint: string;
 };
 
-export type AdminRecentPage = {
+export type DashboardRecentPage = {
   title: string;
   slug: string;
   status: "Draft" | "Published" | "Archived";
@@ -34,3 +34,4 @@ export type CmsSection = {
   note: string;
   fields: CmsTextField[];
 };
+

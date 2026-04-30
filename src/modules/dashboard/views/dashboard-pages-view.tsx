@@ -1,13 +1,13 @@
-import { headers } from "next/headers";
+﻿import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { auth } from "@/lib/auth";
-import { AdminDashboardShell } from "@/modules/admin/components/admin-dashboard-shell";
-import { discoverPagesGroupRoutes } from "@/modules/admin/server/cms-pages.repository";
+import { DashboardShellLegacy } from "@/modules/dashboard/components/dashboard-shell-legacy";
+import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { signOutAction } from "@/modules/auth/server/auth-actions";
 
-export async function AdminPagesView() {
+export async function DashboardPagesView() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -19,9 +19,9 @@ export async function AdminPagesView() {
   const pages = await discoverPagesGroupRoutes();
 
   return (
-    <AdminDashboardShell
+    <DashboardShellLegacy
       userEmail={session.user.email}
-      currentPath="/admin/pages"
+      currentPath="/dashboard/pages"
       breadcrumbPage="CMS / Pages"
       onSignOut={signOutAction}
     >
@@ -47,7 +47,7 @@ export async function AdminPagesView() {
                 </span>
               ) : null}
               <Link
-                href={`/admin/pages/edit?slug=${encodeURIComponent(page.slug)}`}
+                href={`/dashboard/pages/edit?slug=${encodeURIComponent(page.slug)}`}
                 className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
               >
                 Editar
@@ -56,6 +56,8 @@ export async function AdminPagesView() {
           ))}
         </div>
       </div>
-    </AdminDashboardShell>
+    </DashboardShellLegacy>
   );
 }
+
+

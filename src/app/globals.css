@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -388,7 +388,7 @@
   min-height: 145px;
 }
 
-.admin-font-fira {
+.dashboard-font-fira {
   font-family: "Fira Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -582,3 +582,4 @@
   padding-top: 0.1rem;
   padding-bottom: 0.55rem;
 }
+

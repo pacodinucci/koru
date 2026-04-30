@@ -1,9 +1,9 @@
-"use server";
+﻿"use server";
 
 import { redirect } from "next/navigation";
 import { PageStatus } from "@prisma/client";
 
-import { saveEditableCmsPage } from "@/modules/admin/server/cms-pages.repository";
+import { saveEditableCmsPage } from "@/modules/dashboard/server/cms-pages.repository";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -19,7 +19,7 @@ export async function saveCmsPageAction(formData: FormData) {
   const content = getString(formData, "content").trim();
 
   if (!slug) {
-    redirect("/admin/pages?error=missing_slug");
+    redirect("/dashboard/pages?error=missing_slug");
   }
 
   const status =
@@ -36,5 +36,6 @@ export async function saveCmsPageAction(formData: FormData) {
     content,
   });
 
-  redirect(`/admin/pages/edit?slug=${encodeURIComponent(slug)}&saved=1`);
+  redirect(`/dashboard/pages/edit?slug=${encodeURIComponent(slug)}&saved=1`);
 }
+

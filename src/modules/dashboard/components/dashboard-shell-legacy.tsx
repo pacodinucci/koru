@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ChevronDownIcon,
@@ -32,14 +32,14 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  AdminEditorPanelLayout,
-  AdminEditorPanelProvider,
-  AdminEditorPanelToggleButton,
-  useAdminEditorPanel,
-} from "@/modules/admin/components/admin-editor-panel";
-import { AdminAppSidebar } from "@/modules/admin/components/admin-app-sidebar";
+  DashboardEditorPanelLayout,
+  DashboardEditorPanelProvider,
+  DashboardEditorPanelToggleButton,
+  useDashboardEditorPanel,
+} from "@/modules/dashboard/components/dashboard-editor-panel";
+import { DashboardAppSidebar } from "@/modules/dashboard/components/dashboard-app-sidebar";
 
-type AdminDashboardShellProps = {
+type DashboardShellLegacyProps = {
   userEmail: string;
   currentPath: string;
   breadcrumbPage: string;
@@ -48,59 +48,59 @@ type AdminDashboardShellProps = {
   onSignOut: (formData: FormData) => void;
 };
 
-export function AdminDashboardShell({
+export function DashboardShellLegacy({
   userEmail,
   currentPath,
   breadcrumbPage,
   children,
   showEditingModeButton = false,
   onSignOut,
-}: AdminDashboardShellProps) {
+}: DashboardShellLegacyProps) {
   return (
     <SidebarProvider>
-      <AdminAppSidebar userEmail={userEmail} currentPath={currentPath} />
+      <DashboardAppSidebar userEmail={userEmail} currentPath={currentPath} />
       <SidebarInset className="bg-slate-50">
-        <AdminEditorPanelProvider>
-          <AdminDashboardMain
+        <DashboardEditorPanelProvider>
+          <DashboardMain
             userEmail={userEmail}
             breadcrumbPage={breadcrumbPage}
             showEditingModeButton={showEditingModeButton}
             onSignOut={onSignOut}
           >
             {children}
-          </AdminDashboardMain>
-        </AdminEditorPanelProvider>
+          </DashboardMain>
+        </DashboardEditorPanelProvider>
       </SidebarInset>
     </SidebarProvider>
   );
 }
 
-type AdminDashboardMainProps = Pick<
-  AdminDashboardShellProps,
+type DashboardMainProps = Pick<
+  DashboardShellLegacyProps,
   "userEmail" | "breadcrumbPage" | "showEditingModeButton" | "onSignOut" | "children"
 >;
 
-function AdminDashboardMain({
+function DashboardMain({
   userEmail,
   breadcrumbPage,
   children,
   showEditingModeButton = false,
   onSignOut,
-}: AdminDashboardMainProps) {
+}: DashboardMainProps) {
   const signOutFormRef = useRef<HTMLFormElement | null>(null);
   const { open: sidebarOpen } = useSidebar();
-  const { open: panelOpen } = useAdminEditorPanel();
+  const { open: panelOpen } = useDashboardEditorPanel();
   const compactMainPadding = sidebarOpen && panelOpen;
 
   return (
-    <AdminEditorPanelLayout className="min-h-svh">
+    <DashboardEditorPanelLayout className="min-h-svh">
       <div className="relative min-h-svh w-full max-w-full overflow-x-hidden">
         <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur-md">
           <SidebarTrigger />
           <SidebarSeparator orientation="vertical" className="h-5" />
           <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem>Admin</BreadcrumbItem>
+              <BreadcrumbItem>Dashboard</BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbPage>{breadcrumbPage}</BreadcrumbPage>
@@ -108,7 +108,7 @@ function AdminDashboardMain({
             </BreadcrumbList>
           </Breadcrumb>
           <div className="ml-auto flex items-center gap-2">
-            {showEditingModeButton ? <AdminEditorPanelToggleButton /> : null}
+            {showEditingModeButton ? <DashboardEditorPanelToggleButton /> : null}
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
@@ -154,6 +154,8 @@ function AdminDashboardMain({
           </section>
         </div>
       </div>
-    </AdminEditorPanelLayout>
+    </DashboardEditorPanelLayout>
   );
 }
+
+

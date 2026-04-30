@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { createPortal } from "react-dom";
 import { useEffect, useId, useState } from "react";
@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useAdminEditorPanel } from "@/modules/admin/components/admin-editor-panel";
+import { useDashboardEditorPanel } from "@/modules/dashboard/components/dashboard-editor-panel";
 import {
   NovelBlogEditor,
   type NovelBlogEditorActions,
@@ -35,7 +35,7 @@ type DashboardBlogComposerProps = {
 
 export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps) {
   const formId = useId();
-  const { portalTarget, setOpen } = useAdminEditorPanel();
+  const { portalTarget, setOpen } = useDashboardEditorPanel();
   const [editorActions, setEditorActions] = useState<NovelBlogEditorActions | null>(null);
 
   useEffect(() => {
@@ -205,7 +205,7 @@ export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps)
   return (
     <>
       <form id={formId} action={createBlogPostAction} className="space-y-3">
-        <input type="hidden" name="adminPath" value="/dashboard/blog" />
+        <input type="hidden" name="dashboardPath" value="/dashboard/blog" />
         <input type="hidden" name="title" value="Titulo del post" />
         <section className="rounded-xl border border-slate-200 bg-white">
           <header className="flex items-center gap-2 border-b border-slate-200 px-4 py-3">
@@ -221,3 +221,4 @@ export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps)
     </>
   );
 }
+
