@@ -34,6 +34,27 @@ export type LandingLayoutNavLink = {
   href: string;
 };
 
+export type LayoutContainerMode = "fixed" | "free";
+
+export type LandingLayoutContainerRules = {
+  mode: LayoutContainerMode;
+  allowCreate: boolean;
+  allowMove: boolean;
+};
+
+export const landingLayoutContainerRules = {
+  navbar: {
+    mode: "fixed",
+    allowCreate: false,
+    allowMove: false,
+  } satisfies LandingLayoutContainerRules,
+  footer: {
+    mode: "free",
+    allowCreate: true,
+    allowMove: true,
+  } satisfies LandingLayoutContainerRules,
+} as const;
+
 function getDefaultLayoutNavLinks(): LandingLayoutNavLink[] {
   return [
     { id: "nav-1", label: "Quienes somos", href: "/quienes-somos" },

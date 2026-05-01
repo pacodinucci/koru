@@ -69,6 +69,114 @@ function getLayoutFooterHeight(raw: string | undefined) {
   return clamp(parsed, 120, 600);
 }
 
+function getLayoutContainerWidthKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_width`;
+}
+
+function getLayoutContainerHeightKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_height`;
+}
+
+function getLayoutContainerMarginXKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_margin_x`;
+}
+
+function getLayoutContainerMarginYKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_margin_y`;
+}
+
+function getLayoutContainerPaddingXKey(containerId: string) {
+  return `__landing_layout_nav_container_${containerId}_padding_x`;
+}
+
+function getLayoutContainerPaddingYKey(containerId: string) {
+  return `__landing_layout_nav_container_${containerId}_padding_y`;
+}
+
+function getNumeric(raw: string | undefined, fallback = 0, max = 2000) {
+  const parsed = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return clamp(parsed, 0, max);
+}
+
+type FooterContainerElementType =
+  | "text"
+  | "image"
+  | "video"
+  | "line-horizontal"
+  | "line-vertical";
+
+type FooterContainer = {
+  id: string;
+  name: string;
+};
+
+type FooterContainerElement = {
+  id: string;
+  type: FooterContainerElementType;
+  label: string;
+};
+
+const LANDING_LAYOUT_FOOTER_CONTAINERS_KEY = "__landing_layout_footer_containers";
+const LANDING_LAYOUT_FOOTER_ELEMENTS_KEY = "__landing_layout_footer_elements";
+
+function getFooterContainerElementsKey(containerId: string) {
+  return `${LANDING_LAYOUT_FOOTER_ELEMENTS_KEY}_${containerId}`;
+}
+
+function getFooterElementValueKey(elementId: string) {
+  return `__landing_layout_footer_element_${elementId}_value`;
+}
+
+function parseFooterContainers(textMap: LandingTextMap): FooterContainer[] {
+  const raw = textMap[LANDING_LAYOUT_FOOTER_CONTAINERS_KEY];
+  if (!raw) {
+    return [{ id: "footer-text", name: "Texto footer" }];
+  }
+  try {
+    const parsed = JSON.parse(raw) as FooterContainer[];
+    const valid = parsed.filter(
+      (item) =>
+        item &&
+        typeof item.id === "string" &&
+        item.id.trim() !== "" &&
+        typeof item.name === "string",
+    );
+    return valid.length > 0 ? valid : [{ id: "footer-text", name: "Texto footer" }];
+  } catch {
+    return [{ id: "footer-text", name: "Texto footer" }];
+  }
+}
+
+function parseFooterContainerElements(
+  textMap: LandingTextMap,
+  containerId: string,
+): FooterContainerElement[] {
+  const raw = textMap[getFooterContainerElementsKey(containerId)];
+  if (!raw) {
+    return containerId === "footer-text"
+      ? [{ id: "footer-text-default", type: "text", label: "Texto" }]
+      : [];
+  }
+  try {
+    const parsed = JSON.parse(raw) as FooterContainerElement[];
+    const valid = parsed.filter(
+      (item) =>
+        item &&
+        typeof item.id === "string" &&
+        typeof item.label === "string" &&
+        (item.type === "text" ||
+          item.type === "image" ||
+          item.type === "video" ||
+          item.type === "line-horizontal" ||
+          item.type === "line-vertical"),
+    );
+    return valid;
+  } catch {
+    return [];
+  }
+}
+
 export function LandingPageLayout({
   textMap,
   previewViewportHeight,
@@ -105,12 +213,39 @@ export function LandingPageLayout({
     label: item.label,
     href: item.href,
   }));
+  const containerStyles = {
+    "navbar-logo": {
+      width: getNumeric(completeMap[getLayoutContainerWidthKey("navbar-logo")], 0, 1200),
+      height: getNumeric(completeMap[getLayoutContainerHeightKey("navbar-logo")], 0, 600),
+      paddingX: getNumeric(completeMap[getLayoutContainerPaddingXKey("navbar-logo")], 0, 300),
+      paddingY: getNumeric(completeMap[getLayoutContainerPaddingYKey("navbar-logo")], 0, 300),
+      marginX: getNumeric(completeMap[getLayoutContainerMarginXKey("navbar-logo")], 0, 300),
+      marginY: getNumeric(completeMap[getLayoutContainerMarginYKey("navbar-logo")], 0, 300),
+    },
+    "navbar-nav-options": {
+      width: getNumeric(completeMap[getLayoutContainerWidthKey("navbar-options")], 0, 1200),
+      height: getNumeric(completeMap[getLayoutContainerHeightKey("navbar-options")], 0, 600),
+      paddingX: getNumeric(completeMap[getLayoutContainerPaddingXKey("navbar-options")], 0, 300),
+      paddingY: getNumeric(completeMap[getLayoutContainerPaddingYKey("navbar-options")], 0, 300),
+      marginX: getNumeric(completeMap[getLayoutContainerMarginXKey("navbar-options")], 0, 300),
+      marginY: getNumeric(completeMap[getLayoutContainerMarginYKey("navbar-options")], 0, 300),
+    },
+    "navbar-auth-slot": {
+      width: 0,
+      height: 0,
+      paddingX: 0,
+      paddingY: 0,
+      marginX: 0,
+      marginY: 0,
+    },
+  } as const;
   const footerBackgroundColor =
     completeMap[LANDING_LAYOUT_FOOTER_BG_KEY] ?? "#d8cfb6";
   const footerText = completeMap[LANDING_LAYOUT_FOOTER_TEXT_KEY] ?? "Koru OSA";
   const footerHeight = getLayoutFooterHeight(
     completeMap[LANDING_LAYOUT_FOOTER_HEIGHT_KEY],
   );
+  const footerContainers = parseFooterContainers(completeMap);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -257,7 +392,10 @@ export function LandingPageLayout({
         </>
       ) : null}
       <div className="relative z-[1]">
-        <div className="relative">
+        <div
+          className="relative"
+          data-preview-layout-section-id="layout-navbar"
+        >
           <LandingNav
             backgroundColor={navBackgroundColor}
             textColor={navTextColor}
@@ -267,6 +405,8 @@ export function LandingPageLayout({
             links={navLinks}
             fixed={!previewMode}
             user={user}
+            showContainerGuides={previewMode && selectedLayoutSectionId === "layout-navbar"}
+            containerStyles={containerStyles}
           />
           {previewMode && onSelectLayoutSection ? (
             <button
@@ -285,7 +425,7 @@ export function LandingPageLayout({
           ) : null}
         </div>
         {!previewMode ? <div style={{ minHeight: `${navHeight}px` }} /> : null}
-        <div className="relative">
+        <div className="relative" data-preview-layout-section-id="layout-body">
           {children}
           {previewMode && onSelectLayoutSection ? (
             <button
@@ -304,6 +444,7 @@ export function LandingPageLayout({
           ) : null}
         </div>
         <footer
+          data-preview-layout-section-id="layout-footer"
           className="flex items-center border-t border-black/10"
           style={{
             backgroundColor: footerBackgroundColor,
@@ -312,9 +453,149 @@ export function LandingPageLayout({
             paddingRight: "24px",
           }}
         >
-          <p className="font-fira text-4xl font-semibold tracking-tight text-slate-800">
-            {footerText}
-          </p>
+          <div className="flex w-full flex-col gap-2">
+            {footerContainers.map((container) => {
+              const elements = parseFooterContainerElements(completeMap, container.id);
+
+              return (
+                <div
+                  key={container.id}
+                  data-footer-container-id={container.id}
+                  className={
+                    previewMode && selectedLayoutSectionId === "layout-footer"
+                      ? "rounded-sm border-2 border-dashed border-[var(--complement-700)] px-2 py-1"
+                      : ""
+                  }
+                  style={{
+                    width:
+                      getNumeric(
+                        completeMap[getLayoutContainerWidthKey(container.id)],
+                        0,
+                        1200,
+                      ) > 0
+                        ? `${getNumeric(
+                            completeMap[getLayoutContainerWidthKey(container.id)],
+                            0,
+                            1200,
+                          )}px`
+                        : undefined,
+                    minHeight:
+                      getNumeric(
+                        completeMap[getLayoutContainerHeightKey(container.id)],
+                        0,
+                        600,
+                      ) > 0
+                        ? `${getNumeric(
+                            completeMap[getLayoutContainerHeightKey(container.id)],
+                            0,
+                            600,
+                          )}px`
+                        : undefined,
+                    paddingLeft: `${getNumeric(
+                      completeMap[getLayoutContainerPaddingXKey(container.id)],
+                      0,
+                      300,
+                    )}px`,
+                    paddingRight: `${getNumeric(
+                      completeMap[getLayoutContainerPaddingXKey(container.id)],
+                      0,
+                      300,
+                    )}px`,
+                    paddingTop: `${getNumeric(
+                      completeMap[getLayoutContainerPaddingYKey(container.id)],
+                      0,
+                      300,
+                    )}px`,
+                    paddingBottom: `${getNumeric(
+                      completeMap[getLayoutContainerPaddingYKey(container.id)],
+                      0,
+                      300,
+                    )}px`,
+                    marginLeft: `${getNumeric(
+                      completeMap[getLayoutContainerMarginXKey(container.id)],
+                      0,
+                      300,
+                    )}px`,
+                    marginRight: `${getNumeric(
+                      completeMap[getLayoutContainerMarginXKey(container.id)],
+                      0,
+                      300,
+                    )}px`,
+                    marginTop: `${getNumeric(
+                      completeMap[getLayoutContainerMarginYKey(container.id)],
+                      0,
+                      300,
+                    )}px`,
+                    marginBottom: `${getNumeric(
+                      completeMap[getLayoutContainerMarginYKey(container.id)],
+                      0,
+                      300,
+                    )}px`,
+                  }}
+                >
+                  {elements.length === 0 ? (
+                    <div className="min-h-8" />
+                  ) : (
+                    elements.map((element) => {
+                      const isDefaultText =
+                        container.id === "footer-text" &&
+                        element.id === "footer-text-default";
+                      const valueKey = isDefaultText
+                        ? LANDING_LAYOUT_FOOTER_TEXT_KEY
+                        : getFooterElementValueKey(element.id);
+                      const value = completeMap[valueKey] ?? "";
+
+                      if (element.type === "image") {
+                        return (
+                          <img
+                            key={element.id}
+                            src={value}
+                            alt={element.label}
+                            className="h-24 w-auto object-cover"
+                          />
+                        );
+                      }
+                      if (element.type === "video") {
+                        return (
+                          <video
+                            key={element.id}
+                            src={value}
+                            className="h-24 w-auto"
+                            controls={previewMode}
+                          />
+                        );
+                      }
+                      if (element.type === "line-horizontal") {
+                        return (
+                          <div
+                            key={element.id}
+                            className="my-2 h-px w-full bg-slate-700"
+                          />
+                        );
+                      }
+                      if (element.type === "line-vertical") {
+                        return (
+                          <div
+                            key={element.id}
+                            className="my-2 h-8 w-px bg-slate-700"
+                          />
+                        );
+                      }
+
+                      return (
+                        <p
+                          key={element.id}
+                          className="font-fira text-4xl font-semibold tracking-tight text-slate-800"
+                        >
+                          {value || footerText}
+                        </p>
+                      );
+                    })
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </footer>
         {previewMode && onSelectLayoutSection ? (
           <button
