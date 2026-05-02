@@ -25,6 +25,10 @@ import {
   Tablet,
   Smartphone,
   Pencil,
+  Rows3,
+  Columns3,
+  Grid2x2,
+  Square,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +49,7 @@ import { CmsPreviewFrame } from "@/modules/dashboard/components/cms-preview-fram
 import {
   LANDING_BACKGROUND_SCOPES_KEY,
   LANDING_LAYOUT_FOOTER_BG_KEY,
+  LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY,
   LANDING_LAYOUT_FOOTER_HEIGHT_KEY,
   LANDING_LAYOUT_FOOTER_TEXT_KEY,
   LANDING_LAYOUT_NAV_BG_KEY,
@@ -89,6 +94,7 @@ import {
   getSectionFooterHeightKey,
   getSectionFooterMinHeightKey,
   getSectionItemsOrderKey,
+  landingLayoutContainerRules,
   landingSectionCatalog,
   parseSectionExtraElements,
   parseSectionItemsOrder,
@@ -97,6 +103,7 @@ import {
   type LandingSectionInstance,
   type SectionExtraElementType,
   type LandingSectionType,
+  type LayoutContainerArrangement,
 } from "@/modules/landing/config/landing-sections";
 import {
   createResponsiveScopedTextMap,
@@ -275,13 +282,19 @@ type FooterContainerElement = {
   type: FooterContainerElementType;
   label: string;
 };
+type FooterContainerChildRef = {
+  id: string;
+  type: "element" | "container";
+};
 
 const LANDING_LAYOUT_FOOTER_ELEMENTS_KEY = "__landing_layout_footer_elements";
 const LANDING_LAYOUT_FOOTER_CONTAINERS_KEY = "__landing_layout_footer_containers";
+const LANDING_LAYOUT_FOOTER_CHILDREN_KEY = "__landing_layout_footer_children";
 
 type FooterContainer = {
   id: string;
   name: string;
+  parentId?: string | null;
 };
 
 function getFooterElementValueKey(elementId: string) {
@@ -290,6 +303,9 @@ function getFooterElementValueKey(elementId: string) {
 
 function getFooterContainerElementsKey(containerId: string) {
   return `${LANDING_LAYOUT_FOOTER_ELEMENTS_KEY}_${containerId}`;
+}
+function getFooterContainerChildrenKey(containerId: string) {
+  return `${LANDING_LAYOUT_FOOTER_CHILDREN_KEY}_${containerId}`;
 }
 
 function parseFooterContainers(textMap: LandingTextMap): FooterContainer[] {
@@ -304,7 +320,8 @@ function parseFooterContainers(textMap: LandingTextMap): FooterContainer[] {
         item &&
         typeof item.id === "string" &&
         item.id.trim() !== "" &&
-        typeof item.name === "string",
+        typeof item.name === "string" &&
+        (item.parentId == null || typeof item.parentId === "string"),
     );
     return valid.length > 0
       ? valid
@@ -348,6 +365,38 @@ function parseFooterContainerElements(
       ? [{ id: "footer-text-default", type: "text", label: "Texto" }]
       : [];
   }
+}
+
+function parseFooterContainerChildren(
+  textMap: LandingTextMap,
+  containerId: string,
+  allContainers: FooterContainer[],
+): FooterContainerChildRef[] {
+  const raw = textMap[getFooterContainerChildrenKey(containerId)];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as FooterContainerChildRef[];
+      const valid = parsed.filter(
+        (item) =>
+          item &&
+          typeof item.id === "string" &&
+          (item.type === "element" || item.type === "container"),
+      );
+      if (valid.length > 0) {
+        return valid;
+      }
+    } catch {
+      // fallback below
+    }
+  }
+
+  const legacyElements = parseFooterContainerElements(textMap, containerId).map(
+    (item) => ({ id: item.id, type: "element" as const }),
+  );
+  const legacyContainers = allContainers
+    .filter((container) => container.parentId === containerId)
+    .map((item) => ({ id: item.id, type: "container" as const }));
+  return [...legacyElements, ...legacyContainers];
 }
 
 function getFooterElementDefaultValue(type: FooterContainerElementType) {
@@ -408,6 +457,9 @@ function getLayoutContainerMarginXKey(containerId: string) {
 function getLayoutContainerMarginYKey(containerId: string) {
   return `__landing_layout_container_${containerId}_margin_y`;
 }
+function getLayoutContainerChildrenLayoutKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_children_layout`;
+}
 
 function getLayoutNavHeight(raw: string | undefined) {
   const parsed = Number.parseInt(raw ?? "", 10);
@@ -436,6 +488,50 @@ function getNumberValue(
     return fallback;
   }
   return clamp(parsed, min, max);
+}
+
+function getLayoutContainerArrangementValue(
+  raw: string | undefined,
+  fallback: LayoutContainerArrangement,
+  allowed: readonly LayoutContainerArrangement[],
+) {
+  if (raw && allowed.includes(raw as LayoutContainerArrangement)) {
+    return raw as LayoutContainerArrangement;
+  }
+  return fallback;
+}
+
+function getContainerChildrenLayoutMode(raw: string | undefined) {
+  return getLayoutContainerArrangementValue(
+    raw,
+    "block",
+    ["block", "flex-row", "flex-column", "grid-2"],
+  );
+}
+
+function getContainerLayoutOptions() {
+  return [
+    {
+      value: "block",
+      label: <Square className="h-4 w-4" />,
+      srLabel: "Block",
+    },
+    {
+      value: "flex-row",
+      label: <Columns3 className="h-4 w-4" />,
+      srLabel: "Flex fila",
+    },
+    {
+      value: "flex-column",
+      label: <Rows3 className="h-4 w-4" />,
+      srLabel: "Flex columna",
+    },
+    {
+      value: "grid-2",
+      label: <Grid2x2 className="h-4 w-4" />,
+      srLabel: "Grid 2 columnas",
+    },
+  ] as const;
 }
 
 function getSectionEstimatedHeightVh(type: LandingSectionType) {
@@ -1419,6 +1515,75 @@ export function CmsLandingEditor({
     () => parseFooterContainers(textMap),
     [textMap],
   );
+  const footerRootContainers = useMemo(
+    () =>
+      footerContainers.filter(
+        (container) =>
+          container.parentId == null ||
+          !footerContainers.some((entry) => entry.id === container.parentId),
+      ),
+    [footerContainers],
+  );
+  const getFooterContainerChildren = (parentId: string) =>
+    footerContainers.filter((container) => container.parentId === parentId);
+
+  const getFooterContainerDescendantIds = (
+    containers: FooterContainer[],
+    rootId: string,
+  ) => {
+    const result: string[] = [];
+    const stack = [rootId];
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (!current) {
+        continue;
+      }
+      result.push(current);
+      const children = containers
+        .filter((container) => container.parentId === current)
+        .map((container) => container.id);
+      stack.push(...children);
+    }
+    return result;
+  };
+
+
+  const addFooterContainer = (parentId: string | null) => {
+    setTextMap((previous) => {
+      const currentContainers = parseFooterContainers(previous);
+      const nextId = `footer-container-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const nextContainers = [
+        ...currentContainers,
+        {
+          id: nextId,
+          name: `Contenedor ${currentContainers.length + 1}`,
+          parentId,
+        },
+      ];
+      return {
+        ...previous,
+        [LANDING_LAYOUT_FOOTER_CONTAINERS_KEY]: JSON.stringify(nextContainers),
+        [getFooterContainerElementsKey(nextId)]: "[]",
+        ...(parentId
+          ? {
+              [getFooterContainerChildrenKey(parentId)]: JSON.stringify([
+                ...parseFooterContainerChildren(
+                  previous,
+                  parentId,
+                  currentContainers,
+                ),
+                { id: nextId, type: "container" as const },
+              ]),
+            }
+          : {}),
+      };
+    });
+  };
+  const footerContainerArrangement = getLayoutContainerArrangementValue(
+    textMap[LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY],
+    landingLayoutContainerRules.footer.defaultArrangement,
+    landingLayoutContainerRules.footer.allowedArrangements,
+  );
   const selectedSectionVideoTextItems = useMemo(
     () =>
       selectedSection
@@ -2277,6 +2442,437 @@ export function CmsLandingEditor({
       result.ok ? "Cambios publicados." : "No se pudo publicar.",
     );
   }
+  const renderFooterContainerAccordion = (
+    container: FooterContainer,
+    depth = 0,
+  ): ReactNode => {
+    const containerName =
+      textMap[getLayoutNavContainerNameKey(container.id)] ?? container.name;
+    const containerPaddingX = getNumberValue(
+      textMap[getLayoutNavContainerPaddingXKey(container.id)],
+      0,
+      0,
+      200,
+    );
+    const containerPaddingY = getNumberValue(
+      textMap[getLayoutNavContainerPaddingYKey(container.id)],
+      0,
+      0,
+      200,
+    );
+    const footerContainerElements = parseFooterContainerElements(textMap, container.id);
+    const childContainers = getFooterContainerChildren(container.id);
+    const childRefs = parseFooterContainerChildren(
+      textMap,
+      container.id,
+      footerContainers,
+    );
+    const childrenLayoutMode = getContainerChildrenLayoutMode(
+      textMap[getLayoutContainerChildrenLayoutKey(container.id)],
+    );
+
+    return (
+      <details className="panel-accordion" open key={container.id}>
+        <summary
+          className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+          style={{ paddingLeft: `${depth * 10}px` }}
+        >
+          <span className="flex-1 truncate">{containerName}</span>
+          <button
+            type="button"
+            className="container-edit-button inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setEditingLayoutContainerId((current) =>
+                current === container.id ? null : container.id,
+              );
+            }}
+            aria-label="Editar atributos del contenedor footer"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        </summary>
+        <div
+          className="mt-2 space-y-2 rounded-none border bg-background p-2"
+          style={{ marginLeft: `${depth * 10}px` }}
+        >
+          {editingLayoutContainerId === container.id ? (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Disposicion de elementos
+                </label>
+                <PanelRadioGroup
+                  name={`footer-container-layout-${container.id}`}
+                  value={childrenLayoutMode}
+                  options={[...getContainerLayoutOptions()]}
+                  onChange={(nextValue) =>
+                    updateLayoutField(
+                      getLayoutContainerChildrenLayoutKey(container.id),
+                      nextValue,
+                    )
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Nombre contenedor
+                </label>
+                <PanelInput
+                  value={containerName}
+                  onChange={(event) =>
+                    updateLayoutField(
+                      getLayoutNavContainerNameKey(container.id),
+                      event.target.value,
+                    )
+                  }
+                />
+              </div>
+              <SliderValueControl
+                label="Padding X"
+                value={containerPaddingX}
+                min={0}
+                max={200}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutNavContainerPaddingXKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+              <SliderValueControl
+                label="Padding Y"
+                value={containerPaddingY}
+                min={0}
+                max={200}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutNavContainerPaddingYKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+              <SliderValueControl
+                label="Ancho"
+                value={getNumberValue(
+                  textMap[getLayoutContainerWidthKey(container.id)],
+                  0,
+                  0,
+                  1200,
+                )}
+                min={0}
+                max={1200}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutContainerWidthKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+              <SliderValueControl
+                label="Alto"
+                value={getNumberValue(
+                  textMap[getLayoutContainerHeightKey(container.id)],
+                  0,
+                  0,
+                  600,
+                )}
+                min={0}
+                max={600}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutContainerHeightKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+              <SliderValueControl
+                label="Margen X"
+                value={getNumberValue(
+                  textMap[getLayoutContainerMarginXKey(container.id)],
+                  0,
+                  0,
+                  300,
+                )}
+                min={0}
+                max={300}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutContainerMarginXKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+              <SliderValueControl
+                label="Margen Y"
+                value={getNumberValue(
+                  textMap[getLayoutContainerMarginYKey(container.id)],
+                  0,
+                  0,
+                  300,
+                )}
+                min={0}
+                max={300}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutContainerMarginYKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900"
+                      />
+                    }
+                  >
+                    + Agregar elemento
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {(
+                      [
+                        { type: "text", label: "Texto" },
+                        { type: "image", label: "Imagen" },
+                        { type: "video", label: "Video" },
+                        { type: "line-horizontal", label: "Linea horizontal" },
+                        { type: "line-vertical", label: "Linea vertical" },
+                      ] as Array<{
+                        type: FooterContainerElementType;
+                        label: string;
+                      }>
+                    ).map((item) => (
+                      <DropdownMenuItem
+                        key={item.type}
+                        onClick={() => {
+                          const current = parseFooterContainerElements(
+                            textMap,
+                            container.id,
+                          );
+                          const countOfType = current.filter(
+                            (entry) => entry.type === item.type,
+                          ).length;
+                          const nextId = `footer-el-${nextFooterElementIdRef.current++}`;
+                          const nextElement: FooterContainerElement = {
+                            id: nextId,
+                            type: item.type,
+                            label: getFooterElementLabel(
+                              item.type,
+                              countOfType + 1,
+                            ),
+                          };
+                          setTextMap((previous) => ({
+                            ...previous,
+                            [getFooterContainerElementsKey(container.id)]:
+                              JSON.stringify([
+                                ...parseFooterContainerElements(
+                                  previous,
+                                  container.id,
+                                ),
+                                nextElement,
+                              ]),
+                            [getFooterContainerChildrenKey(container.id)]:
+                              JSON.stringify([
+                                ...parseFooterContainerChildren(
+                                  previous,
+                                  container.id,
+                                  parseFooterContainers(previous),
+                                ),
+                                { id: nextId, type: "element" as const },
+                              ]),
+                            [getFooterElementValueKey(nextId)]:
+                              getFooterElementDefaultValue(item.type),
+                          }));
+                        }}
+                      >
+                        {item.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900"
+                    onClick={() => addFooterContainer(container.id)}
+                  >
+                    + Agregar contenedor hijo
+                  </button>
+                  <button
+                    type="button"
+                    className="text-xs text-destructive hover:underline"
+                    onClick={() => {
+                      setTextMap((previous) => {
+                        const currentContainers = parseFooterContainers(previous);
+                        const idsToRemove = getFooterContainerDescendantIds(
+                          currentContainers,
+                          container.id,
+                        );
+                        const nextContainers = currentContainers.filter(
+                          (entry) => !idsToRemove.includes(entry.id),
+                        );
+                        const nextMap = {
+                          ...previous,
+                          [LANDING_LAYOUT_FOOTER_CONTAINERS_KEY]:
+                            JSON.stringify(nextContainers),
+                        };
+                        currentContainers.forEach((entry) => {
+                          nextMap[getFooterContainerChildrenKey(entry.id)] =
+                            JSON.stringify(
+                              parseFooterContainerChildren(
+                                previous,
+                                entry.id,
+                                currentContainers,
+                              ).filter(
+                                (child) =>
+                                  !(
+                                    child.type === "container" &&
+                                    idsToRemove.includes(child.id)
+                                  ),
+                              ),
+                            );
+                        });
+                        idsToRemove.forEach((id) => {
+                          delete nextMap[getFooterContainerElementsKey(id)];
+                          delete nextMap[getFooterContainerChildrenKey(id)];
+                          delete nextMap[getLayoutNavContainerNameKey(id)];
+                          delete nextMap[getLayoutNavContainerPaddingXKey(id)];
+                          delete nextMap[getLayoutNavContainerPaddingYKey(id)];
+                          delete nextMap[getLayoutContainerWidthKey(id)];
+                          delete nextMap[getLayoutContainerHeightKey(id)];
+                          delete nextMap[getLayoutContainerMarginXKey(id)];
+                          delete nextMap[getLayoutContainerMarginYKey(id)];
+                          const elements = parseFooterContainerElements(
+                            previous,
+                            id,
+                          );
+                          elements.forEach((element) => {
+                            if (
+                              !(
+                                id === "footer-text" &&
+                                element.id === "footer-text-default"
+                              )
+                            ) {
+                              delete nextMap[getFooterElementValueKey(element.id)];
+                            }
+                          });
+                        });
+                        if (
+                          editingLayoutContainerId &&
+                          idsToRemove.includes(editingLayoutContainerId)
+                        ) {
+                          setEditingLayoutContainerId(null);
+                        }
+                        return nextMap;
+                      });
+                    }}
+                  >
+                    Quitar contenedor
+                  </button>
+                </div>
+              </div>
+
+              {childRefs.map((childRef) => {
+                if (childRef.type === "container") {
+                  const childContainer = childContainers.find(
+                    (entry) => entry.id === childRef.id,
+                  );
+                  return childContainer
+                    ? renderFooterContainerAccordion(childContainer, depth + 1)
+                    : null;
+                }
+                const element = footerContainerElements.find(
+                  (entry) => entry.id === childRef.id,
+                );
+                if (!element) {
+                  return null;
+                }
+                const isDefaultText =
+                  container.id === "footer-text" &&
+                  element.id === "footer-text-default";
+                const valueKey = isDefaultText
+                  ? LANDING_LAYOUT_FOOTER_TEXT_KEY
+                  : getFooterElementValueKey(element.id);
+
+                return (
+                  <div
+                    key={element.id}
+                    className="space-y-1.5 rounded-sm border bg-muted/20 p-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        {element.label}
+                      </label>
+                      {!isDefaultText ? (
+                        <button
+                          type="button"
+                          className="text-xs text-destructive hover:underline"
+                          onClick={() => {
+                            setTextMap((previous) => {
+                              const current = parseFooterContainerElements(
+                                previous,
+                                container.id,
+                              );
+                              const next = current.filter(
+                                (entry) => entry.id !== element.id,
+                              );
+                              const map = {
+                                ...previous,
+                                [getFooterContainerElementsKey(container.id)]:
+                                  JSON.stringify(next),
+                                [getFooterContainerChildrenKey(container.id)]:
+                                  JSON.stringify(
+                                    parseFooterContainerChildren(
+                                      previous,
+                                      container.id,
+                                      parseFooterContainers(previous),
+                                    ).filter(
+                                      (entry) =>
+                                        !(
+                                          entry.type === "element" &&
+                                          entry.id === element.id
+                                        ),
+                                    ),
+                                  ),
+                              };
+                              delete map[valueKey];
+                              return map;
+                            });
+                          }}
+                        >
+                          Quitar
+                        </button>
+                      ) : null}
+                    </div>
+                    <PanelInput
+                      value={textMap[valueKey] ?? ""}
+                      onChange={(event) =>
+                        updateLayoutField(valueKey, event.target.value)
+                      }
+                    />
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      </details>
+    );
+  };
+
   const panelPortal = portalTarget
     ? createPortal(
         <div
@@ -5553,305 +6149,34 @@ export function CmsLandingEditor({
 
                 {selectedLayoutSectionId === "layout-footer" ? (
                   <>
+                    {landingLayoutContainerRules.footer.allowArrangementSelect ? (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Disposicion de contenedores
+                        </label>
+                        <PanelRadioGroup
+                          name="layout-footer-containers-layout"
+                          value={footerContainerArrangement}
+                          options={[...getContainerLayoutOptions()]}
+                          onChange={(nextValue) =>
+                            updateLayoutField(
+                              LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY,
+                              nextValue,
+                            )
+                          }
+                        />
+                      </div>
+                    ) : null}
                     <button
                       type="button"
                       className="mt-1 text-xs font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900"
-                      onClick={() => {
-                        setTextMap((previous) => {
-                          const currentContainers = parseFooterContainers(previous);
-                          const nextId = `footer-container-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-                          const nextContainers = [
-                            ...currentContainers,
-                            {
-                              id: nextId,
-                              name: `Contenedor ${currentContainers.length + 1}`,
-                            },
-                          ];
-                          return {
-                            ...previous,
-                            [LANDING_LAYOUT_FOOTER_CONTAINERS_KEY]:
-                              JSON.stringify(nextContainers),
-                            [getFooterContainerElementsKey(nextId)]: "[]",
-                          };
-                        });
-                      }}
+                      onClick={() => addFooterContainer(null)}
                     >
                       + Agregar contenedor
                     </button>
-
-                    {footerContainers.map((container) => {
-                      const containerName =
-                        textMap[getLayoutNavContainerNameKey(container.id)] ??
-                        container.name;
-                      const containerPaddingX = getNumberValue(
-                        textMap[getLayoutNavContainerPaddingXKey(container.id)],
-                        0,
-                        0,
-                        200,
-                      );
-                      const containerPaddingY = getNumberValue(
-                        textMap[getLayoutNavContainerPaddingYKey(container.id)],
-                        0,
-                        0,
-                        200,
-                      );
-                      const footerContainerElements = parseFooterContainerElements(
-                        textMap,
-                        container.id,
-                      );
-
-                      return (
-                        <details className="panel-accordion" open key={container.id}>
-                          <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                            <span className="flex-1 truncate">{containerName}</span>
-                            <button
-                              type="button"
-                              className="container-edit-button inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background"
-                              onClick={(event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                setEditingLayoutContainerId((current) =>
-                                  current === container.id ? null : container.id,
-                                );
-                              }}
-                              aria-label="Editar atributos del contenedor footer"
-                            >
-                              <Pencil className="h-3 w-3" />
-                            </button>
-                          </summary>
-                          <div className="mt-2 space-y-2 rounded-none border bg-background p-2">
-                            {editingLayoutContainerId === container.id ? (
-                              <>
-                                <div className="space-y-1.5">
-                                  <label className="text-xs font-medium text-muted-foreground">
-                                    Nombre contenedor
-                                  </label>
-                                  <PanelInput
-                                    value={containerName}
-                                    onChange={(event) =>
-                                      updateLayoutField(
-                                        getLayoutNavContainerNameKey(container.id),
-                                        event.target.value,
-                                      )
-                                    }
-                                  />
-                                </div>
-                                <SliderValueControl
-                                  label="Padding X"
-                                  value={containerPaddingX}
-                                  min={0}
-                                  max={200}
-                                  step={1}
-                                  onChange={(nextValue) =>
-                                    updateLayoutField(
-                                      getLayoutNavContainerPaddingXKey(container.id),
-                                      String(nextValue),
-                                    )
-                                  }
-                                />
-                                <SliderValueControl
-                                  label="Padding Y"
-                                  value={containerPaddingY}
-                                  min={0}
-                                  max={200}
-                                  step={1}
-                                  onChange={(nextValue) =>
-                                    updateLayoutField(
-                                      getLayoutNavContainerPaddingYKey(container.id),
-                                      String(nextValue),
-                                      )
-                                    }
-                                  />
-                                <SliderValueControl
-                                  label="Ancho"
-                                  value={getNumberValue(textMap[getLayoutContainerWidthKey(container.id)], 0, 0, 1200)}
-                                  min={0}
-                                  max={1200}
-                                  step={1}
-                                  onChange={(nextValue) =>
-                                    updateLayoutField(
-                                      getLayoutContainerWidthKey(container.id),
-                                      String(nextValue),
-                                    )
-                                  }
-                                />
-                                <SliderValueControl
-                                  label="Alto"
-                                  value={getNumberValue(textMap[getLayoutContainerHeightKey(container.id)], 0, 0, 600)}
-                                  min={0}
-                                  max={600}
-                                  step={1}
-                                  onChange={(nextValue) =>
-                                    updateLayoutField(
-                                      getLayoutContainerHeightKey(container.id),
-                                      String(nextValue),
-                                    )
-                                  }
-                                />
-                                <SliderValueControl
-                                  label="Margen X"
-                                  value={getNumberValue(textMap[getLayoutContainerMarginXKey(container.id)], 0, 0, 300)}
-                                  min={0}
-                                  max={300}
-                                  step={1}
-                                  onChange={(nextValue) =>
-                                    updateLayoutField(
-                                      getLayoutContainerMarginXKey(container.id),
-                                      String(nextValue),
-                                    )
-                                  }
-                                />
-                                <SliderValueControl
-                                  label="Margen Y"
-                                  value={getNumberValue(textMap[getLayoutContainerMarginYKey(container.id)], 0, 0, 300)}
-                                  min={0}
-                                  max={300}
-                                  step={1}
-                                  onChange={(nextValue) =>
-                                    updateLayoutField(
-                                      getLayoutContainerMarginYKey(container.id),
-                                      String(nextValue),
-                                    )
-                                  }
-                                />
-                              </>
-                            ) : (
-                              <>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger
-                                    render={
-                                      <button
-                                        type="button"
-                                        className="text-xs font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900"
-                                      />
-                                    }
-                                  >
-                                    + Agregar elemento
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="start">
-                                    {(
-                                      [
-                                        { type: "text", label: "Texto" },
-                                        { type: "image", label: "Imagen" },
-                                        { type: "video", label: "Video" },
-                                        {
-                                          type: "line-horizontal",
-                                          label: "Linea horizontal",
-                                        },
-                                        {
-                                          type: "line-vertical",
-                                          label: "Linea vertical",
-                                        },
-                                      ] as Array<{
-                                        type: FooterContainerElementType;
-                                        label: string;
-                                      }>
-                                    ).map((item) => (
-                                      <DropdownMenuItem
-                                        key={item.type}
-                                        onClick={() => {
-                                          const current = parseFooterContainerElements(
-                                            textMap,
-                                            container.id,
-                                          );
-                                          const countOfType = current.filter(
-                                            (entry) => entry.type === item.type,
-                                          ).length;
-                                          const nextId = `footer-el-${nextFooterElementIdRef.current++}`;
-                                          const nextElement: FooterContainerElement = {
-                                            id: nextId,
-                                            type: item.type,
-                                            label: getFooterElementLabel(
-                                              item.type,
-                                              countOfType + 1,
-                                            ),
-                                          };
-                                          setTextMap((previous) => ({
-                                            ...previous,
-                                            [getFooterContainerElementsKey(container.id)]:
-                                              JSON.stringify([
-                                                ...parseFooterContainerElements(
-                                                  previous,
-                                                  container.id,
-                                                ),
-                                                nextElement,
-                                              ]),
-                                            [getFooterElementValueKey(nextId)]:
-                                              getFooterElementDefaultValue(item.type),
-                                          }));
-                                        }}
-                                      >
-                                        {item.label}
-                                      </DropdownMenuItem>
-                                    ))}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-
-                                {footerContainerElements.map((element) => {
-                                  const isDefaultText =
-                                    container.id === "footer-text" &&
-                                    element.id === "footer-text-default";
-                                  const valueKey = isDefaultText
-                                    ? LANDING_LAYOUT_FOOTER_TEXT_KEY
-                                    : getFooterElementValueKey(element.id);
-
-                                  return (
-                                    <div
-                                      key={element.id}
-                                      className="space-y-1.5 rounded-sm border bg-muted/20 p-2"
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <label className="text-xs font-medium text-muted-foreground">
-                                          {element.label}
-                                        </label>
-                                        {!isDefaultText ? (
-                                          <button
-                                            type="button"
-                                            className="text-xs text-destructive hover:underline"
-                                            onClick={() => {
-                                              setTextMap((previous) => {
-                                                const current =
-                                                  parseFooterContainerElements(
-                                                    previous,
-                                                    container.id,
-                                                  );
-                                                const next = current.filter(
-                                                  (entry) =>
-                                                    entry.id !== element.id,
-                                                );
-                                                const map = {
-                                                  ...previous,
-                                                  [getFooterContainerElementsKey(
-                                                    container.id,
-                                                  )]: JSON.stringify(next),
-                                                };
-                                                delete map[valueKey];
-                                                return map;
-                                              });
-                                            }}
-                                          >
-                                            Quitar
-                                          </button>
-                                        ) : null}
-                                      </div>
-                                      <PanelInput
-                                        value={textMap[valueKey] ?? ""}
-                                        onChange={(event) =>
-                                          updateLayoutField(
-                                            valueKey,
-                                            event.target.value,
-                                          )
-                                        }
-                                      />
-                                    </div>
-                                  );
-                                })}
-                              </>
-                            )}
-                          </div>
-                        </details>
-                      );
-                    })}
+                    {footerRootContainers.map((container) =>
+                      renderFooterContainerAccordion(container),
+                    )}
                   </>
                 ) : null}
               </div>

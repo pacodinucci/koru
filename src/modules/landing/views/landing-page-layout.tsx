@@ -11,6 +11,7 @@ import { LandingNav } from "@/modules/landing/components/landing-nav";
 import {
   ensureLandingDefaults,
   LANDING_LAYOUT_FOOTER_BG_KEY,
+  LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY,
   LANDING_LAYOUT_FOOTER_HEIGHT_KEY,
   LANDING_LAYOUT_FOOTER_TEXT_KEY,
   LANDING_LAYOUT_NAV_BG_KEY,
@@ -19,7 +20,9 @@ import {
   LANDING_LAYOUT_NAV_LOGO_SRC_KEY,
   LANDING_LAYOUT_NAV_TEXT_KEY,
   LANDING_LAYOUT_PADDING_X_KEY,
+  landingLayoutContainerRules,
   parseLandingLayoutNavLinks,
+  type LayoutContainerArrangement,
 } from "@/modules/landing/config/landing-sections";
 import type {
   LandingPreviewBindings,
@@ -84,6 +87,9 @@ function getLayoutContainerMarginXKey(containerId: string) {
 function getLayoutContainerMarginYKey(containerId: string) {
   return `__landing_layout_container_${containerId}_margin_y`;
 }
+function getLayoutContainerChildrenLayoutKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_children_layout`;
+}
 
 function getLayoutContainerPaddingXKey(containerId: string) {
   return `__landing_layout_nav_container_${containerId}_padding_x`;
@@ -99,6 +105,25 @@ function getNumeric(raw: string | undefined, fallback = 0, max = 2000) {
   return clamp(parsed, 0, max);
 }
 
+function getLayoutContainerArrangementValue(
+  raw: string | undefined,
+  fallback: LayoutContainerArrangement,
+  allowed: readonly LayoutContainerArrangement[],
+) {
+  if (raw && allowed.includes(raw as LayoutContainerArrangement)) {
+    return raw as LayoutContainerArrangement;
+  }
+  return fallback;
+}
+
+function getContainerChildrenLayoutMode(raw: string | undefined) {
+  return getLayoutContainerArrangementValue(
+    raw,
+    "block",
+    ["block", "flex-row", "flex-column", "grid-2"],
+  );
+}
+
 type FooterContainerElementType =
   | "text"
   | "image"
@@ -109,6 +134,7 @@ type FooterContainerElementType =
 type FooterContainer = {
   id: string;
   name: string;
+  parentId?: string | null;
 };
 
 type FooterContainerElement = {
@@ -116,12 +142,20 @@ type FooterContainerElement = {
   type: FooterContainerElementType;
   label: string;
 };
+type FooterContainerChildRef = {
+  id: string;
+  type: "element" | "container";
+};
 
 const LANDING_LAYOUT_FOOTER_CONTAINERS_KEY = "__landing_layout_footer_containers";
 const LANDING_LAYOUT_FOOTER_ELEMENTS_KEY = "__landing_layout_footer_elements";
+const LANDING_LAYOUT_FOOTER_CHILDREN_KEY = "__landing_layout_footer_children";
 
 function getFooterContainerElementsKey(containerId: string) {
   return `${LANDING_LAYOUT_FOOTER_ELEMENTS_KEY}_${containerId}`;
+}
+function getFooterContainerChildrenKey(containerId: string) {
+  return `${LANDING_LAYOUT_FOOTER_CHILDREN_KEY}_${containerId}`;
 }
 
 function getFooterElementValueKey(elementId: string) {
@@ -140,12 +174,28 @@ function parseFooterContainers(textMap: LandingTextMap): FooterContainer[] {
         item &&
         typeof item.id === "string" &&
         item.id.trim() !== "" &&
-        typeof item.name === "string",
+        typeof item.name === "string" &&
+        (item.parentId == null || typeof item.parentId === "string"),
     );
     return valid.length > 0 ? valid : [{ id: "footer-text", name: "Texto footer" }];
   } catch {
     return [{ id: "footer-text", name: "Texto footer" }];
   }
+}
+
+function getFooterRootContainers(containers: FooterContainer[]) {
+  return containers.filter(
+    (container) =>
+      container.parentId == null ||
+      !containers.some((entry) => entry.id === container.parentId),
+  );
+}
+
+function getFooterChildren(
+  containers: FooterContainer[],
+  parentId: string,
+) {
+  return containers.filter((container) => container.parentId === parentId);
 }
 
 function parseFooterContainerElements(
@@ -175,6 +225,38 @@ function parseFooterContainerElements(
   } catch {
     return [];
   }
+}
+
+function parseFooterContainerChildren(
+  textMap: LandingTextMap,
+  containerId: string,
+  allContainers: FooterContainer[],
+): FooterContainerChildRef[] {
+  const raw = textMap[getFooterContainerChildrenKey(containerId)];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as FooterContainerChildRef[];
+      const valid = parsed.filter(
+        (item) =>
+          item &&
+          typeof item.id === "string" &&
+          (item.type === "element" || item.type === "container"),
+      );
+      if (valid.length > 0) {
+        return valid;
+      }
+    } catch {
+      // fallback below
+    }
+  }
+
+  const legacyElements = parseFooterContainerElements(textMap, containerId).map(
+    (item) => ({ id: item.id, type: "element" as const }),
+  );
+  const legacyContainers = allContainers
+    .filter((container) => container.parentId === containerId)
+    .map((item) => ({ id: item.id, type: "container" as const }));
+  return [...legacyElements, ...legacyContainers];
 }
 
 export function LandingPageLayout({
@@ -246,6 +328,177 @@ export function LandingPageLayout({
     completeMap[LANDING_LAYOUT_FOOTER_HEIGHT_KEY],
   );
   const footerContainers = parseFooterContainers(completeMap);
+  const footerRootContainers = getFooterRootContainers(footerContainers);
+  const footerContainerArrangement = getLayoutContainerArrangementValue(
+    completeMap[LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY],
+    landingLayoutContainerRules.footer.defaultArrangement,
+    landingLayoutContainerRules.footer.allowedArrangements,
+  );
+
+  const renderFooterContainer = (container: FooterContainer): React.ReactNode => {
+    const elements = parseFooterContainerElements(completeMap, container.id);
+    const children = getFooterChildren(footerContainers, container.id);
+    const childRefs = parseFooterContainerChildren(
+      completeMap,
+      container.id,
+      footerContainers,
+    );
+    const childrenLayoutMode = getContainerChildrenLayoutMode(
+      completeMap[getLayoutContainerChildrenLayoutKey(container.id)],
+    );
+
+    return (
+      <div
+        key={container.id}
+        data-footer-container-id={container.id}
+        className={
+          previewMode && selectedLayoutSectionId === "layout-footer"
+            ? "rounded-sm border-2 border-dashed border-[var(--complement-700)] px-2 py-1"
+            : ""
+        }
+        style={{
+          width:
+            getNumeric(
+              completeMap[getLayoutContainerWidthKey(container.id)],
+              0,
+              1200,
+            ) > 0
+              ? `${getNumeric(
+                  completeMap[getLayoutContainerWidthKey(container.id)],
+                  0,
+                  1200,
+                )}px`
+              : undefined,
+          minHeight:
+            getNumeric(
+              completeMap[getLayoutContainerHeightKey(container.id)],
+              0,
+              600,
+            ) > 0
+              ? `${getNumeric(
+                  completeMap[getLayoutContainerHeightKey(container.id)],
+                  0,
+                  600,
+                )}px`
+              : undefined,
+          paddingLeft: `${getNumeric(
+            completeMap[getLayoutContainerPaddingXKey(container.id)],
+            0,
+            300,
+          )}px`,
+          paddingRight: `${getNumeric(
+            completeMap[getLayoutContainerPaddingXKey(container.id)],
+            0,
+            300,
+          )}px`,
+          paddingTop: `${getNumeric(
+            completeMap[getLayoutContainerPaddingYKey(container.id)],
+            0,
+            300,
+          )}px`,
+          paddingBottom: `${getNumeric(
+            completeMap[getLayoutContainerPaddingYKey(container.id)],
+            0,
+            300,
+          )}px`,
+          marginLeft: `${getNumeric(
+            completeMap[getLayoutContainerMarginXKey(container.id)],
+            0,
+            300,
+          )}px`,
+          marginRight: `${getNumeric(
+            completeMap[getLayoutContainerMarginXKey(container.id)],
+            0,
+            300,
+          )}px`,
+          marginTop: `${getNumeric(
+            completeMap[getLayoutContainerMarginYKey(container.id)],
+            0,
+            300,
+          )}px`,
+          marginBottom: `${getNumeric(
+            completeMap[getLayoutContainerMarginYKey(container.id)],
+            0,
+            300,
+          )}px`,
+        }}
+      >
+        {elements.length === 0 && children.length === 0 ? <div className="min-h-8" /> : null}
+        <div
+          className={
+            childrenLayoutMode === "grid-2"
+              ? "grid w-full gap-2"
+              : childrenLayoutMode === "flex-row"
+                ? "flex w-full flex-row flex-wrap items-start gap-2"
+                : childrenLayoutMode === "flex-column"
+                  ? "flex w-full flex-col gap-2"
+                  : "block w-full space-y-2"
+          }
+          style={
+            childrenLayoutMode === "grid-2"
+              ? {
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(min(180px, 100%), 1fr))",
+                }
+              : undefined
+          }
+        >
+          {childRefs.map((childRef) => {
+            if (childRef.type === "container") {
+              const childContainer = children.find((entry) => entry.id === childRef.id);
+              return childContainer ? renderFooterContainer(childContainer) : null;
+            }
+            const element = elements.find((entry) => entry.id === childRef.id);
+            if (!element) {
+              return null;
+            }
+            const isDefaultText =
+              container.id === "footer-text" && element.id === "footer-text-default";
+            const valueKey = isDefaultText
+              ? LANDING_LAYOUT_FOOTER_TEXT_KEY
+              : getFooterElementValueKey(element.id);
+            const value = completeMap[valueKey] ?? "";
+
+            if (element.type === "image") {
+              return (
+                <img
+                  key={element.id}
+                  src={value}
+                  alt={element.label}
+                  className="h-24 w-auto object-cover"
+                />
+              );
+            }
+            if (element.type === "video") {
+              return (
+                <video
+                  key={element.id}
+                  src={value}
+                  className="h-24 w-auto"
+                  controls={previewMode}
+                />
+              );
+            }
+            if (element.type === "line-horizontal") {
+              return <div key={element.id} className="my-2 h-px w-full bg-slate-700" />;
+            }
+            if (element.type === "line-vertical") {
+              return <div key={element.id} className="my-2 h-8 w-px bg-slate-700" />;
+            }
+
+            return (
+              <p
+                key={element.id}
+                className="font-fira text-4xl font-semibold tracking-tight text-slate-800"
+              >
+                {value || footerText}
+              </p>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     const root = rootRef.current;
@@ -453,148 +706,26 @@ export function LandingPageLayout({
             paddingRight: "24px",
           }}
         >
-          <div className="flex w-full flex-col gap-2">
-            {footerContainers.map((container) => {
-              const elements = parseFooterContainerElements(completeMap, container.id);
-
-              return (
-                <div
-                  key={container.id}
-                  data-footer-container-id={container.id}
-                  className={
-                    previewMode && selectedLayoutSectionId === "layout-footer"
-                      ? "rounded-sm border-2 border-dashed border-[var(--complement-700)] px-2 py-1"
-                      : ""
+          <div
+            className={
+              footerContainerArrangement === "grid-2"
+                ? "grid w-full gap-2"
+                : footerContainerArrangement === "flex-row"
+                  ? "flex w-full flex-row flex-wrap items-start gap-2"
+                  : footerContainerArrangement === "flex-column"
+                    ? "flex w-full flex-col gap-2"
+                    : "block w-full space-y-2"
+            }
+            style={
+              footerContainerArrangement === "grid-2"
+                ? {
+                    gridTemplateColumns:
+                      "repeat(auto-fit, minmax(min(220px, 100%), 1fr))",
                   }
-                  style={{
-                    width:
-                      getNumeric(
-                        completeMap[getLayoutContainerWidthKey(container.id)],
-                        0,
-                        1200,
-                      ) > 0
-                        ? `${getNumeric(
-                            completeMap[getLayoutContainerWidthKey(container.id)],
-                            0,
-                            1200,
-                          )}px`
-                        : undefined,
-                    minHeight:
-                      getNumeric(
-                        completeMap[getLayoutContainerHeightKey(container.id)],
-                        0,
-                        600,
-                      ) > 0
-                        ? `${getNumeric(
-                            completeMap[getLayoutContainerHeightKey(container.id)],
-                            0,
-                            600,
-                          )}px`
-                        : undefined,
-                    paddingLeft: `${getNumeric(
-                      completeMap[getLayoutContainerPaddingXKey(container.id)],
-                      0,
-                      300,
-                    )}px`,
-                    paddingRight: `${getNumeric(
-                      completeMap[getLayoutContainerPaddingXKey(container.id)],
-                      0,
-                      300,
-                    )}px`,
-                    paddingTop: `${getNumeric(
-                      completeMap[getLayoutContainerPaddingYKey(container.id)],
-                      0,
-                      300,
-                    )}px`,
-                    paddingBottom: `${getNumeric(
-                      completeMap[getLayoutContainerPaddingYKey(container.id)],
-                      0,
-                      300,
-                    )}px`,
-                    marginLeft: `${getNumeric(
-                      completeMap[getLayoutContainerMarginXKey(container.id)],
-                      0,
-                      300,
-                    )}px`,
-                    marginRight: `${getNumeric(
-                      completeMap[getLayoutContainerMarginXKey(container.id)],
-                      0,
-                      300,
-                    )}px`,
-                    marginTop: `${getNumeric(
-                      completeMap[getLayoutContainerMarginYKey(container.id)],
-                      0,
-                      300,
-                    )}px`,
-                    marginBottom: `${getNumeric(
-                      completeMap[getLayoutContainerMarginYKey(container.id)],
-                      0,
-                      300,
-                    )}px`,
-                  }}
-                >
-                  {elements.length === 0 ? (
-                    <div className="min-h-8" />
-                  ) : (
-                    elements.map((element) => {
-                      const isDefaultText =
-                        container.id === "footer-text" &&
-                        element.id === "footer-text-default";
-                      const valueKey = isDefaultText
-                        ? LANDING_LAYOUT_FOOTER_TEXT_KEY
-                        : getFooterElementValueKey(element.id);
-                      const value = completeMap[valueKey] ?? "";
-
-                      if (element.type === "image") {
-                        return (
-                          <img
-                            key={element.id}
-                            src={value}
-                            alt={element.label}
-                            className="h-24 w-auto object-cover"
-                          />
-                        );
-                      }
-                      if (element.type === "video") {
-                        return (
-                          <video
-                            key={element.id}
-                            src={value}
-                            className="h-24 w-auto"
-                            controls={previewMode}
-                          />
-                        );
-                      }
-                      if (element.type === "line-horizontal") {
-                        return (
-                          <div
-                            key={element.id}
-                            className="my-2 h-px w-full bg-slate-700"
-                          />
-                        );
-                      }
-                      if (element.type === "line-vertical") {
-                        return (
-                          <div
-                            key={element.id}
-                            className="my-2 h-8 w-px bg-slate-700"
-                          />
-                        );
-                      }
-
-                      return (
-                        <p
-                          key={element.id}
-                          className="font-fira text-4xl font-semibold tracking-tight text-slate-800"
-                        >
-                          {value || footerText}
-                        </p>
-                      );
-                    })
-                  )}
-                </div>
-              );
-            })}
+                : undefined
+            }
+          >
+            {footerRootContainers.map((container) => renderFooterContainer(container))}
           </div>
         </footer>
         {previewMode && onSelectLayoutSection ? (
