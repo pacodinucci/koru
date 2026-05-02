@@ -1,4 +1,4 @@
-import { BlogPostStatus } from "@prisma/client";
+﻿import { BlogPostStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
@@ -44,7 +44,7 @@ export async function getPublishedPostBySlug(slug: string) {
   });
 }
 
-export async function getAdminPosts() {
+export async function getDashboardPosts() {
   return prisma.blogPost.findMany({
     orderBy: [{ createdAt: "desc" }],
     select: {
@@ -62,3 +62,4 @@ export async function getAdminPosts() {
     },
   });
 }
+

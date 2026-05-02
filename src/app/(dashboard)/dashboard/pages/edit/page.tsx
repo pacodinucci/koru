@@ -1,9 +1,9 @@
-import { headers } from "next/headers";
+﻿import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { auth } from "@/lib/auth";
-import { discoverPagesGroupRoutes, getEditableCmsPage } from "@/modules/admin/server/cms-pages.repository";
+import { discoverPagesGroupRoutes, getEditableCmsPage } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { saveDashboardPageAction } from "@/modules/dashboard/server/dashboard-pages.actions";
 
@@ -125,3 +125,4 @@ export default async function DashboardPagesEditPage({
     </DashboardShell>
   );
 }
+

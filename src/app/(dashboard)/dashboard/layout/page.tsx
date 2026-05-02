@@ -1,9 +1,9 @@
-import { headers } from "next/headers";
+﻿import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { getCmsDraftTextMap } from "@/modules/cms/server/cms-text.repository";
-import { discoverPagesGroupRoutes } from "@/modules/admin/server/cms-pages.repository";
+import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 
 export default async function DashboardLayoutPage() {
@@ -29,3 +29,4 @@ export default async function DashboardLayoutPage() {
     />
   );
 }
+

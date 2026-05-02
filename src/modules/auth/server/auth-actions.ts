@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -41,7 +41,7 @@ export async function signInAction(formData: FormData) {
     redirect(getErrorPath("/sign-in", "Email o password incorrectos."));
   }
 
-  redirect("/admin");
+  redirect("/dashboard");
 }
 
 export async function signUpAction(formData: FormData) {
@@ -66,7 +66,7 @@ export async function signUpAction(formData: FormData) {
     );
   }
 
-  redirect("/admin");
+  redirect("/dashboard");
 }
 
 export async function signOutAction() {
@@ -76,3 +76,4 @@ export async function signOutAction() {
 
   redirect("/sign-in");
 }
+

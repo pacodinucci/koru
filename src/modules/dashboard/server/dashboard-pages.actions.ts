@@ -1,9 +1,9 @@
-"use server";
+﻿"use server";
 
 import { redirect } from "next/navigation";
 import { PageStatus } from "@prisma/client";
 
-import { saveEditableCmsPage } from "@/modules/admin/server/cms-pages.repository";
+import { saveEditableCmsPage } from "@/modules/dashboard/server/cms-pages.repository";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -38,3 +38,4 @@ export async function saveDashboardPageAction(formData: FormData) {
 
   redirect(`/dashboard/pages/edit?slug=${encodeURIComponent(slug)}&saved=1`);
 }
+

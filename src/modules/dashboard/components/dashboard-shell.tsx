@@ -18,12 +18,12 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-import { CmsLandingEditor } from "@/modules/admin/components/cms-landing-editor";
+import { CmsLandingEditor } from "@/modules/dashboard/components/cms-landing-editor";
 import {
-  AdminEditorPanelLayout,
-  AdminEditorPanelProvider,
-  useAdminEditorPanel,
-} from "@/modules/admin/components/admin-editor-panel";
+  DashboardEditorPanelLayout,
+  DashboardEditorPanelProvider,
+  useDashboardEditorPanel,
+} from "@/modules/dashboard/components/dashboard-editor-panel";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Breadcrumb,
@@ -272,7 +272,7 @@ export function DashboardShell({
       </Sidebar>
 
       <SidebarInset className="h-svh bg-slate-50 md:h-[calc(100svh-1rem)]">
-        <AdminEditorPanelProvider
+        <DashboardEditorPanelProvider
           defaultOpen={
             panelDefaultOpen || editorMode === "layout"
           }
@@ -287,7 +287,7 @@ export function DashboardShell({
           >
             {children}
           </DashboardCanvas>
-        </AdminEditorPanelProvider>
+        </DashboardEditorPanelProvider>
       </SidebarInset>
     </SidebarProvider>
   );
@@ -310,7 +310,7 @@ function DashboardCanvas({
   children?: ReactNode;
   showPanelToggle: boolean;
 }) {
-  const { open, setOpen } = useAdminEditorPanel();
+  const { open, setOpen } = useDashboardEditorPanel();
   const isCmsEditor = !children;
   const canUsePanel = isCmsEditor || showPanelToggle;
 
@@ -345,7 +345,7 @@ function DashboardCanvas({
       </header>
 
       {isCmsEditor ? (
-        <AdminEditorPanelLayout className="min-h-0 h-full flex-1" variant="flush">
+        <DashboardEditorPanelLayout className="min-h-0 h-full flex-1" variant="flush">
           <main className="h-full min-h-0 min-w-0 overflow-hidden p-0">
             <CmsLandingEditor
               initialTextMap={initialTextMap ?? {}}
@@ -355,13 +355,13 @@ function DashboardCanvas({
               editorMode={editorMode}
             />
           </main>
-        </AdminEditorPanelLayout>
+        </DashboardEditorPanelLayout>
       ) : canUsePanel ? (
-        <AdminEditorPanelLayout className="min-h-0 h-full flex-1" variant="flush">
+        <DashboardEditorPanelLayout className="min-h-0 h-full flex-1" variant="flush">
           <main className="h-full min-h-0 min-w-0 overflow-y-auto p-2 md:p-3 lg:p-4">
             {children}
           </main>
-        </AdminEditorPanelLayout>
+        </DashboardEditorPanelLayout>
       ) : (
         <main className="h-full min-h-0 min-w-0 overflow-y-auto p-2 md:p-3 lg:p-4">
           {children}
@@ -370,3 +370,4 @@ function DashboardCanvas({
     </div>
   );
 }
+

@@ -1,8 +1,8 @@
-"use server";
+﻿"use server";
 
 import { z } from "zod";
 
-import { discoverPagesGroupRoutes } from "@/modules/admin/server/cms-pages.repository";
+import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import {
   getCmsDraftTextMap,
   getCmsDraftTextMapBySlug,
@@ -79,3 +79,4 @@ export async function publishAllCmsPagesAction() {
 
   return { ok: true as const, message: "Global publish completed." };
 }
+

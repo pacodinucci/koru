@@ -1,16 +1,16 @@
-import { headers } from "next/headers";
+﻿import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { auth } from "@/lib/auth";
-import { AdminDashboardShell } from "@/modules/admin/components/admin-dashboard-shell";
+import { DashboardShellLegacy } from "@/modules/dashboard/components/dashboard-shell-legacy";
 import { signOutAction } from "@/modules/auth/server/auth-actions";
 
-type AdminBlogPageViewProps = {
+type DashboardBlogPageViewProps = {
   children: ReactNode;
 };
 
-export async function AdminBlogPageView({ children }: AdminBlogPageViewProps) {
+export async function DashboardBlogPageView({ children }: DashboardBlogPageViewProps) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -20,13 +20,15 @@ export async function AdminBlogPageView({ children }: AdminBlogPageViewProps) {
   }
 
   return (
-    <AdminDashboardShell
+    <DashboardShellLegacy
       userEmail={session.user.email}
-      currentPath="/admin/blog"
+      currentPath="/dashboard/blog"
       breadcrumbPage="Blog"
       onSignOut={signOutAction}
     >
       {children}
-    </AdminDashboardShell>
+    </DashboardShellLegacy>
   );
 }
+
+

@@ -27,12 +27,49 @@ export const LANDING_LAYOUT_NAV_LINK6_HREF_KEY = "__landing_layout_nav_link6_hre
 export const LANDING_LAYOUT_FOOTER_BG_KEY = "__landing_layout_footer_bg";
 export const LANDING_LAYOUT_FOOTER_TEXT_KEY = "__landing_layout_footer_text";
 export const LANDING_LAYOUT_FOOTER_HEIGHT_KEY = "__landing_layout_footer_height";
+export const LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY =
+  "__landing_layout_footer_containers_layout";
 
 export type LandingLayoutNavLink = {
   id: string;
   label: string;
   href: string;
 };
+
+export type LayoutContainerMode = "fixed" | "free";
+export type LayoutContainerArrangement =
+  | "block"
+  | "flex-row"
+  | "flex-column"
+  | "grid-2";
+
+export type LandingLayoutContainerRules = {
+  mode: LayoutContainerMode;
+  allowCreate: boolean;
+  allowMove: boolean;
+  allowArrangementSelect: boolean;
+  allowedArrangements: LayoutContainerArrangement[];
+  defaultArrangement: LayoutContainerArrangement;
+};
+
+export const landingLayoutContainerRules = {
+  navbar: {
+    mode: "fixed",
+    allowCreate: false,
+    allowMove: false,
+    allowArrangementSelect: false,
+    allowedArrangements: ["block"],
+    defaultArrangement: "block",
+  } satisfies LandingLayoutContainerRules,
+  footer: {
+    mode: "free",
+    allowCreate: true,
+    allowMove: true,
+    allowArrangementSelect: true,
+    allowedArrangements: ["block", "flex-row", "flex-column", "grid-2"],
+    defaultArrangement: "flex-column",
+  } satisfies LandingLayoutContainerRules,
+} as const;
 
 function getDefaultLayoutNavLinks(): LandingLayoutNavLink[] {
   return [

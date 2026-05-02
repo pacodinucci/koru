@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { BlogPostStatus, Prisma } from "@prisma/client";
 import { headers } from "next/headers";
@@ -41,22 +41,22 @@ function slugify(value: string) {
     .replace(/^-|-$/g, "");
 }
 
-function resolveAdminPath(formData: FormData) {
-  const raw = String(formData.get("adminPath") ?? "").trim();
-  if (raw === "/dashboard/blog" || raw === "/admin/blog") {
+function resolveDashboardPath(formData: FormData) {
+  const raw = String(formData.get("dashboardPath") ?? "").trim();
+  if (raw === "/dashboard/blog" || raw === "/dashboard/blog") {
     return raw;
   }
-  return "/admin/blog";
+  return "/dashboard/blog";
 }
 
-function buildAdminError(message: string, adminPath: string) {
+function buildDashboardError(message: string, dashboardPath: string) {
   const params = new URLSearchParams({ error: message });
-  return `${adminPath}?${params.toString()}`;
+  return `${dashboardPath}?${params.toString()}`;
 }
 
-function buildAdminSuccess(message: string, adminPath: string) {
+function buildDashboardSuccess(message: string, dashboardPath: string) {
   const params = new URLSearchParams({ ok: message });
-  return `${adminPath}?${params.toString()}`;
+  return `${dashboardPath}?${params.toString()}`;
 }
 
 function buildCommentPath(slug: string, message?: string) {
@@ -79,7 +79,7 @@ function stripHtml(value: string) {
 }
 
 export async function createBlogPostAction(formData: FormData) {
-  const adminPath = resolveAdminPath(formData);
+  const dashboardPath = resolveDashboardPath(formData);
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session) {
@@ -99,7 +99,7 @@ export async function createBlogPostAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(buildAdminError("Revisa los datos del post.", adminPath));
+    redirect(buildDashboardError("Revisa los datos del post.", dashboardPath));
   }
 
   const exists = await prisma.blogPost.findUnique({
@@ -108,21 +108,21 @@ export async function createBlogPostAction(formData: FormData) {
   });
 
   if (exists) {
-    redirect(buildAdminError("El slug ya existe.", adminPath));
+    redirect(buildDashboardError("El slug ya existe.", dashboardPath));
   }
 
   let parsedContentJson: Prisma.InputJsonValue = {};
   try {
     parsedContentJson = JSON.parse(parsed.data.contentJson) as Prisma.InputJsonValue;
   } catch {
-    redirect(buildAdminError("El contenido del post es invalido.", adminPath));
+    redirect(buildDashboardError("El contenido del post es invalido.", dashboardPath));
   }
 
   if (parsed.data.contentHtml.includes('data-placeholder=\"true\"')) {
     redirect(
-      buildAdminError(
+      buildDashboardError(
         "Completa todas las imagenes pendientes de la galeria antes de guardar.",
-        adminPath,
+        dashboardPath,
       ),
     );
   }
@@ -132,9 +132,9 @@ export async function createBlogPostAction(formData: FormData) {
 
   if (plainTextContent.length < 30) {
     redirect(
-      buildAdminError(
+      buildDashboardError(
         "El post necesita mas contenido de texto para publicarse.",
-        adminPath,
+        dashboardPath,
       ),
     );
   }
@@ -158,10 +158,10 @@ export async function createBlogPostAction(formData: FormData) {
   if (publishedAt) {
     revalidatePath(`/blog/${parsed.data.slug}`);
   }
-  revalidatePath("/admin/blog");
+  revalidatePath("/dashboard/blog");
   revalidatePath("/dashboard/blog");
 
-  redirect(buildAdminSuccess("Post creado correctamente.", adminPath));
+  redirect(buildDashboardSuccess("Post creado correctamente.", dashboardPath));
 }
 
 export async function createBlogCommentAction(formData: FormData) {
@@ -207,3 +207,4 @@ export async function createBlogCommentAction(formData: FormData) {
 
   redirect(buildCommentPath(post.slug, "ok"));
 }
+

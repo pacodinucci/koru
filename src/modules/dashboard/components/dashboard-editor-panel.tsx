@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
-type AdminEditorPanelContextValue = {
+type DashboardEditorPanelContextValue = {
   open: boolean;
   setOpen: (next: boolean) => void;
   toggleOpen: () => void;
@@ -23,20 +23,20 @@ type AdminEditorPanelContextValue = {
   setMobilePortalTarget: (node: HTMLDivElement | null) => void;
 };
 
-const AdminEditorPanelContext =
-  createContext<AdminEditorPanelContextValue | null>(null);
+const DashboardEditorPanelContext =
+  createContext<DashboardEditorPanelContextValue | null>(null);
 
-export function useAdminEditorPanel() {
-  const context = useContext(AdminEditorPanelContext);
+export function useDashboardEditorPanel() {
+  const context = useContext(DashboardEditorPanelContext);
   if (!context) {
     throw new Error(
-      "useAdminEditorPanel must be used within AdminEditorPanelProvider.",
+      "useDashboardEditorPanel must be used within DashboardEditorPanelProvider.",
     );
   }
   return context;
 }
 
-export function AdminEditorPanelProvider({
+export function DashboardEditorPanelProvider({
   children,
   defaultOpen = false,
 }: {
@@ -56,7 +56,7 @@ export function AdminEditorPanelProvider({
 
   const portalTarget = isMobile ? mobilePortalTarget : desktopPortalTarget;
 
-  const value = useMemo<AdminEditorPanelContextValue>(
+  const value = useMemo<DashboardEditorPanelContextValue>(
     () => ({
       open,
       setOpen,
@@ -69,13 +69,13 @@ export function AdminEditorPanelProvider({
   );
 
   return (
-    <AdminEditorPanelContext.Provider value={value}>
+    <DashboardEditorPanelContext.Provider value={value}>
       {children}
-    </AdminEditorPanelContext.Provider>
+    </DashboardEditorPanelContext.Provider>
   );
 }
 
-export function AdminEditorPanelLayout({
+export function DashboardEditorPanelLayout({
   children,
   className,
   variant = "inset",
@@ -85,7 +85,7 @@ export function AdminEditorPanelLayout({
   variant?: "inset" | "flush";
 }) {
   const { open, setDesktopPortalTarget, setMobilePortalTarget } =
-    useAdminEditorPanel();
+    useDashboardEditorPanel();
   const panelWidthClassName =
     variant === "flush" ? "w-80" : "w-(--sidebar-width)";
   const desktopPaddingClassName = variant === "flush" ? "p-0" : "p-2";
@@ -141,12 +141,12 @@ export function AdminEditorPanelLayout({
   );
 }
 
-export function AdminEditorPanelToggleButton({
+export function DashboardEditorPanelToggleButton({
   className,
 }: {
   className?: string;
 }) {
-  const { open, setOpen } = useAdminEditorPanel();
+  const { open, setOpen } = useDashboardEditorPanel();
 
   return (
     <Button
@@ -157,7 +157,8 @@ export function AdminEditorPanelToggleButton({
       onClick={() => setOpen(!open)}
     >
       <SlidersHorizontal className="h-4 w-4" />
-      {open ? "Cerrar panel de edición" : "Abrir panel de edición"}
+      {open ? "Cerrar panel de ediciÃ³n" : "Abrir panel de ediciÃ³n"}
     </Button>
   );
 }
+

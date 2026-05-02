@@ -1,4 +1,4 @@
-import type { CmsSection } from "@/modules/admin/types/dashboard";
+﻿import type { CmsSection } from "@/modules/dashboard/types/dashboard";
 import { getLandingFieldSizeKey } from "@/modules/landing/types/landing-text";
 
 export const cmsLandingSections: CmsSection[] = [
@@ -162,3 +162,4 @@ export const cmsLandingDefaultTextMap = Object.fromEntries(
 ) as Record<string, string>;
 
 export const cmsLandingTextKeys = Object.keys(cmsLandingDefaultTextMap);
+

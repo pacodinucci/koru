@@ -1,19 +1,19 @@
-import { headers } from "next/headers";
+﻿import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { auth } from "@/lib/auth";
-import { AdminDashboardShell } from "@/modules/admin/components/admin-dashboard-shell";
-import { saveCmsPageAction } from "@/modules/admin/server/cms-pages.actions";
-import { getEditableCmsPage } from "@/modules/admin/server/cms-pages.repository";
+import { DashboardShellLegacy } from "@/modules/dashboard/components/dashboard-shell-legacy";
+import { saveCmsPageAction } from "@/modules/dashboard/server/cms-pages.actions";
+import { getEditableCmsPage } from "@/modules/dashboard/server/cms-pages.repository";
 import { signOutAction } from "@/modules/auth/server/auth-actions";
 
-type AdminPageEditViewProps = {
+type DashboardPageEditViewProps = {
   slug: string;
   saved?: boolean;
 };
 
-export async function AdminPageEditView({ slug, saved = false }: AdminPageEditViewProps) {
+export async function DashboardPageEditView({ slug, saved = false }: DashboardPageEditViewProps) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -25,9 +25,9 @@ export async function AdminPageEditView({ slug, saved = false }: AdminPageEditVi
   const page = await getEditableCmsPage(slug);
 
   return (
-    <AdminDashboardShell
+    <DashboardShellLegacy
       userEmail={session.user.email}
-      currentPath="/admin/pages"
+      currentPath="/dashboard/pages"
       breadcrumbPage={`CMS / Pages / ${slug}`}
       onSignOut={signOutAction}
     >
@@ -38,7 +38,7 @@ export async function AdminPageEditView({ slug, saved = false }: AdminPageEditVi
             <p className="mt-1 font-mono text-sm text-slate-600">{slug}</p>
           </div>
           <Link
-            href="/admin/pages"
+            href="/dashboard/pages"
             className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
           >
             Volver
@@ -113,6 +113,8 @@ export async function AdminPageEditView({ slug, saved = false }: AdminPageEditVi
           </button>
         </form>
       </div>
-    </AdminDashboardShell>
+    </DashboardShellLegacy>
   );
 }
+
+

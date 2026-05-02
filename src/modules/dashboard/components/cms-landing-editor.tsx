@@ -24,6 +24,11 @@ import {
   Laptop,
   Tablet,
   Smartphone,
+  Pencil,
+  Rows3,
+  Columns3,
+  Grid2x2,
+  Square,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -39,11 +44,12 @@ import { Input } from "@/components/ui/input";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { useAdminEditorPanel } from "@/modules/admin/components/admin-editor-panel";
+import { useDashboardEditorPanel } from "@/modules/dashboard/components/dashboard-editor-panel";
 import { CmsPreviewFrame } from "@/modules/dashboard/components/cms-preview-frame";
 import {
   LANDING_BACKGROUND_SCOPES_KEY,
   LANDING_LAYOUT_FOOTER_BG_KEY,
+  LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY,
   LANDING_LAYOUT_FOOTER_HEIGHT_KEY,
   LANDING_LAYOUT_FOOTER_TEXT_KEY,
   LANDING_LAYOUT_NAV_BG_KEY,
@@ -88,6 +94,7 @@ import {
   getSectionFooterHeightKey,
   getSectionFooterMinHeightKey,
   getSectionItemsOrderKey,
+  landingLayoutContainerRules,
   landingSectionCatalog,
   parseSectionExtraElements,
   parseSectionItemsOrder,
@@ -96,6 +103,7 @@ import {
   type LandingSectionInstance,
   type SectionExtraElementType,
   type LandingSectionType,
+  type LayoutContainerArrangement,
 } from "@/modules/landing/config/landing-sections";
 import {
   createResponsiveScopedTextMap,
@@ -262,6 +270,197 @@ function createLayoutNavLinkId() {
   return `nav-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 }
 
+type FooterContainerElementType =
+  | "text"
+  | "image"
+  | "video"
+  | "line-horizontal"
+  | "line-vertical";
+
+type FooterContainerElement = {
+  id: string;
+  type: FooterContainerElementType;
+  label: string;
+};
+type FooterContainerChildRef = {
+  id: string;
+  type: "element" | "container";
+};
+
+const LANDING_LAYOUT_FOOTER_ELEMENTS_KEY = "__landing_layout_footer_elements";
+const LANDING_LAYOUT_FOOTER_CONTAINERS_KEY = "__landing_layout_footer_containers";
+const LANDING_LAYOUT_FOOTER_CHILDREN_KEY = "__landing_layout_footer_children";
+
+type FooterContainer = {
+  id: string;
+  name: string;
+  parentId?: string | null;
+};
+
+function getFooterElementValueKey(elementId: string) {
+  return `__landing_layout_footer_element_${elementId}_value`;
+}
+
+function getFooterContainerElementsKey(containerId: string) {
+  return `${LANDING_LAYOUT_FOOTER_ELEMENTS_KEY}_${containerId}`;
+}
+function getFooterContainerChildrenKey(containerId: string) {
+  return `${LANDING_LAYOUT_FOOTER_CHILDREN_KEY}_${containerId}`;
+}
+
+function parseFooterContainers(textMap: LandingTextMap): FooterContainer[] {
+  const raw = textMap[LANDING_LAYOUT_FOOTER_CONTAINERS_KEY];
+  if (!raw) {
+    return [{ id: "footer-text", name: "Texto footer" }];
+  }
+  try {
+    const parsed = JSON.parse(raw) as FooterContainer[];
+    const valid = parsed.filter(
+      (item) =>
+        item &&
+        typeof item.id === "string" &&
+        item.id.trim() !== "" &&
+        typeof item.name === "string" &&
+        (item.parentId == null || typeof item.parentId === "string"),
+    );
+    return valid.length > 0
+      ? valid
+      : [{ id: "footer-text", name: "Texto footer" }];
+  } catch {
+    return [{ id: "footer-text", name: "Texto footer" }];
+  }
+}
+
+function parseFooterContainerElements(
+  textMap: LandingTextMap,
+  containerId: string,
+): FooterContainerElement[] {
+  const raw = textMap[getFooterContainerElementsKey(containerId)];
+  if (!raw) {
+    return containerId === "footer-text"
+      ? [{ id: "footer-text-default", type: "text", label: "Texto" }]
+      : [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as FooterContainerElement[];
+    const valid = parsed.filter(
+      (item) =>
+        item &&
+        typeof item.id === "string" &&
+        typeof item.label === "string" &&
+        (item.type === "text" ||
+          item.type === "image" ||
+          item.type === "video" ||
+          item.type === "line-horizontal" ||
+          item.type === "line-vertical"),
+    );
+    return valid.length > 0
+      ? valid
+      : containerId === "footer-text"
+        ? [{ id: "footer-text-default", type: "text", label: "Texto" }]
+        : [];
+  } catch {
+    return containerId === "footer-text"
+      ? [{ id: "footer-text-default", type: "text", label: "Texto" }]
+      : [];
+  }
+}
+
+function parseFooterContainerChildren(
+  textMap: LandingTextMap,
+  containerId: string,
+  allContainers: FooterContainer[],
+): FooterContainerChildRef[] {
+  const raw = textMap[getFooterContainerChildrenKey(containerId)];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as FooterContainerChildRef[];
+      const valid = parsed.filter(
+        (item) =>
+          item &&
+          typeof item.id === "string" &&
+          (item.type === "element" || item.type === "container"),
+      );
+      if (valid.length > 0) {
+        return valid;
+      }
+    } catch {
+      // fallback below
+    }
+  }
+
+  const legacyElements = parseFooterContainerElements(textMap, containerId).map(
+    (item) => ({ id: item.id, type: "element" as const }),
+  );
+  const legacyContainers = allContainers
+    .filter((container) => container.parentId === containerId)
+    .map((item) => ({ id: item.id, type: "container" as const }));
+  return [...legacyElements, ...legacyContainers];
+}
+
+function getFooterElementDefaultValue(type: FooterContainerElementType) {
+  switch (type) {
+    case "image":
+      return "/assets/img1.jpg";
+    case "video":
+      return "/assets/vid1.mp4";
+    case "line-horizontal":
+    case "line-vertical":
+      return "1";
+    case "text":
+    default:
+      return "Koru OSA";
+  }
+}
+
+function getFooterElementLabel(type: FooterContainerElementType, index: number) {
+  switch (type) {
+    case "image":
+      return `Imagen ${index}`;
+    case "video":
+      return `Video ${index}`;
+    case "line-horizontal":
+      return `Linea horizontal ${index}`;
+    case "line-vertical":
+      return `Linea vertical ${index}`;
+    case "text":
+    default:
+      return `Texto ${index}`;
+  }
+}
+
+function getLayoutNavContainerNameKey(containerId: string) {
+  return `__landing_layout_nav_container_${containerId}_name`;
+}
+
+function getLayoutNavContainerPaddingXKey(containerId: string) {
+  return `__landing_layout_nav_container_${containerId}_padding_x`;
+}
+
+function getLayoutNavContainerPaddingYKey(containerId: string) {
+  return `__landing_layout_nav_container_${containerId}_padding_y`;
+}
+
+function getLayoutContainerWidthKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_width`;
+}
+
+function getLayoutContainerHeightKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_height`;
+}
+
+function getLayoutContainerMarginXKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_margin_x`;
+}
+
+function getLayoutContainerMarginYKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_margin_y`;
+}
+function getLayoutContainerChildrenLayoutKey(containerId: string) {
+  return `__landing_layout_container_${containerId}_children_layout`;
+}
+
 function getLayoutNavHeight(raw: string | undefined) {
   const parsed = Number.parseInt(raw ?? "", 10);
   if (!Number.isFinite(parsed)) {
@@ -289,6 +488,50 @@ function getNumberValue(
     return fallback;
   }
   return clamp(parsed, min, max);
+}
+
+function getLayoutContainerArrangementValue(
+  raw: string | undefined,
+  fallback: LayoutContainerArrangement,
+  allowed: readonly LayoutContainerArrangement[],
+) {
+  if (raw && allowed.includes(raw as LayoutContainerArrangement)) {
+    return raw as LayoutContainerArrangement;
+  }
+  return fallback;
+}
+
+function getContainerChildrenLayoutMode(raw: string | undefined) {
+  return getLayoutContainerArrangementValue(
+    raw,
+    "block",
+    ["block", "flex-row", "flex-column", "grid-2"],
+  );
+}
+
+function getContainerLayoutOptions() {
+  return [
+    {
+      value: "block",
+      label: <Square className="h-4 w-4" />,
+      srLabel: "Block",
+    },
+    {
+      value: "flex-row",
+      label: <Columns3 className="h-4 w-4" />,
+      srLabel: "Flex fila",
+    },
+    {
+      value: "flex-column",
+      label: <Rows3 className="h-4 w-4" />,
+      srLabel: "Flex columna",
+    },
+    {
+      value: "grid-2",
+      label: <Grid2x2 className="h-4 w-4" />,
+      srLabel: "Grid 2 columnas",
+    },
+  ] as const;
 }
 
 function getSectionEstimatedHeightVh(type: LandingSectionType) {
@@ -803,12 +1046,16 @@ export function CmsLandingEditor({
   const [previewViewportHeight, setPreviewViewportHeight] = useState(0);
   const [isDraggingLayoutBodyPadding, setIsDraggingLayoutBodyPadding] =
     useState(false);
+  const [editingLayoutContainerId, setEditingLayoutContainerId] = useState<
+    string | null
+  >(null);
+  const nextFooterElementIdRef = useRef(1);
   const { open: sidebarOpen } = useSidebar();
   const {
     open: panelOpen,
     setOpen: setPanelOpen,
     portalTarget,
-  } = useAdminEditorPanel();
+  } = useDashboardEditorPanel();
   const compactPreviewSpacing = sidebarOpen && panelOpen;
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const panelRootRef = useRef<HTMLDivElement | null>(null);
@@ -1221,6 +1468,121 @@ export function CmsLandingEditor({
   const layoutNavLinks = useMemo(
     () => parseLandingLayoutNavLinks(textMap),
     [textMap],
+  );
+  const logoContainerName =
+    textMap[getLayoutNavContainerNameKey("navbar-logo")] ?? "Logo";
+  const navOptionsContainerName =
+    textMap[getLayoutNavContainerNameKey("navbar-options")] ?? "Opciones";
+  const logoContainerPaddingX = getNumberValue(
+    textMap[getLayoutNavContainerPaddingXKey("navbar-logo")],
+    0,
+    0,
+    200,
+  );
+  const logoContainerPaddingY = getNumberValue(
+    textMap[getLayoutNavContainerPaddingYKey("navbar-logo")],
+    0,
+    0,
+    200,
+  );
+  const navOptionsPaddingX = getNumberValue(
+    textMap[getLayoutNavContainerPaddingXKey("navbar-options")],
+    0,
+    0,
+    200,
+  );
+  const navOptionsPaddingY = getNumberValue(
+    textMap[getLayoutNavContainerPaddingYKey("navbar-options")],
+    0,
+    0,
+    200,
+  );
+  const footerTextContainerName =
+    textMap[getLayoutNavContainerNameKey("footer-text")] ?? "Texto footer";
+  const footerTextContainerPaddingX = getNumberValue(
+    textMap[getLayoutNavContainerPaddingXKey("footer-text")],
+    0,
+    0,
+    200,
+  );
+  const footerTextContainerPaddingY = getNumberValue(
+    textMap[getLayoutNavContainerPaddingYKey("footer-text")],
+    0,
+    0,
+    200,
+  );
+  const footerContainers = useMemo(
+    () => parseFooterContainers(textMap),
+    [textMap],
+  );
+  const footerRootContainers = useMemo(
+    () =>
+      footerContainers.filter(
+        (container) =>
+          container.parentId == null ||
+          !footerContainers.some((entry) => entry.id === container.parentId),
+      ),
+    [footerContainers],
+  );
+  const getFooterContainerChildren = (parentId: string) =>
+    footerContainers.filter((container) => container.parentId === parentId);
+
+  const getFooterContainerDescendantIds = (
+    containers: FooterContainer[],
+    rootId: string,
+  ) => {
+    const result: string[] = [];
+    const stack = [rootId];
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (!current) {
+        continue;
+      }
+      result.push(current);
+      const children = containers
+        .filter((container) => container.parentId === current)
+        .map((container) => container.id);
+      stack.push(...children);
+    }
+    return result;
+  };
+
+
+  const addFooterContainer = (parentId: string | null) => {
+    setTextMap((previous) => {
+      const currentContainers = parseFooterContainers(previous);
+      const nextId = `footer-container-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const nextContainers = [
+        ...currentContainers,
+        {
+          id: nextId,
+          name: `Contenedor ${currentContainers.length + 1}`,
+          parentId,
+        },
+      ];
+      return {
+        ...previous,
+        [LANDING_LAYOUT_FOOTER_CONTAINERS_KEY]: JSON.stringify(nextContainers),
+        [getFooterContainerElementsKey(nextId)]: "[]",
+        ...(parentId
+          ? {
+              [getFooterContainerChildrenKey(parentId)]: JSON.stringify([
+                ...parseFooterContainerChildren(
+                  previous,
+                  parentId,
+                  currentContainers,
+                ),
+                { id: nextId, type: "container" as const },
+              ]),
+            }
+          : {}),
+      };
+    });
+  };
+  const footerContainerArrangement = getLayoutContainerArrangementValue(
+    textMap[LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY],
+    landingLayoutContainerRules.footer.defaultArrangement,
+    landingLayoutContainerRules.footer.allowedArrangements,
   );
   const selectedSectionVideoTextItems = useMemo(
     () =>
@@ -1922,6 +2284,7 @@ export function CmsLandingEditor({
   function goToAdjacentLayoutSection(direction: "prev" | "next") {
     if (selectedLayoutSectionIndex < 0) {
       setSelectedLayoutSectionId("layout-body");
+      scrollPreviewToLayoutSection("layout-body");
       return;
     }
 
@@ -1935,6 +2298,7 @@ export function CmsLandingEditor({
     }
 
     setSelectedLayoutSectionId(targetSection.id);
+    scrollPreviewToLayoutSection(targetSection.id);
   }
 
   function scrollPreviewToSection(sectionId: string) {
@@ -1947,6 +2311,26 @@ export function CmsLandingEditor({
       `[data-preview-section-id="${sectionId}"]`,
     );
 
+    if (!target) {
+      return;
+    }
+
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+      inline: "nearest",
+    });
+  }
+
+  function scrollPreviewToLayoutSection(sectionId: LayoutSectionId) {
+    const container = previewScrollRef.current;
+    if (!container) {
+      return;
+    }
+
+    const target = container.querySelector<HTMLElement>(
+      `[data-preview-layout-section-id="${sectionId}"]`,
+    );
     if (!target) {
       return;
     }
@@ -2058,6 +2442,437 @@ export function CmsLandingEditor({
       result.ok ? "Cambios publicados." : "No se pudo publicar.",
     );
   }
+  const renderFooterContainerAccordion = (
+    container: FooterContainer,
+    depth = 0,
+  ): ReactNode => {
+    const containerName =
+      textMap[getLayoutNavContainerNameKey(container.id)] ?? container.name;
+    const containerPaddingX = getNumberValue(
+      textMap[getLayoutNavContainerPaddingXKey(container.id)],
+      0,
+      0,
+      200,
+    );
+    const containerPaddingY = getNumberValue(
+      textMap[getLayoutNavContainerPaddingYKey(container.id)],
+      0,
+      0,
+      200,
+    );
+    const footerContainerElements = parseFooterContainerElements(textMap, container.id);
+    const childContainers = getFooterContainerChildren(container.id);
+    const childRefs = parseFooterContainerChildren(
+      textMap,
+      container.id,
+      footerContainers,
+    );
+    const childrenLayoutMode = getContainerChildrenLayoutMode(
+      textMap[getLayoutContainerChildrenLayoutKey(container.id)],
+    );
+
+    return (
+      <details className="panel-accordion" open key={container.id}>
+        <summary
+          className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+          style={{ paddingLeft: `${depth * 10}px` }}
+        >
+          <span className="flex-1 truncate">{containerName}</span>
+          <button
+            type="button"
+            className="container-edit-button inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setEditingLayoutContainerId((current) =>
+                current === container.id ? null : container.id,
+              );
+            }}
+            aria-label="Editar atributos del contenedor footer"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        </summary>
+        <div
+          className="mt-2 space-y-2 rounded-none border bg-background p-2"
+          style={{ marginLeft: `${depth * 10}px` }}
+        >
+          {editingLayoutContainerId === container.id ? (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Disposicion de elementos
+                </label>
+                <PanelRadioGroup
+                  name={`footer-container-layout-${container.id}`}
+                  value={childrenLayoutMode}
+                  options={[...getContainerLayoutOptions()]}
+                  onChange={(nextValue) =>
+                    updateLayoutField(
+                      getLayoutContainerChildrenLayoutKey(container.id),
+                      nextValue,
+                    )
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Nombre contenedor
+                </label>
+                <PanelInput
+                  value={containerName}
+                  onChange={(event) =>
+                    updateLayoutField(
+                      getLayoutNavContainerNameKey(container.id),
+                      event.target.value,
+                    )
+                  }
+                />
+              </div>
+              <SliderValueControl
+                label="Padding X"
+                value={containerPaddingX}
+                min={0}
+                max={200}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutNavContainerPaddingXKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+              <SliderValueControl
+                label="Padding Y"
+                value={containerPaddingY}
+                min={0}
+                max={200}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutNavContainerPaddingYKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+              <SliderValueControl
+                label="Ancho"
+                value={getNumberValue(
+                  textMap[getLayoutContainerWidthKey(container.id)],
+                  0,
+                  0,
+                  1200,
+                )}
+                min={0}
+                max={1200}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutContainerWidthKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+              <SliderValueControl
+                label="Alto"
+                value={getNumberValue(
+                  textMap[getLayoutContainerHeightKey(container.id)],
+                  0,
+                  0,
+                  600,
+                )}
+                min={0}
+                max={600}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutContainerHeightKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+              <SliderValueControl
+                label="Margen X"
+                value={getNumberValue(
+                  textMap[getLayoutContainerMarginXKey(container.id)],
+                  0,
+                  0,
+                  300,
+                )}
+                min={0}
+                max={300}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutContainerMarginXKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+              <SliderValueControl
+                label="Margen Y"
+                value={getNumberValue(
+                  textMap[getLayoutContainerMarginYKey(container.id)],
+                  0,
+                  0,
+                  300,
+                )}
+                min={0}
+                max={300}
+                step={1}
+                onChange={(nextValue) =>
+                  updateLayoutField(
+                    getLayoutContainerMarginYKey(container.id),
+                    String(nextValue),
+                  )
+                }
+              />
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900"
+                      />
+                    }
+                  >
+                    + Agregar elemento
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {(
+                      [
+                        { type: "text", label: "Texto" },
+                        { type: "image", label: "Imagen" },
+                        { type: "video", label: "Video" },
+                        { type: "line-horizontal", label: "Linea horizontal" },
+                        { type: "line-vertical", label: "Linea vertical" },
+                      ] as Array<{
+                        type: FooterContainerElementType;
+                        label: string;
+                      }>
+                    ).map((item) => (
+                      <DropdownMenuItem
+                        key={item.type}
+                        onClick={() => {
+                          const current = parseFooterContainerElements(
+                            textMap,
+                            container.id,
+                          );
+                          const countOfType = current.filter(
+                            (entry) => entry.type === item.type,
+                          ).length;
+                          const nextId = `footer-el-${nextFooterElementIdRef.current++}`;
+                          const nextElement: FooterContainerElement = {
+                            id: nextId,
+                            type: item.type,
+                            label: getFooterElementLabel(
+                              item.type,
+                              countOfType + 1,
+                            ),
+                          };
+                          setTextMap((previous) => ({
+                            ...previous,
+                            [getFooterContainerElementsKey(container.id)]:
+                              JSON.stringify([
+                                ...parseFooterContainerElements(
+                                  previous,
+                                  container.id,
+                                ),
+                                nextElement,
+                              ]),
+                            [getFooterContainerChildrenKey(container.id)]:
+                              JSON.stringify([
+                                ...parseFooterContainerChildren(
+                                  previous,
+                                  container.id,
+                                  parseFooterContainers(previous),
+                                ),
+                                { id: nextId, type: "element" as const },
+                              ]),
+                            [getFooterElementValueKey(nextId)]:
+                              getFooterElementDefaultValue(item.type),
+                          }));
+                        }}
+                      >
+                        {item.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900"
+                    onClick={() => addFooterContainer(container.id)}
+                  >
+                    + Agregar contenedor hijo
+                  </button>
+                  <button
+                    type="button"
+                    className="text-xs text-destructive hover:underline"
+                    onClick={() => {
+                      setTextMap((previous) => {
+                        const currentContainers = parseFooterContainers(previous);
+                        const idsToRemove = getFooterContainerDescendantIds(
+                          currentContainers,
+                          container.id,
+                        );
+                        const nextContainers = currentContainers.filter(
+                          (entry) => !idsToRemove.includes(entry.id),
+                        );
+                        const nextMap = {
+                          ...previous,
+                          [LANDING_LAYOUT_FOOTER_CONTAINERS_KEY]:
+                            JSON.stringify(nextContainers),
+                        };
+                        currentContainers.forEach((entry) => {
+                          nextMap[getFooterContainerChildrenKey(entry.id)] =
+                            JSON.stringify(
+                              parseFooterContainerChildren(
+                                previous,
+                                entry.id,
+                                currentContainers,
+                              ).filter(
+                                (child) =>
+                                  !(
+                                    child.type === "container" &&
+                                    idsToRemove.includes(child.id)
+                                  ),
+                              ),
+                            );
+                        });
+                        idsToRemove.forEach((id) => {
+                          delete nextMap[getFooterContainerElementsKey(id)];
+                          delete nextMap[getFooterContainerChildrenKey(id)];
+                          delete nextMap[getLayoutNavContainerNameKey(id)];
+                          delete nextMap[getLayoutNavContainerPaddingXKey(id)];
+                          delete nextMap[getLayoutNavContainerPaddingYKey(id)];
+                          delete nextMap[getLayoutContainerWidthKey(id)];
+                          delete nextMap[getLayoutContainerHeightKey(id)];
+                          delete nextMap[getLayoutContainerMarginXKey(id)];
+                          delete nextMap[getLayoutContainerMarginYKey(id)];
+                          const elements = parseFooterContainerElements(
+                            previous,
+                            id,
+                          );
+                          elements.forEach((element) => {
+                            if (
+                              !(
+                                id === "footer-text" &&
+                                element.id === "footer-text-default"
+                              )
+                            ) {
+                              delete nextMap[getFooterElementValueKey(element.id)];
+                            }
+                          });
+                        });
+                        if (
+                          editingLayoutContainerId &&
+                          idsToRemove.includes(editingLayoutContainerId)
+                        ) {
+                          setEditingLayoutContainerId(null);
+                        }
+                        return nextMap;
+                      });
+                    }}
+                  >
+                    Quitar contenedor
+                  </button>
+                </div>
+              </div>
+
+              {childRefs.map((childRef) => {
+                if (childRef.type === "container") {
+                  const childContainer = childContainers.find(
+                    (entry) => entry.id === childRef.id,
+                  );
+                  return childContainer
+                    ? renderFooterContainerAccordion(childContainer, depth + 1)
+                    : null;
+                }
+                const element = footerContainerElements.find(
+                  (entry) => entry.id === childRef.id,
+                );
+                if (!element) {
+                  return null;
+                }
+                const isDefaultText =
+                  container.id === "footer-text" &&
+                  element.id === "footer-text-default";
+                const valueKey = isDefaultText
+                  ? LANDING_LAYOUT_FOOTER_TEXT_KEY
+                  : getFooterElementValueKey(element.id);
+
+                return (
+                  <div
+                    key={element.id}
+                    className="space-y-1.5 rounded-sm border bg-muted/20 p-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        {element.label}
+                      </label>
+                      {!isDefaultText ? (
+                        <button
+                          type="button"
+                          className="text-xs text-destructive hover:underline"
+                          onClick={() => {
+                            setTextMap((previous) => {
+                              const current = parseFooterContainerElements(
+                                previous,
+                                container.id,
+                              );
+                              const next = current.filter(
+                                (entry) => entry.id !== element.id,
+                              );
+                              const map = {
+                                ...previous,
+                                [getFooterContainerElementsKey(container.id)]:
+                                  JSON.stringify(next),
+                                [getFooterContainerChildrenKey(container.id)]:
+                                  JSON.stringify(
+                                    parseFooterContainerChildren(
+                                      previous,
+                                      container.id,
+                                      parseFooterContainers(previous),
+                                    ).filter(
+                                      (entry) =>
+                                        !(
+                                          entry.type === "element" &&
+                                          entry.id === element.id
+                                        ),
+                                    ),
+                                  ),
+                              };
+                              delete map[valueKey];
+                              return map;
+                            });
+                          }}
+                        >
+                          Quitar
+                        </button>
+                      ) : null}
+                    </div>
+                    <PanelInput
+                      value={textMap[valueKey] ?? ""}
+                      onChange={(event) =>
+                        updateLayoutField(valueKey, event.target.value)
+                      }
+                    />
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      </details>
+    );
+  };
+
   const panelPortal = portalTarget
     ? createPortal(
         <div
@@ -4686,7 +5501,7 @@ export function CmsLandingEditor({
 
               <div
                 className={cn(
-                  "h-full min-h-0 space-y-4 p-4",
+                  "h-full min-h-0 space-y-2 p-4",
                   editorMode !== "layout" && "hidden",
                 )}
               >
@@ -4740,14 +5555,9 @@ export function CmsLandingEditor({
                       toggleTopLevelAccordion("layout:attributes");
                     }}
                   >
-                    Atributos generales de seccion
+                    Atributos generales
                   </summary>
                   <div className="mt-2 space-y-3">
-                    <p className="text-xs text-muted-foreground">
-                      Seccion:{" "}
-                      {layoutSections[selectedLayoutSectionIndex]?.name ??
-                        "Layout"}
-                    </p>
 
                     {selectedLayoutSectionId === "layout-navbar" ? (
                       <>
@@ -4915,31 +5725,6 @@ export function CmsLandingEditor({
 
                         <details className="panel-accordion panel-accordion-inner">
                           <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                            Contenido
-                          </summary>
-                          <div className="mt-2 space-y-2 rounded-md border bg-background p-2">
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-medium text-muted-foreground">
-                                Texto footer
-                              </label>
-                              <PanelInput
-                                value={
-                                  textMap[LANDING_LAYOUT_FOOTER_TEXT_KEY] ??
-                                  "Koru OSA"
-                                }
-                                onChange={(event) =>
-                                  updateLayoutField(
-                                    LANDING_LAYOUT_FOOTER_TEXT_KEY,
-                                    event.target.value,
-                                  )
-                                }
-                              />
-                            </div>
-                          </div>
-                        </details>
-
-                        <details className="panel-accordion panel-accordion-inner">
-                          <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
                             Dimensiones
                           </summary>
                           <div className="mt-2 space-y-2 rounded-md border bg-background p-2">
@@ -4979,140 +5764,419 @@ export function CmsLandingEditor({
                     ) : null}
                   </div>
                 </details>
+                <div className="h-px w-full bg-border/80" />
 
                 {selectedLayoutSectionId === "layout-navbar" ? (
                   <>
                     <details className="panel-accordion" open>
-                      <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                        Logo
+                      <summary
+                        className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+                        onClick={() => setEditingLayoutContainerId(null)}
+                      >
+                        <span className="flex-1 truncate">{logoContainerName}</span>
+                        <button
+                          type="button"
+                          className="container-edit-button inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setEditingLayoutContainerId((current) =>
+                              current === "navbar-logo" ? null : "navbar-logo",
+                            );
+                          }}
+                          aria-label="Editar atributos del contenedor logo"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
                       </summary>
                       <div className="mt-2 space-y-2 rounded-none border bg-background p-2">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-medium text-muted-foreground">
-                            Logo URL
-                          </label>
-                          <PanelInput
-                            value={
-                              textMap[LANDING_LAYOUT_NAV_LOGO_SRC_KEY] ??
-                              "/branding/koru-logo.png"
-                            }
-                            onChange={(event) =>
-                              updateLayoutField(
-                                LANDING_LAYOUT_NAV_LOGO_SRC_KEY,
-                                event.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-medium text-muted-foreground">
-                            Logo alt
-                          </label>
-                          <PanelInput
-                            value={
-                              textMap[LANDING_LAYOUT_NAV_LOGO_ALT_KEY] ?? "Koru"
-                            }
-                            onChange={(event) =>
-                              updateLayoutField(
-                                LANDING_LAYOUT_NAV_LOGO_ALT_KEY,
-                                event.target.value,
-                              )
-                            }
-                          />
-                        </div>
+                        {editingLayoutContainerId === "navbar-logo" ? (
+                          <>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Nombre contenedor
+                              </label>
+                              <PanelInput
+                                value={logoContainerName}
+                                onChange={(event) =>
+                                  updateLayoutField(
+                                    getLayoutNavContainerNameKey("navbar-logo"),
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                            <SliderValueControl
+                              label="Padding X"
+                              value={logoContainerPaddingX}
+                              min={0}
+                              max={200}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutNavContainerPaddingXKey(
+                                    "navbar-logo",
+                                  ),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                            <SliderValueControl
+                              label="Padding Y"
+                              value={logoContainerPaddingY}
+                              min={0}
+                              max={200}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutNavContainerPaddingYKey(
+                                    "navbar-logo",
+                                  ),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                            <SliderValueControl
+                              label="Ancho"
+                              value={getNumberValue(textMap[getLayoutContainerWidthKey("navbar-logo")], 0, 0, 1200)}
+                              min={0}
+                              max={1200}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutContainerWidthKey("navbar-logo"),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                            <SliderValueControl
+                              label="Alto"
+                              value={getNumberValue(textMap[getLayoutContainerHeightKey("navbar-logo")], 0, 0, 600)}
+                              min={0}
+                              max={600}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutContainerHeightKey("navbar-logo"),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                            <SliderValueControl
+                              label="Margen X"
+                              value={getNumberValue(textMap[getLayoutContainerMarginXKey("navbar-logo")], 0, 0, 300)}
+                              min={0}
+                              max={300}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutContainerMarginXKey("navbar-logo"),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                            <SliderValueControl
+                              label="Margen Y"
+                              value={getNumberValue(textMap[getLayoutContainerMarginYKey("navbar-logo")], 0, 0, 300)}
+                              min={0}
+                              max={300}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutContainerMarginYKey("navbar-logo"),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Logo URL
+                              </label>
+                              <PanelInput
+                                value={
+                                  textMap[LANDING_LAYOUT_NAV_LOGO_SRC_KEY] ??
+                                  "/branding/koru-logo.png"
+                                }
+                                onChange={(event) =>
+                                  updateLayoutField(
+                                    LANDING_LAYOUT_NAV_LOGO_SRC_KEY,
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Logo alt
+                              </label>
+                              <PanelInput
+                                value={
+                                  textMap[LANDING_LAYOUT_NAV_LOGO_ALT_KEY] ??
+                                  "Koru"
+                                }
+                                onChange={(event) =>
+                                  updateLayoutField(
+                                    LANDING_LAYOUT_NAV_LOGO_ALT_KEY,
+                                    event.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                          </>
+                        )}
                       </div>
                     </details>
 
                     <details className="panel-accordion" open>
-                      <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                        Opciones
+                      <summary
+                        className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+                        onClick={() => setEditingLayoutContainerId(null)}
+                      >
+                        <span className="flex-1 truncate">{navOptionsContainerName}</span>
+                        <button
+                          type="button"
+                          className="container-edit-button inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border bg-background"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setEditingLayoutContainerId((current) =>
+                              current === "navbar-options"
+                                ? null
+                                : "navbar-options",
+                            );
+                          }}
+                          aria-label="Editar atributos del contenedor opciones"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
                       </summary>
                       <div className="mt-2 space-y-2 rounded-none border bg-muted/20 p-2">
-                        {layoutNavLinks.map((item, index) => (
-                          <details
-                            key={item.id}
-                            className="panel-accordion panel-accordion-inner"
-                          >
-                            <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                              Opcion {index + 1}
-                            </summary>
-                            <div className="mt-2 grid grid-cols-1 gap-2 rounded-none border bg-background p-2">
-                              <div className="flex justify-end">
-                                <Button
-                                  type="button"
-                                  size="icon-sm"
-                                  variant="ghost"
-                                  className="text-destructive hover:text-destructive"
-                                  onClick={() =>
-                                    updateLayoutNavLinks((links) =>
-                                      links.length <= 1
-                                        ? links
-                                        : links.filter(
-                                            (entry) => entry.id !== item.id,
-                                          ),
-                                    )
-                                  }
-                                  disabled={layoutNavLinks.length <= 1}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
+                        {editingLayoutContainerId === "navbar-options" ? (
+                          <>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Nombre contenedor
+                              </label>
                               <PanelInput
-                                value={item.label}
+                                value={navOptionsContainerName}
                                 onChange={(event) =>
-                                  updateLayoutNavLinks((links) =>
-                                    links.map((entry) =>
-                                      entry.id === item.id
-                                        ? {
-                                            ...entry,
-                                            label: event.target.value,
-                                          }
-                                        : entry,
+                                  updateLayoutField(
+                                    getLayoutNavContainerNameKey(
+                                      "navbar-options",
                                     ),
+                                    event.target.value,
                                   )
                                 }
-                                placeholder="Texto"
-                              />
-                              <PanelInput
-                                value={item.href}
-                                onChange={(event) =>
-                                  updateLayoutNavLinks((links) =>
-                                    links.map((entry) =>
-                                      entry.id === item.id
-                                        ? {
-                                            ...entry,
-                                            href: event.target.value,
-                                          }
-                                        : entry,
-                                    ),
-                                  )
-                                }
-                                placeholder="URL o ancla"
                               />
                             </div>
-                          </details>
-                        ))}
-                        <div className="pt-1">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              updateLayoutNavLinks((links) => [
-                                ...links,
-                                {
-                                  id: createLayoutNavLinkId(),
-                                  label: `Nueva opcion ${links.length + 1}`,
-                                  href: "#",
-                                },
-                              ])
-                            }
-                          >
-                            Agregar opcion
-                          </Button>
-                        </div>
+                            <SliderValueControl
+                              label="Padding X"
+                              value={navOptionsPaddingX}
+                              min={0}
+                              max={200}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutNavContainerPaddingXKey(
+                                    "navbar-options",
+                                  ),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                            <SliderValueControl
+                              label="Padding Y"
+                              value={navOptionsPaddingY}
+                              min={0}
+                              max={200}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutNavContainerPaddingYKey(
+                                    "navbar-options",
+                                  ),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                            <SliderValueControl
+                              label="Ancho"
+                              value={getNumberValue(textMap[getLayoutContainerWidthKey("navbar-options")], 0, 0, 1200)}
+                              min={0}
+                              max={1200}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutContainerWidthKey("navbar-options"),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                            <SliderValueControl
+                              label="Alto"
+                              value={getNumberValue(textMap[getLayoutContainerHeightKey("navbar-options")], 0, 0, 600)}
+                              min={0}
+                              max={600}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutContainerHeightKey("navbar-options"),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                            <SliderValueControl
+                              label="Margen X"
+                              value={getNumberValue(textMap[getLayoutContainerMarginXKey("navbar-options")], 0, 0, 300)}
+                              min={0}
+                              max={300}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutContainerMarginXKey("navbar-options"),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                            <SliderValueControl
+                              label="Margen Y"
+                              value={getNumberValue(textMap[getLayoutContainerMarginYKey("navbar-options")], 0, 0, 300)}
+                              min={0}
+                              max={300}
+                              step={1}
+                              onChange={(nextValue) =>
+                                updateLayoutField(
+                                  getLayoutContainerMarginYKey("navbar-options"),
+                                  String(nextValue),
+                                )
+                              }
+                            />
+                          </>
+                        ) : (
+                          <>
+                            {layoutNavLinks.map((item, index) => (
+                              <details
+                                key={item.id}
+                                className="panel-accordion panel-accordion-inner"
+                              >
+                                <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                  Opcion {index + 1}
+                                </summary>
+                                <div className="mt-2 grid grid-cols-1 gap-2 rounded-none border bg-background p-2">
+                                  <div className="flex justify-end">
+                                    <Button
+                                      type="button"
+                                      size="icon-sm"
+                                      variant="ghost"
+                                      className="text-destructive hover:text-destructive"
+                                      onClick={() =>
+                                        updateLayoutNavLinks((links) =>
+                                          links.length <= 1
+                                            ? links
+                                            : links.filter(
+                                                (entry) => entry.id !== item.id,
+                                              ),
+                                        )
+                                      }
+                                      disabled={layoutNavLinks.length <= 1}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                  <PanelInput
+                                    value={item.label}
+                                    onChange={(event) =>
+                                      updateLayoutNavLinks((links) =>
+                                        links.map((entry) =>
+                                          entry.id === item.id
+                                            ? {
+                                                ...entry,
+                                                label: event.target.value,
+                                              }
+                                            : entry,
+                                        ),
+                                      )
+                                    }
+                                    placeholder="Texto"
+                                  />
+                                  <PanelInput
+                                    value={item.href}
+                                    onChange={(event) =>
+                                      updateLayoutNavLinks((links) =>
+                                        links.map((entry) =>
+                                          entry.id === item.id
+                                            ? {
+                                                ...entry,
+                                                href: event.target.value,
+                                              }
+                                            : entry,
+                                        ),
+                                      )
+                                    }
+                                    placeholder="URL o ancla"
+                                  />
+                                </div>
+                              </details>
+                            ))}
+                            <div className="pt-1">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  updateLayoutNavLinks((links) => [
+                                    ...links,
+                                    {
+                                      id: createLayoutNavLinkId(),
+                                      label: `Nueva opcion ${links.length + 1}`,
+                                      href: "#",
+                                    },
+                                  ])
+                                }
+                              >
+                                Agregar opcion
+                              </Button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </details>
+                  </>
+                ) : null}
+
+                {selectedLayoutSectionId === "layout-footer" ? (
+                  <>
+                    {landingLayoutContainerRules.footer.allowArrangementSelect ? (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Disposicion de contenedores
+                        </label>
+                        <PanelRadioGroup
+                          name="layout-footer-containers-layout"
+                          value={footerContainerArrangement}
+                          options={[...getContainerLayoutOptions()]}
+                          onChange={(nextValue) =>
+                            updateLayoutField(
+                              LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY,
+                              nextValue,
+                            )
+                          }
+                        />
+                      </div>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="mt-1 text-xs font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900"
+                      onClick={() => addFooterContainer(null)}
+                    >
+                      + Agregar contenedor
+                    </button>
+                    {footerRootContainers.map((container) =>
+                      renderFooterContainerAccordion(container),
+                    )}
                   </>
                 ) : null}
               </div>
@@ -5441,6 +6505,7 @@ export function CmsLandingEditor({
                       ? (sectionId) => {
                           setSelectedLayoutSectionId(sectionId);
                           setPanelOpen(true);
+                          scrollPreviewToLayoutSection(sectionId);
                         }
                       : undefined
                   }
@@ -5477,3 +6542,4 @@ export function CmsLandingEditor({
     </CmsPreviewFrame>
   );
 }
+

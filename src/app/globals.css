@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -388,7 +388,7 @@
   min-height: 145px;
 }
 
-.admin-font-fira {
+.dashboard-font-fira {
   font-family: "Fira Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -552,7 +552,7 @@
 .panel-accordion,
 .panel-accordion-inner {
   border: 0;
-  padding: 0;
+  padding: 6px;
   background: transparent;
   border-radius: 0;
 }
@@ -560,7 +560,6 @@
 .panel-accordion[open],
 .panel-accordion-inner[open] {
   background-color: color-mix(in srgb, var(--brand-900) 10%, transparent);
-  padding: 6px;
   border-radius: 0;
 }
 
@@ -570,15 +569,60 @@
 
 .panel-accordion > summary,
 .panel-accordion-inner > summary {
-  padding: 0.6rem 0.85rem;
+  padding: 0.55rem 0.4rem;
+  position: relative;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.panel-accordion > summary::-webkit-details-marker,
+.panel-accordion-inner > summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel-accordion > summary::before,
+.panel-accordion-inner > summary::before {
+  content: "+";
+  width: 0.62rem;
+  display: inline-flex;
+  justify-content: center;
+  flex: 0 0 0.62rem;
+  line-height: 1;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.panel-accordion[open] > summary::before,
+.panel-accordion-inner[open] > summary::before {
+  content: "−";
 }
 
 .panel-accordion > summary + *,
 .panel-accordion-inner > summary + * {
-  padding: 0.2rem 1rem 0.95rem;
+  padding: 0.2rem 0.6rem 0.95rem;
 }
 
 .panel-accordion-inner > summary + * {
+  padding-left: 0.2rem;
+  padding-right: 0.45rem;
   padding-top: 0.1rem;
   padding-bottom: 0.55rem;
 }
+
+.container-edit-button {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel-accordion[open] > summary .container-edit-button,
+.panel-accordion-inner[open] > summary .container-edit-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
