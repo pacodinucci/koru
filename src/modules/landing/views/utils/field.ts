@@ -5,6 +5,8 @@ import {
   getLandingFieldFontFamily,
   getLandingFieldFontSize,
   getLandingFieldFontWeight,
+  getLandingFieldLetterSpacing,
+  getLandingFieldLineHeight,
   getLandingFieldMarginStyle,
   getLandingFieldPaddingStyle,
   type LandingFontFamily,
@@ -20,6 +22,8 @@ export type LandingRenderableField = {
   color: string | null;
   fontFamily: LandingFontFamily | null;
   fontWeight: number | null;
+  lineHeight: number | null;
+  letterSpacing: number | null;
   marginStyle: ReturnType<typeof getLandingFieldMarginStyle>;
   paddingStyle: ReturnType<typeof getLandingFieldPaddingStyle>;
 };
@@ -48,6 +52,8 @@ export function renderField(
     color: getLandingFieldColor(textMap, key),
     fontFamily: getLandingFieldFontFamily(textMap, key),
     fontWeight: getLandingFieldFontWeight(textMap, key),
+    lineHeight: getLandingFieldLineHeight(textMap, key),
+    letterSpacing: getLandingFieldLetterSpacing(textMap, key),
     marginStyle: getLandingFieldMarginStyle(textMap, key),
     paddingStyle: getLandingFieldPaddingStyle(textMap, key),
   };
@@ -70,6 +76,10 @@ export function getFieldStyle(field: LandingRenderableField): CSSProperties {
       ? { fontFamily: getFontFamilyStyleValue(field.fontFamily) }
       : null),
     ...(field.fontWeight ? { fontWeight: field.fontWeight } : null),
+    ...(field.lineHeight ? { lineHeight: field.lineHeight } : null),
+    ...(field.letterSpacing != null
+      ? { letterSpacing: `${field.letterSpacing}px` }
+      : null),
     ...field.marginStyle,
     ...field.paddingStyle,
     ...(field.color ? { color: field.color } : null),

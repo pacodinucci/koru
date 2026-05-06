@@ -16,6 +16,7 @@ import {
   type LandingResponsiveMode,
 } from "@/modules/landing/types/landing-text";
 import { CardsSection } from "@/modules/landing/views/sections/cards-section";
+import { EditorialFeatureSection } from "@/modules/landing/views/sections/editorial-feature-section";
 import { FooterSection } from "@/modules/landing/views/sections/footer-section";
 import { GallerySection } from "@/modules/landing/views/sections/gallery-section";
 import { HeroSection } from "@/modules/landing/views/sections/hero-section";
@@ -180,6 +181,18 @@ function SectionRenderer({
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
         />
       );
+    case "editorial-feature":
+      return (
+        <EditorialFeatureSection
+          section={section}
+          textMap={textMap}
+          previewMode={previewMode}
+          selectedFieldId={selectedFieldId}
+          onSelectField={onSelectField}
+          responsiveMode={responsiveMode}
+          onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+        />
+      );
     case "spore-stack":
       return (
         <SporeFeatureStackSection
@@ -293,7 +306,7 @@ export function LandingView({
   );
 
   return (
-    <div ref={rootRef}>
+    <div ref={rootRef} className="font-fira">
       {groupedSections.map((group, groupIndex) => {
         const scope =
           scopeMap.get(group.scopeId) ??

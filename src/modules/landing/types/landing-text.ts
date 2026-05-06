@@ -106,10 +106,9 @@ export function isResponsiveScopedFieldId(fieldId: string) {
 export function getResponsiveModeFromWidth(
   width: number,
 ): LandingResponsiveMode {
-  // Align with common CSS breakpoints used by the app:
-  // mobile < 768, tablet >= 768, medium >= 1024, large >= 2560.
-  // Product rule: notebook-class screens, including 1920px wide, map to "medium".
-  if (width >= 2560) {
+  // Align with desktop expectations:
+  // mobile < 768, tablet >= 768, medium >= 1024, large >= 1280.
+  if (width >= 1280) {
     return "large";
   }
   if (width >= 1024) {
@@ -195,6 +194,14 @@ export function getLandingFieldButtonVariantKey(fieldId: string) {
 
 export function getLandingFieldLineWidthKey(fieldId: string) {
   return `${fieldId}__line_width`;
+}
+
+export function getLandingFieldLineHeightKey(fieldId: string) {
+  return `${fieldId}__line_height`;
+}
+
+export function getLandingFieldLetterSpacingKey(fieldId: string) {
+  return `${fieldId}__letter_spacing`;
 }
 
 export function getLandingFieldMarginKey(fieldId: string) {
@@ -441,6 +448,40 @@ export function getLandingFieldLineWidth(
   return Math.min(40, Math.max(1, parsed));
 }
 
+export function getLandingFieldLineHeight(
+  textMap: LandingTextMap,
+  fieldId: string,
+) {
+  const raw = textMap[getLandingFieldLineHeightKey(fieldId)]?.trim();
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return Math.min(3, Math.max(0.8, parsed));
+}
+
+export function getLandingFieldLetterSpacing(
+  textMap: LandingTextMap,
+  fieldId: string,
+) {
+  const raw = textMap[getLandingFieldLetterSpacingKey(fieldId)]?.trim();
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return Math.min(40, Math.max(-10, parsed));
+}
+
 function getLandingFieldSpacing(
   textMap: LandingTextMap,
   fieldId: string,
@@ -456,8 +497,23 @@ function getLandingFieldSpacing(
   return Math.min(120, Math.max(0, parsed));
 }
 
+function getLandingFieldMarginSpacing(
+  textMap: LandingTextMap,
+  fieldId: string,
+  keyBuilder: (id: string) => string,
+) {
+  const raw = textMap[keyBuilder(fieldId)];
+  const parsed = Number(raw);
+
+  if (!Number.isFinite(parsed)) {
+    return 0;
+  }
+
+  return Math.min(120, Math.max(-120, parsed));
+}
+
 export function getLandingFieldMargin(textMap: LandingTextMap, fieldId: string) {
-  return getLandingFieldSpacing(textMap, fieldId, getLandingFieldMarginKey);
+  return getLandingFieldMarginSpacing(textMap, fieldId, getLandingFieldMarginKey);
 }
 
 export function getLandingFieldPadding(textMap: LandingTextMap, fieldId: string) {
@@ -475,6 +531,19 @@ function getOptionalSpacingValue(raw: string | undefined) {
   }
 
   return Math.min(120, Math.max(0, parsed));
+}
+
+function getOptionalMarginSpacingValue(raw: string | undefined) {
+  if (raw == null || raw.trim() === "") {
+    return null;
+  }
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return Math.min(120, Math.max(-120, parsed));
 }
 
 function getSpacingMode(raw: string | undefined): SpacingMode {
@@ -554,13 +623,13 @@ export function getLandingFieldMarginStyle(textMap: LandingTextMap, fieldId: str
   }
 
   const mode = getSpacingMode(modeRaw);
-  const margin = getOptionalSpacingValue(textMap[getLandingFieldMarginKey(fieldId)]) ?? 0;
-  const marginX = getOptionalSpacingValue(textMap[getLandingFieldMarginXKey(fieldId)]) ?? 0;
-  const marginY = getOptionalSpacingValue(textMap[getLandingFieldMarginYKey(fieldId)]) ?? 0;
-  const marginTop = getOptionalSpacingValue(textMap[getLandingFieldMarginTopKey(fieldId)]) ?? 0;
-  const marginRight = getOptionalSpacingValue(textMap[getLandingFieldMarginRightKey(fieldId)]) ?? 0;
-  const marginBottom = getOptionalSpacingValue(textMap[getLandingFieldMarginBottomKey(fieldId)]) ?? 0;
-  const marginLeft = getOptionalSpacingValue(textMap[getLandingFieldMarginLeftKey(fieldId)]) ?? 0;
+  const margin = getOptionalMarginSpacingValue(textMap[getLandingFieldMarginKey(fieldId)]) ?? 0;
+  const marginX = getOptionalMarginSpacingValue(textMap[getLandingFieldMarginXKey(fieldId)]) ?? 0;
+  const marginY = getOptionalMarginSpacingValue(textMap[getLandingFieldMarginYKey(fieldId)]) ?? 0;
+  const marginTop = getOptionalMarginSpacingValue(textMap[getLandingFieldMarginTopKey(fieldId)]) ?? 0;
+  const marginRight = getOptionalMarginSpacingValue(textMap[getLandingFieldMarginRightKey(fieldId)]) ?? 0;
+  const marginBottom = getOptionalMarginSpacingValue(textMap[getLandingFieldMarginBottomKey(fieldId)]) ?? 0;
+  const marginLeft = getOptionalMarginSpacingValue(textMap[getLandingFieldMarginLeftKey(fieldId)]) ?? 0;
 
   const style: {
     margin?: string;

@@ -3,7 +3,10 @@
 import { cn } from "@/lib/utils";
 import { SporeShape } from "@/components/spore-shape";
 import { getSectionFieldKey } from "@/modules/landing/config/landing-sections";
-import { getLandingFieldPaddingStyle } from "@/modules/landing/types/landing-text";
+import {
+  getLandingFieldMarginStyle,
+  getLandingFieldPaddingStyle,
+} from "@/modules/landing/types/landing-text";
 import { selectableClass } from "@/modules/landing/views/utils/field";
 import {
   getSectionBackgroundStyle,
@@ -94,12 +97,16 @@ export function SporeFeatureStackSection({
     textMap,
     getSectionFieldKey(section.id, "__section_padding"),
   );
+  const sectionMarginStyle = getLandingFieldMarginStyle(
+    textMap,
+    getSectionFieldKey(section.id, "__section_padding"),
+  );
   const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
   const sectionBorderStyle = getSectionBorderStyle(textMap, section.id);
   const hasImageLayer = hasBackgroundImageLayer(sectionBackgroundStyle);
   const sectionStyle = hasImageLayer
     ? sectionBorderStyle
-    : { ...sectionBackgroundStyle, ...sectionBorderStyle };
+    : { ...sectionBackgroundStyle, ...sectionBorderStyle, ...sectionMarginStyle };
   const bodyPaddingStyle = {
     paddingLeft: "var(--landing-body-padding-x, 24px)",
     paddingRight: "var(--landing-body-padding-x, 24px)",
@@ -109,7 +116,7 @@ export function SporeFeatureStackSection({
   return (
     <section
       className="relative isolate min-h-[200vh] overflow-hidden bg-white"
-      style={sectionStyle}
+      style={hasImageLayer ? { ...sectionStyle, ...sectionMarginStyle } : sectionStyle}
     >
       {hasImageLayer ? (
         <div

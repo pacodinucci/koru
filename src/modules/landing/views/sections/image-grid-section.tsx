@@ -8,6 +8,8 @@ import {
   getLandingFieldFontFamily,
   getLandingFieldFontSize,
   getLandingFieldFontWeight,
+  getLandingFieldLetterSpacing,
+  getLandingFieldLineHeight,
   getLandingFieldMarginStyle,
   getLandingFieldPaddingStyle,
 } from "@/modules/landing/types/landing-text";
@@ -43,6 +45,8 @@ export function ImageGridSection({
     color: getLandingFieldColor(textMap, sharedTextStyleKey),
     fontFamily: getLandingFieldFontFamily(textMap, sharedTextStyleKey),
     fontWeight: getLandingFieldFontWeight(textMap, sharedTextStyleKey),
+    lineHeight: getLandingFieldLineHeight(textMap, sharedTextStyleKey),
+    letterSpacing: getLandingFieldLetterSpacing(textMap, sharedTextStyleKey),
     marginStyle: getLandingFieldMarginStyle(textMap, sharedTextStyleKey),
     paddingStyle: getLandingFieldPaddingStyle(textMap, sharedTextStyleKey),
   };
@@ -75,6 +79,10 @@ export function ImageGridSection({
     textMap,
     getSectionFieldKey(section.id, "__section_padding"),
   );
+  const sectionMarginStyle = getLandingFieldMarginStyle(
+    textMap,
+    getSectionFieldKey(section.id, "__section_padding"),
+  );
   const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
   const sectionBorderStyle = getSectionBorderStyle(textMap, section.id);
   const hasImageLayer = hasBackgroundImageLayer(sectionBackgroundStyle);
@@ -84,6 +92,7 @@ export function ImageGridSection({
         backgroundColor: "#eef0dd",
         ...sectionBackgroundStyle,
         ...sectionBorderStyle,
+        ...sectionMarginStyle,
       };
   const bodyPaddingStyle = {
     paddingLeft: "var(--landing-body-padding-x, 24px)",
@@ -94,7 +103,7 @@ export function ImageGridSection({
   return (
     <section
       className="relative isolate overflow-hidden border-y border-black/10"
-      style={hasImageLayer ? undefined : sectionStyle}
+      style={hasImageLayer ? { ...sectionBorderStyle, ...sectionMarginStyle } : sectionStyle}
     >
       {hasImageLayer ? (
         <div
@@ -136,6 +145,8 @@ export function ImageGridSection({
                     color: sharedTextStyleField.color,
                     fontFamily: sharedTextStyleField.fontFamily,
                     fontWeight: sharedTextStyleField.fontWeight,
+                    lineHeight: sharedTextStyleField.lineHeight,
+                    letterSpacing: sharedTextStyleField.letterSpacing,
                     marginStyle: sharedTextStyleField.marginStyle,
                     paddingStyle: sharedTextStyleField.paddingStyle,
                   })}

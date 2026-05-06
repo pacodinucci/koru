@@ -116,8 +116,18 @@ import {
   getLandingFieldButtonVariantKey,
   getLandingFieldColorKey,
   getLandingFieldFontFamilyKey,
+  getLandingFieldLetterSpacingKey,
   getLandingFieldLineWidthKey,
+  getLandingFieldLineHeightKey,
   getLandingFieldFontWeightKey,
+  getLandingFieldMarginKey,
+  getLandingFieldMarginLeftKey,
+  getLandingFieldMarginModeKey,
+  getLandingFieldMarginRightKey,
+  getLandingFieldMarginTopKey,
+  getLandingFieldMarginBottomKey,
+  getLandingFieldMarginXKey,
+  getLandingFieldMarginYKey,
   getLandingFieldPaddingKey,
   getLandingFieldPaddingBottomKey,
   getLandingFieldPaddingLeftKey,
@@ -483,7 +493,7 @@ function getNumberValue(
   min = 0,
   max = 120,
 ) {
-  const parsed = Number.parseInt(raw ?? "", 10);
+  const parsed = Number.parseFloat(raw ?? "");
   if (!Number.isFinite(parsed)) {
     return fallback;
   }
@@ -536,6 +546,8 @@ function getContainerLayoutOptions() {
 
 function getSectionEstimatedHeightVh(type: LandingSectionType) {
   switch (type) {
+    case "editorial-feature":
+      return 170;
     case "spore-stack":
       return 200;
     case "image-grid":
@@ -1255,6 +1267,14 @@ export function CmsLandingEditor({
   const selectedSectionPaddingFieldId = selectedSection
     ? getSectionFieldKey(selectedSection.id, "__section_padding")
     : null;
+  const selectedSectionEditorialHeaderBackgroundKey =
+    selectedSection?.type === "editorial-feature"
+      ? getSectionFieldKey(selectedSection.id, "__header_background")
+      : null;
+  const selectedSectionEditorialImageSizeKey =
+    selectedSection?.type === "editorial-feature"
+      ? getSectionFieldKey(selectedSection.id, "__image_size")
+      : null;
   const selectedSectionGalleryVariantKey = selectedSection
     ? getSectionGalleryVariantKey(selectedSection.id)
     : null;
@@ -1390,6 +1410,11 @@ export function CmsLandingEditor({
   const selectedSectionPaddingMode = selectedSectionPaddingFieldId
     ? getSpacingModeValue(
         textMap[getLandingFieldPaddingModeKey(selectedSectionPaddingFieldId)],
+      )
+    : "all";
+  const selectedSectionMarginMode = selectedSectionPaddingFieldId
+    ? getSpacingModeValue(
+        textMap[getLandingFieldMarginModeKey(selectedSectionPaddingFieldId)],
       )
     : "all";
   const selectedSectionVideoOverlayOpacityKey = selectedSection
@@ -3977,6 +4002,210 @@ export function CmsLandingEditor({
                               ) : null}
                             </details>
                           ) : null}
+
+                          {selectedSectionPaddingFieldId ? (
+                            <details className="panel-accordion panel-accordion-inner">
+                              <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                                Margen de seccion
+                              </summary>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-muted-foreground">
+                                  Modo
+                                </label>
+                                <PanelRadioGroup
+                                  name={`${selectedSectionPaddingFieldId}-margin-mode`}
+                                  value={selectedSectionMarginMode}
+                                  options={[
+                                    { value: "all", label: "All" },
+                                    { value: "axis", label: "Axis" },
+                                    { value: "sides", label: "Sides" },
+                                  ]}
+                                  onChange={(nextValue) =>
+                                    updateField(
+                                      getLandingFieldMarginModeKey(
+                                        selectedSectionPaddingFieldId,
+                                      ),
+                                      nextValue,
+                                    )
+                                  }
+                                />
+                              </div>
+
+                              {selectedSectionMarginMode === "all" ? (
+                                <SliderValueControl
+                                  label="Margin"
+                                  value={getNumberValue(
+                                    textMap[
+                                      getLandingFieldMarginKey(
+                                        selectedSectionPaddingFieldId,
+                                      )
+                                    ],
+                                    0,
+                                    -120,
+                                    120,
+                                  )}
+                                  min={-120}
+                                  max={120}
+                                  onChange={(value) =>
+                                    updateField(
+                                      getLandingFieldMarginKey(
+                                        selectedSectionPaddingFieldId,
+                                      ),
+                                      String(value),
+                                    )
+                                  }
+                                />
+                              ) : null}
+
+                              {selectedSectionMarginMode === "axis" ? (
+                                <div className="grid grid-cols-1 gap-2">
+                                  <SliderValueControl
+                                    label="Mx"
+                                    value={getNumberValue(
+                                      textMap[
+                                        getLandingFieldMarginXKey(
+                                          selectedSectionPaddingFieldId,
+                                        )
+                                      ],
+                                      0,
+                                      -120,
+                                      120,
+                                    )}
+                                    min={-120}
+                                    max={120}
+                                    onChange={(value) =>
+                                      updateField(
+                                        getLandingFieldMarginXKey(
+                                          selectedSectionPaddingFieldId,
+                                        ),
+                                        String(value),
+                                      )
+                                    }
+                                  />
+                                  <SliderValueControl
+                                    label="My"
+                                    value={getNumberValue(
+                                      textMap[
+                                        getLandingFieldMarginYKey(
+                                          selectedSectionPaddingFieldId,
+                                        )
+                                      ],
+                                      0,
+                                      -120,
+                                      120,
+                                    )}
+                                    min={-120}
+                                    max={120}
+                                    onChange={(value) =>
+                                      updateField(
+                                        getLandingFieldMarginYKey(
+                                          selectedSectionPaddingFieldId,
+                                        ),
+                                        String(value),
+                                      )
+                                    }
+                                  />
+                                </div>
+                              ) : null}
+
+                              {selectedSectionMarginMode === "sides" ? (
+                                <div className="grid grid-cols-1 gap-2">
+                                  <SliderValueControl
+                                    label="Mt"
+                                    value={getNumberValue(
+                                      textMap[
+                                        getLandingFieldMarginTopKey(
+                                          selectedSectionPaddingFieldId,
+                                        )
+                                      ],
+                                      0,
+                                      -120,
+                                      120,
+                                    )}
+                                    min={-120}
+                                    max={120}
+                                    onChange={(value) =>
+                                      updateField(
+                                        getLandingFieldMarginTopKey(
+                                          selectedSectionPaddingFieldId,
+                                        ),
+                                        String(value),
+                                      )
+                                    }
+                                  />
+                                  <SliderValueControl
+                                    label="Mr"
+                                    value={getNumberValue(
+                                      textMap[
+                                        getLandingFieldMarginRightKey(
+                                          selectedSectionPaddingFieldId,
+                                        )
+                                      ],
+                                      0,
+                                      -120,
+                                      120,
+                                    )}
+                                    min={-120}
+                                    max={120}
+                                    onChange={(value) =>
+                                      updateField(
+                                        getLandingFieldMarginRightKey(
+                                          selectedSectionPaddingFieldId,
+                                        ),
+                                        String(value),
+                                      )
+                                    }
+                                  />
+                                  <SliderValueControl
+                                    label="Mb"
+                                    value={getNumberValue(
+                                      textMap[
+                                        getLandingFieldMarginBottomKey(
+                                          selectedSectionPaddingFieldId,
+                                        )
+                                      ],
+                                      0,
+                                      -120,
+                                      120,
+                                    )}
+                                    min={-120}
+                                    max={120}
+                                    onChange={(value) =>
+                                      updateField(
+                                        getLandingFieldMarginBottomKey(
+                                          selectedSectionPaddingFieldId,
+                                        ),
+                                        String(value),
+                                      )
+                                    }
+                                  />
+                                  <SliderValueControl
+                                    label="Ml"
+                                    value={getNumberValue(
+                                      textMap[
+                                        getLandingFieldMarginLeftKey(
+                                          selectedSectionPaddingFieldId,
+                                        )
+                                      ],
+                                      0,
+                                      -120,
+                                      120,
+                                    )}
+                                    min={-120}
+                                    max={120}
+                                    onChange={(value) =>
+                                      updateField(
+                                        getLandingFieldMarginLeftKey(
+                                          selectedSectionPaddingFieldId,
+                                        ),
+                                        String(value),
+                                      )
+                                    }
+                                  />
+                                </div>
+                              ) : null}
+                            </details>
+                          ) : null}
                         </div>
                       </details>
 
@@ -4707,6 +4936,400 @@ export function CmsLandingEditor({
                                     }
                                   />
                                 )}
+                                {item.kind === "base" &&
+                                !isVideoUrlItem &&
+                                baseFieldKey !== "image" ? (
+                                  <>
+                                    <div className="space-y-1.5">
+                                      <label className="text-xs font-medium text-muted-foreground">
+                                        Fuente
+                                      </label>
+                                      <select
+                                        className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                        value={
+                                          textMap[
+                                            getLandingFieldFontFamilyKey(
+                                              item.textKey,
+                                            )
+                                          ] ?? "fira-sans"
+                                        }
+                                        onChange={(event) =>
+                                          updateField(
+                                            getLandingFieldFontFamilyKey(
+                                              item.textKey,
+                                            ),
+                                            event.target.value,
+                                          )
+                                        }
+                                      >
+                                        <option value="fira-sans">
+                                          Fira Sans
+                                        </option>
+                                        <option value="montserrat">
+                                          Montserrat
+                                        </option>
+                                        <option value="nunito">Nunito</option>
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <label className="text-xs font-medium text-muted-foreground">
+                                        Color
+                                      </label>
+                                      <PanelColorControl
+                                        value={
+                                          textMap[
+                                            getLandingFieldColorKey(
+                                              item.textKey,
+                                            )
+                                          ]
+                                        }
+                                        defaultValue="#111827"
+                                        placeholder="#111827"
+                                        showPaletteLabel={false}
+                                        onChange={(nextColor) =>
+                                          updateField(
+                                            getLandingFieldColorKey(
+                                              item.textKey,
+                                            ),
+                                            nextColor,
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                    {selectedSection?.type ===
+                                      "editorial-feature" &&
+                                    baseFieldKey === "header_title" &&
+                                    selectedSectionEditorialHeaderBackgroundKey ? (
+                                      <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-muted-foreground">
+                                          Fondo del contenedor
+                                        </label>
+                                        <PanelColorControl
+                                          value={
+                                            textMap[
+                                              selectedSectionEditorialHeaderBackgroundKey
+                                            ]
+                                          }
+                                          defaultValue="#ddd8ca"
+                                          placeholder="#ddd8ca"
+                                          showPaletteLabel={false}
+                                          onChange={(nextColor) =>
+                                            updateField(
+                                              selectedSectionEditorialHeaderBackgroundKey,
+                                              nextColor,
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    ) : null}
+                                    <SliderValueControl
+                                      label="Tamano"
+                                      value={getNumberValue(
+                                        textMap[getLandingFieldSizeKey(item.textKey)],
+                                        baseField?.defaultSize ?? 24,
+                                        12,
+                                        800,
+                                      )}
+                                      min={12}
+                                      max={800}
+                                      onChange={(value) =>
+                                        updateField(
+                                          getLandingFieldSizeKey(item.textKey),
+                                          String(value),
+                                        )
+                                      }
+                                    />
+                                    <SliderValueControl
+                                      label="Weight"
+                                      value={getNumberValue(
+                                        textMap[
+                                          getLandingFieldFontWeightKey(
+                                            item.textKey,
+                                          )
+                                        ],
+                                        400,
+                                        100,
+                                        900,
+                                      )}
+                                      min={100}
+                                      max={900}
+                                      step={100}
+                                      onChange={(value) =>
+                                        updateField(
+                                          getLandingFieldFontWeightKey(
+                                            item.textKey,
+                                          ),
+                                          String(value),
+                                        )
+                                      }
+                                    />
+                                    <SliderValueControl
+                                      label="Interlineado"
+                                      value={getNumberValue(
+                                        textMap[
+                                          getLandingFieldLineHeightKey(
+                                            item.textKey,
+                                          )
+                                        ],
+                                        1.2,
+                                        0.8,
+                                        3,
+                                      )}
+                                      min={0.8}
+                                      max={3}
+                                      step={0.05}
+                                      onChange={(value) =>
+                                        updateField(
+                                          getLandingFieldLineHeightKey(
+                                            item.textKey,
+                                          ),
+                                          String(value),
+                                        )
+                                      }
+                                    />
+                                    <SliderValueControl
+                                      label="Espaciado letras"
+                                      value={getNumberValue(
+                                        textMap[
+                                          getLandingFieldLetterSpacingKey(
+                                            item.textKey,
+                                          )
+                                        ],
+                                        0,
+                                        -10,
+                                        40,
+                                      )}
+                                      min={-10}
+                                      max={40}
+                                      step={0.5}
+                                      onChange={(value) =>
+                                        updateField(
+                                          getLandingFieldLetterSpacingKey(
+                                            item.textKey,
+                                          ),
+                                          String(value),
+                                        )
+                                      }
+                                    />
+                                    <div className="space-y-1.5">
+                                      <label className="text-xs font-medium text-muted-foreground">
+                                        Margen
+                                      </label>
+                                      <PanelRadioGroup
+                                        name={`${item.textKey}-margin-mode`}
+                                        value={getSpacingModeValue(
+                                          textMap[
+                                            getLandingFieldMarginModeKey(
+                                              item.textKey,
+                                            )
+                                          ],
+                                        )}
+                                        options={[
+                                          { value: "all", label: "All" },
+                                          { value: "axis", label: "Axis" },
+                                          { value: "sides", label: "Sides" },
+                                        ]}
+                                        onChange={(nextValue) =>
+                                          updateField(
+                                            getLandingFieldMarginModeKey(
+                                              item.textKey,
+                                            ),
+                                            nextValue,
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                    {getSpacingModeValue(
+                                      textMap[
+                                        getLandingFieldMarginModeKey(
+                                          item.textKey,
+                                        )
+                                      ],
+                                    ) === "all" ? (
+                                      <SliderValueControl
+                                        label="Margin"
+                                        value={getNumberValue(
+                                          textMap[
+                                            getLandingFieldMarginKey(
+                                              item.textKey,
+                                            )
+                                          ],
+                                          0,
+                                          -120,
+                                          120,
+                                        )}
+                                        min={-120}
+                                        max={120}
+                                        onChange={(value) =>
+                                          updateField(
+                                            getLandingFieldMarginKey(
+                                              item.textKey,
+                                            ),
+                                            String(value),
+                                          )
+                                        }
+                                      />
+                                    ) : null}
+                                    {getSpacingModeValue(
+                                      textMap[
+                                        getLandingFieldMarginModeKey(
+                                          item.textKey,
+                                        )
+                                      ],
+                                    ) === "axis" ? (
+                                      <div className="grid grid-cols-1 gap-2">
+                                        <SliderValueControl
+                                          label="Mx"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldMarginXKey(
+                                                item.textKey,
+                                              )
+                                            ],
+                                            0,
+                                            -120,
+                                            120,
+                                          )}
+                                          min={-120}
+                                          max={120}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldMarginXKey(
+                                                item.textKey,
+                                              ),
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="My"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldMarginYKey(
+                                                item.textKey,
+                                              )
+                                            ],
+                                            0,
+                                            -120,
+                                            120,
+                                          )}
+                                          min={-120}
+                                          max={120}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldMarginYKey(
+                                                item.textKey,
+                                              ),
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    ) : null}
+                                    {getSpacingModeValue(
+                                      textMap[
+                                        getLandingFieldMarginModeKey(
+                                          item.textKey,
+                                        )
+                                      ],
+                                    ) === "sides" ? (
+                                      <div className="grid grid-cols-1 gap-2">
+                                        <SliderValueControl
+                                          label="Mt"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldMarginTopKey(
+                                                item.textKey,
+                                              )
+                                            ],
+                                            0,
+                                            -120,
+                                            120,
+                                          )}
+                                          min={-120}
+                                          max={120}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldMarginTopKey(
+                                                item.textKey,
+                                              ),
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Mr"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldMarginRightKey(
+                                                item.textKey,
+                                              )
+                                            ],
+                                            0,
+                                            -120,
+                                            120,
+                                          )}
+                                          min={-120}
+                                          max={120}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldMarginRightKey(
+                                                item.textKey,
+                                              ),
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Mb"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldMarginBottomKey(
+                                                item.textKey,
+                                              )
+                                            ],
+                                            0,
+                                            -120,
+                                            120,
+                                          )}
+                                          min={-120}
+                                          max={120}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldMarginBottomKey(
+                                                item.textKey,
+                                              ),
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                        <SliderValueControl
+                                          label="Ml"
+                                          value={getNumberValue(
+                                            textMap[
+                                              getLandingFieldMarginLeftKey(
+                                                item.textKey,
+                                              )
+                                            ],
+                                            0,
+                                            -120,
+                                            120,
+                                          )}
+                                          min={-120}
+                                          max={120}
+                                          onChange={(value) =>
+                                            updateField(
+                                              getLandingFieldMarginLeftKey(
+                                                item.textKey,
+                                              ),
+                                              String(value),
+                                            )
+                                          }
+                                        />
+                                      </div>
+                                    ) : null}
+                                  </>
+                                ) : null}
                                 {item.kind === "extra" &&
                                 item.extraId &&
                                 extraItem?.type !== "text" ? (
@@ -5055,6 +5678,28 @@ export function CmsLandingEditor({
                                       </>
                                     ) : null}
                                   </>
+                                ) : null}
+                                {item.kind === "base" &&
+                                selectedSection?.type === "editorial-feature" &&
+                                baseFieldKey === "image" &&
+                                selectedSectionEditorialImageSizeKey ? (
+                                  <SliderValueControl
+                                    label="Tamaño imagen (%)"
+                                    value={getNumberValue(
+                                      textMap[selectedSectionEditorialImageSizeKey],
+                                      100,
+                                      30,
+                                      100,
+                                    )}
+                                    min={30}
+                                    max={100}
+                                    onChange={(value) =>
+                                      updateField(
+                                        selectedSectionEditorialImageSizeKey,
+                                        String(value),
+                                      )
+                                    }
+                                  />
                                 ) : null}
                                 {item.kind === "extra" &&
                                 extraItem?.type === "text" ? (

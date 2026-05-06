@@ -193,6 +193,7 @@ export type LandingSectionType =
   | "cards"
   | "story"
   | "gallery"
+  | "editorial-feature"
   | "spore-stack"
   | "image-grid"
   | "video"
@@ -404,6 +405,66 @@ export const landingSectionCatalog: Record<
         label: "Item 4",
         defaultValue: "Rondas de palabra",
         defaultSize: 18,
+      },
+    ],
+  },
+  "editorial-feature": {
+    type: "editorial-feature",
+    label: "Editorial Feature Section",
+    fields: [
+      {
+        key: "header_title",
+        label: "Titulo superior",
+        defaultValue: "What makes Koru unique?",
+        defaultSize: 62,
+      },
+      {
+        key: "kicker",
+        label: "Kicker",
+        defaultValue: "LEARNING TO BE",
+        defaultSize: 20,
+      },
+      {
+        key: "title",
+        label: "Titulo principal",
+        defaultValue: "ADVENTURE AS",
+        defaultSize: 56,
+      },
+      {
+        key: "subtitle",
+        label: "Subtitulo",
+        defaultValue: "Agency",
+        defaultSize: 56,
+      },
+      {
+        key: "body",
+        label: "Parrafo principal",
+        defaultValue:
+          "Texto descriptivo principal para contar la idea de la seccion.",
+        defaultSize: 24,
+        multiline: true,
+      },
+      {
+        key: "highlight",
+        label: "Texto destacado",
+        defaultValue:
+          "Texto destacado en negrita para reforzar el mensaje central.",
+        defaultSize: 34,
+        multiline: true,
+      },
+      {
+        key: "body2",
+        label: "Parrafo secundario",
+        defaultValue:
+          "Parrafo complementario con detalles y cierre del bloque de contenido.",
+        defaultSize: 24,
+        multiline: true,
+      },
+      {
+        key: "image",
+        label: "Imagen",
+        defaultValue: "/assets/img1.jpg",
+        defaultSize: 14,
       },
     ],
   },
@@ -978,6 +1039,38 @@ function normalizeSectionScopeIds(
   }));
 }
 
+function ensureEditorialFeatureDuplicatedInStructure(
+  structure: LandingSectionInstance[],
+): LandingSectionInstance[] {
+  const editorialSections = structure.filter(
+    (section) => section.type === "editorial-feature",
+  );
+  if (editorialSections.length !== 1) {
+    return structure;
+  }
+
+  const source = editorialSections[0];
+  const preferredId = `${source.id}-copy`;
+  const existingIds = new Set(structure.map((section) => section.id));
+  const duplicateId = existingIds.has(preferredId)
+    ? `${source.id}-copy-2`
+    : preferredId;
+
+  if (existingIds.has(duplicateId)) {
+    return structure;
+  }
+
+  return [
+    ...structure,
+    {
+      id: duplicateId,
+      type: "editorial-feature",
+      name: `${source.name} copia`,
+      scopeId: source.scopeId,
+    },
+  ];
+}
+
 export function getDefaultLandingTextMap(
   structure: LandingSectionInstance[] = defaultLandingStructure,
 ): LandingTextMap {
@@ -1048,9 +1141,15 @@ export function parseLandingStructure(
 
     const parsedStructure =
       validated.length > 0 ? validated : defaultLandingStructure;
-    return normalizeSectionScopeIds(parsedStructure, scopes);
+    return normalizeSectionScopeIds(
+      ensureEditorialFeatureDuplicatedInStructure(parsedStructure),
+      scopes,
+    );
   } catch {
-    return normalizeSectionScopeIds(defaultLandingStructure, scopes);
+    return normalizeSectionScopeIds(
+      ensureEditorialFeatureDuplicatedInStructure(defaultLandingStructure),
+      scopes,
+    );
   }
 }
 
@@ -1058,10 +1157,32 @@ export function ensureLandingDefaults(textMap: LandingTextMap): LandingTextMap {
   const scopes = parseLandingBackgroundScopes(textMap);
   const structure = parseLandingStructure(textMap);
   const defaults = getDefaultLandingTextMap(structure);
-  return {
+  const next: LandingTextMap = {
     ...defaults,
     ...textMap,
     [LANDING_BACKGROUND_SCOPES_KEY]: JSON.stringify(scopes),
     [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
   };
+
+  const editorialSections = structure.filter(
+    (section) => section.type === "editorial-feature",
+  );
+  if (editorialSections.length >= 2) {
+    const source = editorialSections[0];
+    const duplicate = editorialSections[1];
+    const sourcePrefix = `section.${source.id}.`;
+    const duplicatePrefix = `section.${duplicate.id}.`;
+
+    for (const [key, value] of Object.entries(next)) {
+      if (!key.startsWith(sourcePrefix)) {
+        continue;
+      }
+      const duplicateKey = `${duplicatePrefix}${key.slice(sourcePrefix.length)}`;
+      if (textMap[duplicateKey] == null || textMap[duplicateKey] === "") {
+        next[duplicateKey] = value;
+      }
+    }
+  }
+
+  return next;
 }

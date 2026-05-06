@@ -2,7 +2,10 @@
 
 import { cn } from "@/lib/utils";
 import { getSectionFieldKey } from "@/modules/landing/config/landing-sections";
-import { getLandingFieldPaddingStyle } from "@/modules/landing/types/landing-text";
+import {
+  getLandingFieldMarginStyle,
+  getLandingFieldPaddingStyle,
+} from "@/modules/landing/types/landing-text";
 import { SectionExtras } from "@/modules/landing/views/components/section-extras";
 import { getFieldStyle, renderField, selectableClass } from "@/modules/landing/views/utils/field";
 import {
@@ -69,12 +72,16 @@ export function CardsSection({
     textMap,
     getSectionFieldKey(section.id, "__section_padding"),
   );
+  const sectionMarginStyle = getLandingFieldMarginStyle(
+    textMap,
+    getSectionFieldKey(section.id, "__section_padding"),
+  );
   const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
   const sectionBorderStyle = getSectionBorderStyle(textMap, section.id);
   const hasImageLayer = hasBackgroundImageLayer(sectionBackgroundStyle);
   const sectionStyle = hasImageLayer
     ? sectionBorderStyle
-    : { ...sectionBackgroundStyle, ...sectionBorderStyle };
+    : { ...sectionBackgroundStyle, ...sectionBorderStyle, ...sectionMarginStyle };
   const bodyPaddingStyle = {
     paddingLeft: "var(--landing-body-padding-x, 24px)",
     paddingRight: "var(--landing-body-padding-x, 24px)",
@@ -99,7 +106,7 @@ export function CardsSection({
   return (
     <section
       className="relative isolate flex min-h-screen items-center overflow-hidden"
-      style={sectionStyle}
+      style={hasImageLayer ? { ...sectionStyle, ...sectionMarginStyle } : sectionStyle}
     >
       {hasImageLayer ? (
         <div
