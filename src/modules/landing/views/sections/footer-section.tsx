@@ -5,7 +5,10 @@ import {
   getSectionFooterHeightKey,
   getSectionFooterMinHeightKey,
 } from "@/modules/landing/config/landing-sections";
-import { getLandingFieldPaddingStyle } from "@/modules/landing/types/landing-text";
+import {
+  getLandingFieldMarginStyle,
+  getLandingFieldPaddingStyle,
+} from "@/modules/landing/types/landing-text";
 import { SectionExtras } from "@/modules/landing/views/components/section-extras";
 import {
   getSectionBackgroundStyle,
@@ -29,6 +32,10 @@ export function FooterSection({
     textMap,
     getSectionFieldKey(section.id, "__section_padding"),
   );
+  const sectionMarginStyle = getLandingFieldMarginStyle(
+    textMap,
+    getSectionFieldKey(section.id, "__section_padding"),
+  );
   const footerHeightRaw = Number.parseInt(
     textMap[getSectionFooterHeightKey(section.id)] ??
       textMap[getSectionFooterMinHeightKey(section.id)] ??
@@ -42,10 +49,11 @@ export function FooterSection({
   const sectionBorderStyle = getSectionBorderStyle(textMap, section.id);
   const hasImageLayer = hasBackgroundImageLayer(sectionBackgroundStyle);
   const sectionStyle = hasImageLayer
-    ? { ...sectionBorderStyle, height: `${footerHeight}px` }
+    ? { ...sectionBorderStyle, ...sectionMarginStyle, height: `${footerHeight}px` }
     : {
         ...sectionBackgroundStyle,
         ...sectionBorderStyle,
+        ...sectionMarginStyle,
         height: `${footerHeight}px`,
       };
 
