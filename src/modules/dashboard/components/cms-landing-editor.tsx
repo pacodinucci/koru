@@ -93,7 +93,9 @@ import {
   getSectionFieldKey,
   getSectionFooterHeightKey,
   getSectionImageGridColumnsKey,
+  getSectionImageGridImageSizeKey,
   getSectionImageGridItemsCountKey,
+  getSectionImageGridUseBodyPaddingKey,
   getSectionFooterMinHeightKey,
   getSectionItemsOrderKey,
   landingLayoutContainerRules,
@@ -1367,6 +1369,14 @@ export function CmsLandingEditor({
     selectedSection?.type === "image-grid"
       ? getSectionImageGridColumnsKey(selectedSection.id)
       : null;
+  const selectedSectionImageGridUseBodyPaddingKey =
+    selectedSection?.type === "image-grid"
+      ? getSectionImageGridUseBodyPaddingKey(selectedSection.id)
+      : null;
+  const selectedSectionImageGridImageSizeKey =
+    selectedSection?.type === "image-grid"
+      ? getSectionImageGridImageSizeKey(selectedSection.id)
+      : null;
   const selectedSectionBackgroundMode =
     selectedSectionBackgroundModeKey != null
       ? getSectionBackgroundModeValue(
@@ -1423,6 +1433,13 @@ export function CmsLandingEditor({
   const selectedSectionImageGridColumns = selectedSectionImageGridColumnsKey
     ? getNumberValue(textMap[selectedSectionImageGridColumnsKey], 4, 1, 6)
     : 4;
+  const selectedSectionImageGridUseBodyPadding =
+    selectedSectionImageGridUseBodyPaddingKey
+      ? (textMap[selectedSectionImageGridUseBodyPaddingKey] ?? "1") !== "0"
+      : true;
+  const selectedSectionImageGridImageSize = selectedSectionImageGridImageSizeKey
+    ? getNumberValue(textMap[selectedSectionImageGridImageSizeKey], 260, 120, 520)
+    : 260;
   const selectedSectionPaddingMode = selectedSectionPaddingFieldId
     ? getSpacingModeValue(
         textMap[getLandingFieldPaddingModeKey(selectedSectionPaddingFieldId)],
@@ -3173,7 +3190,9 @@ export function CmsLandingEditor({
 
                           {selectedSection.type === "image-grid" &&
                           selectedSectionImageGridItemsCountKey &&
-                          selectedSectionImageGridColumnsKey ? (
+                          selectedSectionImageGridColumnsKey &&
+                          selectedSectionImageGridUseBodyPaddingKey &&
+                          selectedSectionImageGridImageSizeKey ? (
                             <div className="space-y-2 rounded-md border bg-background p-2">
                               <label className="text-xs font-medium text-muted-foreground">
                                 Cantidad de imagenes (
@@ -3232,6 +3251,51 @@ export function CmsLandingEditor({
                                   onChange={(event) =>
                                     updateField(
                                       selectedSectionImageGridColumnsKey,
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                              </div>
+
+                              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border bg-background px-2 py-2 text-xs font-medium text-foreground/90">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedSectionImageGridUseBodyPadding}
+                                  onChange={(event) =>
+                                    updateField(
+                                      selectedSectionImageGridUseBodyPaddingKey,
+                                      event.target.checked ? "1" : "0",
+                                    )
+                                  }
+                                />
+                                Ajustar al padding del body
+                              </label>
+
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Tamano de imagen ({selectedSectionImageGridImageSize}px)
+                              </label>
+                              <div className="grid grid-cols-[1fr_84px] gap-2">
+                                <PanelRangeInput
+                                  min={120}
+                                  max={520}
+                                  step={1}
+                                  value={selectedSectionImageGridImageSize}
+                                  onChange={(value) =>
+                                    updateField(
+                                      selectedSectionImageGridImageSizeKey,
+                                      String(value),
+                                    )
+                                  }
+                                />
+                                <PanelInput
+                                  type="number"
+                                  min={120}
+                                  max={520}
+                                  step={1}
+                                  value={selectedSectionImageGridImageSize}
+                                  onChange={(event) =>
+                                    updateField(
+                                      selectedSectionImageGridImageSizeKey,
                                       event.target.value,
                                     )
                                   }

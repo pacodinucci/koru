@@ -912,6 +912,14 @@ export function getSectionImageGridColumnsKey(sectionId: string) {
   return getSectionFieldKey(sectionId, "__image_grid_columns");
 }
 
+export function getSectionImageGridUseBodyPaddingKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__image_grid_use_body_padding");
+}
+
+export function getSectionImageGridImageSizeKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__image_grid_image_size");
+}
+
 export function getSectionExtraTextKey(sectionId: string, extraId: string) {
   return getSectionFieldKey(sectionId, `extra.${extraId}.text`);
 }
