@@ -2,7 +2,11 @@
 
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
-import { getSectionFieldKey } from "@/modules/landing/config/landing-sections";
+import {
+  getSectionFieldKey,
+  getSectionImageGridColumnsKey,
+  getSectionImageGridItemsCountKey,
+} from "@/modules/landing/config/landing-sections";
 import {
   getLandingFieldColor,
   getLandingFieldFontFamily,
@@ -50,7 +54,27 @@ export function ImageGridSection({
     marginStyle: getLandingFieldMarginStyle(textMap, sharedTextStyleKey),
     paddingStyle: getLandingFieldPaddingStyle(textMap, sharedTextStyleKey),
   };
-  const cards = Array.from({ length: 12 }, (_, index) =>
+  const imageGridItemsCount = Math.min(
+    12,
+    Math.max(
+      1,
+      Number.parseInt(
+        textMap[getSectionImageGridItemsCountKey(section.id)] ?? "12",
+        10,
+      ) || 12,
+    ),
+  );
+  const imageGridColumns = Math.min(
+    6,
+    Math.max(
+      1,
+      Number.parseInt(
+        textMap[getSectionImageGridColumnsKey(section.id)] ?? "4",
+        10,
+      ) || 4,
+    ),
+  );
+  const cards = Array.from({ length: imageGridItemsCount }, (_, index) =>
     renderField(
       section,
       `item${index + 1}`,
@@ -117,8 +141,11 @@ export function ImageGridSection({
         style={bodyPaddingStyle}
       >
         <div
-          className="grid grid-cols-4 gap-3 md:gap-4"
-          style={{ order: getOrder(orderMap, "base:grid", 0) }}
+          className="grid gap-3 md:gap-4"
+          style={{
+            order: getOrder(orderMap, "base:grid", 0),
+            gridTemplateColumns: `repeat(${imageGridColumns}, minmax(0, 1fr))`,
+          }}
         >
           {cards.map((card, index) => (
             <article
@@ -171,3 +198,4 @@ export function ImageGridSection({
     </section>
   );
 }
+
