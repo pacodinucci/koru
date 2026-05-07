@@ -92,6 +92,8 @@ import {
   getSectionExtrasKey,
   getSectionFieldKey,
   getSectionFooterHeightKey,
+  getSectionImageGridColumnsKey,
+  getSectionImageGridItemsCountKey,
   getSectionFooterMinHeightKey,
   getSectionItemsOrderKey,
   landingLayoutContainerRules,
@@ -1357,6 +1359,14 @@ export function CmsLandingEditor({
     selectedSection?.type === "footer"
       ? getSectionFooterMinHeightKey(selectedSection.id)
       : null;
+  const selectedSectionImageGridItemsCountKey =
+    selectedSection?.type === "image-grid"
+      ? getSectionImageGridItemsCountKey(selectedSection.id)
+      : null;
+  const selectedSectionImageGridColumnsKey =
+    selectedSection?.type === "image-grid"
+      ? getSectionImageGridColumnsKey(selectedSection.id)
+      : null;
   const selectedSectionBackgroundMode =
     selectedSectionBackgroundModeKey != null
       ? getSectionBackgroundModeValue(
@@ -1407,6 +1417,12 @@ export function CmsLandingEditor({
         1200,
       )
     : 320;
+  const selectedSectionImageGridItemsCount = selectedSectionImageGridItemsCountKey
+    ? getNumberValue(textMap[selectedSectionImageGridItemsCountKey], 12, 1, 12)
+    : 12;
+  const selectedSectionImageGridColumns = selectedSectionImageGridColumnsKey
+    ? getNumberValue(textMap[selectedSectionImageGridColumnsKey], 4, 1, 6)
+    : 4;
   const selectedSectionPaddingMode = selectedSectionPaddingFieldId
     ? getSpacingModeValue(
         textMap[getLandingFieldPaddingModeKey(selectedSectionPaddingFieldId)],
@@ -3154,6 +3170,75 @@ export function CmsLandingEditor({
                             Tipo:{" "}
                             {landingSectionCatalog[selectedSection.type].label}
                           </p>
+
+                          {selectedSection.type === "image-grid" &&
+                          selectedSectionImageGridItemsCountKey &&
+                          selectedSectionImageGridColumnsKey ? (
+                            <div className="space-y-2 rounded-md border bg-background p-2">
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Cantidad de imagenes (
+                                {selectedSectionImageGridItemsCount})
+                              </label>
+                              <div className="grid grid-cols-[1fr_84px] gap-2">
+                                <PanelRangeInput
+                                  min={1}
+                                  max={12}
+                                  step={1}
+                                  value={selectedSectionImageGridItemsCount}
+                                  onChange={(value) =>
+                                    updateField(
+                                      selectedSectionImageGridItemsCountKey,
+                                      String(value),
+                                    )
+                                  }
+                                />
+                                <PanelInput
+                                  type="number"
+                                  min={1}
+                                  max={12}
+                                  step={1}
+                                  value={selectedSectionImageGridItemsCount}
+                                  onChange={(event) =>
+                                    updateField(
+                                      selectedSectionImageGridItemsCountKey,
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                              </div>
+
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Cantidad de columnas ({selectedSectionImageGridColumns})
+                              </label>
+                              <div className="grid grid-cols-[1fr_84px] gap-2">
+                                <PanelRangeInput
+                                  min={1}
+                                  max={6}
+                                  step={1}
+                                  value={selectedSectionImageGridColumns}
+                                  onChange={(value) =>
+                                    updateField(
+                                      selectedSectionImageGridColumnsKey,
+                                      String(value),
+                                    )
+                                  }
+                                />
+                                <PanelInput
+                                  type="number"
+                                  min={1}
+                                  max={6}
+                                  step={1}
+                                  value={selectedSectionImageGridColumns}
+                                  onChange={(event) =>
+                                    updateField(
+                                      selectedSectionImageGridColumnsKey,
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                              </div>
+                            </div>
+                          ) : null}
 
                           {selectedSection.type === "gallery" &&
                           selectedSectionGalleryVariantKey ? (

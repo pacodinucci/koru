@@ -904,6 +904,14 @@ export function getSectionItemsOrderKey(sectionId: string) {
   return getSectionFieldKey(sectionId, "__items_order");
 }
 
+export function getSectionImageGridItemsCountKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__image_grid_items_count");
+}
+
+export function getSectionImageGridColumnsKey(sectionId: string) {
+  return getSectionFieldKey(sectionId, "__image_grid_columns");
+}
+
 export function getSectionExtraTextKey(sectionId: string, extraId: string) {
   return getSectionFieldKey(sectionId, `extra.${extraId}.text`);
 }
@@ -1186,3 +1194,4 @@ export function ensureLandingDefaults(textMap: LandingTextMap): LandingTextMap {
 
   return next;
 }
+
