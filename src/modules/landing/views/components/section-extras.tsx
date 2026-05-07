@@ -27,7 +27,9 @@ import {
   getLandingFieldBorderWidth,
   getLandingFieldColor,
   getLandingFieldFontFamily,
+  getLandingFieldLetterSpacing,
   getLandingFieldLineWidth,
+  getLandingFieldLineHeight,
   getLandingFieldFontSize,
   getLandingFieldFontWeight,
   getLandingFieldMarginStyle,
@@ -169,6 +171,8 @@ export function SectionExtras({
             color: getLandingFieldColor(textMap, key),
             fontFamily: getLandingFieldFontFamily(textMap, key),
             fontWeight: getLandingFieldFontWeight(textMap, key),
+            lineHeight: getLandingFieldLineHeight(textMap, key),
+            letterSpacing: getLandingFieldLetterSpacing(textMap, key),
             marginStyle: getLandingFieldMarginStyle(textMap, key),
             paddingStyle: getLandingFieldPaddingStyle(textMap, key),
           };
