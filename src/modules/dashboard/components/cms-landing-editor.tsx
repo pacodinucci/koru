@@ -2749,7 +2749,7 @@ export function CmsLandingEditor({
                         const nextContainers = currentContainers.filter(
                           (entry) => !idsToRemove.includes(entry.id),
                         );
-                        const nextMap = {
+                        const nextMap: LandingTextMap = {
                           ...previous,
                           [LANDING_LAYOUT_FOOTER_CONTAINERS_KEY]:
                             JSON.stringify(nextContainers),
