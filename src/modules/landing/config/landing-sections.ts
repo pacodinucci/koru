@@ -177,6 +177,59 @@ export function parseLandingLayoutNavLinks(
 
 export type LandingBackgroundScopeType = "none" | "spore";
 export type LandingBackgroundVisualMode = "color" | "gradient";
+export type LandingSporeConfig = {
+  x: number;
+  y: number;
+  size: number;
+  rotate: number;
+  opacity: number;
+  color: string;
+  flipX: boolean;
+  flipY: boolean;
+};
+
+export const defaultLandingBackgroundSpores: LandingSporeConfig[] = [
+  {
+    x: 6,
+    y: 6,
+    size: 6,
+    rotate: -16,
+    opacity: 0.1,
+    color: "var(--brand-600)",
+    flipX: false,
+    flipY: false,
+  },
+  {
+    x: 86,
+    y: 22,
+    size: 21,
+    rotate: 21,
+    opacity: 0.3,
+    color: "var(--complement-800)",
+    flipX: true,
+    flipY: false,
+  },
+  {
+    x: 8,
+    y: 55,
+    size: 25,
+    rotate: -28,
+    opacity: 0.3,
+    color: "var(--brand-500)",
+    flipX: false,
+    flipY: true,
+  },
+  {
+    x: 72,
+    y: 84,
+    size: 7,
+    rotate: 14,
+    opacity: 0.1,
+    color: "var(--complement-700)",
+    flipX: true,
+    flipY: true,
+  },
+];
 
 export type LandingBackgroundScope = {
   id: string;
@@ -186,7 +239,44 @@ export type LandingBackgroundScope = {
   color: string;
   gradient: string;
   heightVh: number;
+  spores?: LandingSporeConfig[];
 };
+
+function normalizeLandingBackgroundSpore(
+  candidate: unknown,
+  fallback: LandingSporeConfig,
+): LandingSporeConfig {
+  if (!candidate || typeof candidate !== "object") {
+    return fallback;
+  }
+
+  const spore = candidate as Partial<LandingSporeConfig>;
+  return {
+    x:
+      typeof spore.x === "number" && Number.isFinite(spore.x)
+        ? Math.min(150, Math.max(-50, spore.x))
+        : fallback.x,
+    y:
+      typeof spore.y === "number" && Number.isFinite(spore.y)
+        ? Math.min(150, Math.max(-50, spore.y))
+        : fallback.y,
+    size:
+      typeof spore.size === "number" && Number.isFinite(spore.size)
+        ? Math.max(1, spore.size)
+        : fallback.size,
+    rotate:
+      typeof spore.rotate === "number" && Number.isFinite(spore.rotate)
+        ? Math.min(360, Math.max(-360, spore.rotate))
+        : fallback.rotate,
+    opacity:
+      typeof spore.opacity === "number" && Number.isFinite(spore.opacity)
+        ? Math.min(1, Math.max(0, spore.opacity))
+        : fallback.opacity,
+    color: typeof spore.color === "string" ? spore.color : fallback.color,
+    flipX: typeof spore.flipX === "boolean" ? spore.flipX : fallback.flipX,
+    flipY: typeof spore.flipY === "boolean" ? spore.flipY : fallback.flipY,
+  };
+}
 
 export type LandingSectionType =
   | "hero"
@@ -781,6 +871,7 @@ export const defaultLandingBackgroundScopes: LandingBackgroundScope[] = [
     color: "#ffffff",
     gradient: "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
     heightVh: 1000,
+    spores: defaultLandingBackgroundSpores,
   },
 ];
 
@@ -1016,24 +1107,38 @@ export function parseLandingBackgroundScopes(
       return defaultLandingBackgroundScopes;
     }
 
-    return validated.map((entry) => ({
-      id: entry.id,
-      name: entry.name,
-      type: entry.type,
-      visualMode:
-        entry.visualMode === "gradient" || entry.visualMode === "color"
-          ? entry.visualMode
-          : "color",
-      color: typeof entry.color === "string" ? entry.color : "#ffffff",
-      gradient:
-        typeof entry.gradient === "string"
-          ? entry.gradient
-          : "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
-      heightVh:
-        typeof entry.heightVh === "number" && Number.isFinite(entry.heightVh)
-          ? Math.min(2000, Math.max(100, Math.round(entry.heightVh)))
-          : 1000,
-    }));
+    return validated.map((entry) => {
+      const spores = Array.isArray(entry.spores)
+        ? entry.spores.map((candidate, index) =>
+            normalizeLandingBackgroundSpore(
+              candidate,
+              defaultLandingBackgroundSpores[
+                index % defaultLandingBackgroundSpores.length
+              ]!,
+            ),
+          )
+        : defaultLandingBackgroundSpores;
+
+      return {
+        id: entry.id,
+        name: entry.name,
+        type: entry.type,
+        visualMode:
+          entry.visualMode === "gradient" || entry.visualMode === "color"
+            ? entry.visualMode
+            : "color",
+        color: typeof entry.color === "string" ? entry.color : "#ffffff",
+        gradient:
+          typeof entry.gradient === "string"
+            ? entry.gradient
+            : "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
+        heightVh:
+          typeof entry.heightVh === "number" && Number.isFinite(entry.heightVh)
+            ? Math.min(2000, Math.max(100, Math.round(entry.heightVh)))
+            : 1000,
+        spores: spores.length > 0 ? spores : defaultLandingBackgroundSpores,
+      };
+    });
   } catch {
     return defaultLandingBackgroundScopes;
   }

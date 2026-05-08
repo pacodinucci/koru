@@ -405,6 +405,30 @@
   clip-path: inset(0 0 0 0);
 }
 
+.landing-overlap-content {
+  position: relative;
+  z-index: 20;
+}
+
+.landing-video-pin {
+  position: relative;
+  min-height: calc(100dvh - var(--landing-nav-height, 96px));
+  z-index: 0;
+}
+
+.landing-video-static {
+  position: sticky;
+  top: var(--landing-nav-height, 96px);
+  left: 0;
+  right: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-video-static > section {
+  height: calc(100dvh - var(--landing-nav-height, 96px));
+}
+
 @keyframes panel-close-icon-bounce {
   0%,
   88%,
