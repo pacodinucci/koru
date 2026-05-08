@@ -3,6 +3,7 @@
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { SporeShape } from "@/components/spore-shape";
 import {
+  defaultLandingBackgroundSpores,
   ensureLandingDefaults,
   parseLandingBackgroundScopes,
   parseLandingStructure,
@@ -76,47 +77,28 @@ function ScopeBackground({
 
   if (scope.type !== "spore") {
     return (
-      <div className="relative isolate overflow-hidden" style={backgroundStyle}>
+      <div className="relative isolate overflow-visible" style={backgroundStyle}>
         <div className="relative z-10">{children}</div>
       </div>
     );
   }
 
   return (
-    <div className="relative isolate overflow-hidden" style={backgroundStyle}>
+    <div className="relative isolate overflow-visible" style={backgroundStyle}>
       <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
-        <SporeShape
-          className="absolute -left-[9vw] top-[3vh] mix-blend-multiply"
-          size={6}
-          color="var(--brand-600)"
-          opacity={0.1}
-          rotate={-16}
-        />
-        <SporeShape
-          className="absolute right-[-8vw] top-[22vh] mix-blend-multiply"
-          size={21}
-          color="var(--complement-800)"
-          opacity={0.3}
-          rotate={21}
-          flipX
-        />
-        <SporeShape
-          className="absolute left-[8vw] top-[55%] mix-blend-multiply"
-          size={25}
-          color="var(--brand-500)"
-          opacity={0.3}
-          rotate={-28}
-          flipY
-        />
-        <SporeShape
-          className="absolute right-[6vw] bottom-[8%] mix-blend-multiply"
-          size={7}
-          color="var(--complement-700)"
-          opacity={0.1}
-          rotate={14}
-          flipX
-          flipY
-        />
+        {(scope.spores ?? defaultLandingBackgroundSpores).map((spore, index) => (
+          <SporeShape
+            key={`scope-spore-${scope.id}-${index}`}
+            className="absolute mix-blend-multiply"
+            style={{ left: `${spore.x}%`, top: `${spore.y}%` }}
+            size={spore.size}
+            color={spore.color}
+            opacity={spore.opacity}
+            rotate={spore.rotate}
+            flipX={spore.flipX}
+            flipY={spore.flipY}
+          />
+        ))}
       </div>
       <div className="relative z-10">{children}</div>
     </div>
@@ -296,6 +278,8 @@ export function LandingView({
   const structure = parseLandingStructure(completeMap).filter(
     (section) => section.type !== "footer",
   );
+  const videoSectionId =
+    structure.find((section) => section.type === "video")?.id ?? null;
   const groupedSections = useMemo(
     () =>
       groupSectionsByScope(
@@ -323,17 +307,39 @@ export function LandingView({
         return (
           <ScopeBackground key={`${group.scopeId}-${groupIndex}`} scope={scope}>
             {group.sections.map((section) => (
-              <div key={section.id} data-preview-section-id={section.id}>
-                <SectionRenderer
-                  section={section}
-                  textMap={responsiveMap}
-                  previewMode={previewMode}
-                  selectedFieldId={selectedFieldId}
-                  onSelectField={onSelectField}
-                  responsiveMode={effectiveResponsiveMode}
-                  onMoveSectionExtraPosition={onMoveSectionExtraPosition}
-                />
-              </div>
+              section.id === videoSectionId && !previewMode ? (
+                <div key={section.id} data-preview-section-id={section.id}>
+                  <div className="landing-video-pin">
+                    <div className="landing-video-static">
+                      <SectionRenderer
+                        section={section}
+                        textMap={responsiveMap}
+                        previewMode={previewMode}
+                        selectedFieldId={selectedFieldId}
+                        onSelectField={onSelectField}
+                        responsiveMode={effectiveResponsiveMode}
+                        onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  key={section.id}
+                  data-preview-section-id={section.id}
+                  className={!previewMode ? "landing-overlap-content" : undefined}
+                >
+                  <SectionRenderer
+                    section={section}
+                    textMap={responsiveMap}
+                    previewMode={previewMode}
+                    selectedFieldId={selectedFieldId}
+                    onSelectField={onSelectField}
+                    responsiveMode={effectiveResponsiveMode}
+                    onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+                  />
+                </div>
+              )
             ))}
           </ScopeBackground>
         );

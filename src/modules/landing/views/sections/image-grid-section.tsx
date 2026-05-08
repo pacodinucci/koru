@@ -5,7 +5,9 @@ import { cn } from "@/lib/utils";
 import {
   getSectionFieldKey,
   getSectionImageGridColumnsKey,
+  getSectionImageGridImageSizeKey,
   getSectionImageGridItemsCountKey,
+  getSectionImageGridUseBodyPaddingKey,
 } from "@/modules/landing/config/landing-sections";
 import {
   getLandingFieldColor,
@@ -74,6 +76,18 @@ export function ImageGridSection({
       ) || 4,
     ),
   );
+  const imageGridUseBodyPadding =
+    (textMap[getSectionImageGridUseBodyPaddingKey(section.id)] ?? "1") !== "0";
+  const imageGridImageSize = Math.min(
+    520,
+    Math.max(
+      120,
+      Number.parseInt(
+        textMap[getSectionImageGridImageSizeKey(section.id)] ?? "260",
+        10,
+      ) || 260,
+    ),
+  );
   const cards = Array.from({ length: imageGridItemsCount }, (_, index) =>
     renderField(
       section,
@@ -119,9 +133,13 @@ export function ImageGridSection({
         ...sectionMarginStyle,
       };
   const bodyPaddingStyle = {
-    paddingLeft: "var(--landing-body-padding-x, 24px)",
-    paddingRight: "var(--landing-body-padding-x, 24px)",
     ...sectionPaddingStyle,
+    paddingLeft: imageGridUseBodyPadding
+      ? "var(--landing-body-padding-x, 24px)"
+      : "0px",
+    paddingRight: imageGridUseBodyPadding
+      ? "var(--landing-body-padding-x, 24px)"
+      : "0px",
   };
 
   return (
@@ -144,13 +162,18 @@ export function ImageGridSection({
           className="grid gap-3 md:gap-4"
           style={{
             order: getOrder(orderMap, "base:grid", 0),
-            gridTemplateColumns: `repeat(${imageGridColumns}, minmax(0, 1fr))`,
+            gridTemplateColumns: `repeat(${imageGridColumns}, ${imageGridImageSize}px)`,
+            justifyContent: "center",
           }}
         >
           {cards.map((card, index) => (
             <article
               key={card.key}
-              className="group relative aspect-square overflow-hidden"
+              className="group relative overflow-hidden"
+              style={{
+                width: `${imageGridImageSize}px`,
+                height: `${imageGridImageSize}px`,
+              }}
             >
               <div
                 className="h-full w-full scale-[1.08] bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-100"

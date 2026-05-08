@@ -60,6 +60,7 @@ import {
   LANDING_LAYOUT_NAV_TEXT_KEY,
   LANDING_LAYOUT_PADDING_X_KEY,
   LANDING_STRUCTURE_KEY,
+  defaultLandingBackgroundSpores,
   parseLandingLayoutNavLinks,
   parseLandingBackgroundScopes,
   ensureLandingDefaults,
@@ -93,7 +94,9 @@ import {
   getSectionFieldKey,
   getSectionFooterHeightKey,
   getSectionImageGridColumnsKey,
+  getSectionImageGridImageSizeKey,
   getSectionImageGridItemsCountKey,
+  getSectionImageGridUseBodyPaddingKey,
   getSectionFooterMinHeightKey,
   getSectionItemsOrderKey,
   landingLayoutContainerRules,
@@ -1367,6 +1370,14 @@ export function CmsLandingEditor({
     selectedSection?.type === "image-grid"
       ? getSectionImageGridColumnsKey(selectedSection.id)
       : null;
+  const selectedSectionImageGridUseBodyPaddingKey =
+    selectedSection?.type === "image-grid"
+      ? getSectionImageGridUseBodyPaddingKey(selectedSection.id)
+      : null;
+  const selectedSectionImageGridImageSizeKey =
+    selectedSection?.type === "image-grid"
+      ? getSectionImageGridImageSizeKey(selectedSection.id)
+      : null;
   const selectedSectionBackgroundMode =
     selectedSectionBackgroundModeKey != null
       ? getSectionBackgroundModeValue(
@@ -1423,6 +1434,13 @@ export function CmsLandingEditor({
   const selectedSectionImageGridColumns = selectedSectionImageGridColumnsKey
     ? getNumberValue(textMap[selectedSectionImageGridColumnsKey], 4, 1, 6)
     : 4;
+  const selectedSectionImageGridUseBodyPadding =
+    selectedSectionImageGridUseBodyPaddingKey
+      ? (textMap[selectedSectionImageGridUseBodyPaddingKey] ?? "1") !== "0"
+      : true;
+  const selectedSectionImageGridImageSize = selectedSectionImageGridImageSizeKey
+    ? getNumberValue(textMap[selectedSectionImageGridImageSizeKey], 260, 120, 520)
+    : 260;
   const selectedSectionPaddingMode = selectedSectionPaddingFieldId
     ? getSpacingModeValue(
         textMap[getLandingFieldPaddingModeKey(selectedSectionPaddingFieldId)],
@@ -1917,6 +1935,7 @@ export function CmsLandingEditor({
       color: "#ffffff",
       gradient: "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
       heightVh: 400,
+      spores: defaultLandingBackgroundSpores,
     };
     commitBackgroundScopes([...backgroundScopes, nextScope]);
   }
@@ -3173,7 +3192,9 @@ export function CmsLandingEditor({
 
                           {selectedSection.type === "image-grid" &&
                           selectedSectionImageGridItemsCountKey &&
-                          selectedSectionImageGridColumnsKey ? (
+                          selectedSectionImageGridColumnsKey &&
+                          selectedSectionImageGridUseBodyPaddingKey &&
+                          selectedSectionImageGridImageSizeKey ? (
                             <div className="space-y-2 rounded-md border bg-background p-2">
                               <label className="text-xs font-medium text-muted-foreground">
                                 Cantidad de imagenes (
@@ -3232,6 +3253,51 @@ export function CmsLandingEditor({
                                   onChange={(event) =>
                                     updateField(
                                       selectedSectionImageGridColumnsKey,
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                              </div>
+
+                              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border bg-background px-2 py-2 text-xs font-medium text-foreground/90">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedSectionImageGridUseBodyPadding}
+                                  onChange={(event) =>
+                                    updateField(
+                                      selectedSectionImageGridUseBodyPaddingKey,
+                                      event.target.checked ? "1" : "0",
+                                    )
+                                  }
+                                />
+                                Ajustar al padding del body
+                              </label>
+
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Tamano de imagen ({selectedSectionImageGridImageSize}px)
+                              </label>
+                              <div className="grid grid-cols-[1fr_84px] gap-2">
+                                <PanelRangeInput
+                                  min={120}
+                                  max={520}
+                                  step={1}
+                                  value={selectedSectionImageGridImageSize}
+                                  onChange={(value) =>
+                                    updateField(
+                                      selectedSectionImageGridImageSizeKey,
+                                      String(value),
+                                    )
+                                  }
+                                />
+                                <PanelInput
+                                  type="number"
+                                  min={120}
+                                  max={520}
+                                  step={1}
+                                  value={selectedSectionImageGridImageSize}
+                                  onChange={(event) =>
+                                    updateField(
+                                      selectedSectionImageGridImageSizeKey,
                                       event.target.value,
                                     )
                                   }
@@ -7034,6 +7100,235 @@ export function CmsLandingEditor({
                         }
                       />
                     </div>
+                    {editingBackgroundScope.type === "spore" ? (
+                      <div className="space-y-2 rounded-md border border-dashed p-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                            Esporas
+                          </p>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const currentSpores =
+                                editingBackgroundScope.spores ??
+                                defaultLandingBackgroundSpores;
+                              const fallback =
+                                defaultLandingBackgroundSpores[
+                                  currentSpores.length %
+                                    defaultLandingBackgroundSpores.length
+                                ]!;
+                              const nextSpores = [
+                                ...currentSpores,
+                                { ...fallback },
+                              ];
+                              updateBackgroundScope(editingBackgroundScope.id, {
+                                spores: nextSpores,
+                              });
+                            }}
+                          >
+                            + Espora
+                          </Button>
+                        </div>
+                        {(editingBackgroundScope.spores ??
+                          defaultLandingBackgroundSpores
+                        ).map((spore, index) => (
+                          <details key={`bg-spore-${index}`} className="panel-accordion">
+                            <summary className="cursor-pointer text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                              <span>Espora {index + 1}</span>
+                            </summary>
+                            <div className="mt-2 space-y-2">
+                              <div className="flex justify-end">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2 text-destructive hover:text-destructive"
+                                  disabled={
+                                    (editingBackgroundScope.spores ??
+                                      defaultLandingBackgroundSpores).length <= 1
+                                  }
+                                  onClick={() => {
+                                    const currentSpores =
+                                      editingBackgroundScope.spores ??
+                                      defaultLandingBackgroundSpores;
+                                    const nextSpores = currentSpores.filter(
+                                      (_, sporeIdx) => sporeIdx !== index,
+                                    );
+                                    updateBackgroundScope(editingBackgroundScope.id, {
+                                      spores:
+                                        nextSpores.length > 0
+                                          ? nextSpores
+                                          : [{ ...defaultLandingBackgroundSpores[0]! }],
+                                    });
+                                  }}
+                                >
+                                  Quitar
+                                </Button>
+                              </div>
+                              <SliderValueControl
+                                label="Posicion X (%)"
+                                value={Math.round(spore.x)}
+                                min={-50}
+                                max={150}
+                                onChange={(value) => {
+                                  const nextSpores = [
+                                    ...(editingBackgroundScope.spores ??
+                                      defaultLandingBackgroundSpores),
+                                  ];
+                                  nextSpores[index] = { ...spore, x: value };
+                                  updateBackgroundScope(editingBackgroundScope.id, {
+                                    spores: nextSpores,
+                                  });
+                                }}
+                              />
+                              <SliderValueControl
+                                label="Posicion Y (%)"
+                                value={Math.round(spore.y)}
+                                min={-50}
+                                max={150}
+                                onChange={(value) => {
+                                  const nextSpores = [
+                                    ...(editingBackgroundScope.spores ??
+                                      defaultLandingBackgroundSpores),
+                                  ];
+                                  nextSpores[index] = { ...spore, y: value };
+                                  updateBackgroundScope(editingBackgroundScope.id, {
+                                    spores: nextSpores,
+                                  });
+                                }}
+                              />
+                              <SliderValueControl
+                                label="Tamano"
+                                value={Math.round(spore.size)}
+                                min={1}
+                                max={100}
+                                onChange={(value) => {
+                                  const nextSpores = [
+                                    ...(editingBackgroundScope.spores ??
+                                      defaultLandingBackgroundSpores),
+                                  ];
+                                  nextSpores[index] = { ...spore, size: value };
+                                  updateBackgroundScope(editingBackgroundScope.id, {
+                                    spores: nextSpores,
+                                  });
+                                }}
+                              />
+                              <SliderValueControl
+                                label="Rotacion"
+                                value={Math.round(spore.rotate)}
+                                min={-360}
+                                max={360}
+                                onChange={(value) => {
+                                  const nextSpores = [
+                                    ...(editingBackgroundScope.spores ??
+                                      defaultLandingBackgroundSpores),
+                                  ];
+                                  nextSpores[index] = { ...spore, rotate: value };
+                                  updateBackgroundScope(editingBackgroundScope.id, {
+                                    spores: nextSpores,
+                                  });
+                                }}
+                              />
+                              <SliderValueControl
+                                label="Opacidad (0-100)"
+                                value={Math.round(spore.opacity * 100)}
+                                min={0}
+                                max={100}
+                                onChange={(value) => {
+                                  const nextSpores = [
+                                    ...(editingBackgroundScope.spores ??
+                                      defaultLandingBackgroundSpores),
+                                  ];
+                                  nextSpores[index] = {
+                                    ...spore,
+                                    opacity: value / 100,
+                                  };
+                                  updateBackgroundScope(editingBackgroundScope.id, {
+                                    spores: nextSpores,
+                                  });
+                                }}
+                              />
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-muted-foreground">
+                                  Color
+                                </label>
+                                <PanelInput
+                                  value={spore.color}
+                                  placeholder="var(--brand-600) o #RRGGBB"
+                                  onChange={(event) => {
+                                    const nextSpores = [
+                                      ...(editingBackgroundScope.spores ??
+                                        defaultLandingBackgroundSpores),
+                                    ];
+                                    nextSpores[index] = {
+                                      ...spore,
+                                      color: event.target.value,
+                                    };
+                                    updateBackgroundScope(editingBackgroundScope.id, {
+                                      spores: nextSpores,
+                                    });
+                                  }}
+                                />
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1.5">
+                                  <label className="text-xs font-medium text-muted-foreground">
+                                    Eje X
+                                  </label>
+                                  <select
+                                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                    value={spore.flipX ? "1" : "0"}
+                                    onChange={(event) => {
+                                      const nextSpores = [
+                                        ...(editingBackgroundScope.spores ??
+                                          defaultLandingBackgroundSpores),
+                                      ];
+                                      nextSpores[index] = {
+                                        ...spore,
+                                        flipX: event.target.value === "1",
+                                      };
+                                      updateBackgroundScope(editingBackgroundScope.id, {
+                                        spores: nextSpores,
+                                      });
+                                    }}
+                                  >
+                                    <option value="0">Normal</option>
+                                    <option value="1">Invertido</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-xs font-medium text-muted-foreground">
+                                    Eje Y
+                                  </label>
+                                  <select
+                                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                                    value={spore.flipY ? "1" : "0"}
+                                    onChange={(event) => {
+                                      const nextSpores = [
+                                        ...(editingBackgroundScope.spores ??
+                                          defaultLandingBackgroundSpores),
+                                      ];
+                                      nextSpores[index] = {
+                                        ...spore,
+                                        flipY: event.target.value === "1",
+                                      };
+                                      updateBackgroundScope(editingBackgroundScope.id, {
+                                        spores: nextSpores,
+                                      });
+                                    }}
+                                  >
+                                    <option value="0">Normal</option>
+                                    <option value="1">Invertido</option>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    ) : null}
                     <p className="text-[11px] text-muted-foreground">
                       Usado{" "}
                       {sectionHeightsByScope.get(editingBackgroundScope.id) ??

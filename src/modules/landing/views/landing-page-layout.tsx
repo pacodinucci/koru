@@ -580,6 +580,7 @@ export function LandingPageLayout({
 
   const previewRootStyle: CSSProperties = {
     ["--landing-body-padding-x" as string]: `${layoutPaddingX}px`,
+    ["--landing-nav-height" as string]: `${navHeight}px`,
     ...(previewMode && previewViewportHeight
       ? ({
           ["--landing-preview-vh" as string]: `${previewViewportHeight}px`,
