@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { getCmsPublishedTextMap } from "@/modules/cms/server/cms-text.repository";
+import { getDefaultLandingTextMap } from "@/modules/landing/config/landing-sections";
 import { LandingPageLayout } from "@/modules/landing/views/landing-page-layout";
 
 export default async function PublicPagesLayout({
@@ -9,7 +10,12 @@ export default async function PublicPagesLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const textMap = await getCmsPublishedTextMap();
+  let textMap = getDefaultLandingTextMap();
+  try {
+    textMap = await getCmsPublishedTextMap();
+  } catch (error) {
+    console.error("[PublicPagesLayout] Failed to load CMS text map, using defaults.", error);
+  }
   const session = await auth.api.getSession({
     headers: await headers(),
   });
