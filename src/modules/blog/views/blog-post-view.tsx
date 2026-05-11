@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,12 +11,29 @@ type BlogPostViewProps = {
   commentStatus?: string;
 };
 
+function addImageHoverIcon(html: string) {
+  return html.replace(
+    /<img\b([^>]*)>/gi,
+    '<span class="blog-image-hover-wrap" style="position:relative;display:block;width:100%;height:0;padding-top:72%;overflow:hidden;"><img$1 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;"><span class="blog-image-hover-icon" aria-hidden="true"></span></span>',
+  );
+}
+
 function formatDate(date: Date) {
   return date.toLocaleDateString("es-AR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
+}
+
+function initials(name: string | null) {
+  if (!name) return "U";
+
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
@@ -27,33 +43,45 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
     notFound();
   }
 
-  return (
-    <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-10">
-      <div>
-        <Link
-          href="/blog"
-          className="mb-4 inline-flex h-7 items-center justify-center rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] font-medium transition-colors hover:bg-muted"
-        >
-          Volver al blog
-        </Link>
+  const contentWithImageOverlay = addImageHoverIcon(post.content);
 
-        <article className="space-y-6 rounded-xl border p-6">
-          <header className="space-y-2">
-            <h1 className="text-4xl font-semibold leading-tight">{post.title}</h1>
-            <p className="text-xs text-muted-foreground">
-              {formatDate(post.publishedAt ?? post.createdAt)}
-              {post.authorName ? ` - ${post.authorName}` : ""}
-            </p>
+  return (
+    <main className="mx-auto w-full max-w-5xl space-y-8 pl-6 pr-12 py-10 md:pl-10 md:pr-20 lg:pl-14 lg:pr-48">
+      <header className="space-y-1">
+        <h1 className="text-3xl font-semibold tracking-tight [font-family:var(--font-roboto-condensed)] md:text-4xl">
+          Koru OSA
+        </h1>
+        <p className="text-2xl font-semibold italic tracking-tight [font-family:var(--font-indie-flower)] md:text-4xl">
+          Blog
+        </p>
+      </header>
+
+      <div>
+        <article className="space-y-6 rounded-xl border p-6 [font-family:var(--font-montserrat)]">
+          <header className="space-y-5">
+            <div className="flex items-center gap-3 text-foreground">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-900)] text-xs font-bold text-white">
+                {initials(post.authorName)}
+              </div>
+              <p className="text-sm leading-none text-muted-foreground [font-family:var(--font-roboto-condensed)] md:text-base">
+                {post.authorName || "Usuario"} ·{" "}
+                {formatDate(post.publishedAt ?? post.createdAt)}
+              </p>
+            </div>
+
+            <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
+              {post.title}
+            </h1>
           </header>
 
           <div
             className="blog-post-content prose prose-neutral max-w-none"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: contentWithImageOverlay }}
           />
         </article>
       </div>
 
-      <section className="space-y-4">
+      <section className="space-y-4 [font-family:var(--font-montserrat)]">
         <h2 className="text-xl font-semibold">Comentarios</h2>
 
         {commentStatus === "ok" ? (
@@ -106,8 +134,10 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
             {post.comments.map((comment) => (
               <Card key={comment.id}>
                 <CardHeader className="space-y-1">
-                  <CardTitle className="text-sm">{comment.authorName}</CardTitle>
-                  <p className="text-xs text-muted-foreground">
+                  <CardTitle className="text-sm [font-family:var(--font-roboto-condensed)]">
+                    {comment.authorName}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground [font-family:var(--font-roboto-condensed)]">
                     {formatDate(comment.createdAt)}
                   </p>
                 </CardHeader>

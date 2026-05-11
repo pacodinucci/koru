@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useDashboardEditorPanel } from "@/modules/dashboard/components/dashboard-editor-panel";
 import {
   NovelBlogEditor,
@@ -206,13 +208,42 @@ export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps)
     <>
       <form id={formId} action={createBlogPostAction} className="space-y-3">
         <input type="hidden" name="dashboardPath" value="/dashboard/blog" />
-        <input type="hidden" name="title" value="Titulo del post" />
         <section className="rounded-xl border border-slate-200 bg-white">
           <header className="flex items-center gap-2 border-b border-slate-200 px-4 py-3">
             <PenLineIcon className="h-4 w-4" />
             <h2 className="text-base font-semibold">Nuevo post</h2>
           </header>
-          <div className="p-3">
+          <div className="space-y-4 p-3">
+            <div className="space-y-3 rounded-lg border border-slate-200 p-3">
+              <div className="space-y-1.5">
+                <label htmlFor={`${formId}-title`} className="text-sm font-medium text-slate-700">
+                  Titulo
+                </label>
+                <Input
+                  id={`${formId}-title`}
+                  name="title"
+                  required
+                  minLength={4}
+                  maxLength={180}
+                  placeholder="Ej: Como escalar el dashboard del blog"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor={`${formId}-excerpt`} className="text-sm font-medium text-slate-700">
+                  Resumen
+                </label>
+                <Textarea
+                  id={`${formId}-excerpt`}
+                  name="excerpt"
+                  required
+                  minLength={8}
+                  maxLength={220}
+                  rows={3}
+                  placeholder="Resumen corto que se muestra en la lista del blog"
+                  className="resize-none"
+                />
+              </div>
+            </div>
             <NovelBlogEditor controlsInPanel onReady={setEditorActions} />
           </div>
         </section>

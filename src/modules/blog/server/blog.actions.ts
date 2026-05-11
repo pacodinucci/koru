@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 
 const createPostSchema = z.object({
   title: z.string().min(4).max(180),
+  excerpt: z.string().min(8).max(220),
   slug: z.string().trim().min(1).max(180),
   contentJson: z.string().min(2),
   contentHtml: z.string().min(2),
@@ -92,6 +93,7 @@ export async function createBlogPostAction(formData: FormData) {
 
   const parsed = createPostSchema.safeParse({
     title: rawTitle,
+    excerpt: String(formData.get("excerpt") ?? "").trim(),
     slug: normalizedSlug,
     contentJson: String(formData.get("contentJson") ?? "").trim(),
     contentHtml: String(formData.get("contentHtml") ?? "").trim(),
@@ -128,8 +130,6 @@ export async function createBlogPostAction(formData: FormData) {
   }
 
   const plainTextContent = stripHtml(parsed.data.contentHtml);
-  const excerpt = plainTextContent.slice(0, 220);
-
   if (plainTextContent.length < 30) {
     redirect(
       buildDashboardError(
@@ -141,15 +141,20 @@ export async function createBlogPostAction(formData: FormData) {
 
   const publishedAt =
     parsed.data.status === BlogPostStatus.PUBLISHED ? new Date() : null;
+  const authorName =
+    session.user.name?.trim() ||
+    session.user.email.split("@")[0]?.trim() ||
+    "Usuario";
 
   await prisma.blogPost.create({
     data: {
       title: parsed.data.title,
       slug: parsed.data.slug,
-      excerpt,
+      excerpt: parsed.data.excerpt,
       content: parsed.data.contentHtml,
       contentBlocks: parsedContentJson,
       status: parsed.data.status,
+      authorName,
       publishedAt,
     },
   });

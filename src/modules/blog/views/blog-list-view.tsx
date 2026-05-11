@@ -1,6 +1,7 @@
 ﻿/* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
+import { Maximize2Icon } from "lucide-react";
 
 import { getPublishedPosts } from "@/modules/blog/server/blog.repository";
 
@@ -33,14 +34,14 @@ export async function BlogListView() {
   const posts = await getPublishedPosts();
 
   return (
-    <main className="mx-auto w-full max-w-6xl bg-white px-4 pb-16 pt-10 md:px-6">
+    <main className="mx-auto w-full max-w-5xl bg-white pl-6 pr-10 pb-16 pt-10 md:pl-10 md:pr-16 lg:pl-14 lg:pr-24">
       <header className="mb-8 space-y-3">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            Blog
+          <h1 className="text-3xl font-semibold tracking-tight [font-family:var(--font-roboto-condensed)] md:text-4xl">
+            Koru OSA
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Historias, aprendizajes y noticias de la comunidad.
+          <p className="text-2xl font-semibold italic tracking-wider [font-family:var(--font-indie-flower)] md:text-4xl">
+            Blog
           </p>
         </div>
       </header>
@@ -50,30 +51,33 @@ export async function BlogListView() {
           Todavia no hay posts publicados.
         </div>
       ) : (
-        <div className="space-y-7">
+        <div className="space-y-5 [font-family:var(--font-montserrat)]">
           {posts.map((post) => {
             const coverImage = extractFirstImage(post.content);
 
             return (
               <article
                 key={post.id}
-                className="overflow-hidden rounded-none bg-white md:grid md:grid-cols-[1fr_1.12fr]"
+                className="mx-auto max-w-5xl overflow-hidden rounded-none bg-white md:grid md:grid-cols-[340px_minmax(0,1fr)] md:gap-4"
               >
-                <Link href={`/blog/${post.slug}`} className="block bg-muted">
+                <Link href={`/blog/${post.slug}`} className="group relative block bg-muted">
                   {coverImage ? (
                     <img
                       src={coverImage}
                       alt={post.title}
-                      className="h-full min-h-[240px] w-full object-cover md:min-h-[440px]"
+                      className="aspect-square w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full min-h-[240px] items-center justify-center text-sm text-muted-foreground md:min-h-[440px]">
+                    <div className="flex aspect-square w-full items-center justify-center text-sm text-muted-foreground">
                       Sin imagen
                     </div>
                   )}
+                  <span className="pointer-events-none absolute top-3 right-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-900 opacity-0 shadow-sm transition-opacity duration-200 group-hover:opacity-100">
+                    <Maximize2Icon className="h-4 w-4" />
+                  </span>
                 </Link>
 
-                <div className="flex flex-col gap-4 bg-white md:py-2 md:px-4">
+                <div className="flex flex-col gap-3 bg-white py-2 md:pr-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-900)] text-xs font-bold text-white">
@@ -81,7 +85,7 @@ export async function BlogListView() {
                       </div>
                       <div className="flex flex-col justify-center py-1">
                         <p className="text-sm leading-none">
-                          {post.authorName || "Acton Admin"}
+                          {post.authorName || "Usuario"}
                         </p>
                         <p className="mt-1 text-sm leading-none text-muted-foreground">
                           {formatDate(post.publishedAt ?? post.createdAt)}
@@ -90,7 +94,7 @@ export async function BlogListView() {
                     </div>
                   </div>
 
-                  <h2 className="text-lg font-semibold leading-tight md:text-xl">
+                  <h2 className="text-base font-semibold leading-tight md:text-lg">
                     <Link
                       href={`/blog/${post.slug}`}
                       className="hover:underline"
@@ -99,12 +103,12 @@ export async function BlogListView() {
                     </Link>
                   </h2>
 
-                  <p className="line-clamp-4 text-base leading-[1.35] text-foreground/90">
+                  <p className="line-clamp-3 text-sm leading-[1.35] text-foreground/90">
                     {post.excerpt}
                   </p>
 
-                  <div className="mt-auto border-t border-black/15 pt-4">
-                    <span className="text-4xl leading-none text-[#f25f5c]">
+                  <div className="mt-auto border-t border-black/15 pt-3">
+                    <span className="text-3xl leading-none text-[#f25f5c]">
                       ♡
                     </span>
                   </div>
