@@ -1,8 +1,11 @@
 ﻿/* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
-import { Maximize2Icon } from "lucide-react";
+import { headers } from "next/headers";
+import { MessageCircleIcon } from "lucide-react";
 
+import { auth } from "@/lib/auth";
+import { BlogLikeButton } from "@/modules/blog/components/blog-like-button";
 import { getPublishedPosts } from "@/modules/blog/server/blog.repository";
 
 function formatDate(date: Date | null) {
@@ -31,7 +34,8 @@ function initials(name: string | null) {
 }
 
 export async function BlogListView() {
-  const posts = await getPublishedPosts();
+  const session = await auth.api.getSession({ headers: await headers() });
+  const posts = await getPublishedPosts(session?.user.id);
 
   return (
     <main className="mx-auto w-full max-w-5xl bg-white pl-6 pr-10 pb-16 pt-10 md:pl-10 md:pr-16 lg:pl-14 lg:pr-24">
@@ -51,7 +55,7 @@ export async function BlogListView() {
           Todavia no hay posts publicados.
         </div>
       ) : (
-        <div className="space-y-5 [font-family:var(--font-montserrat)]">
+        <div className="space-y-9 [font-family:var(--font-montserrat)]">
           {posts.map((post) => {
             const coverImage = extractFirstImage(post.content);
 
@@ -60,7 +64,7 @@ export async function BlogListView() {
                 key={post.id}
                 className="mx-auto max-w-5xl overflow-hidden rounded-none bg-white md:grid md:grid-cols-[340px_minmax(0,1fr)] md:gap-4"
               >
-                <Link href={`/blog/${post.slug}`} className="group relative block bg-muted">
+                <Link href={`/blog/${post.slug}`} className="block bg-muted">
                   {coverImage ? (
                     <img
                       src={coverImage}
@@ -72,9 +76,6 @@ export async function BlogListView() {
                       Sin imagen
                     </div>
                   )}
-                  <span className="pointer-events-none absolute top-3 right-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-900 opacity-0 shadow-sm transition-opacity duration-200 group-hover:opacity-100">
-                    <Maximize2Icon className="h-4 w-4" />
-                  </span>
                 </Link>
 
                 <div className="flex flex-col gap-3 bg-white py-2 md:pr-2">
@@ -108,9 +109,19 @@ export async function BlogListView() {
                   </p>
 
                   <div className="mt-auto border-t border-black/15 pt-3">
-                    <span className="text-3xl leading-none text-[#f25f5c]">
-                      ♡
-                    </span>
+                    <div className="flex items-center gap-5">
+                      <span className="inline-flex items-center gap-1.5 text-foreground/90">
+                        <MessageCircleIcon className="h-5 w-5" />
+                        <span className="text-sm text-muted-foreground">
+                          {post._count.comments}
+                        </span>
+                      </span>
+                      <BlogLikeButton
+                        slug={post.slug}
+                        initialLiked={Boolean(post.likes?.length)}
+                        initialCount={post._count.likes}
+                      />
+                    </div>
                   </div>
                 </div>
               </article>

@@ -20,13 +20,6 @@ const createPostSchema = z.object({
 
 const createCommentSchema = z.object({
   slug: z.string().trim().min(1),
-  authorName: z.string().min(2).max(80),
-  authorEmail: z
-    .string()
-    .trim()
-    .email()
-    .optional()
-    .or(z.literal("")),
   content: z.string().min(4).max(1200),
 });
 
@@ -170,10 +163,13 @@ export async function createBlogPostAction(formData: FormData) {
 }
 
 export async function createBlogCommentAction(formData: FormData) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    redirect("/sign-in");
+  }
+
   const parsed = createCommentSchema.safeParse({
     slug: String(formData.get("slug") ?? "").trim(),
-    authorName: String(formData.get("authorName") ?? "").trim(),
-    authorEmail: String(formData.get("authorEmail") ?? "").trim(),
     content: String(formData.get("content") ?? "").trim(),
   });
 
@@ -197,11 +193,9 @@ export async function createBlogCommentAction(formData: FormData) {
   await prisma.blogComment.create({
     data: {
       postId: post.id,
-      authorName: parsed.data.authorName,
-      authorEmail:
-        parsed.data.authorEmail && parsed.data.authorEmail.length > 0
-          ? parsed.data.authorEmail
-          : null,
+      authorName:
+        session.user.name?.trim() || session.user.email.split("@")[0]?.trim() || "Usuario",
+      authorEmail: session.user.email || null,
       content: parsed.data.content,
       approved: true,
     },
@@ -211,5 +205,59 @@ export async function createBlogCommentAction(formData: FormData) {
   revalidatePath("/blog");
 
   redirect(buildCommentPath(post.slug, "ok"));
+}
+
+export async function toggleBlogPostLikeAction(formData: FormData) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    redirect("/sign-in");
+  }
+
+  const slug = String(formData.get("slug") ?? "").trim();
+  const redirectPath = String(formData.get("redirectPath") ?? "").trim();
+  const safeRedirectPath =
+    redirectPath.startsWith("/blog/") || redirectPath === "/blog"
+      ? redirectPath
+      : "/blog";
+
+  if (!slug) {
+    redirect(safeRedirectPath);
+  }
+
+  const post = await prisma.blogPost.findFirst({
+    where: { slug, status: BlogPostStatus.PUBLISHED },
+    select: { id: true, slug: true },
+  });
+
+  if (!post) {
+    redirect("/blog");
+  }
+
+  const existing = await prisma.blogPostLike.findUnique({
+    where: {
+      postId_userId: {
+        postId: post.id,
+        userId: session.user.id,
+      },
+    },
+    select: { id: true },
+  });
+
+  if (existing) {
+    await prisma.blogPostLike.delete({
+      where: { id: existing.id },
+    });
+  } else {
+    await prisma.blogPostLike.create({
+      data: {
+        postId: post.id,
+        userId: session.user.id,
+      },
+    });
+  }
+
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${post.slug}`);
+  redirect(safeRedirectPath);
 }
 
