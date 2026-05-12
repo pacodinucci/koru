@@ -51,16 +51,6 @@ const DEFAULT_CONTENT: JSONContent = {
   type: "doc",
   content: [
     {
-      type: "heading",
-      attrs: { level: 1 },
-      content: [{ type: "text", text: "Titulo del post" }],
-    },
-    {
-      type: "heading",
-      attrs: { level: 2 },
-      content: [{ type: "text", text: "Subtitulo del post" }],
-    },
-    {
       type: "paragraph",
       content: [{ type: "text", text: "Empieza a escribir el contenido del post..." }],
     },
@@ -502,7 +492,7 @@ export function NovelBlogEditor({
 }: NovelBlogEditorProps) {
   const [jsonValue, setJsonValue] = useState<string>(JSON.stringify(DEFAULT_CONTENT));
   const [htmlValue, setHtmlValue] = useState<string>(
-    "<h1>Titulo del post</h1><h2>Subtitulo del post</h2><p>Empieza a escribir el contenido del post...</p>",
+    "<p>Empieza a escribir el contenido del post...</p>",
   );
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadNotice, setUploadNotice] = useState<string>("");
@@ -538,12 +528,21 @@ export function NovelBlogEditor({
     });
 
     if (!response.ok) {
-      return null;
+      let backendMessage = "No pudimos subir la imagen.";
+      try {
+        const payload = (await response.json()) as { error?: string };
+        if (payload?.error) {
+          backendMessage = payload.error;
+        }
+      } catch {
+        // ignore parsing error
+      }
+      throw new Error(backendMessage);
     }
 
-    const data = (await response.json()) as { ok?: boolean; url?: string };
+    const data = (await response.json()) as { ok?: boolean; url?: string; error?: string };
     if (!data.ok || !data.url) {
-      return null;
+      throw new Error(data.error || "No pudimos subir la imagen.");
     }
 
     return data.url;
@@ -938,14 +937,16 @@ export function NovelBlogEditor({
             return;
           }
 
+          if (file.size > 10 * 1024 * 1024) {
+            setUploadNotice("La imagen supera el limite de 10MB.");
+            event.target.value = "";
+            return;
+          }
+
           setUploadNotice("");
           setUploadingImage(true);
           try {
             const url = await uploadImage(file);
-            if (!url) {
-              setUploadNotice("No pudimos subir la imagen.");
-              return;
-            }
 
             if (pendingMasonrySlot) {
               const currentNode = editorRef.current.state.doc.nodeAt(
@@ -1011,6 +1012,12 @@ export function NovelBlogEditor({
               attrs.imgAlign = "center";
               editorRef.current.chain().focus().setImage(attrs).run();
             }
+          } catch (error) {
+            setUploadNotice(
+              error instanceof Error && error.message
+                ? error.message
+                : "No pudimos subir la imagen.",
+            );
           } finally {
             setUploadingImage(false);
           }

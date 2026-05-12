@@ -20,3 +20,4 @@ export default async function BlogPostPage({
 
   return <BlogPostView slug={slug} commentStatus={comment} />;
 }
+

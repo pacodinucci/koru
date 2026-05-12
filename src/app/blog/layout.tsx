@@ -5,7 +5,7 @@ import { getCmsPublishedTextMap } from "@/modules/cms/server/cms-text.repository
 import { getDefaultLandingTextMap } from "@/modules/landing/config/landing-sections";
 import { LandingPageLayout } from "@/modules/landing/views/landing-page-layout";
 
-export default async function PublicPagesLayout({
+export default async function BlogLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -14,11 +14,13 @@ export default async function PublicPagesLayout({
   try {
     textMap = await getCmsPublishedTextMap();
   } catch (error) {
-    console.error("[PublicPagesLayout] Failed to load CMS text map, using defaults.", error);
+    console.error("[BlogLayout] Failed to load CMS text map, using defaults.", error);
   }
+
   const session = await auth.api.getSession({
     headers: await headers(),
   });
+
   const user = session
     ? {
         name: session.user.name?.trim() || "Usuario",

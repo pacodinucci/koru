@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 
-export async function getPublishedPosts() {
+export async function getPublishedPosts(userId?: string) {
   return prisma.blogPost.findMany({
     where: { status: BlogPostStatus.PUBLISHED },
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
@@ -23,13 +23,21 @@ export async function getPublishedPosts() {
               approved: true,
             },
           },
+          likes: true,
         },
       },
+      likes: userId
+        ? {
+            where: { userId },
+            select: { id: true },
+            take: 1,
+          }
+        : false,
     },
   });
 }
 
-export async function getPublishedPostBySlug(slug: string) {
+export async function getPublishedPostBySlug(slug: string, userId?: string) {
   return prisma.blogPost.findFirst({
     where: {
       slug,
@@ -39,6 +47,18 @@ export async function getPublishedPostBySlug(slug: string) {
       comments: {
         where: { approved: true },
         orderBy: { createdAt: "desc" },
+      },
+      likes: userId
+        ? {
+            where: { userId },
+            select: { id: true },
+            take: 1,
+          }
+        : false,
+      _count: {
+        select: {
+          likes: true,
+        },
       },
     },
   });

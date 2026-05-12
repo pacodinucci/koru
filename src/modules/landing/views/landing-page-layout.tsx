@@ -591,7 +591,7 @@ export function LandingPageLayout({
   return (
     <div
       ref={rootRef}
-      className="relative isolate min-h-screen overflow-hidden bg-[#f4efe5] text-black"
+      className="relative isolate min-h-screen overflow-hidden bg-white text-black"
       data-landing-preview={previewMode ? "true" : undefined}
       style={previewRootStyle}
     >
