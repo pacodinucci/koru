@@ -1,62 +1,107 @@
-export default function AdmisionesPage() {
+﻿export default function AdmisionesPage() {
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-10 px-6 py-16">
-      <header className="space-y-4">
-        <p className="text-sm uppercase tracking-[0.18em] text-muted-foreground">
-          Seccion
-        </p>
-        <h1 className="text-4xl font-semibold tracking-tight">Admisiones</h1>
-        <p className="text-lg text-muted-foreground">
-          Gracias por su interes en unirse a KORU OSA. Antes de programar su
-          visita, por favor revise detenidamente nuestro proceso de admision.
-        </p>
-      </header>
+    <main className="bg-white pb-16" style={{ fontFamily: "var(--font-montserrat)" }}>
+      <section className="mx-auto w-full max-w-7xl space-y-10 px-6 pt-16 md:px-10 lg:space-y-12 lg:px-14 lg:pt-24">
+        <header className="space-y-6">
+          <p className="text-sm font-medium tracking-[0.18em] text-[#6d7e96]">ADMISIONES</p>
 
-      <section className="space-y-6">
-        <article className="space-y-3 rounded-md border p-5">
-          <h2 className="text-2xl font-semibold">1. Visita nuestro espacio</h2>
-          <p className="text-base leading-7 text-muted-foreground">
-            El primer paso en el proceso de inscripcion de su hijo o hija
-            comienza con una visita a KORU con su familia.
-          </p>
-          <p className="text-base leading-7 text-muted-foreground">
-            Esta es su oportunidad de conocer el espacio y a los acompañantes,
-            informarse sobre nuestra comunidad y resolver dudas.
-          </p>
-        </article>
+          <h1 className="space-y-1 text-5xl leading-[0.95] tracking-tight text-black md:text-6xl lg:text-7xl">
+            <span
+              className="block font-light"
+              style={{ fontFamily: "var(--font-roboto-condensed)" }}
+            >
+              Queremos que cada familia
+            </span>
+            <span
+              className="block italic"
+              style={{ fontFamily: "var(--font-indie-flower)" }}
+            >
+              llegue con claridad y confianza
+            </span>
+          </h1>
 
-        <article className="space-y-3 rounded-md border p-5">
-          <h2 className="text-2xl font-semibold">2. Dias de prueba</h2>
-          <p className="text-base leading-7 text-muted-foreground">
-            En ese primer contacto, el docente se encarga de transmitir al
-            infante un ambiente de confianza, paz y seguridad.
-          </p>
-          <p className="text-base leading-7 text-muted-foreground">
-            En esta semana no se les permite a los padres, madres o tutores
-            compartir espacio con el infante.
-          </p>
-          <p className="text-base leading-7 text-muted-foreground">
-            Se necesita que 4 o 5 dias antes se le estimule al infante,
-            brindandole palabras de tranquilidad para esa primera separacion
-            del niño/a con el adulto.
-          </p>
-        </article>
-
-        <article className="space-y-3 rounded-md border p-5">
-          <h2 className="text-2xl font-semibold">
-            3. Formularios y protocolos de admision
-          </h2>
-          <p className="text-base leading-7 text-muted-foreground">
-            Se le solicitara el pago de inscripcion, colegiatura y cuota de
-            materiales.
-          </p>
-          <p className="text-base leading-7 text-muted-foreground">
-            A su vez, debera completar los formularios de Biografia del Niño,
-            Historia Medica, Autorizacion, protocolos, contrato y Compromiso de
-            Colaboracion.
-          </p>
-        </article>
+        </header>
       </section>
+
+      <section className="my-10 bg-[#f3f2ef] md:my-12 lg:my-16">
+        <div className="mx-auto w-full max-w-7xl px-6 py-12 md:px-10 md:py-16 lg:px-14 lg:py-20">
+          <p
+            className="max-w-5xl text-2xl leading-[1.3] text-black md:text-3xl"
+            style={{ fontFamily: "var(--font-roboto-condensed)" }}
+          >
+            Antes de iniciar, te invitamos a conocer cómo es el proceso de admisión para
+            acompañar este paso de forma consciente, respetuosa y en sintonía con la comunidad.
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-7xl space-y-10 px-6 pt-10 md:px-10 lg:space-y-12 lg:px-14">
+        <section className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+          <article className="space-y-4 rounded-2xl border border-black/10 p-6 lg:p-7">
+            <p
+              className="text-sm tracking-[0.14em] text-black/55"
+              style={{ fontFamily: "var(--font-roboto-condensed)" }}
+            >
+              PASO 1
+            </p>
+            <h2 className="text-3xl leading-tight tracking-tight text-black md:text-[2rem]">
+              Visita inicial
+            </h2>
+            <div className="space-y-3 text-base leading-7 text-black/75">
+              <p>
+                El proceso comienza con una visita familiar al espacio para conocer el ambiente,
+                a los acompañantes y la propuesta de Koru.
+              </p>
+              <p>Es un primer encuentro para observar, preguntar y despejar dudas.</p>
+            </div>
+          </article>
+
+          <article className="space-y-4 rounded-2xl border border-black/10 p-6 lg:p-7">
+            <p
+              className="text-sm tracking-[0.14em] text-black/55"
+              style={{ fontFamily: "var(--font-roboto-condensed)" }}
+            >
+              PASO 2
+            </p>
+            <h2 className="text-3xl leading-tight tracking-tight text-black md:text-[2rem]">
+              Días de prueba
+            </h2>
+            <div className="space-y-3 text-base leading-7 text-black/75">
+              <p>
+                En los primeros días, creamos un entorno de confianza y seguridad para facilitar
+                la adaptación de cada niña o niño.
+              </p>
+              <p>
+                La participación de madres, padres o tutores dentro del espacio no está prevista
+                en esta etapa.
+              </p>
+            </div>
+          </article>
+
+          <article className="space-y-4 rounded-2xl border border-black/10 p-6 lg:p-7">
+            <p
+              className="text-sm tracking-[0.14em] text-black/55"
+              style={{ fontFamily: "var(--font-roboto-condensed)" }}
+            >
+              PASO 3
+            </p>
+            <h2 className="text-3xl leading-tight tracking-tight text-black md:text-[2rem]">
+              Documentación y cierre
+            </h2>
+            <div className="space-y-3 text-base leading-7 text-black/75">
+              <p>
+                Para confirmar el ingreso, se completa la documentación institucional y se
+                formalizan inscripción, colegiatura y cuota de materiales.
+              </p>
+              <p>
+                Incluye biografía, historia médica, autorizaciones, protocolos, contrato y
+                compromiso de colaboración.
+              </p>
+            </div>
+          </article>
+        </section>
+      </section>
+
     </main>
   );
 }
