@@ -1,6 +1,7 @@
 "use client";
 
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { SporeShape } from "@/components/spore-shape";
 import {
   defaultLandingBackgroundSpores,
@@ -17,11 +18,11 @@ import {
   type LandingResponsiveMode,
 } from "@/modules/landing/types/landing-text";
 import { CardsSection } from "@/modules/landing/views/sections/cards-section";
-import { EditorialFeatureSection } from "@/modules/landing/views/sections/editorial-feature-section";
 import { FooterSection } from "@/modules/landing/views/sections/footer-section";
 import { GallerySection } from "@/modules/landing/views/sections/gallery-section";
 import { HeroSection } from "@/modules/landing/views/sections/hero-section";
 import { ImageGridSection } from "@/modules/landing/views/sections/image-grid-section";
+import { NonCmsEditorialSection } from "@/modules/landing/views/sections/non-cms-editorial-section";
 import { SporeFeatureStackSection } from "@/modules/landing/views/sections/spore-feature-stack-section";
 import { StorySection } from "@/modules/landing/views/sections/story-section";
 import { VideoSection } from "@/modules/landing/views/sections/video-section";
@@ -39,6 +40,74 @@ type ScopedSectionGroup = {
   scopeId: string;
   sections: LandingSectionInstance[];
 };
+
+function LandingVisionBridgeSection() {
+  return (
+    <section className="bg-white">
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 md:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16 lg:px-14 lg:py-24">
+        <div className="lg:order-2">
+          <h2
+            className="mb-8 text-5xl leading-[0.95] tracking-tight text-black md:text-6xl"
+            style={{ fontFamily: "var(--font-roboto-condensed)" }}
+          >
+            Bienvenidos a Koru
+          </h2>
+          <div className="max-w-3xl space-y-6 text-xl leading-relaxed text-black/85">
+            <p>
+              Co-creamos una cultura viva donde niñas, niños, familias y
+              acompañantes asumen un rol activo y corresponsable en los procesos
+              de aprendizaje y desarrollo.
+            </p>
+            <p>
+              Queremos una comunidad donde cada persona fortalezca su brújula
+              interna, despliegue sus dones y participe conscientemente en la
+              regeneración social y ecológica.
+            </p>
+          </div>
+        </div>
+
+        <div className="relative mx-auto w-full max-w-[28rem] lg:order-1">
+          <div className="relative aspect-square overflow-hidden rounded-full">
+            <Image
+              src="/assets/img9.jpg"
+              alt="Comunidad educativa compartiendo actividades"
+              fill
+              className="object-cover"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LandingQuoteSection() {
+  return (
+    <section className="bg-white">
+      <div className="mx-auto w-full max-w-6xl px-6 py-16 text-center md:px-10 lg:px-14 lg:py-20">
+        <blockquote
+          className="mx-auto max-w-5xl text-[clamp(1.5rem,3.4vw,2.9rem)] leading-[1.16] text-[var(--complement-800)]"
+          style={{ fontFamily: "var(--font-indie-flower)" }}
+        >
+          “Koru ha sido mágico para nuestra hija. Su creatividad, su bondad y
+          su curiosidad por el mundo florecen cada día. La vemos crecer en su
+          mejor versión.”
+        </blockquote>
+        <div className="mt-7 flex justify-center">
+          <img
+            src="/assets/quote-underline.svg"
+            alt=""
+            aria-hidden="true"
+            className="h-[10px] w-[180px]"
+          />
+        </div>
+        <p className="mt-5 text-center text-xl text-black">
+          Tutor de Koru
+        </p>
+      </div>
+    </section>
+  );
+}
 
 function groupSectionsByScope(
   sections: LandingSectionInstance[],
@@ -165,14 +234,17 @@ function SectionRenderer({
       );
     case "editorial-feature":
       return (
-        <EditorialFeatureSection
-          section={section}
-          textMap={textMap}
-          previewMode={previewMode}
-          selectedFieldId={selectedFieldId}
-          onSelectField={onSelectField}
-          responsiveMode={responsiveMode}
-          onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+        <NonCmsEditorialSection
+          bannerTitle={
+            section.id.includes("-copy")
+              ? "Breve explicación del enfoque"
+              : "Qué nos hace diferentes"
+          }
+          bannerClassName={
+            section.id.includes("-copy")
+              ? "bg-[var(--complement-900)]"
+              : "bg-[var(--brand-900)]"
+          }
         />
       );
     case "spore-stack":
@@ -306,11 +378,36 @@ export function LandingView({
 
         return (
           <ScopeBackground key={`${group.scopeId}-${groupIndex}`} scope={scope}>
-            {group.sections.map((section) => (
-              section.id === videoSectionId && !previewMode ? (
-                <div key={section.id} data-preview-section-id={section.id}>
-                  <div className="landing-video-pin">
-                    <div className="landing-video-static">
+            {group.sections.map((section) => {
+              return (
+                <div key={section.id}>
+                  {section.id === videoSectionId && !previewMode ? (
+                    <div>
+                      <div data-preview-section-id={section.id}>
+                        <div className="landing-video-pin">
+                          <div className="landing-video-static">
+                            <SectionRenderer
+                              section={section}
+                              textMap={responsiveMap}
+                              previewMode={previewMode}
+                              selectedFieldId={selectedFieldId}
+                              onSelectField={onSelectField}
+                              responsiveMode={effectiveResponsiveMode}
+                              onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="landing-overlap-content">
+                        <LandingVisionBridgeSection />
+                        <LandingQuoteSection />
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      data-preview-section-id={section.id}
+                      className={!previewMode ? "landing-overlap-content" : undefined}
+                    >
                       <SectionRenderer
                         section={section}
                         textMap={responsiveMap}
@@ -321,26 +418,10 @@ export function LandingView({
                         onMoveSectionExtraPosition={onMoveSectionExtraPosition}
                       />
                     </div>
-                  </div>
+                  )}
                 </div>
-              ) : (
-                <div
-                  key={section.id}
-                  data-preview-section-id={section.id}
-                  className={!previewMode ? "landing-overlap-content" : undefined}
-                >
-                  <SectionRenderer
-                    section={section}
-                    textMap={responsiveMap}
-                    previewMode={previewMode}
-                    selectedFieldId={selectedFieldId}
-                    onSelectField={onSelectField}
-                    responsiveMode={effectiveResponsiveMode}
-                    onMoveSectionExtraPosition={onMoveSectionExtraPosition}
-                  />
-                </div>
-              )
-            ))}
+              );
+            })}
           </ScopeBackground>
         );
       })}

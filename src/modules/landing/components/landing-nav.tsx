@@ -72,7 +72,46 @@ function getInitials(nameOrEmail: string) {
 }
 
 function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
-  const normalized = label.trim().toLowerCase();
+  const normalized = label
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (normalized === "como acompanamos") {
+    return {
+      featured: {
+        imageSrc: "/assets/img1.jpg",
+        imageAlt: "Cómo acompañamos",
+        title: "Cómo acompañamos",
+        href: "/como-acompanamos",
+      },
+      columns: [
+        {
+          title: "Cómo acompañamos",
+          links: [
+            {
+              label: "Grupo Esporas",
+              href: "/como-acompanamos#grupo-esporas",
+            },
+            {
+              label: "Grupo Koru",
+              href: "/como-acompanamos#grupo-koru",
+            },
+            {
+              label: "Grupo Helechos 1",
+              href: "/como-acompanamos#grupo-helechos-1",
+            },
+            {
+              label: "Grupo Helechos 2",
+              href: "/como-acompanamos#grupo-helechos-2",
+            },
+          ],
+        },
+      ],
+    };
+  }
+
   if (normalized !== "comunidad") {
     return undefined;
   }
@@ -112,11 +151,12 @@ export function LandingNav({
   containerStyles = {},
   user = null,
   links = [
-    { label: "Quienes somos", href: "/quienes-somos" },
-    { label: "Como acompanamos", href: "/como-acompanamos" },
+    { label: "Quiénes somos", href: "/quienes-somos" },
+    { label: "Cómo acompañamos", href: "/como-acompanamos" },
     { label: "Comunidad", href: "/comunidad" },
     { label: "Blog", href: "/blog" },
     { label: "Admisiones", href: "/admisiones" },
+    { label: "Contacto", href: "/contacto" },
     { label: "Log In", href: "/sign-in" },
   ],
 }: LandingNavProps) {
@@ -301,7 +341,7 @@ export function LandingNav({
 
       {activeSubmenu ? (
         <div className="w-full bg-white px-10 py-8 font-['Roboto_Condensed'] text-black shadow-[0_14px_24px_-18px_rgba(0,0,0,0.45)]">
-          <div className="mx-auto flex max-w-[1400px] gap-12">
+          <div className="mx-auto flex min-h-[260px] max-w-[1400px] items-stretch gap-12">
             {activeSubmenu.featured ? (
               <a
                 href={activeSubmenu.featured.href || "#"}
@@ -312,7 +352,7 @@ export function LandingNav({
                   alt={activeSubmenu.featured.imageAlt}
                   width={640}
                   height={640}
-                  className="h-[200px] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                  className="h-full min-h-[200px] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                 />
                 {activeSubmenu.featured.title ? (
                   <span className="absolute right-4 bottom-4 text-sm font-semibold tracking-wider text-white">
@@ -322,7 +362,7 @@ export function LandingNav({
               </a>
             ) : null}
 
-            <div className="grid flex-1 grid-cols-1 gap-10 md:grid-cols-3">
+            <div className="grid flex-1 content-start grid-cols-1 gap-10 md:grid-cols-3">
               {activeSubmenu.columns.map((column) => (
                 <div key={column.title} className="space-y-3">
                   <p className="text-sm font-bold tracking-[0.2em] uppercase">

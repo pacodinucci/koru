@@ -548,7 +548,7 @@
 
 .landing-video-pin {
   position: relative;
-  min-height: calc(100dvh - var(--landing-nav-height, 96px));
+  min-height: var(--landing-vh, 100dvh);
   z-index: 0;
 }
 
@@ -562,7 +562,7 @@
 }
 
 .landing-video-static > section {
-  height: calc(100dvh - var(--landing-nav-height, 96px));
+  height: var(--landing-vh, 100dvh);
 }
 
 @keyframes panel-close-icon-bounce {

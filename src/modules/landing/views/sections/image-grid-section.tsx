@@ -98,6 +98,9 @@ export function ImageGridSection({
       responsiveMode,
     ),
   );
+  const fixedHoverLabels = ["Aprendizaje", "Cultura", "Instalaciones", "Equipo"];
+  const topCards = cards.slice(0, Math.min(4, cards.length));
+  const remainingCards = cards.slice(Math.min(4, cards.length));
   const imageUrls = [
     "/assets/img1.jpg",
     "/assets/img2.jpg",
@@ -141,6 +144,8 @@ export function ImageGridSection({
       ? "var(--landing-body-padding-x, 24px)"
       : "0px",
   };
+  const topCardSize = Math.round(imageGridImageSize * 0.9);
+  const topGridGap = Math.max(6, Math.round(topCardSize * 0.035));
 
   return (
     <section
@@ -158,55 +163,111 @@ export function ImageGridSection({
         className="mx-auto w-full max-w-[110rem] py-14"
         style={bodyPaddingStyle}
       >
-        <div
-          className="grid gap-3 md:gap-4"
-          style={{
-            order: getOrder(orderMap, "base:grid", 0),
-            gridTemplateColumns: `repeat(${imageGridColumns}, ${imageGridImageSize}px)`,
-            justifyContent: "center",
-          }}
-        >
-          {cards.map((card, index) => (
-            <article
-              key={card.key}
-              className="group relative overflow-hidden"
-              style={{
-                width: `${imageGridImageSize}px`,
-                height: `${imageGridImageSize}px`,
-              }}
-            >
-              <div
-                className="h-full w-full scale-[1.08] bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-100"
-                style={{ backgroundImage: `url("${imageUrls[index]}")` }}
-              />
-              <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/35" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p
-                  className={cn(
-                    previewMode
-                      ? "text-center text-white -translate-y-3"
-                      : "landing-curtain-rtl text-center text-white -translate-y-3",
-                    selectableClass(selectedFieldId === card.key, previewMode),
-                  )}
-                  onClick={() => onSelectField?.(card.key)}
-                  style={getFieldStyle({
-                    ...card,
-                    fontSize: sharedTextStyleField.fontSize,
-                    color: sharedTextStyleField.color,
-                    fontFamily: sharedTextStyleField.fontFamily,
-                    fontWeight: sharedTextStyleField.fontWeight,
-                    lineHeight: sharedTextStyleField.lineHeight,
-                    letterSpacing: sharedTextStyleField.letterSpacing,
-                    marginStyle: sharedTextStyleField.marginStyle,
-                    paddingStyle: sharedTextStyleField.paddingStyle,
-                  })}
-                >
-                  {card.value}
-                </p>
-              </div>
-            </article>
-          ))}
+        <div className="flex justify-center">
+          <div
+            className="grid"
+            style={{
+              order: getOrder(orderMap, "base:grid", 0),
+              gridTemplateColumns: `repeat(2, ${topCardSize}px)`,
+              gap: `${topGridGap}px`,
+            }}
+          >
+            {topCards.map((card, index) => (
+              <article
+                key={card.key}
+                className="group relative overflow-hidden"
+                style={{
+                  width: `${topCardSize}px`,
+                  height: `${topCardSize}px`,
+                }}
+              >
+                <div
+                  className="h-full w-full scale-[1.08] bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-100"
+                  style={{ backgroundImage: `url("${imageUrls[index]}")` }}
+                />
+                <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/35" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <p
+                    className={cn(
+                      previewMode
+                        ? "text-center text-white -translate-y-3"
+                        : "landing-curtain-rtl text-center text-white -translate-y-3",
+                      selectableClass(selectedFieldId === card.key, previewMode),
+                    )}
+                    onClick={() => onSelectField?.(card.key)}
+                    style={getFieldStyle({
+                      ...card,
+                      fontSize: sharedTextStyleField.fontSize,
+                      color: sharedTextStyleField.color,
+                      fontFamily: sharedTextStyleField.fontFamily,
+                      fontWeight: sharedTextStyleField.fontWeight,
+                      lineHeight: sharedTextStyleField.lineHeight,
+                      letterSpacing: sharedTextStyleField.letterSpacing,
+                      marginStyle: sharedTextStyleField.marginStyle,
+                      paddingStyle: sharedTextStyleField.paddingStyle,
+                    })}
+                  >
+                    {fixedHoverLabels[index] ?? card.value}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
+
+        {remainingCards.length > 0 ? (
+          <div
+            className="mt-4 grid gap-3 md:gap-4"
+            style={{
+              gridTemplateColumns: `repeat(${imageGridColumns}, ${imageGridImageSize}px)`,
+              justifyContent: "center",
+            }}
+          >
+            {remainingCards.map((card, idx) => {
+              const imageIndex = idx + 4;
+              return (
+                <article
+                  key={card.key}
+                  className="group relative overflow-hidden"
+                  style={{
+                    width: `${imageGridImageSize}px`,
+                    height: `${imageGridImageSize}px`,
+                  }}
+                >
+                  <div
+                    className="h-full w-full scale-[1.08] bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-100"
+                    style={{ backgroundImage: `url("${imageUrls[imageIndex]}")` }}
+                  />
+                  <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/35" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p
+                      className={cn(
+                        previewMode
+                          ? "text-center text-white -translate-y-3"
+                          : "landing-curtain-rtl text-center text-white -translate-y-3",
+                        selectableClass(selectedFieldId === card.key, previewMode),
+                      )}
+                      onClick={() => onSelectField?.(card.key)}
+                      style={getFieldStyle({
+                        ...card,
+                        fontSize: sharedTextStyleField.fontSize,
+                        color: sharedTextStyleField.color,
+                        fontFamily: sharedTextStyleField.fontFamily,
+                        fontWeight: sharedTextStyleField.fontWeight,
+                        lineHeight: sharedTextStyleField.lineHeight,
+                        letterSpacing: sharedTextStyleField.letterSpacing,
+                        marginStyle: sharedTextStyleField.marginStyle,
+                        paddingStyle: sharedTextStyleField.paddingStyle,
+                      })}
+                    >
+                      {card.value}
+                    </p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : null}
 
         <SectionExtras
           section={section}

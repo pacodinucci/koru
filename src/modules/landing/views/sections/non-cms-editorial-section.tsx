@@ -1,0 +1,71 @@
+"use client";
+
+type NonCmsEditorialSectionProps = {
+  bannerTitle?: string;
+  bannerClassName?: string;
+};
+
+export function NonCmsEditorialSection({
+  bannerTitle,
+  bannerClassName = "bg-[var(--brand-900)]",
+}: NonCmsEditorialSectionProps) {
+  return (
+    <section className="mt-16 bg-white">
+      {bannerTitle ? (
+        <div className={`${bannerClassName} py-6`}>
+          <div className="mx-auto w-full max-w-7xl px-6 md:px-10 lg:px-14">
+            <h2
+              className="text-6xl leading-tight italic text-white"
+              style={{ fontFamily: "var(--font-roboto-condensed)" }}
+            >
+              {bannerTitle}
+            </h2>
+          </div>
+        </div>
+      ) : null}
+      <div
+        className="mx-auto grid w-full max-w-7xl items-start gap-10 px-6 py-20 md:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:px-14"
+        style={{ fontFamily: "var(--font-montserrat)" }}
+      >
+        <div>
+          <h2 className="space-y-1 text-6xl leading-[0.9] tracking-tight text-black">
+            <span
+              className="block font-light uppercase"
+              style={{ fontFamily: "var(--font-roboto-condensed)" }}
+            >
+              Adventure as
+            </span>
+            <span
+              className="block italic"
+              style={{ fontFamily: "var(--font-indie-flower)" }}
+            >
+              Agency
+            </span>
+          </h2>
+
+          <p className="mt-6 max-w-3xl text-xl leading-relaxed text-black/85">
+            Texto descriptivo principal para contar la idea de la sección. Texto
+            descriptivo principal para contar la idea de la sección.
+          </p>
+
+          <p className="mt-6 max-w-3xl text-4xl leading-tight text-black/90">
+            Texto destacado en negrita para reforzar el mensaje central.
+          </p>
+
+          <p className="mt-6 max-w-3xl text-xl leading-relaxed text-black/85">
+            Párrafo complementario con detalles y cierre del bloque de contenido.
+            Párrafo complementario con detalles y cierre del bloque de contenido.
+          </p>
+        </div>
+
+        <div className="relative mx-auto w-full max-w-[540px]">
+          <img
+            src="/assets/img1.jpg"
+            alt="Niñas y niños en actividad comunitaria"
+            className="h-auto w-full object-cover"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}

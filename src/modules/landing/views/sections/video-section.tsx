@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { SectionExtras } from "@/modules/landing/views/components/section-extras";
 import { getSectionFieldKey } from "@/modules/landing/config/landing-sections";
 import {
@@ -9,7 +9,6 @@ import {
 } from "@/modules/landing/types/landing-text";
 import {
   getSectionBackgroundStyle,
-  getSectionBorderStyle,
 } from "@/modules/landing/views/utils/section-style";
 import type { LandingSectionComponentProps } from "@/modules/landing/views/sections/types";
 
@@ -60,6 +59,37 @@ export function VideoSection({
   previewMode,
   responsiveMode,
 }: LandingSectionComponentProps) {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [videoParallaxY, setVideoParallaxY] = useState(0);
+  const [textParallaxY, setTextParallaxY] = useState(0);
+  const [textOpacity, setTextOpacity] = useState(1);
+  useEffect(() => {
+    const onScroll = () => {
+      const sectionEl = sectionRef.current;
+      if (!sectionEl) {
+        return;
+      }
+      const rect = sectionEl.getBoundingClientRect();
+      const viewportH = window.innerHeight || 1;
+      const progress =
+        (viewportH - rect.top) / Math.max(viewportH + rect.height, 1);
+      const clampedProgress = Math.min(1, Math.max(0, progress));
+      const centered = clampedProgress - 0.5;
+      const sectionTopDoc = window.scrollY + rect.top;
+      const traveledPx = Math.max(0, window.scrollY - sectionTopDoc);
+      setVideoParallaxY(centered * 180);
+      setTextParallaxY(Math.min(traveledPx * 0.22, 120));
+      setTextOpacity(Math.max(0, 1 - Math.min(traveledPx / 380, 1)));
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
   const videoUrlKey = getSectionFieldKey(section.id, "url");
   const videoOverlayOpacityKey = getSectionFieldKey(
     section.id,
@@ -98,18 +128,16 @@ export function VideoSection({
   const zoom = Number.isFinite(zoomRaw)
     ? Math.min(300, Math.max(100, zoomRaw))
     : 100;
-  const heightRaw = Number.parseInt(
-    textMap[sectionHeightKey] ?? textMap[getSectionFieldKey(section.id, "__video_height")] ?? "",
-    10,
-  );
-  const heightVh = Number.isFinite(heightRaw)
-    ? Math.min(300, Math.max(40, heightRaw))
-    : 100;
+  const heightVh = 75;
   const sectionHeight = `calc(var(--landing-vh, 100dvh) * ${heightVh} / 100)`;
   const videoTextItems = parseVideoTextItems(textMap, section.id);
+  const hasVideoText = videoTextItems.length > 0;
+  const fallbackText =
+    textMap[getSectionFieldKey(section.id, "__video_text_fallback")] ||
+    "Una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.";
+  const textParallaxOffset = textParallaxY;
 
   const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
-  const sectionBorderStyle = getSectionBorderStyle(textMap, section.id);
   const sectionPaddingStyle = getLandingFieldPaddingStyle(
     textMap,
     getSectionFieldKey(section.id, "__section_padding"),
@@ -120,9 +148,10 @@ export function VideoSection({
   );
   const sectionStyle: CSSProperties = {
     ...sectionBackgroundStyle,
-    ...sectionBorderStyle,
     ...sectionMarginStyle,
     ...sectionPaddingStyle,
+    backgroundColor: "var(--background)",
+    border: "none",
     transform: undefined,
     transformOrigin: undefined,
     height: sectionHeight,
@@ -131,17 +160,24 @@ export function VideoSection({
 
   return (
     <section
+      ref={sectionRef}
       className="relative isolate w-full overflow-hidden"
       style={sectionStyle}
     >
-      <div className="relative w-full" style={{ height: sectionHeight }}>
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ height: sectionHeight }}
+      >
         <video
           key={videoSrc}
-          className="block h-full w-full object-cover"
+          className="absolute left-0 w-full object-cover"
           src={videoSrc}
           style={{
+            top: "-22%",
+            height: "144%",
             objectPosition: `${positionX}% ${positionY}%`,
-            transform: `scale(${zoom / 100})`,
+            transform: `translate3d(0, ${videoParallaxY * 1.35}px, 0) scale(${zoom / 100})`,
+            willChange: "transform",
           }}
           autoPlay
           muted
@@ -177,9 +213,6 @@ export function VideoSection({
           const color =
             textMap[getVideoTextFieldKey(section.id, textId, "color")] ||
             "#ffffff";
-          const weight =
-            textMap[getVideoTextFieldKey(section.id, textId, "weight")] ||
-            "700";
           const alignRaw =
             textMap[getVideoTextFieldKey(section.id, textId, "align")];
           const align =
@@ -203,25 +236,49 @@ export function VideoSection({
               style={{
                 left: `${positionX}%`,
                 top: `${positionY}%`,
-                transform: "translate(-50%, -50%)",
+                transform: `translate(-50%, calc(-50% + ${textParallaxOffset}px))`,
                 textAlign: align,
               }}
             >
               <p
-                style={{
-                  margin: 0,
-                  color,
-                  fontSize: `${size}px`,
-                  fontWeight: Number.parseInt(weight, 10) || 700,
-                  lineHeight: 1.1,
-                  textShadow: "0 2px 14px rgba(0,0,0,0.45)",
-                }}
+              style={{
+                margin: 0,
+                color,
+                fontSize: `${size}px`,
+                fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
+                fontWeight: 100,
+                lineHeight: 1.1,
+                textShadow: "0 2px 14px rgba(0,0,0,0.45)",
+                opacity: textOpacity,
+              }}
               >
                 {content}
               </p>
             </div>
           );
         })}
+        {!hasVideoText ? (
+          <div
+            className="pointer-events-none absolute inset-0 z-10 grid place-items-center px-4"
+            style={{ transform: `translate3d(0, ${textParallaxOffset}px, 0)` }}
+          >
+            <p
+              className="text-center"
+              style={{
+                margin: 0,
+                color: "#ffffff",
+                fontSize: "clamp(28px, 5vw, 56px)",
+                fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
+                fontWeight: 100,
+                lineHeight: 1.1,
+                textShadow: "0 2px 14px rgba(0,0,0,0.45)",
+                opacity: textOpacity,
+              }}
+            >
+              {fallbackText}
+            </p>
+          </div>
+        ) : null}
       </div>
       <SectionExtras
         section={section}
