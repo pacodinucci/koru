@@ -25,7 +25,6 @@ export function EditorialFeatureSection({
   responsiveMode,
 }: LandingSectionComponentProps) {
   const headerTitle = renderField(section, "header_title", "", 62, textMap, responsiveMode);
-  const kicker = renderField(section, "kicker", "", 20, textMap, responsiveMode);
   const title = renderField(section, "title", "", 56, textMap, responsiveMode);
   const subtitle = renderField(section, "subtitle", "", 56, textMap, responsiveMode);
   const body = renderField(section, "body", "", 24, textMap, responsiveMode);
@@ -86,19 +85,6 @@ export function EditorialFeatureSection({
       </div>
 
       <div className="mx-auto w-full max-w-[92rem] py-8" style={bodyPaddingStyle}>
-        <div className="flex items-center">
-          <p
-            className={cn(
-              "bg-[#e4ea97] px-4 py-2 tracking-wide uppercase",
-              selectableClass(selectedFieldId === kicker.key, previewMode),
-            )}
-            onClick={() => onSelectField?.(kicker.key)}
-            style={getFieldStyle(kicker)}
-          >
-            {kicker.value}
-          </p>
-        </div>
-
         <div className="mt-10 grid items-end gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <h3

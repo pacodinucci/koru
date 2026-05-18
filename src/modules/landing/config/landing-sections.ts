@@ -36,6 +36,31 @@ export type LandingLayoutNavLink = {
   href: string;
 };
 
+function canonicalizeNavLabel(label: string, href: string) {
+  const normalizedHref = href.trim().toLowerCase();
+  const normalizedLabel = label
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (
+    normalizedHref === "/quienes-somos" ||
+    normalizedLabel === "quienes somos"
+  ) {
+    return "Quiénes somos";
+  }
+
+  if (
+    normalizedHref === "/como-acompanamos" ||
+    normalizedLabel === "como acompanamos"
+  ) {
+    return "Cómo acompañamos";
+  }
+
+  return label;
+}
+
 export type LayoutContainerMode = "fixed" | "free";
 export type LayoutContainerArrangement =
   | "block"
@@ -73,13 +98,40 @@ export const landingLayoutContainerRules = {
 
 function getDefaultLayoutNavLinks(): LandingLayoutNavLink[] {
   return [
-    { id: "nav-1", label: "Quienes somos", href: "/quienes-somos" },
-    { id: "nav-2", label: "Como acompanamos", href: "/como-acompanamos" },
+    { id: "nav-1", label: "Quiénes somos", href: "/quienes-somos" },
+    { id: "nav-2", label: "Cómo acompañamos", href: "/como-acompanamos" },
     { id: "nav-3", label: "Comunidad", href: "/comunidad" },
     { id: "nav-4", label: "Blog", href: "/blog" },
     { id: "nav-5", label: "Escuela para familias", href: "/family-dashboard" },
     { id: "nav-6", label: "Admisiones", href: "/admisiones" },
-    { id: "nav-7", label: "Log In", href: "/sign-in" },
+    { id: "nav-7", label: "Contacto", href: "/contacto" },
+    { id: "nav-8", label: "Log In", href: "/sign-in" },
+  ];
+}
+
+function ensureContactoNavLink(
+  links: LandingLayoutNavLink[],
+): LandingLayoutNavLink[] {
+  const hasContacto = links.some(
+    (item) => item.href.trim().toLowerCase() === "/contacto",
+  );
+
+  if (hasContacto) {
+    return links;
+  }
+
+  const insertIndex = links.findIndex(
+    (item) => item.href.trim().toLowerCase() === "/sign-in",
+  );
+
+  if (insertIndex === -1) {
+    return [...links, { id: "nav-contacto", label: "Contacto", href: "/contacto" }];
+  }
+
+  return [
+    ...links.slice(0, insertIndex),
+    { id: "nav-contacto", label: "Contacto", href: "/contacto" },
+    ...links.slice(insertIndex),
   ];
 }
 
@@ -104,7 +156,7 @@ function normalizeLayoutNavLinks(raw: unknown) {
 
       return {
         id,
-        label,
+        label: canonicalizeNavLabel(label, href || "#"),
         href: href || "#",
       } as LandingLayoutNavLink;
     })
@@ -122,7 +174,7 @@ export function parseLandingLayoutNavLinks(
       const parsed = JSON.parse(rawJson);
       const normalized = normalizeLayoutNavLinks(parsed);
       if (normalized) {
-        return normalized;
+        return ensureContactoNavLink(normalized);
       }
     } catch {
       // Fallback to legacy keys/defaults when JSON is invalid.
@@ -132,12 +184,12 @@ export function parseLandingLayoutNavLinks(
   const legacy = [
     {
       id: "nav-1",
-      label: textMap[LANDING_LAYOUT_NAV_LINK1_LABEL_KEY] ?? "Quienes somos",
+      label: textMap[LANDING_LAYOUT_NAV_LINK1_LABEL_KEY] ?? "Quiénes somos",
       href: textMap[LANDING_LAYOUT_NAV_LINK1_HREF_KEY] ?? "/quienes-somos",
     },
     {
       id: "nav-2",
-      label: textMap[LANDING_LAYOUT_NAV_LINK2_LABEL_KEY] ?? "Como acompanamos",
+      label: textMap[LANDING_LAYOUT_NAV_LINK2_LABEL_KEY] ?? "Cómo acompañamos",
       href: textMap[LANDING_LAYOUT_NAV_LINK2_HREF_KEY] ?? "/como-acompanamos",
     },
     {
@@ -168,11 +220,16 @@ export function parseLandingLayoutNavLinks(
     },
   ].filter((item) => item.label.trim() !== "");
 
-  if (legacy.length > 0) {
-    return legacy;
+  const canonicalLegacy = legacy.map((item) => ({
+    ...item,
+    label: canonicalizeNavLabel(item.label, item.href),
+  }));
+
+  if (canonicalLegacy.length > 0) {
+    return ensureContactoNavLink(canonicalLegacy);
   }
 
-  return getDefaultLayoutNavLinks();
+  return ensureContactoNavLink(getDefaultLayoutNavLinks());
 }
 
 export type LandingBackgroundScopeType = "none" | "spore";
@@ -511,7 +568,7 @@ export const landingSectionCatalog: Record<
       {
         key: "kicker",
         label: "Kicker",
-        defaultValue: "LEARNING TO BE",
+        defaultValue: "",
         defaultSize: 20,
       },
       {
@@ -1211,9 +1268,9 @@ export function getDefaultLandingTextMap(
     [LANDING_LAYOUT_NAV_LOGO_SRC_KEY]: "/branding/koru-logo.png",
     [LANDING_LAYOUT_NAV_LOGO_ALT_KEY]: "Koru",
     [LANDING_LAYOUT_NAV_LINKS_KEY]: JSON.stringify(getDefaultLayoutNavLinks()),
-    [LANDING_LAYOUT_NAV_LINK1_LABEL_KEY]: "Quienes somos",
+    [LANDING_LAYOUT_NAV_LINK1_LABEL_KEY]: "Quiénes somos",
     [LANDING_LAYOUT_NAV_LINK1_HREF_KEY]: "/quienes-somos",
-    [LANDING_LAYOUT_NAV_LINK2_LABEL_KEY]: "Como acompanamos",
+    [LANDING_LAYOUT_NAV_LINK2_LABEL_KEY]: "Cómo acompañamos",
     [LANDING_LAYOUT_NAV_LINK2_HREF_KEY]: "/como-acompanamos",
     [LANDING_LAYOUT_NAV_LINK3_LABEL_KEY]: "Comunidad",
     [LANDING_LAYOUT_NAV_LINK3_HREF_KEY]: "/comunidad",

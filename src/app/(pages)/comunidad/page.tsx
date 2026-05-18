@@ -1,260 +1,238 @@
 ﻿import Image from "next/image";
 import Link from "next/link";
 
+type TextImageSectionProps = {
+  id?: string;
+  title: string;
+  subtitle?: string;
+  paragraphs: string[];
+  imageSrc: string;
+  imageAlt: string;
+  reverse?: boolean;
+  sectionClassName?: string;
+  children?: React.ReactNode;
+};
+
+function TextImageSection({
+  id,
+  title,
+  subtitle,
+  paragraphs,
+  imageSrc,
+  imageAlt,
+  reverse = false,
+  sectionClassName = "bg-white",
+  children,
+}: TextImageSectionProps) {
+  return (
+    <section id={id} className={`${sectionClassName} scroll-mt-36`}>
+      <div
+        className={`mx-auto grid w-full max-w-7xl items-center gap-8 px-6 py-10 md:px-10 md:py-12 lg:gap-10 lg:px-14 lg:py-14 ${
+          reverse ? "lg:grid-cols-[0.95fr_1.05fr]" : "lg:grid-cols-[1.05fr_0.95fr]"
+        }`}
+      >
+        <div className={reverse ? "lg:order-2" : ""}>
+          <h2
+            className="mb-5 text-3xl leading-[1] tracking-tight text-black md:text-4xl lg:text-5xl"
+            style={{ fontFamily: "var(--font-roboto-condensed)" }}
+          >
+            {title}
+            {subtitle ? (
+              <span
+                className="mt-2 block text-2xl md:text-3xl"
+                style={{ fontFamily: "var(--font-indie-flower)" }}
+              >
+                {subtitle}
+              </span>
+            ) : null}
+          </h2>
+
+          <div className="max-w-3xl space-y-4 text-base leading-relaxed text-black/85 md:text-lg">
+            {paragraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
+
+          {children ? <div className="mt-5">{children}</div> : null}
+        </div>
+
+        <div className={`relative mx-auto w-full max-w-[22rem] ${reverse ? "lg:order-1" : ""}`}>
+          <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
+            <Image src={imageSrc} alt={imageAlt} fill className="object-cover" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function ComunidadPage() {
   return (
-    <main className="space-y-12 bg-white pb-16" style={{ fontFamily: "var(--font-montserrat)" }}>
+    <main className="bg-white pb-16" style={{ fontFamily: "var(--font-montserrat)" }}>
       <section
         id="nuestra-comunidad"
-        className="mx-auto w-full max-w-7xl scroll-mt-36 space-y-10 px-6 md:px-10 lg:px-14 pt-16 lg:space-y-12 lg:pt-24"
+        className="mx-auto grid w-full max-w-7xl items-start gap-8 px-6 pt-10 md:px-10 md:pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-14 lg:pt-14"
       >
-        <div className="space-y-6">
-          <p className="text-sm font-medium tracking-[0.18em] text-[#6d7e96]">
-            COMUNIDAD
-          </p>
+        <div className="space-y-5">
+          <p className="text-sm font-medium tracking-[0.18em] text-[#6d7e96]">COMUNIDAD</p>
 
-          <h1 className="space-y-1 text-5xl leading-[0.95] tracking-tight text-black md:text-6xl lg:text-7xl">
-            <span
-              className="block font-light"
-              style={{ fontFamily: "var(--font-roboto-condensed)" }}
-            >
+          <h1 className="space-y-1 text-4xl leading-[0.95] tracking-tight text-black md:text-5xl lg:text-6xl">
+            <span className="block font-light" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
               Creemos que la educación
             </span>
-            <span
-              className="block italic"
-              style={{ fontFamily: "var(--font-indie-flower)" }}
-            >
+            <span className="block italic" style={{ fontFamily: "var(--font-indie-flower)" }}>
               es un proceso compartido
             </span>
           </h1>
 
+          <div className="max-w-3xl space-y-4 text-base leading-relaxed text-black/85 md:text-lg">
+            <p>
+              Niñas, niños, familias y colaboradores formamos un mismo organismo donde cada parte influye en el
+              desarrollo individual y colectivo.
+            </p>
+            <p>Ser parte de esta comunidad implica una participación activa, comprometida y corresponsable.</p>
+            <p>No buscamos familias perfectas, sino disponibles a cuestionar, aprender, construir y participar.</p>
+          </div>
         </div>
 
-        <div className="grid items-start gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
-          <div className="max-w-3xl space-y-6 text-xl leading-relaxed text-black/85">
-            <p>
-              Niñas, niños, familias y colaboradores formamos un mismo
-              organismo, donde cada parte influye en el desarrollo individual y
-              colectivo. Por eso, el acompañamiento no ocurre sólo dentro del
-              espacio educativo, sino también en casa y en la relación
-              cotidiana.
-            </p>
-            <p>
-              Ser parte de esta comunidad implica una participación activa y
-              comprometida.
-            </p>
-            <p>
-              Ser parte de este espacio implica formar parte de una comunidad
-              que aprende, se cuestiona y evoluciona.
-            </p>
-            <div className="space-y-3">
-              <p>No buscamos familias perfectas, sino disponibles a:</p>
-              <ul className="list-disc space-y-1 pl-6">
-                <li>cuestionar</li>
-                <li>aprender</li>
-                <li>construir en conjunto</li>
-                <li>participar</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="relative mx-auto w-full max-w-[28rem] lg:mx-0">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <Image
-                src="/assets/img7.jpg"
-                alt="Comunidad Koru compartiendo actividades"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
+        <div className="relative mx-auto w-full max-w-[22rem] lg:mx-0">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
+            <Image
+              src="/assets/img7.jpg"
+              alt="Comunidad Koru compartiendo actividades"
+              fill
+              className="object-cover"
+              priority
+            />
           </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl space-y-4 px-6 md:px-10 lg:px-14">
-        <h2 className="text-3xl font-semibold tracking-tight">El dia a dia</h2>
-        <p className="text-base leading-7 text-muted-foreground">
-          Placeholder: poner fotos del dia a dia y de eventos.
-        </p>
-        <p className="text-base leading-7 text-muted-foreground">
-          Placeholder: incluir ritmos (con enlace al ritmo de cada grupo) para
-          que personas externas puedan darse una idea de como se vive la
-          comunidad.
-        </p>
-      </section>
-
-      <section className="mx-auto w-full max-w-7xl space-y-4 px-6 md:px-10 lg:px-14">
-        <h2 className="text-3xl font-semibold tracking-tight">
-          AcompaÃ±amiento conjunto
-        </h2>
-        <p className="text-base leading-7 text-muted-foreground">
-          El proceso de cada niÃ±@ es acompaÃ±ado de manera cercana tambien con su
-          familia.
-        </p>
-        <p className="text-base leading-7 text-muted-foreground">
-          Generamos espacios de seguimiento, comunicacion continua y acuerdos
-          compartidos.
-        </p>
-        <p className="text-base leading-7 text-muted-foreground">
-          Cada niÃ±@ cuenta con un registro donde se documentan avances,
-          procesos y acuerdos, permitiendo que las familias esten informadas y
-          puedan dar continuidad desde casa.
-        </p>
-        <div className="pt-1">
-          <Link
-            href="/sign-in"
-            className="inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+      <section className="mt-8 bg-[#f3f2ef] md:mt-10 lg:mt-12">
+        <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
+          <p
+            className="mx-auto max-w-5xl text-center text-2xl leading-[1.25] text-black md:text-3xl"
+            style={{ fontFamily: "var(--font-roboto-condensed)" }}
           >
-            Log In (para entrar)
-          </Link>
+            La comunidad se sostiene cuando casa y espacio educativo caminan en la misma dirección.
+          </p>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl space-y-4 px-6 md:px-10 lg:px-14">
-        <h2 className="text-3xl font-semibold tracking-tight">Corresponsabilidad</h2>
-        <p className="text-base leading-7 text-muted-foreground">
-          Entendemos la corresponsabilidad como la base de nuestra comunidad.
-        </p>
-        <p className="text-base leading-7 text-muted-foreground">
-          Las familias no son observadoras externas, sino parte activa del
-          proceso. Esto implica sostener acuerdos, dar continuidad en casa a lo
-          que se acompaÃ±a en la comunidad, participar en espacios de formacion y
-          dialogo, y mantener una comunicacion abierta y respetuosa.
-        </p>
-        <p className="text-base leading-7 text-muted-foreground">
-          Cuando existe coherencia entre casa y comunidad, las niÃ±as y niÃ±os
-          encuentran mayor seguridad, claridad y contencion para su desarrollo.
-        </p>
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold">Â¿Como se ve en el organismo?</h3>
-          <ul className="list-disc space-y-1 pl-6 text-base text-muted-foreground">
-            <li>Asambleas comunitarias</li>
-            <li>Escuela para Familias</li>
-            <li>Talleres introductorios</li>
-            <li>Tequios</li>
-            <li>Citas de seguimiento</li>
-            <li>Enlace de la carta compromiso que se firma al entrar</li>
-          </ul>
-        </div>
-      </section>
+      <TextImageSection
+        title="El día a día"
+        imageSrc="/assets/img9.jpg"
+        imageAlt="Vida cotidiana en la comunidad Koru"
+        paragraphs={[
+          "La vida cotidiana se organiza con ritmos claros, espacios de juego, proyectos y tiempos de encuentro.",
+          "Cada jornada busca equilibrio entre movimiento, vínculo, aprendizaje y descanso.",
+          "También celebramos eventos comunitarios donde familias, niñas, niños y colaboradores fortalecen el organismo vivo que somos.",
+        ]}
+      />
 
-      <section
-        id="escuela-para-familias"
-        className="mx-auto w-full max-w-7xl scroll-mt-36 space-y-4 px-6 md:px-10 lg:px-14"
+      <TextImageSection
+        title="Acompañamiento conjunto"
+        imageSrc="/assets/img4.jpg"
+        imageAlt="Acompañamiento entre familia y comunidad educativa"
+        reverse
+        sectionClassName="bg-[#f7f6f1]"
+        paragraphs={[
+          "El proceso de cada niña y niño se acompaña de manera cercana también con su familia.",
+          "Sostenemos seguimiento, comunicación continua y acuerdos compartidos para dar coherencia entre casa y comunidad.",
+          "Cada niña y niño cuenta con un registro vivo de avances, procesos y acuerdos para dar continuidad desde casa.",
+        ]}
       >
-        <h2 className="text-3xl font-semibold tracking-tight">
-          Escuela para familias
-        </h2>
-        <p className="text-base leading-7 text-muted-foreground">
-          Contamos con un espacio de formacion y acompaÃ±amiento dirigido a
-          madres y padres, con el objetivo de estar en sintonia en la forma de
-          acompaÃ±ar a las infancias.
-        </p>
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold">Talleres introductorios obligatorios</h3>
-          <ul className="list-disc space-y-1 pl-6 text-base text-muted-foreground">
-            <li>Comunicacion No Violenta</li>
-            <li>Etapas evolutivas</li>
-            <li>Ambos incluidos en su cuota de inscripcion</li>
-          </ul>
-        </div>
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold">Talleres y charlas</h3>
-          <p className="text-base leading-7 text-muted-foreground">
-            Se realizan encuentros dos veces al mes con temas como gestion
-            emocional, retos cotidianos en la crianza, construccion de acuerdos,
-            educacion sexual y retos de cada etapa.
-          </p>
-          <p className="text-base leading-7 text-muted-foreground">
-            Estos talleres pueden tener costo extra.
-          </p>
-          <p className="text-base leading-7 text-muted-foreground">
-            Ademas de contenido, estos espacios permiten compartir experiencias,
-            reflexionar y generar herramientas practicas para la vida diaria.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3 pt-1">
+        <Link
+          href="/sign-in"
+          className="inline-flex items-center rounded-md border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5"
+        >
+          Ingresar
+        </Link>
+      </TextImageSection>
+
+      <TextImageSection
+        title="Corresponsabilidad"
+        imageSrc="/assets/img6.jpg"
+        imageAlt="Comunidad participando activamente"
+        paragraphs={[
+          "Entendemos la corresponsabilidad como la base de nuestra comunidad.",
+          "Las familias no son observadoras externas: participan, sostienen acuerdos y mantienen una comunicación abierta y respetuosa.",
+          "Cuando hay coherencia entre casa y comunidad, niñas y niños encuentran mayor seguridad, claridad y contención.",
+        ]}
+      >
+        <ul className="list-disc space-y-1 pl-6 text-base text-black/75">
+          <li>Asambleas comunitarias</li>
+          <li>Escuela para Familias</li>
+          <li>Talleres introductorios</li>
+          <li>Tequios</li>
+          <li>Citas de seguimiento</li>
+        </ul>
+      </TextImageSection>
+
+      <TextImageSection
+        id="escuela-para-familias"
+        title="Escuela para familias"
+        imageSrc="/assets/img8.jpg"
+        imageAlt="Encuentros de formación para familias"
+        reverse
+        sectionClassName="bg-[#f7f6f1]"
+        paragraphs={[
+          "Contamos con un espacio de formación y acompañamiento para madres y padres, con el objetivo de sostener sintonía en la forma de acompañar las infancias.",
+          "Incluye talleres introductorios obligatorios (Comunicación No Violenta y etapas evolutivas) y encuentros quincenales con herramientas prácticas para la vida diaria.",
+          "Además de contenido, estos espacios permiten compartir experiencias, reflexionar y construir acuerdos concretos.",
+        ]}
+      >
+        <div className="flex flex-wrap gap-3">
           <a
             href="#"
-            className="inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+            className="inline-flex items-center rounded-md border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5"
           >
-            Calendario (temas, fechas y costos)
+            Calendario
           </a>
           <Link
             href="/blog"
-            className="inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+            className="inline-flex items-center rounded-md border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5"
           >
-            Blog (videos y articulos)
+            Blog
           </Link>
         </div>
-      </section>
+      </TextImageSection>
 
-      <section
+      <TextImageSection
         id="unete-al-equipo"
-        className="mx-auto w-full max-w-7xl scroll-mt-36 space-y-4 px-6 md:px-10 lg:px-14"
+        title="Únete al equipo"
+        imageSrc="/assets/img10.jpg"
+        imageAlt="Equipo educativo en comunidad"
+        paragraphs={[
+          "Si querés sumarte a Koru, escribinos para conocer búsquedas abiertas y próximos procesos de selección.",
+        ]}
       >
-        <h2 className="text-3xl font-semibold tracking-tight">Ãšnete al equipo</h2>
-        <p className="text-base leading-7 text-muted-foreground">
-          Si querÃ©s sumarte a Koru, escribinos para conocer bÃºsquedas abiertas
-          y prÃ³ximos procesos de selecciÃ³n.
-        </p>
         <Link
           href="/admisiones"
-          className="inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+          className="inline-flex items-center rounded-md border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5"
         >
           Quiero sumarme
         </Link>
-      </section>
+      </TextImageSection>
 
-      <section className="mx-auto w-full max-w-7xl space-y-4 px-6 md:px-10 lg:px-14">
-        <h2 className="text-3xl font-semibold tracking-tight">
-          Protocolos y cuidado
-        </h2>
-        <p className="text-base leading-7 text-muted-foreground">
-          Para sostener un entorno seguro y coherente, contamos con protocolos
-          claros que forman parte del funcionamiento de la comunidad.
-        </p>
-        <ul className="list-disc space-y-1 pl-6 text-base text-muted-foreground">
-          <li>Resolucion de conflictos</li>
-          <li>Prevencion y manejo de enfermedades</li>
-          <li>Protocolos de higiene (como prevencion de piojos)</li>
-          <li>Atencion a emergencias</li>
+      <TextImageSection
+        title="Protocolos y cuidado"
+        imageSrc="/assets/img11.jpg"
+        imageAlt="Cuidado y seguridad en la comunidad"
+        reverse
+        sectionClassName="bg-[#f7f6f1]"
+        paragraphs={[
+          "Para sostener un entorno seguro y coherente, contamos con protocolos claros que forman parte del funcionamiento comunitario.",
+          "Estos lineamientos cuidan el bienestar individual y colectivo y brindan claridad para todas las familias.",
+        ]}
+      >
+        <ul className="list-disc space-y-1 pl-6 text-base text-black/75">
+          <li>Resolución de conflictos</li>
+          <li>Prevención y manejo de enfermedades</li>
+          <li>Protocolos de higiene</li>
+          <li>Atención a emergencias</li>
         </ul>
-        <p className="text-base leading-7 text-muted-foreground">
-          Estos lineamientos permiten cuidar el bienestar individual y
-          colectivo, generando claridad y confianza para todas las familias.
-        </p>
-        <div className="flex flex-wrap gap-3 pt-1">
-          <a
-            href="#"
-            className="inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
-          >
-            Ver protocolo: conflictos
-          </a>
-          <a
-            href="#"
-            className="inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
-          >
-            Ver protocolo: enfermedades
-          </a>
-          <a
-            href="#"
-            className="inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
-          >
-            Ver protocolo: higiene
-          </a>
-          <a
-            href="#"
-            className="inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
-          >
-            Ver protocolo: emergencias
-          </a>
-        </div>
-      </section>
+      </TextImageSection>
     </main>
   );
 }
-
-
-
