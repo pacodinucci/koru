@@ -2,6 +2,7 @@
 
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { FernShape } from "@/components/fern-shape";
 import { SporeShape } from "@/components/spore-shape";
 import {
   defaultLandingBackgroundSpores,
@@ -43,7 +44,21 @@ type ScopedSectionGroup = {
 
 function LandingVisionBridgeSection() {
   return (
-    <section className="bg-white">
+    <section className="relative overflow-hidden bg-white">
+      <FernShape
+        x="-56px"
+        y="40px"
+        size={220}
+        color="#4d7b53"
+        opacity={0.25}
+      />
+      <FernShape
+        size={280}
+        color="#4d7b53"
+        opacity={0.2}
+        rotate={180}
+        style={{ right: "-64px", bottom: "32px", left: "auto", top: "auto" }}
+      />
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 md:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16 lg:px-14 lg:py-24">
         <div className="lg:order-2">
           <h2

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -160,6 +160,30 @@ export function LandingNav({
     { label: "Log In", href: "/sign-in" },
   ],
 }: LandingNavProps) {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!fixed) {
+      setIsScrolled(false);
+      return;
+    }
+
+    const onScroll = () => {
+      setIsScrolled(window.scrollY >= 200);
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [fixed]);
+
+  const isTransparentNav =
+    backgroundColor.trim().toLowerCase() === "transparent";
+  const effectiveBackgroundColor =
+    fixed && isScrolled ? "#ffffff" : backgroundColor;
+  const effectiveTextColor =
+    fixed && !isScrolled && isTransparentNav ? "#ffffff" : "#111111";
+
   const [activeSubmenuId, setActiveSubmenuId] = useState<string | null>(null);
 
   const authLink = links.find((item) => {
@@ -196,13 +220,13 @@ export function LandingNav({
       onMouseLeave={() => setActiveSubmenuId(null)}
       className={
         fixed
-          ? "font-fira fixed inset-x-0 top-0 z-20 backdrop-blur"
-          : "font-fira sticky top-0 z-20 backdrop-blur"
+          ? `font-fira fixed inset-x-0 top-0 z-20 transition-colors duration-300 ${isTransparentNav && !isScrolled ? "" : "backdrop-blur"}`
+          : `font-fira sticky top-0 z-20 transition-colors duration-300 ${isTransparentNav ? "" : "backdrop-blur"}`
       }
-      style={{ backgroundColor, color: textColor }}
+      style={{ backgroundColor: effectiveBackgroundColor, color: effectiveTextColor }}
     >
       <div
-        className="flex w-full items-center justify-between pt-4 pb-0"
+        className="flex w-full items-center justify-between py-0"
         style={{
           minHeight: `${heightPx}px`,
           paddingLeft: `${paddingX}px`,
@@ -291,7 +315,7 @@ export function LandingNav({
                   >
                     <a
                       href={item.href || "#"}
-                      className="transition hover:text-[var(--complement-800)]"
+                      className="transition-colors duration-300 hover:text-[var(--complement-800)]"
                       onClick={(event) => {
                         if (!item.submenu) {
                           return;
@@ -329,7 +353,7 @@ export function LandingNav({
               ) : (
                 <a
                   href={authLink.href || "#"}
-                  className="text-[.8rem] font-semibold tracking-wider transition hover:text-[var(--complement-800)]"
+                  className="text-[.8rem] font-semibold tracking-wider transition-colors duration-300 hover:text-[var(--complement-800)]"
                 >
                   {authLink.label}
                 </a>

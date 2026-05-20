@@ -285,7 +285,7 @@ export function LandingPageLayout({
   const layoutPaddingX = getLayoutPaddingX(
     responsiveMap[LANDING_LAYOUT_PADDING_X_KEY],
   );
-  const navBackgroundColor = completeMap[LANDING_LAYOUT_NAV_BG_KEY] ?? "#ffffff";
+  const navBackgroundColor = "transparent";
   const navTextColor = completeMap[LANDING_LAYOUT_NAV_TEXT_KEY] ?? "#111111";
   const navHeight = getLayoutNavHeight(completeMap[LANDING_LAYOUT_NAV_HEIGHT_KEY]);
   const navLogoSrc =
@@ -678,7 +678,6 @@ export function LandingPageLayout({
             />
           ) : null}
         </div>
-        {!previewMode ? <div style={{ minHeight: `${navHeight}px` }} /> : null}
         <div className="relative" data-preview-layout-section-id="layout-body">
           {children}
           {previewMode && onSelectLayoutSection ? (

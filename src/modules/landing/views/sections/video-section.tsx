@@ -130,6 +130,8 @@ export function VideoSection({
     : 100;
   const heightVh = 75;
   const sectionHeight = `calc(var(--landing-vh, 100dvh) * ${heightVh} / 100)`;
+  const navHeight = "var(--landing-nav-height, 96px)";
+  const effectiveSectionHeight = `calc(${sectionHeight} + ${navHeight})`;
   const videoTextItems = parseVideoTextItems(textMap, section.id);
   const hasVideoText = videoTextItems.length > 0;
   const fallbackText =
@@ -150,11 +152,13 @@ export function VideoSection({
     ...sectionBackgroundStyle,
     ...sectionMarginStyle,
     ...sectionPaddingStyle,
+    padding: 0,
     backgroundColor: "var(--background)",
     border: "none",
     transform: undefined,
     transformOrigin: undefined,
-    height: sectionHeight,
+    height: effectiveSectionHeight,
+    marginTop: `calc(${navHeight} * -1)`,
     boxSizing: "border-box",
   };
 
@@ -166,7 +170,7 @@ export function VideoSection({
     >
       <div
         className="relative w-full overflow-hidden"
-        style={{ height: sectionHeight }}
+        style={{ height: effectiveSectionHeight }}
       >
         <video
           key={videoSrc}
