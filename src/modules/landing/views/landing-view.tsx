@@ -396,7 +396,7 @@ export function LandingView({
             {group.sections.map((section) => {
               return (
                 <div key={section.id}>
-                  {section.id === videoSectionId && !previewMode ? (
+                  {section.id === videoSectionId ? (
                     <div>
                       <div data-preview-section-id={section.id}>
                         <div className="landing-video-pin">
@@ -443,3 +443,4 @@ export function LandingView({
     </div>
   );
 }
+

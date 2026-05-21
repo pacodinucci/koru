@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -42,6 +42,7 @@ type LandingNavProps = {
   logoAlt?: string;
   links?: LandingNavLink[];
   fixed?: boolean;
+  disableScrollBackgroundChange?: boolean;
   showContainerGuides?: boolean;
   containerStyles?: Record<
     string,
@@ -82,13 +83,13 @@ function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
     return {
       featured: {
         imageSrc: "/assets/img1.jpg",
-        imageAlt: "CÃ³mo acompaÃ±amos",
-        title: "CÃ³mo acompaÃ±amos",
+        imageAlt: "Cómo acompañamos",
+        title: "Cómo acompañamos",
         href: "/como-acompanamos",
       },
       columns: [
         {
-          title: "CÃ³mo acompaÃ±amos",
+          title: "Cómo acompañamos",
           links: [
             {
               label: "Grupo Esporas",
@@ -132,7 +133,7 @@ function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
             label: "Escuela para familias",
             href: "/comunidad#escuela-para-familias",
           },
-          { label: "Ãšnete al equipo", href: "/comunidad#unete-al-equipo" },
+          { label: "Únete al equipo", href: "/comunidad#unete-al-equipo" },
         ],
       },
     ],
@@ -147,12 +148,13 @@ export function LandingNav({
   logoSrc = "/branding/koru-logo.png",
   logoAlt = "Koru",
   fixed = true,
+  disableScrollBackgroundChange = false,
   showContainerGuides = false,
   containerStyles = {},
   user = null,
   links = [
-    { label: "QuiÃ©nes somos", href: "/quienes-somos" },
-    { label: "CÃ³mo acompaÃ±amos", href: "/como-acompanamos" },
+    { label: "Quiénes somos", href: "/quienes-somos" },
+    { label: "Cómo acompañamos", href: "/como-acompanamos" },
     { label: "Comunidad", href: "/comunidad" },
     { label: "Blog", href: "/blog" },
     { label: "Admisiones", href: "/admisiones" },
@@ -163,7 +165,7 @@ export function LandingNav({
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    if (!fixed) {
+    if (!fixed || disableScrollBackgroundChange) {
       setIsScrolled(false);
       return;
     }
@@ -175,7 +177,7 @@ export function LandingNav({
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [fixed]);
+  }, [fixed, disableScrollBackgroundChange]);
 
   const isTransparentNav =
     backgroundColor.trim().toLowerCase() === "transparent";
@@ -321,15 +323,7 @@ export function LandingNav({
                     <a
                       href={item.href || "#"}
                       className="transition-colors duration-300 hover:text-[var(--complement-800)]"
-                      onClick={(event) => {
-                        if (!item.submenu) {
-                          return;
-                        }
-                        event.preventDefault();
-                        setActiveSubmenuId((current) =>
-                          current === itemId ? null : itemId,
-                        );
-                      }}
+                      onClick={() => setActiveSubmenuId(null)}
                     >
                       {item.label}
                     </a>
@@ -421,3 +415,5 @@ export function LandingNav({
     </header>
   );
 }
+
+
