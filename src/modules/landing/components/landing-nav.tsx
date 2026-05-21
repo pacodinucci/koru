@@ -183,8 +183,13 @@ export function LandingNav({
     fixed && isScrolled ? "#ffffff" : backgroundColor;
   const effectiveTextColor =
     fixed && !isScrolled && isTransparentNav ? "#ffffff" : "#111111";
+  const shouldUseBackdropBlur =
+    fixed
+      ? !(isTransparentNav && !isScrolled)
+      : !isTransparentNav;
 
   const [activeSubmenuId, setActiveSubmenuId] = useState<string | null>(null);
+  const hasActiveSubmenu = activeSubmenuId !== null;
 
   const authLink = links.find((item) => {
     const normalizedLabel = item.label.trim().toLowerCase();
@@ -220,8 +225,8 @@ export function LandingNav({
       onMouseLeave={() => setActiveSubmenuId(null)}
       className={
         fixed
-          ? `font-fira fixed inset-x-0 top-0 z-20 transition-colors duration-300 ${isTransparentNav && !isScrolled ? "" : "backdrop-blur"}`
-          : `font-fira sticky top-0 z-20 transition-colors duration-300 ${isTransparentNav ? "" : "backdrop-blur"}`
+          ? `font-fira fixed inset-x-0 top-0 z-20 transition-[background-color,backdrop-filter] duration-300 ${shouldUseBackdropBlur || hasActiveSubmenu ? "backdrop-blur" : ""}`
+          : `font-fira sticky top-0 z-20 transition-[background-color,backdrop-filter] duration-300 ${shouldUseBackdropBlur || hasActiveSubmenu ? "backdrop-blur" : ""}`
       }
       style={{ backgroundColor: effectiveBackgroundColor, color: effectiveTextColor }}
     >
@@ -364,7 +369,10 @@ export function LandingNav({
       </div>
 
       {activeSubmenu ? (
-        <div className="w-full bg-white px-10 py-8 font-['Roboto_Condensed'] text-black shadow-[0_14px_24px_-18px_rgba(0,0,0,0.45)]">
+        <div
+          className={`w-full px-10 py-8 font-['Roboto_Condensed'] shadow-[0_14px_24px_-18px_rgba(0,0,0,0.45)] transition-[background-color,backdrop-filter] duration-300 backdrop-blur`}
+          style={{ backgroundColor: effectiveBackgroundColor, color: effectiveTextColor }}
+        >
           <div className="mx-auto flex min-h-[260px] max-w-[1400px] items-stretch gap-12">
             {activeSubmenu.featured ? (
               <a
