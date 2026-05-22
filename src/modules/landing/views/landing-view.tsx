@@ -27,6 +27,7 @@ import {
   getResponsiveModeFromWidth,
   type LandingResponsiveMode,
 } from "@/modules/landing/types/landing-text";
+import { cloudinaryImageUrl } from "@/lib/cloudinary";
 import { CardsSection } from "@/modules/landing/views/sections/cards-section";
 import { FooterSection } from "@/modules/landing/views/sections/footer-section";
 import { GallerySection } from "@/modules/landing/views/sections/gallery-section";
@@ -52,6 +53,11 @@ type ScopedSectionGroup = {
 };
 
 function LandingVisionBridgeSection() {
+  const imageUrl = cloudinaryImageUrl(
+    "koru/landing/DSC01443",
+    "/assets/images/DSC01443.png",
+  );
+
   return (
     <section className="relative overflow-hidden bg-white">
       <FernShape x="-56px" y="40px" size={220} color="#4d7b53" opacity={0.25} />
@@ -86,12 +92,14 @@ function LandingVisionBridgeSection() {
 
         <div className="relative mx-auto w-full max-w-[28rem] lg:order-1">
           <div className="relative aspect-square overflow-hidden rounded-full">
-            <Image
-              src="/assets/images/DSC01443.png"
-              alt="Comunidad educativa compartiendo actividades"
-              fill
-              className="object-cover rotate-90"
-            />
+            {imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt="Comunidad educativa compartiendo actividades"
+                fill
+                className="object-cover rotate-90"
+              />
+            ) : null}
           </div>
         </div>
       </div>
@@ -268,8 +276,14 @@ function SectionRenderer({
           }
           imageSrc={
             section.id.includes("-copy")
-              ? "/assets/images/DSC01273.png"
-              : "/assets/images/DSC01342.png"
+              ? cloudinaryImageUrl(
+                  "koru/landing/DSC01273",
+                  "/assets/images/DSC01273.png",
+                )
+              : cloudinaryImageUrl(
+                  "koru/landing/DSC01342",
+                  "/assets/images/DSC01342.png",
+                )
           }
           imageScale={section.id.includes("-copy") ? 1 : 1.6}
         />

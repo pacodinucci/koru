@@ -1,5 +1,7 @@
 ﻿"use client";
 
+import { cloudinaryImageUrl } from "@/lib/cloudinary";
+
 type NonCmsEditorialSectionProps = {
   bannerTitle?: string;
   bannerClassName?: string;
@@ -12,14 +14,19 @@ type NonCmsEditorialSectionProps = {
 export function NonCmsEditorialSection({
   bannerTitle,
   bannerClassName = "bg-[var(--brand-900)]",
-  imageSrc = "/assets/images/DSC01342.png",
+  imageSrc = cloudinaryImageUrl(
+    "koru/landing/DSC01342",
+    "/assets/images/DSC01342.png",
+  ),
   imageFrameWidth = "320px",
   imageFrameHeight,
   imageScale = 1,
 }: NonCmsEditorialSectionProps) {
   const frameStyle = {
     width: `calc(${imageFrameWidth} * ${imageScale})`,
-    height: imageFrameHeight ? `calc(${imageFrameHeight} * ${imageScale})` : undefined,
+    height: imageFrameHeight
+      ? `calc(${imageFrameHeight} * ${imageScale})`
+      : undefined,
   } as const;
 
   return (
@@ -72,14 +79,15 @@ export function NonCmsEditorialSection({
         </div>
 
         <div className="relative mx-auto overflow-hidden" style={frameStyle}>
-          <img
-            src={imageSrc}
-            alt="Niñas y niños en actividad comunitaria"
-            className="h-full w-full object-contain"
-          />
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt="Niñas y niños en actividad comunitaria"
+              className="h-full w-full object-contain"
+            />
+          ) : null}
         </div>
       </div>
     </section>
   );
 }
-
