@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useEffect,
@@ -729,7 +729,7 @@ export function LandingPageLayout({
             logoAlt={navLogoAlt}
             links={navLinks}
             fixed={true}
-            disableScrollBackgroundChange={previewMode || isLandingRoute}
+            disableScrollBackgroundChange={previewMode}
             user={user}
             showContainerGuides={
               previewMode && selectedLayoutSectionId === "layout-navbar"
@@ -941,6 +941,7 @@ export function LandingPageLayout({
     </div>
   );
 }
+
 
 
 

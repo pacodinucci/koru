@@ -83,13 +83,13 @@ function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
     return {
       featured: {
         imageSrc: "/assets/img1.jpg",
-        imageAlt: "Cómo acompañamos",
-        title: "Cómo acompañamos",
+        imageAlt: "CÃ³mo acompaÃ±amos",
+        title: "CÃ³mo acompaÃ±amos",
         href: "/como-acompanamos",
       },
       columns: [
         {
-          title: "Cómo acompañamos",
+          title: "CÃ³mo acompaÃ±amos",
           links: [
             {
               label: "Grupo Esporas",
@@ -133,7 +133,7 @@ function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
             label: "Escuela para familias",
             href: "/comunidad#escuela-para-familias",
           },
-          { label: "Únete al equipo", href: "/comunidad#unete-al-equipo" },
+          { label: "Ãšnete al equipo", href: "/comunidad#unete-al-equipo" },
         ],
       },
     ],
@@ -153,8 +153,8 @@ export function LandingNav({
   containerStyles = {},
   user = null,
   links = [
-    { label: "Quiénes somos", href: "/quienes-somos" },
-    { label: "Cómo acompañamos", href: "/como-acompanamos" },
+    { label: "QuiÃ©nes somos", href: "/quienes-somos" },
+    { label: "CÃ³mo acompaÃ±amos", href: "/como-acompanamos" },
     { label: "Comunidad", href: "/comunidad" },
     { label: "Blog", href: "/blog" },
     { label: "Admisiones", href: "/admisiones" },

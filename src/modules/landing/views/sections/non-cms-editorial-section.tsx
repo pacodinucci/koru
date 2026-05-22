@@ -1,14 +1,27 @@
-"use client";
+﻿"use client";
 
 type NonCmsEditorialSectionProps = {
   bannerTitle?: string;
   bannerClassName?: string;
+  imageSrc?: string;
+  imageFrameWidth?: string;
+  imageFrameHeight?: string;
+  imageScale?: number;
 };
 
 export function NonCmsEditorialSection({
   bannerTitle,
   bannerClassName = "bg-[var(--brand-900)]",
+  imageSrc = "/assets/images/DSC01342.png",
+  imageFrameWidth = "320px",
+  imageFrameHeight,
+  imageScale = 1,
 }: NonCmsEditorialSectionProps) {
+  const frameStyle = {
+    width: `calc(${imageFrameWidth} * ${imageScale})`,
+    height: imageFrameHeight ? `calc(${imageFrameHeight} * ${imageScale})` : undefined,
+  } as const;
+
   return (
     <section className="mt-16 bg-white">
       {bannerTitle ? (
@@ -58,14 +71,15 @@ export function NonCmsEditorialSection({
           </p>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[540px]">
+        <div className="relative mx-auto overflow-hidden" style={frameStyle}>
           <img
-            src="/assets/img1.jpg"
+            src={imageSrc}
             alt="Niñas y niños en actividad comunitaria"
-            className="h-auto w-full object-cover"
+            className="h-full w-full object-contain"
           />
         </div>
       </div>
     </section>
   );
 }
+

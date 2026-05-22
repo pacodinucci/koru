@@ -1,6 +1,12 @@
-"use client";
+﻿"use client";
 
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Image from "next/image";
 import { FernShape } from "@/components/fern-shape";
 import { SporeShape } from "@/components/spore-shape";
@@ -12,7 +18,10 @@ import {
   type LandingBackgroundScope,
   type LandingSectionInstance,
 } from "@/modules/landing/config/landing-sections";
-import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
+import type {
+  LandingPreviewBindings,
+  LandingTextMap,
+} from "@/modules/landing/types/landing-text";
 import {
   createResponsiveScopedTextMap,
   getResponsiveModeFromWidth,
@@ -45,13 +54,7 @@ type ScopedSectionGroup = {
 function LandingVisionBridgeSection() {
   return (
     <section className="relative overflow-hidden bg-white">
-      <FernShape
-        x="-56px"
-        y="40px"
-        size={220}
-        color="#4d7b53"
-        opacity={0.25}
-      />
+      <FernShape x="-56px" y="40px" size={220} color="#4d7b53" opacity={0.25} />
       <FernShape
         size={280}
         color="#4d7b53"
@@ -70,8 +73,8 @@ function LandingVisionBridgeSection() {
           <div className="max-w-3xl space-y-6 text-xl leading-relaxed text-black/85">
             <p>
               Co-creamos una cultura viva donde niñas, niños, familias y
-              acompañantes asumen un rol activo y corresponsable en los procesos
-              de aprendizaje y desarrollo.
+              acompañantes asumen un rol activo y corresponsable en los
+              procesos de aprendizaje y desarrollo.
             </p>
             <p>
               Queremos una comunidad donde cada persona fortalezca su brújula
@@ -84,10 +87,10 @@ function LandingVisionBridgeSection() {
         <div className="relative mx-auto w-full max-w-[28rem] lg:order-1">
           <div className="relative aspect-square overflow-hidden rounded-full">
             <Image
-              src="/assets/img9.jpg"
+              src="/assets/images/DSC01443.png"
               alt="Comunidad educativa compartiendo actividades"
               fill
-              className="object-cover"
+              className="object-cover rotate-90"
             />
           </div>
         </div>
@@ -116,9 +119,7 @@ function LandingQuoteSection() {
             className="h-[10px] w-[180px]"
           />
         </div>
-        <p className="mt-5 text-center text-xl text-black">
-          Tutor de Koru
-        </p>
+        <p className="mt-5 text-center text-xl text-black">Tutor de Koru</p>
       </div>
     </section>
   );
@@ -161,7 +162,10 @@ function ScopeBackground({
 
   if (scope.type !== "spore") {
     return (
-      <div className="relative isolate overflow-visible" style={backgroundStyle}>
+      <div
+        className="relative isolate overflow-visible"
+        style={backgroundStyle}
+      >
         <div className="relative z-10">{children}</div>
       </div>
     );
@@ -170,19 +174,21 @@ function ScopeBackground({
   return (
     <div className="relative isolate overflow-visible" style={backgroundStyle}>
       <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
-        {(scope.spores ?? defaultLandingBackgroundSpores).map((spore, index) => (
-          <SporeShape
-            key={`scope-spore-${scope.id}-${index}`}
-            className="absolute mix-blend-multiply"
-            style={{ left: `${spore.x}%`, top: `${spore.y}%` }}
-            size={spore.size}
-            color={spore.color}
-            opacity={spore.opacity}
-            rotate={spore.rotate}
-            flipX={spore.flipX}
-            flipY={spore.flipY}
-          />
-        ))}
+        {(scope.spores ?? defaultLandingBackgroundSpores).map(
+          (spore, index) => (
+            <SporeShape
+              key={`scope-spore-${scope.id}-${index}`}
+              className="absolute mix-blend-multiply"
+              style={{ left: `${spore.x}%`, top: `${spore.y}%` }}
+              size={spore.size}
+              color={spore.color}
+              opacity={spore.opacity}
+              rotate={spore.rotate}
+              flipX={spore.flipX}
+              flipY={spore.flipY}
+            />
+          ),
+        )}
       </div>
       <div className="relative z-10">{children}</div>
     </div>
@@ -260,6 +266,12 @@ function SectionRenderer({
               ? "bg-[var(--complement-900)]"
               : "bg-[var(--brand-900)]"
           }
+          imageSrc={
+            section.id.includes("-copy")
+              ? "/assets/images/DSC01273.png"
+              : "/assets/images/DSC01342.png"
+          }
+          imageScale={section.id.includes("-copy") ? 1 : 1.6}
         />
       );
     case "spore-stack":
@@ -325,7 +337,8 @@ export function LandingView({
 }: LandingViewProps) {
   const completeMap = ensureLandingDefaults(textMap);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const [measuredMode, setMeasuredMode] = useState<LandingResponsiveMode>("large");
+  const [measuredMode, setMeasuredMode] =
+    useState<LandingResponsiveMode>("large");
 
   useEffect(() => {
     if (responsiveMode) {
@@ -408,7 +421,9 @@ export function LandingView({
                               selectedFieldId={selectedFieldId}
                               onSelectField={onSelectField}
                               responsiveMode={effectiveResponsiveMode}
-                              onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+                              onMoveSectionExtraPosition={
+                                onMoveSectionExtraPosition
+                              }
                             />
                           </div>
                         </div>
@@ -421,7 +436,9 @@ export function LandingView({
                   ) : (
                     <div
                       data-preview-section-id={section.id}
-                      className={!previewMode ? "landing-overlap-content" : undefined}
+                      className={
+                        !previewMode ? "landing-overlap-content" : undefined
+                      }
                     >
                       <SectionRenderer
                         section={section}
