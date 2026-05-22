@@ -102,18 +102,30 @@ export function ImageGridSection({
   const topCards = cards.slice(0, Math.min(4, cards.length));
   const remainingCards = cards.slice(Math.min(4, cards.length));
   const imageUrls = [
-    "/assets/img1.jpg",
-    "/assets/img2.jpg",
-    "/assets/img3.jpg",
-    "/assets/img4.jpg",
-    "/assets/img5.jpg",
-    "/assets/img6.jpg",
-    "/assets/img7.jpg",
-    "/assets/img8.jpg",
-    "/assets/img9.jpg",
-    "/assets/img1.jpg",
-    "/assets/img2.jpg",
-    "/assets/img3.jpg",
+    {
+      primary: "/assets/images/DSC01345.png",
+      fallback: "/assets/images/DSC01345.png",
+    },
+    {
+      primary: "/assets/images/DSC01338.png",
+      fallback: "/assets/images/DSC01338.png",
+    },
+    {
+      primary: "/assets/images/DSC01402.png",
+      fallback: "/assets/images/DSC01402.png",
+    },
+    {
+      primary: "/assets/images/DSC02336.png",
+      fallback: "/assets/images/DSC02336.png",
+    },
+    { primary: "/assets/img5.jpg", fallback: "/assets/img5.jpg" },
+    { primary: "/assets/img6.jpg", fallback: "/assets/img6.jpg" },
+    { primary: "/assets/img7.jpg", fallback: "/assets/img7.jpg" },
+    { primary: "/assets/img8.jpg", fallback: "/assets/img8.jpg" },
+    { primary: "/assets/img9.jpg", fallback: "/assets/img9.jpg" },
+    { primary: "/assets/img1.jpg", fallback: "/assets/img1.jpg" },
+    { primary: "/assets/img2.jpg", fallback: "/assets/img2.jpg" },
+    { primary: "/assets/img3.jpg", fallback: "/assets/img3.jpg" },
   ];
   const orderMap = getSectionOrderMap(textMap, section.id);
   const sectionPaddingStyle = getLandingFieldPaddingStyle(
@@ -179,9 +191,19 @@ export function ImageGridSection({
                 key={card.key}
                 className="group relative aspect-square w-full cursor-pointer overflow-hidden"
               >
-                <div
-                  className="h-full w-full scale-[1.08] bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-100"
-                  style={{ backgroundImage: `url("${imageUrls[index]}")` }}
+                <img
+                  src={imageUrls[index]?.primary}
+                  onError={(event) => {
+                    const target = event.currentTarget;
+                    const fallback = imageUrls[index]?.fallback;
+                    if (fallback && target.src !== new URL(fallback, window.location.origin).href) {
+                      target.src = fallback;
+                    }
+                  }}
+                  className={`h-full w-full scale-[1.08] object-cover transition-transform duration-500 ease-out group-hover:scale-100 ${
+                    index === 3 ? "" : index < 4 ? "rotate-90" : ""
+                  }`}
+                  alt=""
                 />
                 <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/35" />
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -232,9 +254,19 @@ export function ImageGridSection({
                     height: `${imageGridImageSize}px`,
                   }}
                 >
-                  <div
-                    className="h-full w-full scale-[1.08] bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-100"
-                    style={{ backgroundImage: `url("${imageUrls[imageIndex]}")` }}
+                  <img
+                    src={imageUrls[imageIndex]?.primary}
+                    onError={(event) => {
+                      const target = event.currentTarget;
+                      const fallback = imageUrls[imageIndex]?.fallback;
+                      if (fallback && target.src !== new URL(fallback, window.location.origin).href) {
+                        target.src = fallback;
+                      }
+                    }}
+                    className={`h-full w-full scale-[1.08] object-cover transition-transform duration-500 ease-out group-hover:scale-100 ${
+                      imageIndex === 3 ? "" : imageIndex < 4 ? "rotate-90" : ""
+                    }`}
+                    alt=""
                   />
                   <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/35" />
                   <div className="absolute inset-0 flex items-center justify-center">
