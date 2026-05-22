@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -42,6 +42,7 @@ type LandingNavProps = {
   logoAlt?: string;
   links?: LandingNavLink[];
   fixed?: boolean;
+  disableScrollBackgroundChange?: boolean;
   showContainerGuides?: boolean;
   containerStyles?: Record<
     string,
@@ -147,6 +148,7 @@ export function LandingNav({
   logoSrc = "/branding/koru-logo.png",
   logoAlt = "Koru",
   fixed = true,
+  disableScrollBackgroundChange = false,
   showContainerGuides = false,
   containerStyles = {},
   user = null,
@@ -163,7 +165,7 @@ export function LandingNav({
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    if (!fixed) {
+    if (!fixed || disableScrollBackgroundChange) {
       setIsScrolled(false);
       return;
     }
@@ -175,7 +177,7 @@ export function LandingNav({
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [fixed]);
+  }, [fixed, disableScrollBackgroundChange]);
 
   const isTransparentNav =
     backgroundColor.trim().toLowerCase() === "transparent";
@@ -321,15 +323,7 @@ export function LandingNav({
                     <a
                       href={item.href || "#"}
                       className="transition-colors duration-300 hover:text-[var(--complement-800)]"
-                      onClick={(event) => {
-                        if (!item.submenu) {
-                          return;
-                        }
-                        event.preventDefault();
-                        setActiveSubmenuId((current) =>
-                          current === itemId ? null : itemId,
-                        );
-                      }}
+                      onClick={() => setActiveSubmenuId(null)}
                     >
                       {item.label}
                     </a>
@@ -421,3 +415,5 @@ export function LandingNav({
     </header>
   );
 }
+
+

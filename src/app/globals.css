@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -62,6 +62,7 @@
   --comlement-700: var(--complement-700);
   --complement-600: #d6e68e;
   --complement-500: #f5ffc9;
+  --complement-400: #a9b285;
   --complement-300: #f8ffd8;
 
   --background: #ffffff;
@@ -559,7 +560,7 @@
 
 .landing-video-static {
   position: sticky;
-  top: var(--landing-nav-height, 96px);
+  top: 0;
   left: 0;
   right: 0;
   z-index: 0;
@@ -761,7 +762,7 @@
 
 .panel-accordion[open] > summary::before,
 .panel-accordion-inner[open] > summary::before {
-  content: "−";
+  content: "-";
 }
 
 .panel-accordion > summary + *,
@@ -790,3 +791,4 @@
   opacity: 1;
   pointer-events: auto;
 }
+

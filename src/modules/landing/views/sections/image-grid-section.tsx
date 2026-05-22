@@ -144,8 +144,9 @@ export function ImageGridSection({
       ? "var(--landing-body-padding-x, 24px)"
       : "0px",
   };
-  const topCardSize = Math.round(imageGridImageSize * 0.9);
+  const topCardSize = Math.round(imageGridImageSize * 0.74);
   const topGridGap = Math.max(6, Math.round(topCardSize * 0.035));
+  const topGridMaxWidth = topCardSize * 2 + topGridGap;
 
   return (
     <section
@@ -168,18 +169,15 @@ export function ImageGridSection({
             className="grid"
             style={{
               order: getOrder(orderMap, "base:grid", 0),
-              gridTemplateColumns: `repeat(2, ${topCardSize}px)`,
+              width: `min(100%, ${topGridMaxWidth}px)`,
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
               gap: `${topGridGap}px`,
             }}
           >
             {topCards.map((card, index) => (
               <article
                 key={card.key}
-                className="group relative overflow-hidden"
-                style={{
-                  width: `${topCardSize}px`,
-                  height: `${topCardSize}px`,
-                }}
+                className="group relative aspect-square w-full cursor-pointer overflow-hidden"
               >
                 <div
                   className="h-full w-full scale-[1.08] bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-100"
@@ -228,7 +226,7 @@ export function ImageGridSection({
               return (
                 <article
                   key={card.key}
-                  className="group relative overflow-hidden"
+                  className="group relative cursor-pointer overflow-hidden"
                   style={{
                     width: `${imageGridImageSize}px`,
                     height: `${imageGridImageSize}px`,

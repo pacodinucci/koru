@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useEffect,
@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { usePathname } from "next/navigation";
 import { LandingNav } from "@/modules/landing/components/landing-nav";
 import {
   ensureLandingDefaults,
@@ -117,11 +118,12 @@ function getLayoutContainerArrangementValue(
 }
 
 function getContainerChildrenLayoutMode(raw: string | undefined) {
-  return getLayoutContainerArrangementValue(
-    raw,
+  return getLayoutContainerArrangementValue(raw, "block", [
     "block",
-    ["block", "flex-row", "flex-column", "grid-2"],
-  );
+    "flex-row",
+    "flex-column",
+    "grid-2",
+  ]);
 }
 
 type FooterContainerElementType =
@@ -147,7 +149,8 @@ type FooterContainerChildRef = {
   type: "element" | "container";
 };
 
-const LANDING_LAYOUT_FOOTER_CONTAINERS_KEY = "__landing_layout_footer_containers";
+const LANDING_LAYOUT_FOOTER_CONTAINERS_KEY =
+  "__landing_layout_footer_containers";
 const LANDING_LAYOUT_FOOTER_ELEMENTS_KEY = "__landing_layout_footer_elements";
 const LANDING_LAYOUT_FOOTER_CHILDREN_KEY = "__landing_layout_footer_children";
 
@@ -177,7 +180,9 @@ function parseFooterContainers(textMap: LandingTextMap): FooterContainer[] {
         typeof item.name === "string" &&
         (item.parentId == null || typeof item.parentId === "string"),
     );
-    return valid.length > 0 ? valid : [{ id: "footer-text", name: "Texto footer" }];
+    return valid.length > 0
+      ? valid
+      : [{ id: "footer-text", name: "Texto footer" }];
   } catch {
     return [{ id: "footer-text", name: "Texto footer" }];
   }
@@ -191,10 +196,7 @@ function getFooterRootContainers(containers: FooterContainer[]) {
   );
 }
 
-function getFooterChildren(
-  containers: FooterContainer[],
-  parentId: string,
-) {
+function getFooterChildren(containers: FooterContainer[], parentId: string) {
   return containers.filter((container) => container.parentId === parentId);
 }
 
@@ -271,10 +273,13 @@ export function LandingPageLayout({
   responsiveMode,
   children,
 }: LandingPageLayoutProps) {
+  const pathname = usePathname();
+  const isLandingRoute = pathname === "/";
   const completeMap = ensureLandingDefaults(textMap);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [rootWidth, setRootWidth] = useState(0);
-  const [measuredMode, setMeasuredMode] = useState<LandingResponsiveMode>("large");
+  const [measuredMode, setMeasuredMode] =
+    useState<LandingResponsiveMode>("large");
   const effectiveResponsiveMode: LandingResponsiveMode =
     responsiveMode ?? measuredMode;
   const responsiveMap = createResponsiveScopedTextMap(
@@ -285,9 +290,11 @@ export function LandingPageLayout({
   const layoutPaddingX = getLayoutPaddingX(
     responsiveMap[LANDING_LAYOUT_PADDING_X_KEY],
   );
-  const navBackgroundColor = "transparent";
+  const navBackgroundColor = isLandingRoute || previewMode ? "transparent" : "#ffffff";
   const navTextColor = completeMap[LANDING_LAYOUT_NAV_TEXT_KEY] ?? "#111111";
-  const navHeight = getLayoutNavHeight(completeMap[LANDING_LAYOUT_NAV_HEIGHT_KEY]);
+  const navHeight = getLayoutNavHeight(
+    completeMap[LANDING_LAYOUT_NAV_HEIGHT_KEY],
+  );
   const navLogoSrc =
     completeMap[LANDING_LAYOUT_NAV_LOGO_SRC_KEY] ?? "/branding/koru-logo.png";
   const navLogoAlt = completeMap[LANDING_LAYOUT_NAV_LOGO_ALT_KEY] ?? "Koru";
@@ -297,20 +304,68 @@ export function LandingPageLayout({
   }));
   const containerStyles = {
     "navbar-logo": {
-      width: getNumeric(completeMap[getLayoutContainerWidthKey("navbar-logo")], 0, 1200),
-      height: getNumeric(completeMap[getLayoutContainerHeightKey("navbar-logo")], 0, 600),
-      paddingX: getNumeric(completeMap[getLayoutContainerPaddingXKey("navbar-logo")], 0, 300),
-      paddingY: getNumeric(completeMap[getLayoutContainerPaddingYKey("navbar-logo")], 0, 300),
-      marginX: getNumeric(completeMap[getLayoutContainerMarginXKey("navbar-logo")], 0, 300),
-      marginY: getNumeric(completeMap[getLayoutContainerMarginYKey("navbar-logo")], 0, 300),
+      width: getNumeric(
+        completeMap[getLayoutContainerWidthKey("navbar-logo")],
+        0,
+        1200,
+      ),
+      height: getNumeric(
+        completeMap[getLayoutContainerHeightKey("navbar-logo")],
+        0,
+        600,
+      ),
+      paddingX: getNumeric(
+        completeMap[getLayoutContainerPaddingXKey("navbar-logo")],
+        0,
+        300,
+      ),
+      paddingY: getNumeric(
+        completeMap[getLayoutContainerPaddingYKey("navbar-logo")],
+        0,
+        300,
+      ),
+      marginX: getNumeric(
+        completeMap[getLayoutContainerMarginXKey("navbar-logo")],
+        0,
+        300,
+      ),
+      marginY: getNumeric(
+        completeMap[getLayoutContainerMarginYKey("navbar-logo")],
+        0,
+        300,
+      ),
     },
     "navbar-nav-options": {
-      width: getNumeric(completeMap[getLayoutContainerWidthKey("navbar-options")], 0, 1200),
-      height: getNumeric(completeMap[getLayoutContainerHeightKey("navbar-options")], 0, 600),
-      paddingX: getNumeric(completeMap[getLayoutContainerPaddingXKey("navbar-options")], 0, 300),
-      paddingY: getNumeric(completeMap[getLayoutContainerPaddingYKey("navbar-options")], 0, 300),
-      marginX: getNumeric(completeMap[getLayoutContainerMarginXKey("navbar-options")], 0, 300),
-      marginY: getNumeric(completeMap[getLayoutContainerMarginYKey("navbar-options")], 0, 300),
+      width: getNumeric(
+        completeMap[getLayoutContainerWidthKey("navbar-options")],
+        0,
+        1200,
+      ),
+      height: getNumeric(
+        completeMap[getLayoutContainerHeightKey("navbar-options")],
+        0,
+        600,
+      ),
+      paddingX: getNumeric(
+        completeMap[getLayoutContainerPaddingXKey("navbar-options")],
+        0,
+        300,
+      ),
+      paddingY: getNumeric(
+        completeMap[getLayoutContainerPaddingYKey("navbar-options")],
+        0,
+        300,
+      ),
+      marginX: getNumeric(
+        completeMap[getLayoutContainerMarginXKey("navbar-options")],
+        0,
+        300,
+      ),
+      marginY: getNumeric(
+        completeMap[getLayoutContainerMarginYKey("navbar-options")],
+        0,
+        300,
+      ),
     },
     "navbar-auth-slot": {
       width: 0,
@@ -335,7 +390,9 @@ export function LandingPageLayout({
     landingLayoutContainerRules.footer.allowedArrangements,
   );
 
-  const renderFooterContainer = (container: FooterContainer): React.ReactNode => {
+  const renderFooterContainer = (
+    container: FooterContainer,
+  ): React.ReactNode => {
     const elements = parseFooterContainerElements(completeMap, container.id);
     const children = getFooterChildren(footerContainers, container.id);
     const childRefs = parseFooterContainerChildren(
@@ -423,7 +480,9 @@ export function LandingPageLayout({
           )}px`,
         }}
       >
-        {elements.length === 0 && children.length === 0 ? <div className="min-h-8" /> : null}
+        {elements.length === 0 && children.length === 0 ? (
+          <div className="min-h-8" />
+        ) : null}
         <div
           className={
             childrenLayoutMode === "grid-2"
@@ -445,15 +504,20 @@ export function LandingPageLayout({
         >
           {childRefs.map((childRef) => {
             if (childRef.type === "container") {
-              const childContainer = children.find((entry) => entry.id === childRef.id);
-              return childContainer ? renderFooterContainer(childContainer) : null;
+              const childContainer = children.find(
+                (entry) => entry.id === childRef.id,
+              );
+              return childContainer
+                ? renderFooterContainer(childContainer)
+                : null;
             }
             const element = elements.find((entry) => entry.id === childRef.id);
             if (!element) {
               return null;
             }
             const isDefaultText =
-              container.id === "footer-text" && element.id === "footer-text-default";
+              container.id === "footer-text" &&
+              element.id === "footer-text-default";
             const valueKey = isDefaultText
               ? LANDING_LAYOUT_FOOTER_TEXT_KEY
               : getFooterElementValueKey(element.id);
@@ -480,10 +544,17 @@ export function LandingPageLayout({
               );
             }
             if (element.type === "line-horizontal") {
-              return <div key={element.id} className="my-2 h-px w-full bg-slate-700" />;
+              return (
+                <div
+                  key={element.id}
+                  className="my-2 h-px w-full bg-slate-700"
+                />
+              );
             }
             if (element.type === "line-vertical") {
-              return <div key={element.id} className="my-2 h-8 w-px bg-slate-700" />;
+              return (
+                <div key={element.id} className="my-2 h-8 w-px bg-slate-700" />
+              );
             }
 
             return (
@@ -657,9 +728,12 @@ export function LandingPageLayout({
             logoSrc={navLogoSrc}
             logoAlt={navLogoAlt}
             links={navLinks}
-            fixed={!previewMode}
+            fixed={true}
+            disableScrollBackgroundChange={previewMode}
             user={user}
-            showContainerGuides={previewMode && selectedLayoutSectionId === "layout-navbar"}
+            showContainerGuides={
+              previewMode && selectedLayoutSectionId === "layout-navbar"
+            }
             containerStyles={containerStyles}
           />
           {previewMode && onSelectLayoutSection ? (
@@ -679,7 +753,14 @@ export function LandingPageLayout({
           ) : null}
         </div>
         <div className="relative" data-preview-layout-section-id="layout-body">
-          {children}
+          <div
+            style={{
+              paddingTop:
+                !previewMode && !isLandingRoute ? `${navHeight}px` : undefined,
+            }}
+          >
+            {children}
+          </div>
           {previewMode && onSelectLayoutSection ? (
             <button
               type="button"
@@ -698,35 +779,146 @@ export function LandingPageLayout({
         </div>
         <footer
           data-preview-layout-section-id="layout-footer"
-          className="flex items-center border-t border-black/10"
+          className=""
           style={{
-            backgroundColor: footerBackgroundColor,
+            backgroundColor: "var(--complement-400)",
             minHeight: `${footerHeight}px`,
-            paddingLeft: "24px",
-            paddingRight: "24px",
+            padding: "12px",
           }}
         >
-          <div
-            className={
-              footerContainerArrangement === "grid-2"
-                ? "grid w-full gap-2"
-                : footerContainerArrangement === "flex-row"
-                  ? "flex w-full flex-row flex-wrap items-start gap-2"
-                  : footerContainerArrangement === "flex-column"
-                    ? "flex w-full flex-col gap-2"
-                    : "block w-full space-y-2"
-            }
-            style={
-              footerContainerArrangement === "grid-2"
-                ? {
-                    gridTemplateColumns:
-                      "repeat(auto-fit, minmax(min(220px, 100%), 1fr))",
-                  }
-                : undefined
-            }
-          >
-            {footerRootContainers.map((container) => renderFooterContainer(container))}
-          </div>
+          {previewMode ? (
+            <div
+              className={
+                footerContainerArrangement === "grid-2"
+                  ? "grid w-full gap-2"
+                  : footerContainerArrangement === "flex-row"
+                    ? "flex w-full flex-row flex-wrap items-start gap-2"
+                    : footerContainerArrangement === "flex-column"
+                      ? "flex w-full flex-col gap-2"
+                      : "block w-full space-y-2"
+              }
+              style={
+                footerContainerArrangement === "grid-2"
+                  ? {
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(min(220px, 100%), 1fr))",
+                    }
+                  : undefined
+              }
+            >
+              {footerRootContainers.map((container) =>
+                renderFooterContainer(container),
+              )}
+            </div>
+          ) : (
+            <div
+              className="w-full px-2 py-2"
+              style={{ fontFamily: "var(--font-montserrat)" }}
+            >
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.15fr] lg:gap-10">
+                <section>
+                  <img
+                    src={navLogoSrc}
+                    alt={navLogoAlt}
+                    className="h-11 w-auto object-contain"
+                  />
+                  <p className="mt-5 max-w-[36ch] text-base leading-relaxed text-black/85">
+                    Koru es una comunidad viva de aprendizaje donde acompañamos
+                    procesos con presencia, cuidado y vínculo auténtico.
+                  </p>
+                  <div className="mt-6 flex items-center gap-3">
+                    {["f", "x", "▶", "◎", "in"].map((item) => (
+                      <a
+                        key={item}
+                        href="#"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-[#38a000] text-lg font-semibold text-white"
+                      >
+                        {item}
+                      </a>
+                    ))}
+                  </div>
+                </section>
+
+                <section>
+                  <h4
+                    className="text-lg font-semibold uppercase tracking-tight text-black"
+                    style={{ fontFamily: "var(--font-roboto-condensed)" }}
+                  >
+                    Links
+                  </h4>
+                  <nav className="mt-4 space-y-2.5 text-lg text-black/95">
+                    <a href="/" className="block">
+                      Home
+                    </a>
+                    <a href="/quienes-somos" className="block">
+                      Quiénes somos
+                    </a>
+                    <a href="/como-acompanamos" className="block">
+                      Cómo acompañamos
+                    </a>
+                    <a href="/comunidad" className="block">
+                      Comunidad
+                    </a>
+                    <a href="/blog" className="block">
+                      Blog
+                    </a>
+                  </nav>
+                </section>
+
+                <section>
+                  <h4
+                    className="text-lg font-semibold uppercase tracking-tight text-black"
+                    style={{ fontFamily: "var(--font-roboto-condensed)" }}
+                  >
+                    Comunidad
+                  </h4>
+                  <ul className="mt-4 space-y-2.5 text-lg text-black/95">
+                    <li>Acompañamiento integral</li>
+                    <li>Comunidad de familias</li>
+                    <li>Programas por etapas</li>
+                    <li>Experiencias vivenciales</li>
+                    <li>Orientación personalizada</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h4
+                    className="text-lg font-semibold uppercase tracking-tight text-black"
+                    style={{ fontFamily: "var(--font-roboto-condensed)" }}
+                  >
+                    Contacto
+                  </h4>
+                  <ul className="mt-4 space-y-3 text-lg text-black/95">
+                    <li className="flex items-start gap-3">
+                      <span className="mt-0.5">✉</span>
+                      <span>contacto@koruosa.com</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="mt-0.5">☎</span>
+                      <span>+52 81 0000 0000</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="mt-0.5">⌖</span>
+                      <span>Tepoztlán, Morelos, México</span>
+                    </li>
+                  </ul>
+                </section>
+              </div>
+
+              <div className="mt-8 border-t border-black/15 pt-5">
+                <div className="flex flex-col gap-3 text-base text-black/90 md:flex-row md:items-center md:justify-between">
+                  <p>Copyright © 2026 Koru OSA. All Rights Reserved.</p>
+                  <nav className="flex items-center gap-4">
+                    <a href="#">Terms & Condition</a>
+                    <span>|</span>
+                    <a href="#">Privacy</a>
+                    <span>|</span>
+                    <a href="#">Support</a>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </footer>
         {previewMode && onSelectLayoutSection ? (
           <button
@@ -749,3 +941,11 @@ export function LandingPageLayout({
     </div>
   );
 }
+
+
+
+
+
+
+
+

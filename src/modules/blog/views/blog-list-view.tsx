@@ -38,8 +38,8 @@ export async function BlogListView() {
   const posts = await getPublishedPosts(session?.user.id);
 
   return (
-    <main className="mx-auto w-full max-w-5xl bg-white pl-6 pr-10 pb-16 pt-10 md:pl-10 md:pr-16 lg:pl-14 lg:pr-24">
-      <header className="mb-8 space-y-3">
+    <main className="mx-auto w-full max-w-7xl bg-white px-6 pb-16 pt-10 md:px-10 lg:px-14">
+      <header className="mx-auto mb-8 max-w-5xl space-y-3">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight [font-family:var(--font-roboto-condensed)] md:text-4xl">
             Koru OSA
