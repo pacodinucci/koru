@@ -10,6 +10,7 @@ import {
 import Image from "next/image";
 import { FernShape } from "@/components/fern-shape";
 import { SporeShape } from "@/components/spore-shape";
+import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
 import {
   defaultLandingBackgroundSpores,
   ensureLandingDefaults,
@@ -157,16 +158,24 @@ function groupSectionsByScope(
 
 function ScopeBackground({
   scope,
+  disableScopeMinHeight = false,
   children,
 }: {
   scope: LandingBackgroundScope;
+  disableScopeMinHeight?: boolean;
   children: React.ReactNode;
 }) {
   const scopeHeight = `calc(var(--landing-vh, 100dvh) * ${scope.heightVh} / 100)`;
   const backgroundStyle: CSSProperties =
     scope.visualMode === "gradient"
-      ? { backgroundImage: scope.gradient, minHeight: scopeHeight }
-      : { backgroundColor: scope.color, minHeight: scopeHeight };
+      ? {
+          backgroundImage: scope.gradient,
+          minHeight: disableScopeMinHeight ? undefined : scopeHeight,
+        }
+      : {
+          backgroundColor: scope.color,
+          minHeight: disableScopeMinHeight ? undefined : scopeHeight,
+        };
 
   if (scope.type !== "spore") {
     return (
@@ -349,6 +358,7 @@ export function LandingView({
   responsiveMode,
   onMoveSectionExtraPosition,
 }: LandingViewProps) {
+  const isCodeFirst = isCodeFirstLandingMode();
   const completeMap = ensureLandingDefaults(textMap);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [measuredMode, setMeasuredMode] =
@@ -387,7 +397,19 @@ export function LandingView({
     completeMap,
     effectiveResponsiveMode,
   );
-  const scopes = parseLandingBackgroundScopes(completeMap);
+  const scopes = isCodeFirst
+    ? [
+        {
+          id: "scope-default",
+          name: "Fondo base",
+          type: "none" as const,
+          visualMode: "color" as const,
+          color: "#ffffff",
+          gradient: "linear-gradient(180deg,#ffffff 0%,#f8f8f8 100%)",
+          heightVh: 100,
+        },
+      ]
+    : parseLandingBackgroundScopes(completeMap);
   const scopeMap = new Map(scopes.map((scope) => [scope.id, scope]));
   const structure = parseLandingStructure(completeMap).filter(
     (section) => section.type !== "footer",
@@ -419,7 +441,11 @@ export function LandingView({
           } as const);
 
         return (
-          <ScopeBackground key={`${group.scopeId}-${groupIndex}`} scope={scope}>
+          <ScopeBackground
+            key={`${group.scopeId}-${groupIndex}`}
+            scope={scope}
+            disableScopeMinHeight={isCodeFirst}
+          >
             {group.sections.map((section) => {
               return (
                 <div key={section.id}>

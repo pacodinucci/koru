@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { SectionExtras } from "@/modules/landing/views/components/section-extras";
+import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
 import { getSectionFieldKey } from "@/modules/landing/config/landing-sections";
 import {
   getLandingFieldMarginStyle,
@@ -57,6 +58,7 @@ export function VideoSection({
   previewMode,
   responsiveMode,
 }: LandingSectionComponentProps) {
+  const isCodeFirst = isCodeFirstLandingMode();
   const sectionRef = useRef<HTMLElement | null>(null);
   const [videoParallaxY, setVideoParallaxY] = useState(0);
   const [textParallaxY, setTextParallaxY] = useState(0);
@@ -137,20 +139,29 @@ export function VideoSection({
     "Una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.";
   const textParallaxOffset = textParallaxY;
 
-  const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
-  const sectionPaddingStyle = getLandingFieldPaddingStyle(
-    textMap,
-    getSectionFieldKey(section.id, "__section_padding"),
-  );
-  const sectionMarginStyle = getLandingFieldMarginStyle(
-    textMap,
-    getSectionFieldKey(section.id, "__section_padding"),
-  );
+  const sectionBackgroundStyle = isCodeFirst
+    ? {}
+    : getSectionBackgroundStyle(textMap, section.id);
+  const sectionPaddingStyle = isCodeFirst
+    ? {}
+    : getLandingFieldPaddingStyle(
+        textMap,
+        getSectionFieldKey(section.id, "__section_padding"),
+      );
+  const sectionMarginStyle = isCodeFirst
+    ? {}
+    : getLandingFieldMarginStyle(
+        textMap,
+        getSectionFieldKey(section.id, "__section_padding"),
+      );
   const sectionStyle: CSSProperties = {
     ...sectionBackgroundStyle,
     ...sectionMarginStyle,
     ...sectionPaddingStyle,
-    padding: 0,
+    paddingTop: "0px",
+    paddingRight: "0px",
+    paddingBottom: "0px",
+    paddingLeft: "0px",
     backgroundColor: "var(--background)",
     border: "none",
     transform: undefined,

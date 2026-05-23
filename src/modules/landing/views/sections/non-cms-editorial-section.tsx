@@ -30,7 +30,7 @@ export function NonCmsEditorialSection({
   } as const;
 
   return (
-    <section className="mt-16 bg-white">
+    <section className="bg-white">
       {bannerTitle ? (
         <div className={`${bannerClassName} py-6`}>
           <div className="mx-auto w-full max-w-7xl px-6 md:px-10 lg:px-14">
