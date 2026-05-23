@@ -35,7 +35,7 @@ export function NonCmsEditorialSection({
         <div className={`${bannerClassName} py-6`}>
           <div className="mx-auto w-full max-w-7xl px-6 md:px-10 lg:px-14">
             <h2
-              className="text-6xl leading-tight italic text-white"
+              className="text-4xl leading-tight italic text-white md:text-6xl"
               style={{ fontFamily: "var(--font-roboto-condensed)" }}
             >
               {bannerTitle}
@@ -48,7 +48,7 @@ export function NonCmsEditorialSection({
         style={{ fontFamily: "var(--font-montserrat)" }}
       >
         <div>
-          <h2 className="space-y-1 text-6xl leading-[0.9] tracking-tight text-black">
+          <h2 className="space-y-1 text-4xl leading-[0.9] tracking-tight text-black md:text-6xl">
             <span
               className="block font-light uppercase"
               style={{ fontFamily: "var(--font-roboto-condensed)" }}
@@ -63,16 +63,16 @@ export function NonCmsEditorialSection({
             </span>
           </h2>
 
-          <p className="mt-6 max-w-3xl text-xl leading-relaxed text-black/85">
+          <p className="mt-6 max-w-3xl text-base leading-relaxed text-black/85 md:text-xl">
             Texto descriptivo principal para contar la idea de la sección. Texto
             descriptivo principal para contar la idea de la sección.
           </p>
 
-          <p className="mt-6 max-w-3xl text-4xl leading-tight text-black/90">
+          <p className="mt-6 max-w-3xl text-2xl leading-tight text-black/90 md:text-4xl">
             Texto destacado en negrita para reforzar el mensaje central.
           </p>
 
-          <p className="mt-6 max-w-3xl text-xl leading-relaxed text-black/85">
+          <p className="mt-6 max-w-3xl text-base leading-relaxed text-black/85 md:text-xl">
             Párrafo complementario con detalles y cierre del bloque de contenido.
             Párrafo complementario con detalles y cierre del bloque de contenido.
           </p>

@@ -281,11 +281,11 @@ function SectionRenderer({
                   "/assets/images/DSC01273.png",
                 )
               : cloudinaryImageUrl(
-                  "koru/landing/DSC01342",
-                  "/assets/images/DSC01342.png",
+                  "koru/landing/DSC01344",
+                  "/assets/images/DSC01344.png",
                 )
           }
-          imageScale={section.id.includes("-copy") ? 1 : 1.6}
+          imageScale={1}
         />
       );
     case "spore-stack":

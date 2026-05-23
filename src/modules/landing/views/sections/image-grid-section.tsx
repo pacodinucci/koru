@@ -237,7 +237,7 @@ export function ImageGridSection({
 
         {remainingCards.length > 0 ? (
           <div
-            className="mt-4 grid gap-3 md:gap-4"
+            className="mt-4 hidden gap-3 md:grid md:gap-4"
             style={{
               gridTemplateColumns: `repeat(${imageGridColumns}, ${imageGridImageSize}px)`,
               justifyContent: "center",

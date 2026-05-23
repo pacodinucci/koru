@@ -7,9 +7,7 @@ import {
   getLandingFieldMarginStyle,
   getLandingFieldPaddingStyle,
 } from "@/modules/landing/types/landing-text";
-import {
-  getSectionBackgroundStyle,
-} from "@/modules/landing/views/utils/section-style";
+import { getSectionBackgroundStyle } from "@/modules/landing/views/utils/section-style";
 import type { LandingSectionComponentProps } from "@/modules/landing/views/sections/types";
 
 function getVideoTextItemsKey(sectionId: string) {
@@ -115,7 +113,7 @@ export function VideoSection({
   );
   const overlayOpacity = Number.isFinite(overlayOpacityRaw)
     ? Math.min(100, Math.max(0, overlayOpacityRaw))
-    : 40;
+    : 5;
   const positionXRaw = Number.parseInt(textMap[videoPositionXKey] ?? "", 10);
   const positionYRaw = Number.parseInt(textMap[videoPositionYKey] ?? "", 10);
   const zoomRaw = Number.parseInt(textMap[videoZoomKey] ?? "", 10);
@@ -245,16 +243,16 @@ export function VideoSection({
               }}
             >
               <p
-              style={{
-                margin: 0,
-                color,
-                fontSize: `${size}px`,
-                fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
-                fontWeight: 100,
-                lineHeight: 1.1,
-                textShadow: "0 2px 14px rgba(0,0,0,0.45)",
-                opacity: textOpacity,
-              }}
+                style={{
+                  margin: 0,
+                  color,
+                  fontSize: `${size}px`,
+                  fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
+                  fontWeight: 100,
+                  lineHeight: 1.1,
+                  textShadow: "0 2px 14px rgba(0,0,0,0.45)",
+                  opacity: textOpacity,
+                }}
               >
                 {content}
               </p>
