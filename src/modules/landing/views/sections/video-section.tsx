@@ -60,9 +60,11 @@ export function VideoSection({
 }: LandingSectionComponentProps) {
   const isCodeFirst = isCodeFirstLandingMode();
   const sectionRef = useRef<HTMLElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoParallaxY, setVideoParallaxY] = useState(0);
   const [textParallaxY, setTextParallaxY] = useState(0);
   const [textOpacity, setTextOpacity] = useState(1);
+  const [videoPlayable, setVideoPlayable] = useState(true);
   useEffect(() => {
     const onScroll = () => {
       const sectionEl = sectionRef.current;
@@ -139,6 +141,56 @@ export function VideoSection({
     "Una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.";
   const textParallaxOffset = textParallaxY;
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const attemptPlay = async () => {
+      if (cancelled) return;
+      try {
+        video.muted = true;
+        video.defaultMuted = true;
+        const maybePromise = video.play();
+        if (maybePromise && typeof maybePromise.then === "function") {
+          await maybePromise;
+        }
+        if (!cancelled) setVideoPlayable(true);
+      } catch {
+        if (!cancelled) setVideoPlayable(false);
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void attemptPlay();
+      }
+    };
+
+    const onFirstUserGesture = () => {
+      void attemptPlay();
+    };
+
+    void attemptPlay();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("touchstart", onFirstUserGesture, {
+      passive: true,
+    });
+    window.addEventListener("pointerdown", onFirstUserGesture, {
+      passive: true,
+    });
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("touchstart", onFirstUserGesture);
+      window.removeEventListener("pointerdown", onFirstUserGesture);
+    };
+  }, [videoSrc]);
+
   const sectionBackgroundStyle = isCodeFirst
     ? {}
     : getSectionBackgroundStyle(textMap, section.id);
@@ -182,6 +234,7 @@ export function VideoSection({
         style={{ height: effectiveSectionHeight }}
       >
         <video
+          ref={videoRef}
           key={videoSrc}
           className="absolute left-0 w-full object-cover"
           src={videoSrc}
@@ -191,13 +244,26 @@ export function VideoSection({
             objectPosition: `${positionX}% ${positionY}%`,
             transform: `translate3d(0, ${videoParallaxY * 1.35}px, 0) scale(${zoom / 100})`,
             willChange: "transform",
+            visibility: videoPlayable ? "visible" : "hidden",
           }}
           autoPlay
           muted
           loop
           playsInline
+          preload="auto"
           controls={previewMode}
+          controlsList={
+            previewMode ? undefined : "nodownload nofullscreen noplaybackrate"
+          }
+          disablePictureInPicture={!previewMode}
         />
+        {!videoPlayable ? (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{ background: "#0f0f0f" }}
+          />
+        ) : null}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-black"
