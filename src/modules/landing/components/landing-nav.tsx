@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -162,7 +163,9 @@ export function LandingNav({
     { label: "Log In", href: "/sign-in" },
   ],
 }: LandingNavProps) {
+  const mobileMenuBackgroundColor = "#343c11";
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!fixed || disableScrollBackgroundChange) {
@@ -179,6 +182,17 @@ export function LandingNav({
     return () => window.removeEventListener("scroll", onScroll);
   }, [fixed, disableScrollBackgroundChange]);
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
   const isTransparentNav =
     backgroundColor.trim().toLowerCase() === "transparent";
   const effectiveBackgroundColor =
@@ -189,6 +203,7 @@ export function LandingNav({
     fixed
       ? !(isTransparentNav && !isScrolled)
       : !isTransparentNav;
+  const resolvedHeaderBackgroundColor = effectiveBackgroundColor;
 
   const [activeSubmenuId, setActiveSubmenuId] = useState<string | null>(null);
   const hasActiveSubmenu = activeSubmenuId !== null;
@@ -230,7 +245,7 @@ export function LandingNav({
           ? `font-fira fixed inset-x-0 top-0 z-20 transition-[background-color,backdrop-filter] duration-300 ${shouldUseBackdropBlur || hasActiveSubmenu ? "backdrop-blur" : ""}`
           : `font-fira sticky top-0 z-20 transition-[background-color,backdrop-filter] duration-300 ${shouldUseBackdropBlur || hasActiveSubmenu ? "backdrop-blur" : ""}`
       }
-      style={{ backgroundColor: effectiveBackgroundColor, color: effectiveTextColor }}
+      style={{ backgroundColor: resolvedHeaderBackgroundColor, color: effectiveTextColor }}
     >
       <div
         className="flex w-full items-center justify-between py-0"
@@ -360,7 +375,97 @@ export function LandingNav({
             </div>
           </div>
         </div>
+
+        <div className="flex lg:hidden">
+          <button
+            type="button"
+            aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={isMobileMenuOpen}
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            className={`inline-flex h-10 w-10 items-center justify-center rounded-md ${isMobileMenuOpen ? "text-white" : ""}`}
+          >
+            <span className="sr-only">Menú</span>
+            <span className="relative block h-4 w-6">
+              <span
+                className={`absolute left-0 h-[2px] w-6 bg-current transition-all duration-300 ${isMobileMenuOpen ? "top-[7px] rotate-45" : "top-0"}`}
+              />
+              <span
+                className={`absolute top-[7px] left-0 h-[2px] w-6 bg-current transition-all duration-300 ${isMobileMenuOpen ? "opacity-0" : "opacity-100"}`}
+              />
+              <span
+                className={`absolute left-0 h-[2px] w-6 bg-current transition-all duration-300 ${isMobileMenuOpen ? "top-[7px] -rotate-45" : "top-[14px]"}`}
+              />
+            </span>
+          </button>
+        </div>
       </div>
+
+      {typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className={`fixed inset-0 z-[9999] lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+              style={{
+                backgroundColor: mobileMenuBackgroundColor,
+                color: "#ffffff",
+                width: "100vw",
+                height: "100dvh",
+                minHeight: "100dvh",
+              }}
+            >
+              <button
+                type="button"
+                aria-label="Cerrar menú"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="absolute top-8 right-6 inline-flex h-10 w-10 items-center justify-center rounded-md text-white"
+              >
+                <span className="relative block h-5 w-5">
+                  <span className="absolute top-1/2 left-0 h-[2px] w-5 -translate-y-1/2 rotate-45 bg-current" />
+                  <span className="absolute top-1/2 left-0 h-[2px] w-5 -translate-y-1/2 -rotate-45 bg-current" />
+                </span>
+              </button>
+              <div className="flex h-full w-full flex-col items-center justify-center px-6 py-10 text-center">
+                <nav className="flex flex-col items-center justify-center gap-8 font-['Roboto_Condensed'] text-2xl font-semibold tracking-wide text-white">
+                  {navLinksWithSubmenu.map((item, index) => (
+                    <a
+                      key={`${item.label}-${index}`}
+                      href={item.href || "#"}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="transition-colors duration-200 hover:text-white/80"
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </nav>
+                <div className="pt-8 text-center">
+                  {user ? (
+                    <Link
+                      href="/family-dashboard"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="inline-flex items-center gap-3 text-white"
+                      aria-label="Ir a tu cuenta"
+                    >
+                      <Avatar>
+                        <AvatarFallback>{userInitials}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-['Roboto_Condensed'] text-lg font-semibold">
+                        Mi cuenta
+                      </span>
+                    </Link>
+                  ) : (
+                    <a
+                      href={authLink.href || "#"}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="font-['Roboto_Condensed'] text-lg font-semibold tracking-wider text-white transition-colors duration-200 hover:text-white/80"
+                    >
+                      {authLink.label}
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
 
       {activeSubmenu ? (
         <div
