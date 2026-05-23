@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -383,6 +384,7 @@ export function SectionExtras({
 
           if (extra.type === "image") {
             const imageSrc = field.value.trim();
+            const imageSize = Math.max(80, field.fontSize);
             return (
               <div
                 key={extra.id}
@@ -396,15 +398,19 @@ export function SectionExtras({
                 style={{
                   order,
                   ...positionedStyle,
-                  width: `${Math.max(80, field.fontSize)}px`,
+                  width: `${imageSize}px`,
                   maxWidth: "100%",
                 }}
               >
                 {imageSrc ? (
-                  <img
+                  <Image
                     src={imageSrc}
                     alt=""
+                    width={imageSize}
+                    height={imageSize}
+                    sizes={`${imageSize}px`}
                     className="block h-auto w-full object-cover"
+                    unoptimized={imageSrc.startsWith("http")}
                   />
                 ) : (
                   <div className="flex h-24 items-center justify-center text-xs text-muted-foreground">

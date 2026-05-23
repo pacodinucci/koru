@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LandingNav } from "@/modules/landing/components/landing-nav";
 import {
@@ -525,10 +526,13 @@ export function LandingPageLayout({
 
             if (element.type === "image") {
               return (
-                <img
+                <Image
                   key={element.id}
                   src={value}
                   alt={element.label}
+                  width={96}
+                  height={96}
+                  unoptimized={value.startsWith("http")}
                   className="h-24 w-auto object-cover"
                 />
               );
@@ -817,9 +821,12 @@ export function LandingPageLayout({
             >
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.15fr] lg:gap-10">
                 <section>
-                  <img
+                  <Image
                     src={navLogoSrc}
                     alt={navLogoAlt}
+                    width={180}
+                    height={44}
+                    unoptimized={navLogoSrc.startsWith("http")}
                     className="h-11 w-auto object-contain"
                   />
                   <p className="mt-5 max-w-[36ch] text-base leading-relaxed text-black/85">

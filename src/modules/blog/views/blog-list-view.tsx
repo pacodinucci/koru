@@ -1,5 +1,4 @@
-﻿/* eslint-disable @next/next/no-img-element */
-
+import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { MessageCircleIcon } from "lucide-react";
@@ -66,10 +65,14 @@ export async function BlogListView() {
               >
                 <Link href={`/blog/${post.slug}`} className="block bg-muted">
                   {coverImage ? (
-                    <img
+                    <Image
                       src={coverImage}
                       alt={post.title}
+                      width={900}
+                      height={900}
+                      sizes="(max-width: 768px) 100vw, 340px"
                       className="aspect-square w-full object-cover"
+                      unoptimized={coverImage.startsWith("http")}
                     />
                   ) : (
                     <div className="flex aspect-square w-full items-center justify-center text-sm text-muted-foreground">
@@ -132,3 +135,4 @@ export async function BlogListView() {
     </main>
   );
 }
+

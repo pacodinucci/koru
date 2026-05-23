@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Image from "next/image";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
 
 type NonCmsEditorialSectionProps = {
@@ -80,10 +81,14 @@ export function NonCmsEditorialSection({
 
         <div className="relative mx-auto overflow-hidden" style={frameStyle}>
           {imageSrc ? (
-            <img
+            <Image
               src={imageSrc}
               alt="Niñas y niños en actividad comunitaria"
-              className="h-full w-full object-contain"
+              width={1200}
+              height={1200}
+              sizes="(max-width: 1024px) 100vw, 40vw"
+              className="h-auto w-full object-contain"
+              unoptimized={imageSrc.startsWith("http")}
             />
           ) : null}
         </div>
