@@ -1,0 +1,17 @@
+{
+  "rootDir": "public/assets/images",
+  "maxBytesDefault": 1500000,
+  "maxBytesPng": 900000,
+  "maxBytesAbsolute": 5000000,
+  "referencedOnly": true,
+  "allowedOversize": [
+    "DSC01273.png",
+    "DSC01338.png",
+    "DSC01342.png",
+    "DSC01344.png",
+    "DSC01345.png",
+    "DSC01402.png",
+    "DSC01443.png",
+    "DSC02336.png"
+  ]
+}

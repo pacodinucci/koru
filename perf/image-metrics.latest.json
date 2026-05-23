@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-05-23T15:38:43.629Z",
+  "imageCount": 45,
+  "totalBytes": 1034876665,
+  "top10ByBytes": [
+    {
+      "file": "public/assets/images/DSC01342.png",
+      "bytes": 30093618
+    },
+    {
+      "file": "public/assets/images/DSC01352.png",
+      "bytes": 29950099
+    },
+    {
+      "file": "public/assets/images/DSC01402.png",
+      "bytes": 28652649
+    },
+    {
+      "file": "public/assets/images/DSC01345.png",
+      "bytes": 28091891
+    },
+    {
+      "file": "public/assets/images/DSC01385.png",
+      "bytes": 27447833
+    },
+    {
+      "file": "public/assets/images/DSC01344.png",
+      "bytes": 27247149
+    },
+    {
+      "file": "public/assets/images/DSC02336.png",
+      "bytes": 26992901
+    },
+    {
+      "file": "public/assets/images/DSC01363.png",
+      "bytes": 26623751
+    },
+    {
+      "file": "public/assets/images/DSC01400.png",
+      "bytes": 26604238
+    },
+    {
+      "file": "public/assets/images/DSC01384.png",
+      "bytes": 26346780
+    }
+  ]
+}

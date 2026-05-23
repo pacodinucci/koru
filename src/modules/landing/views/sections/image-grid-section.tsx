@@ -1,7 +1,9 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { cloudinaryImageUrl } from "@/lib/cloudinary";
 import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
 import {
   getSectionFieldKey,
@@ -105,19 +107,19 @@ export function ImageGridSection({
   const remainingCards = cards.slice(Math.min(4, cards.length));
   const imageUrls = [
     {
-      primary: "/assets/images/DSC01345.png",
+      primary: cloudinaryImageUrl("koru/landing/DSC01345", "/assets/images/DSC01345.png"),
       fallback: "/assets/images/DSC01345.png",
     },
     {
-      primary: "/assets/images/DSC01338.png",
+      primary: cloudinaryImageUrl("koru/landing/DSC01338", "/assets/images/DSC01338.png"),
       fallback: "/assets/images/DSC01338.png",
     },
     {
-      primary: "/assets/images/DSC01402.png",
+      primary: cloudinaryImageUrl("koru/landing/DSC01402", "/assets/images/DSC01402.png"),
       fallback: "/assets/images/DSC01402.png",
     },
     {
-      primary: "/assets/images/DSC02336.png",
+      primary: cloudinaryImageUrl("koru/landing/DSC02336", "/assets/images/DSC02336.png"),
       fallback: "/assets/images/DSC02336.png",
     },
     { primary: "/assets/img5.jpg", fallback: "/assets/img5.jpg" },
@@ -200,19 +202,15 @@ export function ImageGridSection({
                 key={card.key}
                 className="group relative aspect-square w-full cursor-pointer overflow-hidden"
               >
-                <img
+                <Image
                   src={imageUrls[index]?.primary}
-                  onError={(event) => {
-                    const target = event.currentTarget;
-                    const fallback = imageUrls[index]?.fallback;
-                    if (fallback && target.src !== new URL(fallback, window.location.origin).href) {
-                      target.src = fallback;
-                    }
-                  }}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  quality={70}
                   className={`h-full w-full scale-[1.08] object-cover transition-transform duration-500 ease-out group-hover:scale-100 ${
                     index === 3 ? "" : index < 4 ? "rotate-90" : ""
                   }`}
-                  alt=""
+                  alt={fixedHoverLabels[index] ?? `Imagen ${index + 1}`}
                 />
                 <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/35" />
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -263,19 +261,15 @@ export function ImageGridSection({
                     height: `${imageGridImageSize}px`,
                   }}
                 >
-                  <img
+                  <Image
                     src={imageUrls[imageIndex]?.primary}
-                    onError={(event) => {
-                      const target = event.currentTarget;
-                      const fallback = imageUrls[imageIndex]?.fallback;
-                      if (fallback && target.src !== new URL(fallback, window.location.origin).href) {
-                        target.src = fallback;
-                      }
-                    }}
+                    fill
+                    sizes={`${imageGridImageSize}px`}
+                    quality={70}
                     className={`h-full w-full scale-[1.08] object-cover transition-transform duration-500 ease-out group-hover:scale-100 ${
                       imageIndex === 3 ? "" : imageIndex < 4 ? "rotate-90" : ""
                     }`}
-                    alt=""
+                    alt={`Imagen ${imageIndex + 1}`}
                   />
                   <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/35" />
                   <div className="absolute inset-0 flex items-center justify-center">

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { getSectionFieldKey } from "@/modules/landing/config/landing-sections";
 import {
@@ -150,7 +151,14 @@ export function EditorialFeatureSection({
               marginLeft: "auto",
             }}
           >
-            <img src={image.value} alt={title.value} className="h-full w-full object-cover" />
+            <Image
+              src={image.value}
+              alt={title.value}
+              fill
+              sizes="(max-width: 1024px) 100vw, 45vw"
+              className="h-full w-full object-cover"
+              unoptimized
+            />
           </div>
         </div>
         <SectionExtras

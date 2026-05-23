@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+import Image from "next/image";
 
 import type { BlogContentBlock } from "@/modules/blog/types/blog-content";
 
@@ -35,10 +35,14 @@ export function BlogContentRenderer({ blocks }: BlogContentRendererProps) {
               >
                 <div className={block.layout === "right" ? "md:order-2" : ""}>
                   <div className="overflow-hidden rounded-lg border bg-muted">
-                    <img
+                    <Image
                       src={block.src}
                       alt={block.alt || "Imagen del post"}
+                      width={1200}
+                      height={900}
+                      sizes="(max-width: 768px) 100vw, 50vw"
                       className="h-full w-full object-cover"
+                      unoptimized={block.src.startsWith("http")}
                     />
                   </div>
                 </div>
@@ -60,10 +64,14 @@ export function BlogContentRenderer({ blocks }: BlogContentRendererProps) {
           return (
             <figure key={block.id} className="space-y-2">
               <div className="overflow-hidden rounded-xl border bg-muted">
-                <img
+                <Image
                   src={block.src}
                   alt={block.alt || "Imagen del post"}
+                  width={1400}
+                  height={1000}
+                  sizes="100vw"
                   className="h-full w-full object-cover"
+                  unoptimized={block.src.startsWith("http")}
                 />
               </div>
               {block.caption ? (
@@ -78,10 +86,14 @@ export function BlogContentRenderer({ blocks }: BlogContentRendererProps) {
             <div className="grid gap-3 md:grid-cols-2">
               {block.images.map((image, index) => (
                 <div key={`${block.id}-${index}`} className="overflow-hidden rounded-xl border bg-muted">
-                  <img
+                  <Image
                     src={image.src}
                     alt={image.alt || `Imagen ${index + 1}`}
+                    width={1000}
+                    height={750}
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="h-full w-full object-cover"
+                    unoptimized={image.src.startsWith("http")}
                   />
                 </div>
               ))}

@@ -16,7 +16,7 @@ type BlogPostViewProps = {
 function addImageHoverIcon(html: string) {
   return html.replace(
     /<img\b([^>]*)>/gi,
-    '<span class="blog-image-hover-wrap" style="position:relative;display:block;width:100%;height:0;padding-top:72%;overflow:hidden;"><img$1 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;"><span class="blog-image-hover-icon" aria-hidden="true"></span></span>',
+    '<span class="blog-image-hover-wrap" style="position:relative;display:block;width:100%;height:0;padding-top:72%;overflow:hidden;"><img loading="lazy" decoding="async"$1 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;"><span class="blog-image-hover-icon" aria-hidden="true"></span></span>',
   );
 }
 

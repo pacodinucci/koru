@@ -121,10 +121,12 @@ function LandingQuoteSection() {
           mejor versión.”
         </blockquote>
         <div className="mt-7 flex justify-center">
-          <img
+          <Image
             src="/assets/quote-underline.svg"
             alt=""
             aria-hidden="true"
+            width={180}
+            height={10}
             className="h-[10px] w-[180px]"
           />
         </div>
