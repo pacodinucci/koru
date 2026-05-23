@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { SectionExtras } from "@/modules/landing/views/components/section-extras";
+import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
 import { getSectionFieldKey } from "@/modules/landing/config/landing-sections";
 import {
   getLandingFieldMarginStyle,
   getLandingFieldPaddingStyle,
 } from "@/modules/landing/types/landing-text";
-import {
-  getSectionBackgroundStyle,
-} from "@/modules/landing/views/utils/section-style";
+import { getSectionBackgroundStyle } from "@/modules/landing/views/utils/section-style";
 import type { LandingSectionComponentProps } from "@/modules/landing/views/sections/types";
 
 function getVideoTextItemsKey(sectionId: string) {
@@ -59,6 +58,7 @@ export function VideoSection({
   previewMode,
   responsiveMode,
 }: LandingSectionComponentProps) {
+  const isCodeFirst = isCodeFirstLandingMode();
   const sectionRef = useRef<HTMLElement | null>(null);
   const [videoParallaxY, setVideoParallaxY] = useState(0);
   const [textParallaxY, setTextParallaxY] = useState(0);
@@ -115,7 +115,7 @@ export function VideoSection({
   );
   const overlayOpacity = Number.isFinite(overlayOpacityRaw)
     ? Math.min(100, Math.max(0, overlayOpacityRaw))
-    : 40;
+    : 5;
   const positionXRaw = Number.parseInt(textMap[videoPositionXKey] ?? "", 10);
   const positionYRaw = Number.parseInt(textMap[videoPositionYKey] ?? "", 10);
   const zoomRaw = Number.parseInt(textMap[videoZoomKey] ?? "", 10);
@@ -139,20 +139,29 @@ export function VideoSection({
     "Una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.";
   const textParallaxOffset = textParallaxY;
 
-  const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
-  const sectionPaddingStyle = getLandingFieldPaddingStyle(
-    textMap,
-    getSectionFieldKey(section.id, "__section_padding"),
-  );
-  const sectionMarginStyle = getLandingFieldMarginStyle(
-    textMap,
-    getSectionFieldKey(section.id, "__section_padding"),
-  );
+  const sectionBackgroundStyle = isCodeFirst
+    ? {}
+    : getSectionBackgroundStyle(textMap, section.id);
+  const sectionPaddingStyle = isCodeFirst
+    ? {}
+    : getLandingFieldPaddingStyle(
+        textMap,
+        getSectionFieldKey(section.id, "__section_padding"),
+      );
+  const sectionMarginStyle = isCodeFirst
+    ? {}
+    : getLandingFieldMarginStyle(
+        textMap,
+        getSectionFieldKey(section.id, "__section_padding"),
+      );
   const sectionStyle: CSSProperties = {
     ...sectionBackgroundStyle,
     ...sectionMarginStyle,
     ...sectionPaddingStyle,
-    padding: 0,
+    paddingTop: "0px",
+    paddingRight: "0px",
+    paddingBottom: "0px",
+    paddingLeft: "0px",
     backgroundColor: "var(--background)",
     border: "none",
     transform: undefined,
@@ -245,16 +254,16 @@ export function VideoSection({
               }}
             >
               <p
-              style={{
-                margin: 0,
-                color,
-                fontSize: `${size}px`,
-                fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
-                fontWeight: 100,
-                lineHeight: 1.1,
-                textShadow: "0 2px 14px rgba(0,0,0,0.45)",
-                opacity: textOpacity,
-              }}
+                style={{
+                  margin: 0,
+                  color,
+                  fontSize: `${size}px`,
+                  fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
+                  fontWeight: 100,
+                  lineHeight: 1.1,
+                  textShadow: "0 2px 14px rgba(0,0,0,0.45)",
+                  opacity: textOpacity,
+                }}
               >
                 {content}
               </p>

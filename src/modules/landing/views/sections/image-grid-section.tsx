@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
+import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
 import {
   getSectionFieldKey,
   getSectionImageGridColumnsKey,
@@ -38,6 +39,7 @@ export function ImageGridSection({
   onSelectField,
   responsiveMode,
 }: LandingSectionComponentProps) {
+  const isCodeFirst = isCodeFirstLandingMode();
   const sharedTextStyleKey = getSectionFieldKey(section.id, "__cards_text_style");
   const sharedTextStyleField = {
     key: sharedTextStyleKey,
@@ -128,16 +130,24 @@ export function ImageGridSection({
     { primary: "/assets/img3.jpg", fallback: "/assets/img3.jpg" },
   ];
   const orderMap = getSectionOrderMap(textMap, section.id);
-  const sectionPaddingStyle = getLandingFieldPaddingStyle(
-    textMap,
-    getSectionFieldKey(section.id, "__section_padding"),
-  );
-  const sectionMarginStyle = getLandingFieldMarginStyle(
-    textMap,
-    getSectionFieldKey(section.id, "__section_padding"),
-  );
-  const sectionBackgroundStyle = getSectionBackgroundStyle(textMap, section.id);
-  const sectionBorderStyle = getSectionBorderStyle(textMap, section.id);
+  const sectionPaddingStyle = isCodeFirst
+    ? {}
+    : getLandingFieldPaddingStyle(
+        textMap,
+        getSectionFieldKey(section.id, "__section_padding"),
+      );
+  const sectionMarginStyle = isCodeFirst
+    ? {}
+    : getLandingFieldMarginStyle(
+        textMap,
+        getSectionFieldKey(section.id, "__section_padding"),
+      );
+  const sectionBackgroundStyle = isCodeFirst
+    ? {}
+    : getSectionBackgroundStyle(textMap, section.id);
+  const sectionBorderStyle = isCodeFirst
+    ? {}
+    : getSectionBorderStyle(textMap, section.id);
   const hasImageLayer = hasBackgroundImageLayer(sectionBackgroundStyle);
   const sectionStyle: CSSProperties = hasImageLayer
     ? sectionBorderStyle
@@ -173,16 +183,15 @@ export function ImageGridSection({
         />
       ) : null}
       <div
-        className="mx-auto w-full max-w-[110rem] py-14"
+        className="mx-auto w-full max-w-[110rem] py-20"
         style={bodyPaddingStyle}
       >
         <div className="flex justify-center">
           <div
-            className="grid"
+            className="grid grid-cols-1 md:grid-cols-2"
             style={{
               order: getOrder(orderMap, "base:grid", 0),
               width: `min(100%, ${topGridMaxWidth}px)`,
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
               gap: `${topGridGap}px`,
             }}
           >
@@ -237,7 +246,7 @@ export function ImageGridSection({
 
         {remainingCards.length > 0 ? (
           <div
-            className="mt-4 grid gap-3 md:gap-4"
+            className="mt-4 hidden gap-3 md:grid md:gap-4"
             style={{
               gridTemplateColumns: `repeat(${imageGridColumns}, ${imageGridImageSize}px)`,
               justifyContent: "center",
