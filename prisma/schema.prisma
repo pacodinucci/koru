@@ -10,6 +10,7 @@ model User {
   id            String    @id
   name          String
   email         String
+  role          UserRole  @default(PARENT)
   emailVerified Boolean   @default(false)
   image         String?
   createdAt     DateTime  @default(now())
@@ -17,6 +18,8 @@ model User {
   sessions      Session[]
   accounts      Account[]
   blogLikes     BlogPostLike[]
+  createdCalendarEvents CalendarEvent[] @relation("CalendarEventCreator")
+  calendarEventAudiences CalendarEventAudience[]
 
   @@unique([email])
   @@map("user")
@@ -106,6 +109,30 @@ enum ContactMessageStatus {
   NEW
   READ
   REPLIED
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  PARENT
+}
+
+enum CalendarEventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELED
+}
+
+enum CalendarAudienceType {
+  ALL
+  TEACHERS
+  PARENTS
+  PRIVATE
+}
+
+enum CalendarEventKind {
+  EVENT
+  MEETING
 }
 
 model Page {
@@ -216,4 +243,38 @@ model ContactMessage {
   updatedAt DateTime             @updatedAt
 
   @@index([status, createdAt])
+}
+
+model CalendarEvent {
+  id           String                @id @default(cuid())
+  title        String
+  description  String?
+  startsAt     DateTime
+  endsAt       DateTime
+  allDay       Boolean               @default(false)
+  location     String?
+  status       CalendarEventStatus   @default(DRAFT)
+  audienceType CalendarAudienceType  @default(ALL)
+  kind         CalendarEventKind     @default(EVENT)
+  createdById  String
+  createdBy    User                  @relation("CalendarEventCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  audiences    CalendarEventAudience[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@index([startsAt, endsAt])
+  @@index([status, audienceType])
+}
+
+model CalendarEventAudience {
+  id        String        @id @default(cuid())
+  eventId   String
+  event     CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
 }

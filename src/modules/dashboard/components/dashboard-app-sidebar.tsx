@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   ChevronDownIcon,
+  CalendarDaysIcon,
   LayoutDashboardIcon,
   NotebookPenIcon,
   PanelsTopLeftIcon,
@@ -35,6 +36,7 @@ export function DashboardAppSidebar({
   currentPath,
 }: DashboardAppSidebarProps) {
   const isBlogActive = currentPath.startsWith("/dashboard/blog");
+  const isCalendarActive = currentPath.startsWith("/dashboard/calendar");
   const isLayoutActive = currentPath === "/dashboard";
   const isPagesActive = currentPath.startsWith("/dashboard/pages");
   const isCmsActive = isLayoutActive || isPagesActive;
@@ -75,6 +77,16 @@ export function DashboardAppSidebar({
                 >
                   <NotebookPenIcon />
                   <span>Blog</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={isCalendarActive}
+                  className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900 data-active:shadow-[inset_0_0_0_1px_rgba(148,163,184,0.35)]"
+                  render={<Link href="/dashboard/calendar" />}
+                >
+                  <CalendarDaysIcon />
+                  <span>Calendario</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
