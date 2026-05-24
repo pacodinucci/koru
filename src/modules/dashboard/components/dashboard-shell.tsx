@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   FileText,
   NotebookPen,
+  CalendarDays,
   HandCoins,
   ShieldCheck,
   Settings,
@@ -93,6 +94,7 @@ export function DashboardShell({
   const searchParams = useSearchParams();
   const currentEditorSlug = searchParams.get("slug") ?? "/";
   const isBlogActive = pathname.startsWith("/dashboard/blog");
+  const isCalendarActive = pathname.startsWith("/dashboard/calendar");
   const isLayoutActive = pathname.startsWith("/dashboard/layout");
   const isPageEditorActive =
     pathname.startsWith("/dashboard/pages/edit") ||
@@ -207,6 +209,17 @@ export function DashboardShell({
                       ) : null}
                     </SidebarMenuSub>
                   ) : null}
+                </SidebarMenuItem>
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={isCalendarActive}
+                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                    render={<Link href="/dashboard/calendar" />}
+                  >
+                    <CalendarDays />
+                    <span>Calendario</span>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
 
                 <SidebarMenuItem>

@@ -13,6 +13,8 @@
     "cloudinary:migrate:assets": "node scripts/cloudinary-migrate-assets.mjs",
     "perf:images:check": "node scripts/check-image-budgets.mjs",
     "perf:images:report": "node scripts/image-metrics-report.mjs",
+    "roles:backfill": "node scripts/backfill-user-roles.mjs",
+    "calendar:smoke": "node scripts/calendar-staging-smoke.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
