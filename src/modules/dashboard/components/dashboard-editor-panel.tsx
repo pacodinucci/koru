@@ -77,10 +77,12 @@ export function DashboardEditorPanelProvider({
 
 export function DashboardEditorPanelLayout({
   children,
+  panelContent,
   className,
   variant = "inset",
 }: {
   children: ReactNode;
+  panelContent?: ReactNode;
   className?: string;
   variant?: "inset" | "flush";
 }) {
@@ -120,7 +122,9 @@ export function DashboardEditorPanelLayout({
           <div
             ref={setDesktopPortalTarget}
             className={panelSurfaceClassName}
-          />
+          >
+            {panelContent}
+          </div>
         </aside>
       </div>
 
@@ -135,7 +139,9 @@ export function DashboardEditorPanelLayout({
         <div
           ref={setMobilePortalTarget}
           className={panelSurfaceClassName}
-        />
+        >
+          {panelContent}
+        </div>
       </div>
     </div>
   );

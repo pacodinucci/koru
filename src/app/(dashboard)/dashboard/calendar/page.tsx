@@ -6,10 +6,13 @@ import { prisma } from "@/lib/prisma";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import {
-  listAudienceUsers,
-  listCalendarEventsForAdmin,
+  listAudienceUsers, listCalendarEventsForAdmin,
 } from "@/modules/dashboard/server/calendar.repository";
-import { DashboardCalendarView } from "@/modules/dashboard/views/dashboard-calendar-view";
+import {
+  DashboardCalendarGrid,
+  DashboardCalendarSidePanel,
+  DashboardCalendarTopBar,
+} from "@/modules/dashboard/views/dashboard-calendar-view";
 
 type DashboardCalendarPageProps = {
   searchParams: Promise<{
@@ -59,8 +62,12 @@ export default async function DashboardCalendarPage({
       breadcrumbPage="Calendario"
       showPanelToggle
       panelDefaultOpen
+      contentHeader={<DashboardCalendarTopBar />}
+      sidePanelContent={
+        <DashboardCalendarSidePanel events={events} users={users} ok={ok} error={error} />
+      }
     >
-      <DashboardCalendarView events={events} users={users} ok={ok} error={error} />
+      <DashboardCalendarGrid events={events} />
     </DashboardShell>
   );
 }
