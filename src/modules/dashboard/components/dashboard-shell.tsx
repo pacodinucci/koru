@@ -74,6 +74,8 @@ type DashboardShellProps = {
   editorMode?: "layout" | "page";
   breadcrumbPage?: string;
   children?: ReactNode;
+  contentHeader?: ReactNode;
+  sidePanelContent?: ReactNode;
   showPanelToggle?: boolean;
   panelDefaultOpen?: boolean;
 };
@@ -87,6 +89,8 @@ export function DashboardShell({
   editorMode = "page",
   breadcrumbPage = "CMS",
   children,
+  contentHeader,
+  sidePanelContent,
   showPanelToggle = false,
   panelDefaultOpen = false,
 }: DashboardShellProps) {
@@ -296,6 +300,8 @@ export function DashboardShell({
             cmsPreviewUrl={cmsPreviewUrl}
             editorMode={editorMode}
             breadcrumbPage={breadcrumbPage}
+            contentHeader={contentHeader}
+            sidePanelContent={sidePanelContent}
             showPanelToggle={showPanelToggle}
           >
             {children}
@@ -313,6 +319,8 @@ function DashboardCanvas({
   editorMode,
   breadcrumbPage,
   children,
+  contentHeader,
+  sidePanelContent,
   showPanelToggle,
 }: {
   initialTextMap?: LandingTextMap;
@@ -321,6 +329,8 @@ function DashboardCanvas({
   editorMode: "layout" | "page";
   breadcrumbPage: string;
   children?: ReactNode;
+  contentHeader?: ReactNode;
+  sidePanelContent?: ReactNode;
   showPanelToggle: boolean;
 }) {
   const { open, setOpen } = useDashboardEditorPanel();
@@ -370,11 +380,22 @@ function DashboardCanvas({
           </main>
         </DashboardEditorPanelLayout>
       ) : canUsePanel ? (
-        <DashboardEditorPanelLayout className="min-h-0 h-full flex-1" variant="flush">
-          <main className="h-full min-h-0 min-w-0 overflow-y-auto p-2 md:p-3 lg:p-4">
-            {children}
-          </main>
-        </DashboardEditorPanelLayout>
+        <div className="flex min-h-0 h-full flex-1 flex-col overflow-hidden">
+          {contentHeader ? (
+            <div className="border-b border-slate-200 bg-white px-2 py-2 md:px-3 lg:px-4">
+              {contentHeader}
+            </div>
+          ) : null}
+          <DashboardEditorPanelLayout
+            className="min-h-0 flex-1"
+            variant="flush"
+            panelContent={sidePanelContent}
+          >
+            <main className="h-full min-h-0 min-w-0 overflow-y-auto p-2 md:p-3 lg:p-4">
+              {children}
+            </main>
+          </DashboardEditorPanelLayout>
+        </div>
       ) : (
         <main className="h-full min-h-0 min-w-0 overflow-y-auto p-2 md:p-3 lg:p-4">
           {children}
