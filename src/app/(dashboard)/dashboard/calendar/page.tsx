@@ -62,6 +62,7 @@ export default async function DashboardCalendarPage({
       breadcrumbPage="Calendario"
       showPanelToggle
       panelDefaultOpen
+      contentNoPadding
       contentHeader={<DashboardCalendarTopBar />}
       sidePanelContent={
         <DashboardCalendarSidePanel events={events} users={users} ok={ok} error={error} />

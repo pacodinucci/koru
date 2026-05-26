@@ -76,6 +76,7 @@ type DashboardShellProps = {
   children?: ReactNode;
   contentHeader?: ReactNode;
   sidePanelContent?: ReactNode;
+  contentNoPadding?: boolean;
   showPanelToggle?: boolean;
   panelDefaultOpen?: boolean;
 };
@@ -91,6 +92,7 @@ export function DashboardShell({
   children,
   contentHeader,
   sidePanelContent,
+  contentNoPadding = false,
   showPanelToggle = false,
   panelDefaultOpen = false,
 }: DashboardShellProps) {
@@ -302,6 +304,7 @@ export function DashboardShell({
             breadcrumbPage={breadcrumbPage}
             contentHeader={contentHeader}
             sidePanelContent={sidePanelContent}
+            contentNoPadding={contentNoPadding}
             showPanelToggle={showPanelToggle}
           >
             {children}
@@ -321,6 +324,7 @@ function DashboardCanvas({
   children,
   contentHeader,
   sidePanelContent,
+  contentNoPadding,
   showPanelToggle,
 }: {
   initialTextMap?: LandingTextMap;
@@ -331,6 +335,7 @@ function DashboardCanvas({
   children?: ReactNode;
   contentHeader?: ReactNode;
   sidePanelContent?: ReactNode;
+  contentNoPadding: boolean;
   showPanelToggle: boolean;
 }) {
   const { open, setOpen } = useDashboardEditorPanel();
@@ -391,7 +396,9 @@ function DashboardCanvas({
             variant="flush"
             panelContent={sidePanelContent}
           >
-            <main className="h-full min-h-0 min-w-0 overflow-y-auto p-2 md:p-3 lg:p-4">
+            <main
+              className={`h-full min-h-0 min-w-0 overflow-y-auto ${contentNoPadding ? "p-0" : "p-2 md:p-3 lg:p-4"}`}
+            >
               {children}
             </main>
           </DashboardEditorPanelLayout>

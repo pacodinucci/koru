@@ -53,7 +53,7 @@ export function DashboardCalendarGrid({ events }: Pick<Props, "events">) {
   const preview = events.slice(0, 8);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <section className="overflow-hidden bg-white">
       <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
         <div className="flex items-center gap-3">
           <p className="text-lg leading-none font-semibold text-slate-900">
@@ -98,7 +98,7 @@ export function DashboardCalendarGrid({ events }: Pick<Props, "events">) {
           >
             {label.split(" ")[0]}
             <div
-              className={`mx-auto mt-1.5 w-fit rounded-full px-2.5 py-1 text-xs ${i === 0 ? "bg-indigo-600 text-white" : "text-slate-900"}`}
+              className={`mx-auto mt-1.5 w-fit rounded-full px-2.5 py-1 text-xs ${i === 0 ? "bg-emerald-600 text-white" : "text-slate-900"}`}
             >
               {label.split(" ")[1]}
             </div>
@@ -140,13 +140,13 @@ export function DashboardCalendarGrid({ events }: Pick<Props, "events">) {
 
 export function DashboardCalendarTopBar() {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2.5">
+    <div className="flex items-center justify-between bg-white px-4 py-2.5">
       <h1 className="text-xl leading-none font-semibold text-slate-900">
         Calendario
       </h1>
       <button
         type="button"
-        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white"
+        className="inline-flex items-center gap-2 bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white"
       >
         <Plus className="h-4 w-4" />
         Crear evento
@@ -180,7 +180,7 @@ export function DashboardCalendarSidePanel({
           {Array.from({ length: 31 }).map((_, i) => (
             <span
               key={i}
-              className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs ${i + 1 === 11 ? "bg-indigo-600 text-white" : "text-slate-800"}`}
+              className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs ${i + 1 === 11 ? "bg-emerald-600 text-white" : "text-slate-800"}`}
             >
               {i + 1}
             </span>
@@ -266,7 +266,7 @@ export function DashboardCalendarSidePanel({
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-indigo-600 py-2 text-sm font-semibold text-white"
+              className="rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white"
             >
               Guardar
             </button>
