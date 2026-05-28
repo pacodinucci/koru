@@ -20,14 +20,6 @@ function getBoolean(formData: FormData, key: string) {
   return getString(formData, key) === "on";
 }
 
-function parseDate(value: string) {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    throw new Error("invalid_date");
-  }
-  return parsed;
-}
-
 function parseAudience(value: string): CalendarAudienceType {
   if (Object.values(CalendarAudienceType).includes(value as CalendarAudienceType)) {
     return value as CalendarAudienceType;
@@ -35,11 +27,25 @@ function parseAudience(value: string): CalendarAudienceType {
   return CalendarAudienceType.ALL;
 }
 
-function parseStatus(value: string): CalendarEventStatus {
-  if (Object.values(CalendarEventStatus).includes(value as CalendarEventStatus)) {
-    return value as CalendarEventStatus;
+
+function parseDurationMinutes(value: string) {
+  const minutes = Number.parseInt(value, 10);
+  if (!Number.isFinite(minutes) || minutes <= 0) {
+    throw new Error("invalid_duration");
   }
-  return CalendarEventStatus.DRAFT;
+  if (minutes > 24 * 60) {
+    throw new Error("duration_too_long");
+  }
+  return minutes;
+}
+
+function combineDateAndTime(dateValue: string, timeValue: string) {
+  const iso = `${dateValue}T${timeValue}:00`;
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("invalid_date");
+  }
+  return parsed;
 }
 
 async function ensureAdminOrRedirect() {
@@ -73,12 +79,15 @@ export async function saveCalendarEventAction(formData: FormData) {
     const id = getString(formData, "id").trim();
     const title = getString(formData, "title").trim();
     const description = getString(formData, "description").trim();
-    const startsAt = parseDate(getString(formData, "startsAt"));
-    const endsAt = parseDate(getString(formData, "endsAt"));
+    const eventDate = getString(formData, "eventDate").trim();
+    const startTime = getString(formData, "startTime").trim();
+    const durationMinutes = parseDurationMinutes(getString(formData, "durationMinutes").trim());
+    const startsAt = combineDateAndTime(eventDate, startTime);
+    const endsAt = new Date(startsAt.getTime() + durationMinutes * 60_000);
     const allDay = getBoolean(formData, "allDay");
     const location = getString(formData, "location").trim();
     const audienceType = parseAudience(getString(formData, "audienceType"));
-    const status = parseStatus(getString(formData, "status"));
+    const status = CalendarEventStatus.PUBLISHED;
     const kind = getString(formData, "kind") === "MEETING" ? "MEETING" : "EVENT";
     const privateAudienceUserIds = formData
       .getAll("privateAudienceUserIds")
