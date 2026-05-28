@@ -18,6 +18,9 @@ type DashboardCalendarPageProps = {
   searchParams: Promise<{
     ok?: string;
     error?: string;
+    date?: string;
+    view?: string;
+    edit?: string;
   }>;
 };
 
@@ -48,7 +51,10 @@ export default async function DashboardCalendarPage({
     redirect("/dashboard?error=forbidden");
   }
 
-  const { ok, error } = await searchParams;
+  const { ok, error, date, view, edit } = await searchParams;
+  const parsedDate = date ? new Date(`${date}T00:00:00`) : new Date();
+  const dateCursor = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+  const viewMode = view === "day" || view === "month" ? view : "week";
   const [events, users, cmsPages] = await Promise.all([
     listCalendarEventsForAdmin(),
     listAudienceUsers(),
@@ -63,12 +69,12 @@ export default async function DashboardCalendarPage({
       showPanelToggle
       panelDefaultOpen
       contentNoPadding
-      contentHeader={<DashboardCalendarTopBar />}
+      contentHeader={<DashboardCalendarTopBar users={users} ok={ok} error={error} events={events} dateCursor={dateCursor} viewMode={viewMode} selectedEventId={edit} />}
       sidePanelContent={
-        <DashboardCalendarSidePanel events={events} users={users} ok={ok} error={error} />
+        <DashboardCalendarSidePanel events={events} dateCursor={dateCursor} viewMode={viewMode} />
       }
     >
-      <DashboardCalendarGrid events={events} />
+      <DashboardCalendarGrid events={events} dateCursor={dateCursor} viewMode={viewMode} selectedEventId={edit} />
     </DashboardShell>
   );
 }

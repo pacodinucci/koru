@@ -166,6 +166,7 @@ export function LandingNav({
   const mobileMenuBackgroundColor = "#343c11";
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     if (!fixed || disableScrollBackgroundChange) {
@@ -192,6 +193,10 @@ export function LandingNav({
       document.body.style.overflow = "";
     };
   }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const isTransparentNav =
     backgroundColor.trim().toLowerCase() === "transparent";
@@ -400,7 +405,7 @@ export function LandingNav({
         </div>
       </div>
 
-      {typeof document !== "undefined"
+      {isMounted
         ? createPortal(
             <div
               className={`fixed inset-0 z-[9999] lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
