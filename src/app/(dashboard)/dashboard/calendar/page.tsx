@@ -6,13 +6,16 @@ import { prisma } from "@/lib/prisma";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import {
-  listAudienceUsers, listCalendarEventsForAdmin,
+  listAudienceUsers,
+  listCalendarEventsForAdminByRange,
+  listUpcomingCalendarEventsForAdmin,
 } from "@/modules/dashboard/server/calendar.repository";
 import {
-  DashboardCalendarGrid,
-  DashboardCalendarSidePanel,
-  DashboardCalendarTopBar,
-} from "@/modules/dashboard/views/dashboard-calendar-view";
+  DashboardCalendarGridClient,
+  DashboardCalendarSidePanelClient,
+  DashboardCalendarTopBarClient,
+  DashboardCalendarClientProvider,
+} from "@/modules/dashboard/views/dashboard-calendar-client";
 
 type DashboardCalendarPageProps = {
   searchParams: Promise<{
@@ -55,26 +58,36 @@ export default async function DashboardCalendarPage({
   const parsedDate = date ? new Date(`${date}T00:00:00`) : new Date();
   const dateCursor = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
   const viewMode = view === "day" || view === "month" ? view : "week";
-  const [events, users, cmsPages] = await Promise.all([
-    listCalendarEventsForAdmin(),
+  const [events, upcomingEvents, users, cmsPages] = await Promise.all([
+    listCalendarEventsForAdminByRange(dateCursor, viewMode),
+    listUpcomingCalendarEventsForAdmin(6),
     listAudienceUsers(),
     discoverPagesGroupRoutes(),
   ]);
 
   return (
-    <DashboardShell
-      userEmail={sessionEmail}
-      cmsPages={cmsPages.filter((page) => !page.isDynamic)}
-      breadcrumbPage="Calendario"
-      showPanelToggle
-      panelDefaultOpen
-      contentNoPadding
-      contentHeader={<DashboardCalendarTopBar users={users} ok={ok} error={error} events={events} dateCursor={dateCursor} viewMode={viewMode} selectedEventId={edit} />}
-      sidePanelContent={
-        <DashboardCalendarSidePanel events={events} dateCursor={dateCursor} viewMode={viewMode} />
-      }
+    <DashboardCalendarClientProvider
+      initialEvents={events}
+      initialDateCursor={dateCursor}
+      initialViewMode={viewMode}
+      initialSelectedEventId={edit}
+      initialUpcomingEvents={upcomingEvents}
+      users={users}
+      ok={ok}
+      error={error}
     >
-      <DashboardCalendarGrid events={events} dateCursor={dateCursor} viewMode={viewMode} selectedEventId={edit} />
-    </DashboardShell>
+      <DashboardShell
+        userEmail={sessionEmail}
+        cmsPages={cmsPages.filter((page) => !page.isDynamic)}
+        breadcrumbPage="Calendario"
+        showPanelToggle
+        panelDefaultOpen
+        contentNoPadding
+        contentHeader={<DashboardCalendarTopBarClient />}
+        sidePanelContent={<DashboardCalendarSidePanelClient />}
+      >
+        <DashboardCalendarGridClient />
+      </DashboardShell>
+    </DashboardCalendarClientProvider>
   );
 }
