@@ -5,6 +5,7 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { getRangeForView, type CalendarViewMode } from "@/modules/dashboard/lib/calendar-range";
 
 type SaveCalendarEventInput = {
   id?: string;
@@ -24,6 +25,47 @@ type SaveCalendarEventInput = {
 export async function listCalendarEventsForAdmin() {
   return prisma.calendarEvent.findMany({
     orderBy: [{ startsAt: "asc" }],
+    include: {
+      createdBy: { select: { id: true, name: true, email: true } },
+      audiences: {
+        include: { user: { select: { id: true, name: true, email: true } } },
+      },
+    },
+  });
+}
+
+export async function listCalendarEventsForAdminByRange(
+  dateCursor: Date,
+  viewMode: CalendarViewMode,
+) {
+  const { start, end } = getRangeForView(dateCursor, viewMode);
+
+  return prisma.calendarEvent.findMany({
+    where: {
+      startsAt: {
+        gte: start,
+        lt: end,
+      },
+    },
+    orderBy: [{ startsAt: "asc" }],
+    include: {
+      createdBy: { select: { id: true, name: true, email: true } },
+      audiences: {
+        include: { user: { select: { id: true, name: true, email: true } } },
+      },
+    },
+  });
+}
+
+export async function listUpcomingCalendarEventsForAdmin(limit = 6) {
+  return prisma.calendarEvent.findMany({
+    where: {
+      startsAt: {
+        gte: new Date(),
+      },
+    },
+    orderBy: [{ startsAt: "asc" }],
+    take: limit,
     include: {
       createdBy: { select: { id: true, name: true, email: true } },
       audiences: {

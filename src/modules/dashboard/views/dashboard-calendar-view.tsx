@@ -1,6 +1,7 @@
 import { CalendarAudienceType, UserRole } from "@prisma/client";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
+import { type CalendarViewMode, getNextCursor } from "@/modules/dashboard/lib/calendar-range";
 
 import { CalendarEventForm } from "@/modules/dashboard/components/calendar-event-form";
 import { ResponsiveEventSheet } from "@/modules/dashboard/components/responsive-event-sheet";
@@ -22,8 +23,15 @@ type Props = {
   ok?: string;
   error?: string;
   dateCursor: Date;
-  viewMode: "day" | "week" | "month";
+  viewMode: CalendarViewMode;
   selectedEventId?: string;
+  onChangeView?: (viewMode: CalendarViewMode) => void;
+  onMoveCursor?: (direction: -1 | 1) => void;
+  onGoToday?: () => void;
+  onSelectEvent?: (eventId: string) => void;
+  onMoveMiniMonth?: (direction: -1 | 1) => void;
+  onToggleUpcomingList?: () => void;
+  isUpcomingListOpen?: boolean;
 };
 
 const WEEK_DAYS = ["Lun", "Mar", "Mi\u00e9", "Jue", "Vie", "S\u00e1b", "Dom"];
@@ -81,8 +89,7 @@ function hrefWith(dateCursor: Date, viewMode: Props["viewMode"], editId?: string
 }
 
 function moveCursor(cursor: Date, viewMode: Props["viewMode"], direction: -1 | 1) {
-  const unit = viewMode === "day" ? 1 : viewMode === "week" ? 7 : 30;
-  return addDays(cursor, direction * unit);
+  return getNextCursor(cursor, viewMode, direction);
 }
 
 function formatHeaderLabel(dateCursor: Date, viewMode: Props["viewMode"]) {
@@ -110,17 +117,32 @@ function formatHeaderLabel(dateCursor: Date, viewMode: Props["viewMode"]) {
 
 const cardPalette = ["bg-pink-100 border-pink-200", "bg-sky-100 border-sky-200", "bg-violet-100 border-violet-200", "bg-emerald-100 border-emerald-200"];
 
-function CalendarViewSwitch({ dateCursor, viewMode }: Pick<Props, "dateCursor" | "viewMode">) {
+function CalendarViewSwitch({
+  dateCursor, viewMode, onChangeView,
+}: Pick<Props, "dateCursor" | "viewMode" | "onChangeView">) {
   return (
     <div className="rounded-xl border border-slate-200 p-1">
-      <Link className={`px-3 py-1 text-sm ${viewMode === "day" ? "rounded-lg bg-slate-100 font-semibold text-slate-900" : "text-slate-500"}`} href={hrefWith(dateCursor, "day")}>{"D\u00eda"}</Link>
-      <Link className={`px-3 py-1 text-sm ${viewMode === "week" ? "rounded-lg bg-slate-100 font-semibold text-slate-900" : "text-slate-500"}`} href={hrefWith(dateCursor, "week")}>Semana</Link>
-      <Link className={`px-3 py-1 text-sm ${viewMode === "month" ? "rounded-lg bg-slate-100 font-semibold text-slate-900" : "text-slate-500"}`} href={hrefWith(dateCursor, "month")}>Mes</Link>
+      {(["day", "week", "month"] as const).map((mode) => (onChangeView ? (
+        <button
+          key={mode}
+          type="button"
+          className={`px-3 py-1 text-sm ${viewMode === mode ? "rounded-lg bg-slate-100 font-semibold text-slate-900" : "text-slate-500"}`}
+          onClick={() => onChangeView(mode)}
+        >
+          {mode === "day" ? "Día" : mode === "week" ? "Semana" : "Mes"}
+        </button>
+      ) : (
+        <Link key={mode} className={`px-3 py-1 text-sm ${viewMode === mode ? "rounded-lg bg-slate-100 font-semibold text-slate-900" : "text-slate-500"}`} href={hrefWith(dateCursor, mode)}>
+          {mode === "day" ? "Día" : mode === "week" ? "Semana" : "Mes"}
+        </Link>
+      )))}
     </div>
   );
 }
 
-export function DashboardCalendarGrid({ events, dateCursor, viewMode, selectedEventId }: Pick<Props, "events" | "dateCursor" | "viewMode" | "selectedEventId">) {
+export function DashboardCalendarGrid({
+  events, dateCursor, viewMode, selectedEventId, onChangeView, onMoveCursor, onGoToday, onSelectEvent,
+}: Pick<Props, "events" | "dateCursor" | "viewMode" | "selectedEventId" | "onChangeView" | "onMoveCursor" | "onGoToday" | "onSelectEvent">) {
   const now = new Date();
   const visibleDays = getVisibleDays(dateCursor, viewMode);
   const headerLabel = formatHeaderLabel(dateCursor, viewMode);
@@ -131,11 +153,11 @@ export function DashboardCalendarGrid({ events, dateCursor, viewMode, selectedEv
       <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
         <div className="flex items-center gap-3">
           <p className="text-lg leading-none font-semibold text-slate-900 capitalize">{headerLabel}</p>
-          <Link href={hrefWith(new Date(), viewMode)} className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700">Hoy</Link>
-          <Link href={hrefWith(moveCursor(dateCursor, viewMode, -1), viewMode)} className="rounded-md p-1.5 text-slate-500"><ChevronLeft className="h-4 w-4" /></Link>
-          <Link href={hrefWith(moveCursor(dateCursor, viewMode, 1), viewMode)} className="rounded-md p-1.5 text-slate-500"><ChevronRight className="h-4 w-4" /></Link>
+          {onGoToday ? <button type="button" onClick={onGoToday} className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700">Hoy</button> : <Link href={hrefWith(new Date(), viewMode)} className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700">Hoy</Link>}
+          {onMoveCursor ? <button type="button" onClick={() => onMoveCursor(-1)} className="rounded-md p-1.5 text-slate-500"><ChevronLeft className="h-4 w-4" /></button> : <Link href={hrefWith(moveCursor(dateCursor, viewMode, -1), viewMode)} className="rounded-md p-1.5 text-slate-500"><ChevronLeft className="h-4 w-4" /></Link>}
+          {onMoveCursor ? <button type="button" onClick={() => onMoveCursor(1)} className="rounded-md p-1.5 text-slate-500"><ChevronRight className="h-4 w-4" /></button> : <Link href={hrefWith(moveCursor(dateCursor, viewMode, 1), viewMode)} className="rounded-md p-1.5 text-slate-500"><ChevronRight className="h-4 w-4" /></Link>}
         </div>
-        <CalendarViewSwitch dateCursor={dateCursor} viewMode={viewMode} />
+        <CalendarViewSwitch dateCursor={dateCursor} viewMode={viewMode} onChangeView={onChangeView} />
       </div>
 
       {viewMode === "month" ? (
@@ -149,9 +171,15 @@ export function DashboardCalendarGrid({ events, dateCursor, viewMode, selectedEv
                 <p className="text-xs font-semibold text-slate-900">{day.getDate()}</p>
                 <div className="mt-1 space-y-1">
                   {dayEvents.slice(0, 2).map((event, i) => (
-                    <Link key={event.id} href={hrefWith(dateCursor, viewMode, event.id)} className={`block rounded border px-1 py-0.5 text-[11px] ${cardPalette[i % cardPalette.length]} ${selectedEventId === event.id ? "ring-2 ring-emerald-500" : ""}`}>
-                      {event.title}
-                    </Link>
+                    onSelectEvent ? (
+                      <button type="button" key={event.id} onClick={() => onSelectEvent(event.id)} className={`block w-full rounded border px-1 py-0.5 text-left text-[11px] ${cardPalette[i % cardPalette.length]} ${selectedEventId === event.id ? "ring-2 ring-emerald-500" : ""}`}>
+                        {event.title}
+                      </button>
+                    ) : (
+                      <Link key={event.id} href={hrefWith(dateCursor, viewMode, event.id)} className={`block rounded border px-1 py-0.5 text-[11px] ${cardPalette[i % cardPalette.length]} ${selectedEventId === event.id ? "ring-2 ring-emerald-500" : ""}`}>
+                        {event.title}
+                      </Link>
+                    )
                   ))}
                 </div>
               </div>
@@ -178,10 +206,17 @@ export function DashboardCalendarGrid({ events, dateCursor, viewMode, selectedEv
                 return (
                   <div key={`${day.toISOString()}-${hour}`} className="min-h-24 border-r border-b border-slate-100 p-1.5">
                     {cellEvents.map((event, idx) => (
-                      <Link key={event.id} href={hrefWith(dateCursor, viewMode, event.id)} className={`mb-1 block rounded-lg border p-2 ${cardPalette[(row + col + idx) % cardPalette.length]} ${selectedEventId === event.id ? "ring-2 ring-emerald-500" : ""}`}>
-                        <p className="text-[11px] font-semibold">{formatRange(new Date(event.startsAt), new Date(event.endsAt))}</p>
-                        <p className="mt-1.5 text-[11px] font-semibold leading-tight">{event.title}</p>
-                      </Link>
+                      onSelectEvent ? (
+                        <button type="button" key={event.id} onClick={() => onSelectEvent(event.id)} className={`mb-1 block w-full rounded-lg border p-2 text-left ${cardPalette[(row + col + idx) % cardPalette.length]} ${selectedEventId === event.id ? "ring-2 ring-emerald-500" : ""}`}>
+                          <p className="text-[11px] font-semibold">{formatRange(new Date(event.startsAt), new Date(event.endsAt))}</p>
+                          <p className="mt-1.5 text-[11px] font-semibold leading-tight">{event.title}</p>
+                        </button>
+                      ) : (
+                        <Link key={event.id} href={hrefWith(dateCursor, viewMode, event.id)} className={`mb-1 block rounded-lg border p-2 ${cardPalette[(row + col + idx) % cardPalette.length]} ${selectedEventId === event.id ? "ring-2 ring-emerald-500" : ""}`}>
+                          <p className="text-[11px] font-semibold">{formatRange(new Date(event.startsAt), new Date(event.endsAt))}</p>
+                          <p className="mt-1.5 text-[11px] font-semibold leading-tight">{event.title}</p>
+                        </Link>
+                      )
                     ))}
                   </div>
                 );
@@ -226,14 +261,23 @@ export function DashboardCalendarTopBar({ users, ok, error, selectedEventId, eve
   );
 }
 
-export function DashboardCalendarSidePanel({ events, dateCursor, viewMode }: Pick<Props, "events" | "dateCursor" | "viewMode">) {
+export function DashboardCalendarSidePanel({
+  events,
+  dateCursor,
+  viewMode,
+  onSelectEvent,
+  onMoveMiniMonth,
+  onToggleUpcomingList,
+  isUpcomingListOpen,
+}: Pick<Props, "events" | "dateCursor" | "viewMode" | "onSelectEvent" | "onMoveMiniMonth" | "onToggleUpcomingList" | "isUpcomingListOpen">) {
   const headerLabel = dateCursor.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
   const today = new Date();
+  const nowTimestamp = today.getTime();
   const days = getVisibleDays(dateCursor, "month");
   const leading = Array.from({ length: (new Date(dateCursor.getFullYear(), dateCursor.getMonth(), 1).getDay() + 6) % 7 }, () => null);
 
   const upcomingEvents = events
-    .filter((event) => new Date(event.startsAt).getTime() >= Date.now())
+    .filter((event) => new Date(event.startsAt).getTime() >= nowTimestamp)
     .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
     .slice(0, 6);
 
@@ -241,9 +285,9 @@ export function DashboardCalendarSidePanel({ events, dateCursor, viewMode }: Pic
     <div className="space-y-4 p-4 [font-family:var(--font-montserrat)]">
       <div className="rounded-xl py-4">
         <div className="mb-2 flex items-center justify-between">
-          <Link href={hrefWith(addDays(dateCursor, -30), "month")} className="text-slate-500"><ChevronLeft className="h-4 w-4" /></Link>
+          {onMoveMiniMonth ? <button type="button" onClick={() => onMoveMiniMonth(-1)} className="text-slate-500"><ChevronLeft className="h-4 w-4" /></button> : <Link href={hrefWith(addDays(dateCursor, -30), "month")} className="text-slate-500"><ChevronLeft className="h-4 w-4" /></Link>}
           <p className="text-base font-semibold text-slate-900 capitalize">{headerLabel}</p>
-          <Link href={hrefWith(addDays(dateCursor, 30), "month")} className="text-slate-500"><ChevronRight className="h-4 w-4" /></Link>
+          {onMoveMiniMonth ? <button type="button" onClick={() => onMoveMiniMonth(1)} className="text-slate-500"><ChevronRight className="h-4 w-4" /></button> : <Link href={hrefWith(addDays(dateCursor, 30), "month")} className="text-slate-500"><ChevronRight className="h-4 w-4" /></Link>}
         </div>
         <div className="grid grid-cols-7 gap-y-2 text-center text-xs">
           {WEEK_DAYS.map((d) => <span key={d} className="font-medium text-slate-500">{d.slice(0, 2)}</span>)}
@@ -255,7 +299,18 @@ export function DashboardCalendarSidePanel({ events, dateCursor, viewMode }: Pic
       </div>
 
       <div className="rounded-xl py-4">
-        <p className="text-xs text-slate-500">Pr?ximos eventos</p>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs text-slate-500">Próximos eventos</p>
+          {onToggleUpcomingList ? (
+            <button
+              type="button"
+              onClick={onToggleUpcomingList}
+              className="rounded border border-slate-300 px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              {isUpcomingListOpen ? "Ver calendario" : "Ver tabla"}
+            </button>
+          ) : null}
+        </div>
         <div className="mt-3 overflow-hidden rounded-lg border border-slate-200">
           <div className="grid grid-cols-[88px_96px_1fr] border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             <span>Fecha</span>
@@ -263,14 +318,81 @@ export function DashboardCalendarSidePanel({ events, dateCursor, viewMode }: Pic
             <span>Evento</span>
           </div>
           {upcomingEvents.length ? upcomingEvents.map((event) => (
-            <Link key={event.id} href={hrefWith(dateCursor, viewMode, event.id)} className="grid grid-cols-[88px_96px_1fr] items-center border-b border-slate-100 px-2 py-2 text-xs hover:bg-slate-50 last:border-b-0">
-              <span className="text-slate-600">{new Date(event.startsAt).toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })}</span>
-              <span className="text-slate-600">{formatRange(new Date(event.startsAt), new Date(event.endsAt)).split(" - ")[0]}</span>
-              <span className="truncate font-semibold text-slate-900">{event.title}</span>
-            </Link>
+            onSelectEvent ? (
+              <button type="button" key={event.id} onClick={() => onSelectEvent(event.id)} className="grid w-full grid-cols-[88px_96px_1fr] items-center border-b border-slate-100 px-2 py-2 text-left text-xs hover:bg-slate-50 last:border-b-0">
+                <span className="text-slate-600">{new Date(event.startsAt).toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })}</span>
+                <span className="text-slate-600">{formatRange(new Date(event.startsAt), new Date(event.endsAt)).split(" - ")[0]}</span>
+                <span className="truncate font-semibold text-slate-900">{event.title}</span>
+              </button>
+            ) : (
+              <Link key={event.id} href={hrefWith(dateCursor, viewMode, event.id)} className="grid grid-cols-[88px_96px_1fr] items-center border-b border-slate-100 px-2 py-2 text-xs hover:bg-slate-50 last:border-b-0">
+                <span className="text-slate-600">{new Date(event.startsAt).toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })}</span>
+                <span className="text-slate-600">{formatRange(new Date(event.startsAt), new Date(event.endsAt)).split(" - ")[0]}</span>
+                <span className="truncate font-semibold text-slate-900">{event.title}</span>
+              </Link>
+            )
           )) : <p className="px-2 py-3 text-sm text-slate-500">No hay pr?ximos eventos.</p>}
         </div>
       </div>
     </div>
+  );
+}
+
+export function DashboardCalendarUpcomingTable({
+  events,
+  onSelectEvent,
+}: {
+  events: CalendarEventItem[];
+  onSelectEvent?: (eventId: string) => void;
+}) {
+  return (
+    <section className="overflow-hidden bg-white [font-family:var(--font-montserrat)]">
+      <div className="border-b border-slate-200 px-4 py-3">
+        <p className="text-lg font-semibold text-slate-900">Próximos eventos</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[700px] text-left">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <th className="px-4 py-3">Fecha</th>
+              <th className="px-4 py-3">Hora inicio</th>
+              <th className="px-4 py-3">Hora fin</th>
+              <th className="px-4 py-3">Evento</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.length ? events.map((event) => (
+              <tr
+                key={event.id}
+                className="border-b border-slate-100 text-sm hover:bg-slate-50"
+              >
+                <td className="px-4 py-3 text-slate-700">
+                  {new Date(event.startsAt).toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {new Date(event.startsAt).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {new Date(event.endsAt).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+                </td>
+                <td className="px-4 py-3 font-semibold text-slate-900">
+                  {onSelectEvent ? (
+                    <button type="button" onClick={() => onSelectEvent(event.id)} className="text-left hover:underline">
+                      {event.title}
+                    </button>
+                  ) : event.title}
+                </td>
+              </tr>
+            )) : (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
+                  No hay próximos eventos.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
