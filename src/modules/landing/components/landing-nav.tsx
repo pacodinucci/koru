@@ -482,10 +482,15 @@ export function LandingNav({
       onMouseLeave={() => setActiveSubmenuId(null)}
       className={
         fixed
-          ? `font-fira fixed inset-x-0 top-0 z-20 transition-[background-color,backdrop-filter] duration-300 ${shouldUseBackdropBlur || hasActiveSubmenu ? "backdrop-blur" : ""}`
-          : `font-fira sticky top-0 z-20 transition-[background-color,backdrop-filter] duration-300 ${shouldUseBackdropBlur || hasActiveSubmenu ? "backdrop-blur" : ""}`
+          ? `font-fira fixed inset-x-0 top-0 ${isMobileMenuOpen ? "z-[60]" : "z-20"} transition-[background-color,backdrop-filter] duration-300 ${shouldUseBackdropBlur || hasActiveSubmenu ? "backdrop-blur" : ""}`
+          : `font-fira sticky top-0 ${isMobileMenuOpen ? "z-[60]" : "z-20"} transition-[background-color,backdrop-filter] duration-300 ${shouldUseBackdropBlur || hasActiveSubmenu ? "backdrop-blur" : ""}`
       }
-      style={{ backgroundColor: resolvedHeaderBackgroundColor, color: effectiveTextColor }}
+      style={{
+        backgroundColor: isMobileMenuOpen
+          ? mobileMenuBackgroundColor
+          : resolvedHeaderBackgroundColor,
+        color: isMobileMenuOpen ? "#ffffff" : effectiveTextColor,
+      }}
     >
       <div
         className="flex w-full items-center justify-between py-0"
@@ -615,7 +620,7 @@ export function LandingNav({
             aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={isMobileMenuOpen}
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-            className={`inline-flex h-10 w-10 items-center justify-center rounded-md ${isMobileMenuOpen ? "text-white" : ""}`}
+            className={`relative z-[70] inline-flex h-10 w-10 items-center justify-center rounded-md ${isMobileMenuOpen ? "text-white" : ""}`}
           >
             <span className="sr-only">Menú</span>
             <span className="relative block h-4 w-6">
@@ -636,13 +641,14 @@ export function LandingNav({
       {isMounted
         ? createPortal(
             <div
-              className={`fixed inset-0 z-[15] lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+              className={`fixed inset-x-0 bottom-0 z-50 lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
               style={{
                 backgroundColor: mobileMenuBackgroundColor,
                 color: "#ffffff",
                 width: "100vw",
-                height: "100dvh",
-                minHeight: "100dvh",
+                top: `${heightPx}px`,
+                height: `calc(100dvh - ${heightPx}px)`,
+                minHeight: `calc(100dvh - ${heightPx}px)`,
               }}
             >
               <div className="flex h-full w-full flex-col items-center justify-center px-6 py-10 text-center">
@@ -728,5 +734,4 @@ export function LandingNav({
     </header>
   );
 }
-
 
