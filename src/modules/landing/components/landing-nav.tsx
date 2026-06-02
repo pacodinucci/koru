@@ -2,10 +2,35 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import {
+  ChevronDown,
+  LogOut,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type LandingSubmenuLink = {
   label: string;
@@ -59,7 +84,9 @@ type LandingNavProps = {
   user?: {
     name: string;
     email: string;
+    role?: "ADMIN" | "TEACHER" | "PARENT";
   } | null;
+  onSignOut?: (formData: FormData) => void;
 };
 
 function getInitials(nameOrEmail: string) {
@@ -153,6 +180,7 @@ export function LandingNav({
   showContainerGuides = false,
   containerStyles = {},
   user = null,
+  onSignOut,
   links = [
     { label: "Quiénes somos", href: "/quienes-somos" },
     { label: "Cómo acompañamos", href: "/como-acompanamos" },
@@ -166,11 +194,39 @@ export function LandingNav({
   const mobileMenuBackgroundColor = "#343c11";
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileUserDrawerOpen, setIsMobileUserDrawerOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [activeUserMenu, setActiveUserMenu] = useState<
+    "desktop" | "mobile" | null
+  >(null);
+  const closeUserMenuTimeoutRef = useRef<ReturnType<
+    typeof window.setTimeout
+  > | null>(null);
+
+  function clearUserMenuCloseTimeout() {
+    if (!closeUserMenuTimeoutRef.current) {
+      return;
+    }
+
+    window.clearTimeout(closeUserMenuTimeoutRef.current);
+    closeUserMenuTimeoutRef.current = null;
+  }
+
+  function openUserMenu(menu: "desktop" | "mobile") {
+    clearUserMenuCloseTimeout();
+    setActiveUserMenu(menu);
+  }
+
+  function scheduleUserMenuClose(menu: "desktop" | "mobile") {
+    clearUserMenuCloseTimeout();
+    closeUserMenuTimeoutRef.current = window.setTimeout(() => {
+      setActiveUserMenu((current) => (current === menu ? null : current));
+      closeUserMenuTimeoutRef.current = null;
+    }, 1000);
+  }
 
   useEffect(() => {
     if (!fixed || disableScrollBackgroundChange) {
-      setIsScrolled(false);
       return;
     }
 
@@ -195,18 +251,23 @@ export function LandingNav({
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
-    setIsMounted(true);
+    const timeoutId = window.setTimeout(() => setIsMounted(true), 0);
+    return () => {
+      window.clearTimeout(timeoutId);
+      clearUserMenuCloseTimeout();
+    };
   }, []);
 
   const isTransparentNav =
     backgroundColor.trim().toLowerCase() === "transparent";
+  const effectiveIsScrolled = fixed && !disableScrollBackgroundChange && isScrolled;
   const effectiveBackgroundColor =
-    fixed && isScrolled ? "#ffffff" : backgroundColor;
+    effectiveIsScrolled ? "#ffffff" : backgroundColor;
   const effectiveTextColor =
-    fixed && !isScrolled && isTransparentNav ? "#ffffff" : "#111111";
+    fixed && !effectiveIsScrolled && isTransparentNav ? "#ffffff" : textColor;
   const shouldUseBackdropBlur =
     fixed
-      ? !(isTransparentNav && !isScrolled)
+      ? !(isTransparentNav && !effectiveIsScrolled)
       : !isTransparentNav;
   const resolvedHeaderBackgroundColor = effectiveBackgroundColor;
 
@@ -238,9 +299,185 @@ export function LandingNav({
 
   const userDisplay = user?.name?.trim() || user?.email || "Usuario";
   const userInitials = getInitials(userDisplay);
+  const isAdmin = user?.role === "ADMIN";
   const activeSubmenu = navLinksWithSubmenu.find(
     (item, index) => (item.id?.trim() || `nav-${index}`) === activeSubmenuId,
   )?.submenu;
+
+
+  function renderUserDropdown(
+    menu: "desktop" | "mobile",
+    triggerClassName = "h-12 gap-3 rounded-md bg-transparent px-3 pr-4 font-['Montserrat'] text-sm font-semibold shadow-none transition hover:bg-transparent aria-expanded:bg-transparent aria-expanded:text-current",
+  ) {
+    const isMobileUserMenu = menu === "mobile";
+
+    return (
+      <DropdownMenu
+        open={activeUserMenu === menu}
+        onOpenChange={(open) => setActiveUserMenu(open ? menu : null)}
+      >
+        <div
+          onMouseEnter={isMobileUserMenu ? undefined : () => openUserMenu(menu)}
+          onMouseLeave={
+            isMobileUserMenu ? undefined : () => scheduleUserMenuClose(menu)
+          }
+        >
+          <DropdownMenuTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                className={triggerClassName}
+                aria-label="Abrir men? de usuario"
+              />
+            }
+          >
+            <Avatar className="h-9 w-9 border border-black/5">
+              <AvatarFallback className="bg-[#f3d889] text-xs font-semibold text-slate-950">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+            <span className="max-w-[110px] truncate">{userDisplay}</span>
+            <ChevronDown className="h-4 w-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            sideOffset={14}
+            className="w-[300px] rounded-lg border border-black/10 bg-white p-3 font-['Montserrat'] text-slate-950 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.45)]"
+            onMouseEnter={isMobileUserMenu ? undefined : () => openUserMenu(menu)}
+            onMouseLeave={
+              isMobileUserMenu ? undefined : () => scheduleUserMenuClose(menu)
+            }
+          >
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="p-0 font-normal">
+                <div className="flex flex-col items-center px-3 pt-2 pb-5 text-center">
+                  <Avatar className="h-16 w-16 border border-black/5 shadow-sm">
+                    <AvatarFallback className="bg-[#f3d889] text-base font-semibold text-slate-950">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="mt-4 grid max-w-full leading-tight">
+                    <span className="truncate text-sm font-bold">
+                      {userDisplay}
+                    </span>
+                    <span className="mt-1 truncate text-xs text-slate-500">
+                      {user?.email}
+                    </span>
+                  </div>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
+            <DropdownMenuGroup className="space-y-2">
+              <DropdownMenuItem
+                render={<Link href="/family-dashboard" />}
+                className="h-12 rounded-md px-4 text-sm font-medium text-slate-950 focus:bg-slate-100 focus:text-slate-950"
+              >
+                <Users />
+                Family dashboard
+              </DropdownMenuItem>
+              {isAdmin ? (
+                <DropdownMenuItem
+                  render={<Link href="/dashboard" />}
+                  className="h-12 rounded-md px-4 text-sm font-medium text-slate-950 focus:bg-slate-100 focus:text-slate-950"
+                >
+                  <ShieldCheck />
+                  Admin dashboard
+                </DropdownMenuItem>
+              ) : null}
+            </DropdownMenuGroup>
+            {onSignOut ? (
+              <>
+                <DropdownMenuSeparator className="my-4 bg-transparent" />
+                <form action={onSignOut} className="px-1 pb-1">
+                  <button
+                    type="submit"
+                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border border-black/10 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:outline-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
+                  >
+                    <LogOut />
+                    Cerrar sesi?n
+                  </button>
+                </form>
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </div>
+      </DropdownMenu>
+    );
+  }
+
+  function renderMobileUserDrawer() {
+    return (
+      <Drawer
+        open={isMobileUserDrawerOpen}
+        onOpenChange={setIsMobileUserDrawerOpen}
+      >
+        <DrawerTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-transparent px-2 font-['Montserrat'] text-sm font-semibold shadow-none transition hover:bg-transparent"
+            aria-label="Abrir menú de usuario"
+          >
+            <Avatar className="h-9 w-9 border border-black/5">
+              <AvatarFallback className="bg-[#f3d889] text-xs font-semibold text-slate-950">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+            <span className="max-w-[96px] truncate">{userDisplay}</span>
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        </DrawerTrigger>
+        <DrawerContent className="rounded-t-lg border-t border-black/10 bg-white font-['Montserrat'] text-slate-950">
+          <DrawerHeader className="items-center px-6 pt-6 pb-3 text-center">
+            <Avatar className="h-16 w-16 border border-black/5 shadow-sm">
+              <AvatarFallback className="bg-[#f3d889] text-base font-semibold text-slate-950">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+            <DrawerTitle className="mt-3 text-sm font-bold text-slate-950">
+              {userDisplay}
+            </DrawerTitle>
+            <DrawerDescription className="text-xs text-slate-500">
+              {user?.email}
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="space-y-2 px-4 pb-2">
+            <Link
+              href="/family-dashboard"
+              onClick={() => setIsMobileUserDrawerOpen(false)}
+              className="flex h-12 items-center gap-2 rounded-md px-4 text-sm font-medium text-slate-950 transition hover:bg-slate-100"
+            >
+              <Users className="h-4 w-4" />
+              Family dashboard
+            </Link>
+            {isAdmin ? (
+              <Link
+                href="/dashboard"
+                onClick={() => setIsMobileUserDrawerOpen(false)}
+                className="flex h-12 items-center gap-2 rounded-md px-4 text-sm font-medium text-slate-950 transition hover:bg-slate-100"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Admin dashboard
+              </Link>
+            ) : null}
+          </div>
+          {onSignOut ? (
+            <DrawerFooter className="px-4 pt-2 pb-5">
+              <form action={onSignOut}>
+                <button
+                  type="submit"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border border-black/10 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:outline-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
+                >
+                  <LogOut />
+                  Cerrar sesión
+                </button>
+              </form>
+            </DrawerFooter>
+          ) : null}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
 
   return (
     <header
@@ -360,15 +597,7 @@ export function LandingNav({
               }
             >
               {user ? (
-                <Link
-                  href="/family-dashboard"
-                  className="transition hover:opacity-70"
-                  aria-label="Ir a tu cuenta"
-                >
-                  <Avatar>
-                    <AvatarFallback>{userInitials}</AvatarFallback>
-                  </Avatar>
-                </Link>
+                renderUserDropdown("desktop")
               ) : (
                 <a
                   href={authLink.href || "#"}
@@ -381,7 +610,8 @@ export function LandingNav({
           </div>
         </div>
 
-        <div className="flex lg:hidden">
+        <div className="flex items-center gap-2 lg:hidden">
+          {user ? renderMobileUserDrawer() : null}
           <button
             type="button"
             aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
@@ -408,7 +638,7 @@ export function LandingNav({
       {isMounted
         ? createPortal(
             <div
-              className={`fixed inset-0 z-[9999] lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+              className={`fixed inset-0 z-[15] lg:hidden transition-opacity duration-300 ${isMobileMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
               style={{
                 backgroundColor: mobileMenuBackgroundColor,
                 color: "#ffffff",
@@ -417,17 +647,6 @@ export function LandingNav({
                 minHeight: "100dvh",
               }}
             >
-              <button
-                type="button"
-                aria-label="Cerrar menú"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="absolute top-8 right-6 inline-flex h-10 w-10 items-center justify-center rounded-md text-white"
-              >
-                <span className="relative block h-5 w-5">
-                  <span className="absolute top-1/2 left-0 h-[2px] w-5 -translate-y-1/2 rotate-45 bg-current" />
-                  <span className="absolute top-1/2 left-0 h-[2px] w-5 -translate-y-1/2 -rotate-45 bg-current" />
-                </span>
-              </button>
               <div className="flex h-full w-full flex-col items-center justify-center px-6 py-10 text-center">
                 <nav className="flex flex-col items-center justify-center gap-8 font-['Roboto_Condensed'] text-2xl font-semibold tracking-wide text-white">
                   {navLinksWithSubmenu.map((item, index) => (
@@ -441,22 +660,8 @@ export function LandingNav({
                     </a>
                   ))}
                 </nav>
-                <div className="pt-8 text-center">
-                  {user ? (
-                    <Link
-                      href="/family-dashboard"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="inline-flex items-center gap-3 text-white"
-                      aria-label="Ir a tu cuenta"
-                    >
-                      <Avatar>
-                        <AvatarFallback>{userInitials}</AvatarFallback>
-                      </Avatar>
-                      <span className="font-['Roboto_Condensed'] text-lg font-semibold">
-                        Mi cuenta
-                      </span>
-                    </Link>
-                  ) : (
+                {!user ? (
+                  <div className="pt-8 text-center">
                     <a
                       href={authLink.href || "#"}
                       onClick={() => setIsMobileMenuOpen(false)}
@@ -464,8 +669,8 @@ export function LandingNav({
                     >
                       {authLink.label}
                     </a>
-                  )}
-                </div>
+                  </div>
+                ) : null}
               </div>
             </div>,
             document.body,

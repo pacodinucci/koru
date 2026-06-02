@@ -8,15 +8,14 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LandingNav } from "@/modules/landing/components/landing-nav";
 import {
   ensureLandingDefaults,
-  LANDING_LAYOUT_FOOTER_BG_KEY,
   LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY,
   LANDING_LAYOUT_FOOTER_HEIGHT_KEY,
   LANDING_LAYOUT_FOOTER_TEXT_KEY,
-  LANDING_LAYOUT_NAV_BG_KEY,
   LANDING_LAYOUT_NAV_HEIGHT_KEY,
   LANDING_LAYOUT_NAV_LOGO_ALT_KEY,
   LANDING_LAYOUT_NAV_LOGO_SRC_KEY,
@@ -43,7 +42,9 @@ type LandingPageLayoutProps = {
   user?: {
     name: string;
     email: string;
+    role?: "ADMIN" | "TEACHER" | "PARENT";
   } | null;
+  onSignOut?: (formData: FormData) => void;
 } & LandingPreviewBindings;
 
 function clamp(value: number, min: number, max: number) {
@@ -266,6 +267,7 @@ export function LandingPageLayout({
   textMap,
   previewViewportHeight,
   user = null,
+  onSignOut,
   previewMode,
   selectedLayoutSectionId,
   onSelectLayoutSection,
@@ -377,8 +379,6 @@ export function LandingPageLayout({
       marginY: 0,
     },
   } as const;
-  const footerBackgroundColor =
-    completeMap[LANDING_LAYOUT_FOOTER_BG_KEY] ?? "#d8cfb6";
   const footerText = completeMap[LANDING_LAYOUT_FOOTER_TEXT_KEY] ?? "Koru OSA";
   const footerHeight = getLayoutFooterHeight(
     completeMap[LANDING_LAYOUT_FOOTER_HEIGHT_KEY],
@@ -735,6 +735,7 @@ export function LandingPageLayout({
             fixed={true}
             disableScrollBackgroundChange={previewMode}
             user={user}
+            onSignOut={onSignOut}
             showContainerGuides={
               previewMode && selectedLayoutSectionId === "layout-navbar"
             }
@@ -854,21 +855,21 @@ export function LandingPageLayout({
                     Links
                   </h4>
                   <nav className="mt-4 space-y-2.5 text-lg text-black/95">
-                    <a href="/" className="block">
+                    <Link href="/" className="block">
                       Home
-                    </a>
-                    <a href="/quienes-somos" className="block">
+                    </Link>
+                    <Link href="/quienes-somos" className="block">
                       Quiénes somos
-                    </a>
-                    <a href="/como-acompanamos" className="block">
+                    </Link>
+                    <Link href="/como-acompanamos" className="block">
                       Cómo acompañamos
-                    </a>
-                    <a href="/comunidad" className="block">
+                    </Link>
+                    <Link href="/comunidad" className="block">
                       Comunidad
-                    </a>
-                    <a href="/blog" className="block">
+                    </Link>
+                    <Link href="/blog" className="block">
                       Blog
-                    </a>
+                    </Link>
                   </nav>
                 </section>
 
