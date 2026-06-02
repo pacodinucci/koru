@@ -1,8 +1,6 @@
-﻿import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import Link from "next/link";
+﻿import Link from "next/link";
 
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { discoverPagesGroupRoutes, getEditableCmsPage } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { saveDashboardPageAction } from "@/modules/dashboard/server/dashboard-pages.actions";
@@ -17,13 +15,7 @@ type DashboardPagesEditPageProps = {
 export default async function DashboardPagesEditPage({
   searchParams,
 }: DashboardPagesEditPageProps) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/sign-in");
-  }
+  const user = await requireAdmin();
 
   const resolved = searchParams ? await searchParams : undefined;
   const slug = resolved?.slug ?? "/";
@@ -33,7 +25,7 @@ export default async function DashboardPagesEditPage({
 
   return (
     <DashboardShell
-      userEmail={session.user.email}
+      userEmail={user.email}
       cmsPages={cmsPages}
       breadcrumbPage={`Pages / ${slug}`}
       showPanelToggle

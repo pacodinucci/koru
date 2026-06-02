@@ -1,8 +1,4 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import {
@@ -30,29 +26,7 @@ type DashboardCalendarPageProps = {
 export default async function DashboardCalendarPage({
   searchParams,
 }: DashboardCalendarPageProps) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/sign-in");
-  }
-
-  const sessionEmail =
-    typeof session.user.email === "string" ? session.user.email.trim() : "";
-
-  if (!sessionEmail) {
-    redirect("/sign-in");
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { email: sessionEmail },
-    select: { role: true },
-  });
-
-  if (!user || user.role !== "ADMIN") {
-    redirect("/dashboard?error=forbidden");
-  }
+  const user = await requireAdmin();
 
   const { ok, error, date, view, edit } = await searchParams;
   const parsedDate = date ? new Date(`${date}T00:00:00`) : new Date();
@@ -77,7 +51,7 @@ export default async function DashboardCalendarPage({
       error={error}
     >
       <DashboardShell
-        userEmail={sessionEmail}
+        userEmail={user.email}
         cmsPages={cmsPages.filter((page) => !page.isDynamic)}
         breadcrumbPage="Calendario"
         showPanelToggle

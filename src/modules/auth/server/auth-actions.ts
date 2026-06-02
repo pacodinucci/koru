@@ -5,6 +5,12 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
+import {
+  getPendingUserInvitationByEmail,
+  normalizeInvitationEmail,
+  reconcileUserInvitationAfterSignup,
+  rollbackUserCreatedDuringFailedSignup,
+} from "@/modules/users/server/users.repository";
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -41,7 +47,7 @@ export async function signInAction(formData: FormData) {
     redirect(getErrorPath("/sign-in", "Email o password incorrectos."));
   }
 
-  redirect("/dashboard");
+  redirect("/family-dashboard");
 }
 
 export async function signUpAction(formData: FormData) {
@@ -55,10 +61,25 @@ export async function signUpAction(formData: FormData) {
     redirect(getErrorPath("/sign-up", "Revisa los datos del formulario."));
   }
 
+  const normalizedEmail = normalizeInvitationEmail(parsed.data.email);
+  const invitation = await getPendingUserInvitationByEmail(normalizedEmail);
+
+  if (!invitation) {
+    redirect(
+      getErrorPath(
+        "/sign-up",
+        "Tu email no esta autorizado para crear un usuario.",
+      ),
+    );
+  }
+
   try {
     await auth.api.signUpEmail({
       headers: await headers(),
-      body: parsed.data,
+      body: {
+        ...parsed.data,
+        email: normalizedEmail,
+      },
     });
   } catch {
     redirect(
@@ -66,7 +87,22 @@ export async function signUpAction(formData: FormData) {
     );
   }
 
-  redirect("/dashboard");
+  try {
+    await reconcileUserInvitationAfterSignup(normalizedEmail);
+  } catch {
+    await rollbackUserCreatedDuringFailedSignup(normalizedEmail).catch(() => {
+      // If rollback fails, keep the user-facing error generic and let admins reconcile.
+    });
+
+    redirect(
+      getErrorPath(
+        "/sign-up",
+        "No pudimos completar la creacion del usuario. Intenta de nuevo o contacta a administracion.",
+      ),
+    );
+  }
+
+  redirect("/family-dashboard");
 }
 
 export async function signOutAction() {

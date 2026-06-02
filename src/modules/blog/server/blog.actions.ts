@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { prisma } from "@/lib/prisma";
 
 const createPostSchema = z.object({
@@ -74,11 +75,7 @@ function stripHtml(value: string) {
 
 export async function createBlogPostAction(formData: FormData) {
   const dashboardPath = resolveDashboardPath(formData);
-  const session = await auth.api.getSession({ headers: await headers() });
-
-  if (!session) {
-    redirect("/sign-in");
-  }
+  const user = await requireAdmin();
 
   const rawTitle = String(formData.get("title") ?? "").trim();
   const rawSlug = String(formData.get("slug") ?? "").trim();
@@ -135,9 +132,7 @@ export async function createBlogPostAction(formData: FormData) {
   const publishedAt =
     parsed.data.status === BlogPostStatus.PUBLISHED ? new Date() : null;
   const authorName =
-    session.user.name?.trim() ||
-    session.user.email.split("@")[0]?.trim() ||
-    "Usuario";
+    user.name?.trim() || user.email.split("@")[0]?.trim() || "Usuario";
 
   await prisma.blogPost.create({
     data: {

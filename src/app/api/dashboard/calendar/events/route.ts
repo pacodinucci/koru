@@ -1,8 +1,6 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getAdminUser } from "@/modules/auth/server/auth-guards";
 import { type CalendarViewMode } from "@/modules/dashboard/lib/calendar-range";
 import { listCalendarEventsForAdminByRange } from "@/modules/dashboard/server/calendar.repository";
 
@@ -11,18 +9,9 @@ function parseView(view: string | null): CalendarViewMode {
 }
 
 export async function GET(request: Request) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const user = await getAdminUser();
 
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email.trim() },
-    select: { role: true },
-  });
-
-  if (!user || user.role !== "ADMIN") {
+  if (!user) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

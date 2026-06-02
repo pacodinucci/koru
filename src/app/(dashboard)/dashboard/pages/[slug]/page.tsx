@@ -1,7 +1,4 @@
-﻿import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { getCmsDraftTextMapBySlug } from "@/modules/cms/server/cms-text.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
@@ -13,14 +10,7 @@ type DashboardCmsPageProps = {
 };
 
 export default async function DashboardCmsPage({ params }: DashboardCmsPageProps) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/sign-in");
-  }
-
+  const user = await requireAdmin();
   const { slug } = await params;
   const decodedSlug = `/${decodeURIComponent(slug)}`;
   const cmsPages = await discoverPagesGroupRoutes();
@@ -29,7 +19,7 @@ export default async function DashboardCmsPage({ params }: DashboardCmsPageProps
 
   return (
     <DashboardShell
-      userEmail={session.user.email}
+      userEmail={user.email}
       cmsPages={staticPages}
       initialTextMap={initialTextMap}
       cmsPageSlug={decodedSlug}
@@ -39,4 +29,3 @@ export default async function DashboardCmsPage({ params }: DashboardCmsPageProps
     />
   );
 }
-
