@@ -199,9 +199,7 @@ export function LandingNav({
   const [activeUserMenu, setActiveUserMenu] = useState<
     "desktop" | "mobile" | null
   >(null);
-  const closeUserMenuTimeoutRef = useRef<ReturnType<
-    typeof window.setTimeout
-  > | null>(null);
+  const closeUserMenuTimeoutRef = useRef<number | null>(null);
 
   function clearUserMenuCloseTimeout() {
     if (!closeUserMenuTimeoutRef.current) {

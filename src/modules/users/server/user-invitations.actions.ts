@@ -42,7 +42,7 @@ export async function listUserInvitationsForAdmin() {
   return listUserInvitations();
 }
 
-export async function createUserInvitationAction(formData: FormData) {
+export async function createUserInvitationAction(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
   const parsed = createInvitationSchema.safeParse({
     email: getString(formData, "email"),
@@ -50,10 +50,7 @@ export async function createUserInvitationAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    return {
-      ok: false as const,
-      message: "Revisá el email y el rol de la invitación.",
-    };
+    return;
   }
 
   try {
@@ -63,51 +60,30 @@ export async function createUserInvitationAction(formData: FormData) {
       invitedById: admin.id,
     });
     revalidatePath("/dashboard/users");
-
-    return {
-      ok: true as const,
-      message: "Invitación creada correctamente.",
-    };
   } catch (error) {
-    return {
-      ok: false as const,
-      message:
-        error instanceof Error ? resolveInvitationError(error.message) : "Error inesperado.",
-    };
+    resolveInvitationError(error instanceof Error ? error.message : "");
   }
 }
 
-export async function revokeUserInvitationAction(formData: FormData) {
+export async function revokeUserInvitationAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const parsed = revokeInvitationSchema.safeParse({
     id: getString(formData, "id"),
   });
 
   if (!parsed.success) {
-    return {
-      ok: false as const,
-      message: "Invitación inválida.",
-    };
+    return;
   }
 
   try {
     await revokeUserInvitation(parsed.data.id);
     revalidatePath("/dashboard/users");
-
-    return {
-      ok: true as const,
-      message: "Invitación revocada correctamente.",
-    };
   } catch (error) {
-    return {
-      ok: false as const,
-      message:
-        error instanceof Error ? resolveInvitationError(error.message) : "Error inesperado.",
-    };
+    resolveInvitationError(error instanceof Error ? error.message : "");
   }
 }
 
-export async function updateUserRoleAction(formData: FormData) {
+export async function updateUserRoleAction(formData: FormData): Promise<void> {
   const admin = await requireAdmin();
   const parsed = updateUserRoleSchema.safeParse({
     userId: getString(formData, "userId"),
@@ -115,32 +91,18 @@ export async function updateUserRoleAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    return {
-      ok: false as const,
-      message: "Revisá el usuario y el rol.",
-    };
+    return;
   }
 
   if (parsed.data.userId === admin.id && parsed.data.role !== "ADMIN") {
-    return {
-      ok: false as const,
-      message: "No podés quitarte tu propio rol admin.",
-    };
+    return;
   }
 
   try {
     await updateUserRole(parsed.data);
     revalidatePath("/dashboard/users");
-
-    return {
-      ok: true as const,
-      message: "Rol actualizado correctamente.",
-    };
   } catch {
-    return {
-      ok: false as const,
-      message: "No pudimos actualizar el rol sin dejar el sistema sin admin.",
-    };
+    return;
   }
 }
 
