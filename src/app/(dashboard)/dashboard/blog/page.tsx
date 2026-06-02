@@ -1,8 +1,5 @@
-﻿import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-
-import { auth } from "@/lib/auth";
 import { DashboardBlogView } from "@/modules/blog/views/dashboard-blog-view";
+import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 
@@ -16,14 +13,7 @@ type DashboardBlogPageProps = {
 export default async function DashboardBlogPage({
   searchParams,
 }: DashboardBlogPageProps) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/sign-in");
-  }
-
+  const user = await requireAdmin();
   const { ok, error } = await searchParams;
   const cmsPages = (await discoverPagesGroupRoutes()).filter(
     (page) => !page.isDynamic,
@@ -31,7 +21,7 @@ export default async function DashboardBlogPage({
 
   return (
     <DashboardShell
-      userEmail={session.user.email}
+      userEmail={user.email}
       cmsPages={cmsPages}
       breadcrumbPage="Blog"
       showPanelToggle
@@ -41,4 +31,3 @@ export default async function DashboardBlogPage({
     </DashboardShell>
   );
 }
-

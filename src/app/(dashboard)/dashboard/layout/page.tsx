@@ -1,20 +1,10 @@
-﻿import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { getCmsDraftTextMap } from "@/modules/cms/server/cms-text.repository";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 
 export default async function DashboardLayoutPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/sign-in");
-  }
-
+  const user = await requireAdmin();
   const initialTextMap = await getCmsDraftTextMap();
   const cmsPages = (await discoverPagesGroupRoutes()).filter(
     (page) => !page.isDynamic,
@@ -22,11 +12,10 @@ export default async function DashboardLayoutPage() {
 
   return (
     <DashboardShell
-      userEmail={session.user.email}
+      userEmail={user.email}
       cmsPages={cmsPages}
       initialTextMap={initialTextMap}
       editorMode="layout"
     />
   );
 }
-

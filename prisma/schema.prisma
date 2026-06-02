@@ -20,6 +20,7 @@ model User {
   blogLikes     BlogPostLike[]
   createdCalendarEvents CalendarEvent[] @relation("CalendarEventCreator")
   calendarEventAudiences CalendarEventAudience[]
+  createdInvitations UserInvitation[] @relation("UserInvitationsCreated")
 
   @@unique([email])
   @@map("user")
@@ -109,6 +110,12 @@ enum ContactMessageStatus {
   NEW
   READ
   REPLIED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
 }
 
 enum UserRole {
@@ -243,6 +250,22 @@ model ContactMessage {
   updatedAt DateTime             @updatedAt
 
   @@index([status, createdAt])
+}
+
+model UserInvitation {
+  id          String           @id @default(cuid())
+  email       String
+  role        UserRole         @default(PARENT)
+  status      InvitationStatus @default(PENDING)
+  invitedById String?
+  invitedBy   User?            @relation("UserInvitationsCreated", fields: [invitedById], references: [id], onDelete: SetNull)
+  acceptedAt  DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([email])
+  @@index([status, createdAt])
+  @@index([invitedById])
 }
 
 model CalendarEvent {

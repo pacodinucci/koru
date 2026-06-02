@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 
+import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import {
   getCmsDraftTextMap,
@@ -15,6 +16,8 @@ import {
 const cmsTextMapSchema = z.record(z.string(), z.string());
 
 export async function saveCmsDraftAction(payload: unknown) {
+  await requireAdmin();
+
   const parsed = cmsTextMapSchema.safeParse(payload);
 
   if (!parsed.success) {
@@ -27,6 +30,8 @@ export async function saveCmsDraftAction(payload: unknown) {
 }
 
 export async function publishCmsAction(payload: unknown) {
+  await requireAdmin();
+
   const parsed = cmsTextMapSchema.safeParse(payload);
 
   if (!parsed.success) {
@@ -39,6 +44,8 @@ export async function publishCmsAction(payload: unknown) {
 }
 
 export async function saveCmsPageDraftAction(slug: string, payload: unknown) {
+  await requireAdmin();
+
   const parsed = cmsTextMapSchema.safeParse(payload);
 
   if (!parsed.success) {
@@ -51,6 +58,8 @@ export async function saveCmsPageDraftAction(slug: string, payload: unknown) {
 }
 
 export async function publishCmsPageAction(slug: string, payload: unknown) {
+  await requireAdmin();
+
   const parsed = cmsTextMapSchema.safeParse(payload);
 
   if (!parsed.success) {
@@ -63,6 +72,8 @@ export async function publishCmsPageAction(slug: string, payload: unknown) {
 }
 
 export async function publishAllCmsPagesAction() {
+  await requireAdmin();
+
   const baseDraft = await getCmsDraftTextMap();
   await publishCmsTextMap(baseDraft);
 

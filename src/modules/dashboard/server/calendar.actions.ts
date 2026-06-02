@@ -1,11 +1,9 @@
 "use server";
 
 import { CalendarAudienceType, CalendarEventStatus } from "@prisma/client";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import {
   cancelCalendarEvent,
   saveCalendarEvent,
@@ -48,32 +46,9 @@ function combineDateAndTime(dateValue: string, timeValue: string) {
   return parsed;
 }
 
-async function ensureAdminOrRedirect() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  const sessionEmail =
-    typeof session?.user?.email === "string" ? session.user.email.trim() : "";
-
-  if (!sessionEmail) {
-    redirect("/sign-in");
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { email: sessionEmail },
-    select: { id: true, role: true },
-  });
-
-  if (!user || user.role !== "ADMIN") {
-    redirect("/dashboard/calendar?error=forbidden");
-  }
-
-  return user;
-}
 
 export async function saveCalendarEventAction(formData: FormData) {
-  const user = await ensureAdminOrRedirect();
+  const user = await requireAdmin("/dashboard/calendar?error=forbidden");
 
   try {
     const id = getString(formData, "id").trim();
@@ -124,7 +99,7 @@ export async function saveCalendarEventAction(formData: FormData) {
 }
 
 export async function cancelCalendarEventAction(formData: FormData) {
-  await ensureAdminOrRedirect();
+  await requireAdmin("/dashboard/calendar?error=forbidden");
 
   const id = getString(formData, "id").trim();
   if (!id) {

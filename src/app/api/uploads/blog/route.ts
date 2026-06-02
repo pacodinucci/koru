@@ -1,8 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
+import { getAdminUser } from "@/modules/auth/server/auth-guards";
 import { env } from "@/lib/env";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -37,12 +36,10 @@ function uploadToCloudinary(buffer: Buffer) {
 }
 
 export async function POST(request: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const user = await getAdminUser();
 
-  if (!session) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  if (!user) {
+    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
   const formData = await request.formData();

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { PageStatus } from "@prisma/client";
 
+import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { saveEditableCmsPage } from "@/modules/dashboard/server/cms-pages.repository";
 
 function getString(formData: FormData, key: string) {
@@ -11,6 +12,8 @@ function getString(formData: FormData, key: string) {
 }
 
 export async function saveDashboardPageAction(formData: FormData) {
+  await requireAdmin();
+
   const slug = getString(formData, "slug").trim();
   const title = getString(formData, "title").trim();
   const statusRaw = getString(formData, "status");

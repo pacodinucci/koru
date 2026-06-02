@@ -1,11 +1,10 @@
 import { requireAdmin } from "@/modules/auth/server/auth-guards";
-import { getCmsDraftTextMap } from "@/modules/cms/server/cms-text.repository";
-import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
+import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
+import { DashboardUsersView } from "@/modules/users/views/dashboard-users-view";
 
-export default async function DashboardLandingPage() {
+export default async function DashboardUsersPage() {
   const user = await requireAdmin();
-  const initialTextMap = await getCmsDraftTextMap();
   const cmsPages = (await discoverPagesGroupRoutes()).filter(
     (page) => !page.isDynamic,
   );
@@ -14,9 +13,9 @@ export default async function DashboardLandingPage() {
     <DashboardShell
       userEmail={user.email}
       cmsPages={cmsPages}
-      initialTextMap={initialTextMap}
-      cmsPageSlug="/"
-      editorMode="page"
-    />
+      breadcrumbPage="Usuarios"
+    >
+      <DashboardUsersView />
+    </DashboardShell>
   );
 }
