@@ -54,7 +54,6 @@ const DEFAULT_CONTENT: JSONContent = {
   content: [
     {
       type: "paragraph",
-      content: [{ type: "text", text: "Empieza a escribir el contenido del post..." }],
     },
   ],
 };
@@ -509,7 +508,7 @@ export function NovelBlogEditor({
     }
   }, [initialJson]);
   const initialJsonValue = useMemo(() => JSON.stringify(initialContent), [initialContent]);
-  const initialHtmlValue = initialHtml || "<p>Empieza a escribir el contenido del post...</p>";
+  const initialHtmlValue = initialHtml || "<p></p>";
   const [jsonValue, setJsonValue] = useState<string>(initialJsonValue);
   const [htmlValue, setHtmlValue] = useState<string>(initialHtmlValue);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -919,7 +918,7 @@ export function NovelBlogEditor({
         types: ["heading", "paragraph"],
       }),
       Placeholder.configure({
-        placeholder: "Escribe tu historia... usa / para insertar bloques",
+        placeholder: "Escribe aquí el contenido...",
       }),
       Command.configure({
         suggestion: {
@@ -1168,7 +1167,7 @@ export function NovelBlogEditor({
             },
             attributes: {
               class:
-                "blog-editor-content min-h-[340px] w-full max-w-none px-6 py-5 outline-none prose prose-neutral [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_h1]:text-4xl [&_h1]:font-bold [&_h1]:leading-tight [&_h2]:text-3xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h3]:text-2xl [&_h3]:font-semibold [&_p]:text-[1.05rem] [&_p]:leading-8",
+                "blog-editor-content min-h-[340px] w-full max-w-none px-6 py-5 outline-none prose prose-neutral [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-primary [&_.is-editor-empty:first-child::before]:pointer-events-none [&_.is-editor-empty:first-child::before]:float-left [&_.is-editor-empty:first-child::before]:h-0 [&_.is-editor-empty:first-child::before]:text-muted-foreground [&_.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_h1]:text-4xl [&_h1]:font-bold [&_h1]:leading-tight [&_h2]:text-3xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h3]:text-2xl [&_h3]:font-semibold [&_p]:text-[1.05rem] [&_p]:leading-8",
             },
           }}
           className="w-full"
