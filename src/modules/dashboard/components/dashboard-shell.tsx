@@ -13,6 +13,7 @@ import {
   NotebookPen,
   CalendarDays,
   ClipboardList,
+  Mail,
   Users,
   HandCoins,
   ShieldCheck,
@@ -106,6 +107,7 @@ export function DashboardShell({
   const isBlogActive = pathname.startsWith("/dashboard/blog");
   const isCalendarActive = pathname.startsWith("/dashboard/calendar");
   const isUsersActive = pathname.startsWith("/dashboard/users");
+  const isMailingActive = pathname.startsWith("/dashboard/mailing");
   const isStudentsActive = pathname.startsWith("/dashboard/students");
   const isTeachersActive = pathname.startsWith("/dashboard/teachers");
   const isExamsActive = pathname.startsWith("/dashboard/exams");
@@ -248,6 +250,19 @@ export function DashboardShell({
                     >
                       <Users />
                       <span>Usuarios</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
+
+                {isAdmin ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isMailingActive}
+                      className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                      render={<Link href="/dashboard/mailing" />}
+                    >
+                      <Mail />
+                      <span>Mailing</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ) : null}

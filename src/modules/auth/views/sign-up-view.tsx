@@ -5,6 +5,7 @@ import { signUpAction } from "@/modules/auth/server/auth-actions";
 
 type SignUpViewProps = {
   searchParams: Promise<{
+    email?: string;
     error?: string;
   }>;
 };
@@ -57,6 +58,7 @@ export async function SignUpView({ searchParams }: SignUpViewProps) {
             name="email"
             type="email"
             required
+            defaultValue={params.email ?? ""}
             className="h-12 w-full rounded-2xl border border-[#dce4b8] bg-white px-4 text-sm text-[#1f2610] outline-none transition placeholder:text-[#98a278] focus:border-[var(--complement-700)] focus:ring-4 focus:ring-[var(--complement-700)]/20"
           />
         </div>
