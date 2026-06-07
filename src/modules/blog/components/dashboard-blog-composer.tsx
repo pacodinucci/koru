@@ -35,20 +35,20 @@ import {
 
 const groupTagColorClasses = [
   {
-    selected: "border-emerald-600 bg-emerald-600 text-white",
-    inactive: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
+    selected: "bg-emerald-600 text-white",
+    inactive: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
   },
   {
-    selected: "border-purple-600 bg-purple-600 text-white",
-    inactive: "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100",
+    selected: "bg-purple-600 text-white",
+    inactive: "bg-purple-50 text-purple-700 hover:bg-purple-100",
   },
   {
-    selected: "border-orange-500 bg-orange-500 text-white",
-    inactive: "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100",
+    selected: "bg-orange-500 text-white",
+    inactive: "bg-orange-50 text-orange-700 hover:bg-orange-100",
   },
   {
-    selected: "border-sky-600 bg-sky-600 text-white",
-    inactive: "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100",
+    selected: "bg-sky-600 text-white",
+    inactive: "bg-sky-50 text-sky-700 hover:bg-sky-100",
   },
 ];
 
@@ -328,15 +328,25 @@ export function DashboardBlogComposer({
               <div className="space-y-1.5">
                 <p className="text-sm font-medium text-slate-700">Audiencia</p>
                 <input type="hidden" name="visibility" value={visibility} />
-                <div className="grid w-full max-w-[260px] overflow-hidden rounded-lg border border-emerald-600 grid-cols-2">
+                <div
+                  className="relative flex h-10 w-[172px] items-center rounded-full bg-[#5b3f99]/25 p-1 shadow-inner"
+                  role="group"
+                  aria-label="Audiencia del post"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`absolute left-1 top-1 h-8 w-[calc(50%-4px)] rounded-full bg-white shadow-[0_2px_7px_rgba(15,23,42,0.22)] transition-transform duration-300 ease-out ${
+                      visibility === BlogPostVisibility.MEMBERS ? "translate-x-full" : "translate-x-0"
+                    }`}
+                  />
                   <button
                     type="button"
                     aria-pressed={visibility === BlogPostVisibility.PUBLIC}
                     onClick={() => setVisibility(BlogPostVisibility.PUBLIC)}
-                    className={`h-9 px-3 text-sm font-semibold tracking-wide transition-colors ${
+                    className={`relative z-10 h-8 flex-1 rounded-full px-3 text-[11px] font-bold uppercase tracking-wide transition-colors duration-300 ${
                       visibility === BlogPostVisibility.PUBLIC
-                        ? "bg-emerald-600 text-white"
-                        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                        ? "text-[#5b3f99]"
+                        : "text-[#5b3f99] hover:text-[#4c3580]"
                     }`}
                   >
                     PUBLICO
@@ -345,10 +355,10 @@ export function DashboardBlogComposer({
                     type="button"
                     aria-pressed={visibility === BlogPostVisibility.MEMBERS}
                     onClick={() => setVisibility(BlogPostVisibility.MEMBERS)}
-                    className={`h-9 border-l border-emerald-600 px-3 text-sm font-semibold tracking-wide transition-colors ${
+                    className={`relative z-10 h-8 flex-1 rounded-full px-3 text-[11px] font-bold uppercase tracking-wide transition-colors duration-300 ${
                       visibility === BlogPostVisibility.MEMBERS
-                        ? "bg-emerald-600 text-white"
-                        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                        ? "text-[#5b3f99]"
+                        : "text-[#5b3f99] hover:text-[#4c3580]"
                     }`}
                   >
                     PRIVADO
@@ -392,7 +402,7 @@ export function DashboardBlogComposer({
                           type="button"
                           aria-pressed={isSelected}
                           onClick={() => toggleGroupTag(group.id)}
-                          className={`inline-flex h-9 items-center rounded-lg border px-3 text-sm font-medium transition-colors ${
+                          className={`inline-flex h-7 items-center rounded-md px-2.5 text-xs font-medium transition-colors ${
                             isSelected
                               ? color.selected
                               : color.inactive
