@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { sendUserInvitationEmail } from "@/modules/mailing/server/mailing.service";
 import {
   createUserInvitation,
   listUserInvitations,
@@ -54,12 +55,18 @@ export async function createUserInvitationAction(formData: FormData): Promise<vo
   }
 
   try {
-    await createUserInvitation({
+    const invitation = await createUserInvitation({
       email: parsed.data.email,
       role: parsed.data.role,
       invitedById: admin.id,
     });
+    await sendUserInvitationEmail({
+      email: invitation.email,
+      role: invitation.role,
+      invitationId: invitation.id,
+    });
     revalidatePath("/dashboard/users");
+    revalidatePath("/dashboard/mailing");
   } catch (error) {
     resolveInvitationError(error instanceof Error ? error.message : "");
   }

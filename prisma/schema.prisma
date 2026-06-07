@@ -130,6 +130,19 @@ enum InvitationStatus {
   REVOKED
 }
 
+enum EmailMessageType {
+  USER_INVITATION
+  CALENDAR_EVENT
+  BLOG_POST
+  MANUAL
+}
+
+enum EmailDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
 enum UserRole {
   ADMIN
   TEACHER
@@ -330,6 +343,43 @@ model UserInvitation {
   @@unique([email])
   @@index([status, createdAt])
   @@index([invitedById])
+}
+
+model EmailMessage {
+  id                String              @id @default(cuid())
+  type              EmailMessageType
+  subject           String
+  from              String
+  status            EmailDeliveryStatus @default(PENDING)
+  provider          String              @default("resend")
+  providerMessageId String?
+  payload           Json?
+  error             String?
+  recipients        EmailRecipient[]
+  sentAt            DateTime?
+  failedAt          DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([type, createdAt])
+  @@index([status, createdAt])
+}
+
+model EmailRecipient {
+  id        String              @id @default(cuid())
+  messageId String
+  message   EmailMessage        @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  email     String
+  name      String?
+  status    EmailDeliveryStatus @default(PENDING)
+  error     String?
+  sentAt    DateTime?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([messageId])
+  @@index([email])
+  @@index([status, createdAt])
 }
 
 model StudentGroup {

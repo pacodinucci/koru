@@ -1,0 +1,32 @@
+
+[2m[455.30ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.13ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 78.05ms][22m  [2m ↳ [22mSetup compiler
+[2m[  1.25ms][22m    [2m ↳ [22mPostCSS AST -> Tailwind CSS AST
+[2m[ 76.76ms][22m    [2m ↳ [22mCreate compiler
+[2m[  0.90ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 11.64ms][22m  [2m ↳ [22mSetup scanner
+[2m[102.13ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 34.12ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[183.07ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 28.68ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 15.19ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[0.47ms][22m [@tailwindcss/postcss] node_modules\@fontsource\fira-sans\600.css
+[2m[0.44ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.05ms][22m [@tailwindcss/postcss] node_modules\@fontsource\fira-sans\700.css
+[2m[0.04ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.07ms][22m [@tailwindcss/postcss] node_modules\@fontsource\fira-sans\400.css
+[2m[0.04ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.03ms][22m [@tailwindcss/postcss] node_modules\@fontsource\fira-sans\500.css
+[2m[0.02ms][22m  [2m ↳ [22mQuick bail check
+
+[browser] Image with src "https://res.cloudinary.com/ddtpavjz2/image/upload/v1778610385/koru/blog/gfnstuinav9qwyfqn880.jpg" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
