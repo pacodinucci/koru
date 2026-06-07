@@ -11,6 +11,7 @@ import {
   createDefaultBlogBlocks,
   type BlogContentBlock,
 } from "@/modules/blog/types/blog-content";
+import { useToast } from "@/components/ui/toast";
 
 type BlogPostComposerProps = {
   inputName?: string;
@@ -23,6 +24,7 @@ function createId(prefix: string) {
 type UploadingState = Record<string, boolean>;
 
 export function BlogPostComposer({ inputName = "contentBlocks" }: BlogPostComposerProps) {
+  const { toast } = useToast();
   const [blocks, setBlocks] = useState<BlogContentBlock[]>(createDefaultBlogBlocks);
   const [uploading, setUploading] = useState<UploadingState>({});
 
@@ -123,7 +125,12 @@ export function BlogPostComposer({ inputName = "contentBlocks" }: BlogPostCompos
 
       if (response.ok && result.ok && result.url) {
         onSuccess(result.url);
+        toast("Imagen subida correctamente.", "success");
+      } else {
+        toast("No pudimos subir la imagen.", "error");
       }
+    } catch {
+      toast("No pudimos subir la imagen.", "error");
     } finally {
       setUploading((current) => ({ ...current, [key]: false }));
     }

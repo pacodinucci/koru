@@ -101,6 +101,8 @@ export async function updateUserRoleAction(formData: FormData): Promise<void> {
   try {
     await updateUserRole(parsed.data);
     revalidatePath("/dashboard/users");
+    revalidatePath("/dashboard/teachers");
+    revalidatePath("/dashboard/students");
   } catch {
     return;
   }

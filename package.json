@@ -19,7 +19,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "check:encoding": "node scripts/check-encoding.mjs",
-    "precommit": "npm run check:encoding"
+    "precommit": "npm run check:encoding",
+    "test:domain": "node scripts/run-domain-tests.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

@@ -2,7 +2,7 @@
 
 import { createPortal } from "react-dom";
 import { useEffect, useId, useState } from "react";
-import { BlogPostStatus } from "@prisma/client";
+import { BlogPostStatus, BlogPostVisibility } from "@prisma/client";
 import {
   AlignCenterIcon,
   AlignJustifyIcon,
@@ -28,21 +28,94 @@ import {
   NovelBlogEditor,
   type NovelBlogEditorActions,
 } from "@/modules/blog/components/novel-blog-editor";
-import { createBlogPostAction } from "@/modules/blog/server/blog.actions";
+import {
+  createBlogPostAction,
+  updateBlogPostAction,
+} from "@/modules/blog/server/blog.actions";
+
+const groupTagColorClasses = [
+  {
+    selected: "border-emerald-600 bg-emerald-600 text-white",
+    inactive: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
+  },
+  {
+    selected: "border-purple-600 bg-purple-600 text-white",
+    inactive: "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100",
+  },
+  {
+    selected: "border-orange-500 bg-orange-500 text-white",
+    inactive: "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100",
+  },
+  {
+    selected: "border-sky-600 bg-sky-600 text-white",
+    inactive: "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100",
+  },
+];
 
 type DashboardBlogComposerProps = {
-  ok?: string;
-  error?: string;
+  tagOptions: {
+    groups: Array<{ id: string; name: string; slug: string }>;
+    customTags: Array<{ id: string; name: string; slug: string }>;
+  };
+  editingPost?: {
+    id: string;
+    slug: string;
+    title: string;
+    excerpt: string;
+    content: string;
+    contentBlocks: unknown;
+    status: BlogPostStatus;
+    visibility: BlogPostVisibility;
+    tags: Array<{
+      tag: {
+        name: string;
+        type: "GROUP" | "CUSTOM";
+        groupId: string | null;
+      };
+    }>;
+  };
 };
 
-export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps) {
+export function DashboardBlogComposer({
+  tagOptions,
+  editingPost,
+}: DashboardBlogComposerProps) {
   const formId = useId();
   const { portalTarget, setOpen } = useDashboardEditorPanel();
   const [editorActions, setEditorActions] = useState<NovelBlogEditorActions | null>(null);
+  const isEditing = Boolean(editingPost);
+  const [visibility, setVisibility] = useState<BlogPostVisibility>(
+    editingPost?.visibility ?? BlogPostVisibility.PUBLIC,
+  );
+  const initialSelectedGroupIds = new Set(
+    editingPost?.tags
+      .filter((postTag) => postTag.tag.type === "GROUP" && postTag.tag.groupId)
+      .map((postTag) => postTag.tag.groupId as string) ?? [],
+  );
+  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(
+    initialSelectedGroupIds,
+  );
+  const customTagValue =
+    editingPost?.tags
+      .filter((postTag) => postTag.tag.type === "CUSTOM")
+      .map((postTag) => postTag.tag.name)
+      .join(", ") ?? "";
 
   useEffect(() => {
     setOpen(true);
   }, [setOpen]);
+
+  function toggleGroupTag(groupId: string) {
+    setSelectedGroupIds((current) => {
+      const next = new Set(current);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  }
 
   const panel = portalTarget
     ? createPortal(
@@ -51,21 +124,12 @@ export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps)
             <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">
               Configuracion del post
             </p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">Nuevo post</p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">
+              {isEditing ? "Editar post" : "Nuevo post"}
+            </p>
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {ok ? (
-              <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                {ok}
-              </p>
-            ) : null}
-            {error ? (
-              <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                {error}
-              </p>
-            ) : null}
-
             <div className="space-y-2 rounded-lg border border-slate-200 p-3">
               <p className="text-[11px] font-medium tracking-wide text-slate-500 uppercase">
                 Insertar contenido
@@ -206,12 +270,28 @@ export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps)
 
   return (
     <>
-      <form id={formId} action={createBlogPostAction} className="space-y-3">
-        <input type="hidden" name="dashboardPath" value="/dashboard/blog" />
+      <form
+        id={formId}
+        action={isEditing ? updateBlogPostAction : createBlogPostAction}
+        className="space-y-3"
+      >
+        <input
+          type="hidden"
+          name="dashboardPath"
+          value={isEditing && editingPost ? `/dashboard/blog/${editingPost.id}/edit` : "/dashboard/blog"}
+        />
+        {editingPost ? (
+          <>
+            <input type="hidden" name="postId" value={editingPost.id} />
+            <input type="hidden" name="slug" value={editingPost.slug} />
+          </>
+        ) : null}
         <section className="rounded-xl border border-slate-200 bg-white">
           <header className="flex items-center gap-2 border-b border-slate-200 px-4 py-3">
             <PenLineIcon className="h-4 w-4" />
-            <h2 className="text-base font-semibold">Nuevo post</h2>
+            <h2 className="text-base font-semibold">
+              {isEditing ? "Editar post" : "Nuevo post"}
+            </h2>
           </header>
           <div className="space-y-4 p-3">
             <div className="space-y-3 rounded-lg border border-slate-200 p-3">
@@ -225,6 +305,7 @@ export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps)
                   required
                   minLength={4}
                   maxLength={180}
+                  defaultValue={editingPost?.title}
                   placeholder="Ej: Como escalar el dashboard del blog"
                 />
               </div>
@@ -239,12 +320,124 @@ export function DashboardBlogComposer({ ok, error }: DashboardBlogComposerProps)
                   minLength={8}
                   maxLength={220}
                   rows={3}
+                  defaultValue={editingPost?.excerpt}
                   placeholder="Resumen corto que se muestra en la lista del blog"
                   className="resize-none"
                 />
               </div>
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-slate-700">Audiencia</p>
+                <input type="hidden" name="visibility" value={visibility} />
+                <div className="grid w-full max-w-[260px] overflow-hidden rounded-lg border border-emerald-600 grid-cols-2">
+                  <button
+                    type="button"
+                    aria-pressed={visibility === BlogPostVisibility.PUBLIC}
+                    onClick={() => setVisibility(BlogPostVisibility.PUBLIC)}
+                    className={`h-9 px-3 text-sm font-semibold tracking-wide transition-colors ${
+                      visibility === BlogPostVisibility.PUBLIC
+                        ? "bg-emerald-600 text-white"
+                        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                    }`}
+                  >
+                    PUBLICO
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={visibility === BlogPostVisibility.MEMBERS}
+                    onClick={() => setVisibility(BlogPostVisibility.MEMBERS)}
+                    className={`h-9 border-l border-emerald-600 px-3 text-sm font-semibold tracking-wide transition-colors ${
+                      visibility === BlogPostVisibility.MEMBERS
+                        ? "bg-emerald-600 text-white"
+                        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                    }`}
+                  >
+                    PRIVADO
+                  </button>
+                </div>
+              </div>
+
             </div>
-            <NovelBlogEditor controlsInPanel onReady={setEditorActions} />
+
+            <div className="space-y-3 rounded-lg border border-slate-200 p-3">
+              <div>
+                <p className="text-sm font-medium text-slate-700">Etiquetas</p>
+                <p className="text-xs text-slate-500">
+                  Usá grupos activos y etiquetas custom separadas por coma.
+                </p>
+              </div>
+
+              {tagOptions.groups.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Grupos
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {tagOptions.groups
+                      .filter((group) => selectedGroupIds.has(group.id))
+                      .map((group) => (
+                        <input
+                          key={group.id}
+                          type="hidden"
+                          name="groupTagIds"
+                          value={group.id}
+                        />
+                      ))}
+                    {tagOptions.groups.map((group, index) => {
+                      const isSelected = selectedGroupIds.has(group.id);
+                      const color =
+                        groupTagColorClasses[index % groupTagColorClasses.length];
+                      return (
+                        <button
+                          key={group.id}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() => toggleGroupTag(group.id)}
+                          className={`inline-flex h-9 items-center rounded-lg border px-3 text-sm font-medium transition-colors ${
+                            isSelected
+                              ? color.selected
+                              : color.inactive
+                          }`}
+                        >
+                          {group.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor={`${formId}-custom-tags`}
+                  className="text-xs font-medium uppercase tracking-wide text-slate-500"
+                >
+                  Custom
+                </label>
+                <Input
+                  id={`${formId}-custom-tags`}
+                  name="customTags"
+                  defaultValue={customTagValue}
+                  placeholder="Ej: Novedades, Familias, Talleres"
+                  list={`${formId}-custom-tags-options`}
+                />
+                <datalist id={`${formId}-custom-tags-options`}>
+                  {tagOptions.customTags.map((tag) => (
+                    <option key={tag.id} value={tag.name} />
+                  ))}
+                </datalist>
+              </div>
+            </div>
+
+            <NovelBlogEditor
+              controlsInPanel
+              onReady={setEditorActions}
+              initialJson={
+                editingPost?.contentBlocks
+                  ? JSON.stringify(editingPost.contentBlocks)
+                  : undefined
+              }
+              initialHtml={editingPost?.content}
+            />
           </div>
         </section>
       </form>

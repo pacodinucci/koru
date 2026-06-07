@@ -1,6 +1,6 @@
 import "server-only";
 
-import { InvitationStatus, type UserRole } from "@prisma/client";
+import { InvitationStatus, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
@@ -43,6 +43,8 @@ export async function reconcileUserInvitationAfterSignup(email: string) {
       where: { email: normalizedEmail },
       select: {
         id: true,
+        name: true,
+        email: true,
         role: true,
       },
     });
@@ -71,10 +73,29 @@ export async function reconcileUserInvitationAfterSignup(email: string) {
 
     const acceptedAt = invitation.acceptedAt ?? new Date();
 
-    if (user.role !== invitation.role) {
+    const finalRole = invitation.role;
+
+    if (user.role !== finalRole) {
       await tx.user.update({
         where: { id: user.id },
-        data: { role: invitation.role },
+        data: { role: finalRole },
+      });
+    }
+
+    if (finalRole === UserRole.TEACHER) {
+      await tx.teacherProfile.upsert({
+        where: { userId: user.id },
+        create: {
+          userId: user.id,
+          displayName: user.name || user.email,
+          email: user.email,
+          isActive: true,
+        },
+        update: {
+          displayName: user.name || user.email,
+          email: user.email,
+          isActive: true,
+        },
       });
     }
 
@@ -90,6 +111,16 @@ export async function reconcileUserInvitationAfterSignup(email: string) {
         },
       });
     }
+
+    await tx.studentGuardian.updateMany({
+      where: {
+        email: normalizedEmail,
+        userId: null,
+      },
+      data: {
+        userId: user.id,
+      },
+    });
   });
 }
 
@@ -203,7 +234,7 @@ export async function revokeUserInvitation(id: string) {
 export async function updateUserRole({ userId, role }: UpdateUserRoleInput) {
   const existingUser = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: true },
+    select: { id: true, name: true, email: true, role: true },
   });
 
   if (!existingUser) {
@@ -220,14 +251,42 @@ export async function updateUserRole({ userId, role }: UpdateUserRoleInput) {
     }
   }
 
-  return prisma.user.update({
-    where: { id: userId },
-    data: { role },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-    },
+  return prisma.$transaction(async (tx) => {
+    const updatedUser = await tx.user.update({
+      where: { id: userId },
+      data: { role },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (role === UserRole.TEACHER) {
+      await tx.teacherProfile.upsert({
+        where: { userId },
+        create: {
+          userId,
+          displayName: updatedUser.name || updatedUser.email,
+          email: updatedUser.email,
+          isActive: true,
+        },
+        update: {
+          displayName: updatedUser.name || updatedUser.email,
+          email: updatedUser.email,
+          isActive: true,
+        },
+      });
+    }
+
+    if (existingUser.role === UserRole.TEACHER && role !== UserRole.TEACHER) {
+      await tx.teacherProfile.updateMany({
+        where: { userId },
+        data: { isActive: false },
+      });
+    }
+
+    return updatedUser;
   });
 }

@@ -12,6 +12,7 @@ import {
   FileText,
   NotebookPen,
   CalendarDays,
+  ClipboardList,
   Users,
   HandCoins,
   ShieldCheck,
@@ -65,6 +66,7 @@ import type { LandingTextMap } from "@/modules/landing/types/landing-text";
 
 type DashboardShellProps = {
   userEmail: string;
+  userRole?: "ADMIN" | "TEACHER" | "PARENT";
   cmsPages?: Array<{
     slug: string;
     isDynamic?: boolean;
@@ -84,6 +86,7 @@ type DashboardShellProps = {
 
 export function DashboardShell({
   userEmail,
+  userRole = "ADMIN",
   cmsPages = [],
   initialTextMap,
   cmsPageSlug = "/",
@@ -103,6 +106,9 @@ export function DashboardShell({
   const isBlogActive = pathname.startsWith("/dashboard/blog");
   const isCalendarActive = pathname.startsWith("/dashboard/calendar");
   const isUsersActive = pathname.startsWith("/dashboard/users");
+  const isStudentsActive = pathname.startsWith("/dashboard/students");
+  const isTeachersActive = pathname.startsWith("/dashboard/teachers");
+  const isExamsActive = pathname.startsWith("/dashboard/exams");
   const isLayoutActive = pathname.startsWith("/dashboard/layout");
   const isPageEditorActive =
     pathname.startsWith("/dashboard/pages/edit") ||
@@ -118,6 +124,7 @@ export function DashboardShell({
   const isCmsActive = isLayoutActive || isLandingActive || isPageEditorActive;
   const [cmsOpen, setCmsOpen] = useState(isCmsActive);
   const [pagesOpen, setPagesOpen] = useState(isLandingActive);
+  const isAdmin = userRole === "ADMIN";
 
   return (
     <SidebarProvider>
@@ -153,21 +160,22 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={isCmsActive}
-                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
-                    onClick={() => setCmsOpen((previous) => !previous)}
-                  >
-                    <LayoutDashboard />
-                    <span>CMS</span>
-                    <ChevronDown
-                      className={`ml-auto transition-transform ${cmsOpen ? "rotate-180" : ""}`}
-                    />
-                  </SidebarMenuButton>
+                {isAdmin ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isCmsActive}
+                      className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                      onClick={() => setCmsOpen((previous) => !previous)}
+                    >
+                      <LayoutDashboard />
+                      <span>CMS</span>
+                      <ChevronDown
+                        className={`ml-auto transition-transform ${cmsOpen ? "rotate-180" : ""}`}
+                      />
+                    </SidebarMenuButton>
 
-                  {cmsOpen ? (
-                    <SidebarMenuSub>
+                    {cmsOpen ? (
+                      <SidebarMenuSub>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           isActive={isLayoutActive}
@@ -215,9 +223,10 @@ export function DashboardShell({
                           })}
                         </SidebarMenuSub>
                       ) : null}
-                    </SidebarMenuSub>
-                  ) : null}
-                </SidebarMenuItem>
+                      </SidebarMenuSub>
+                    ) : null}
+                  </SidebarMenuItem>
+                ) : null}
 
                 <SidebarMenuItem>
                   <SidebarMenuButton
@@ -230,44 +239,82 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
+                {isAdmin ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isUsersActive}
+                      className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                      render={<Link href="/dashboard/users" />}
+                    >
+                      <Users />
+                      <span>Usuarios</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
+
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    isActive={isUsersActive}
+                    isActive={isStudentsActive}
                     className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
-                    render={<Link href="/dashboard/users" />}
+                    render={<Link href="/dashboard/students" />}
                   >
                     <Users />
-                    <span>Usuarios</span>
+                    <span>Alumnos</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    render={<Link href="#" />}
+                    isActive={isExamsActive}
+                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                    render={<Link href="/dashboard/exams" />}
                   >
-                    <HandCoins />
-                    <span>Donaciones</span>
+                    <ClipboardList />
+                    <span>Notas</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    render={<Link href="#" />}
-                  >
-                    <ShieldCheck />
-                    <span>Seguridad</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    render={<Link href="#" />}
-                  >
-                    <Settings />
-                    <span>Configuracion</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+
+                {isAdmin ? (
+                  <>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={isTeachersActive}
+                        className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                        render={<Link href="/dashboard/teachers" />}
+                      >
+                        <User2 />
+                        <span>Docentes</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        render={<Link href="#" />}
+                      >
+                        <HandCoins />
+                        <span>Donaciones</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        render={<Link href="#" />}
+                      >
+                        <ShieldCheck />
+                        <span>Seguridad</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        render={<Link href="#" />}
+                      >
+                        <Settings />
+                        <span>Configuracion</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
+                ) : null}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

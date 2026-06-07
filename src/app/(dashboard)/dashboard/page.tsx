@@ -1,8 +1,13 @@
 import { redirect } from "next/navigation";
 
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requireDashboardUser } from "@/modules/auth/server/auth-guards";
 
 export default async function DashboardPage() {
-  await requireAdmin();
+  const user = await requireDashboardUser();
+
+  if (user.role === "TEACHER") {
+    redirect("/dashboard/exams");
+  }
+
   redirect("/dashboard/layout");
 }

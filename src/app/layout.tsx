@@ -14,6 +14,7 @@ import "@fontsource/fira-sans/600.css";
 import "@fontsource/fira-sans/700.css";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ToastProvider } from "@/components/ui/toast";
 
 import "./globals.css";
 
@@ -74,7 +75,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${nunito.variable} ${lato.variable} ${robotoCondensed.variable} ${indieFlower.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <TooltipProvider>{children}</TooltipProvider>
+        <ToastProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </ToastProvider>
       </body>
     </html>
   );
