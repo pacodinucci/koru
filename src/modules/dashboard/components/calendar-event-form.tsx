@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarAudienceType, UserRole } from "@prisma/client";
+import type {
+  CalendarAudienceType,
+  CalendarEventVisibility,
+  UserRole,
+} from "@prisma/client";
 
 import {
   cancelCalendarEventAction,
@@ -13,6 +17,8 @@ type EventItem = {
   title: string;
   startsAt: Date;
   endsAt: Date;
+  location?: string | null;
+  visibility: CalendarEventVisibility;
   audienceType: CalendarAudienceType;
   kind: "EVENT" | "MEETING";
   audiences?: Array<{ userId: string }>;
@@ -31,6 +37,11 @@ const audienceOptions: Array<{ value: CalendarAudienceType; label: string }> = [
   { value: "TEACHERS", label: "Maestros" },
   { value: "PARENTS", label: "Padres" },
   { value: "PRIVATE", label: "Privado" },
+];
+
+const visibilityOptions: Array<{ value: CalendarEventVisibility; label: string }> = [
+  { value: "PUBLIC", label: "Público" },
+  { value: "MEMBERS", label: "Privado" },
 ];
 
 function roleLabel(role: UserRole) {
@@ -55,7 +66,11 @@ function toTimeValue(date: Date) {
 }
 
 export function CalendarEventForm({ users, ok, error, event, mode = "create" }: Props) {
-  const initialAudience = event?.audienceType ?? "ALL";
+  const initialVisibility = event?.visibility ?? "MEMBERS";
+  const initialAudience =
+    initialVisibility === "PUBLIC" ? "ALL" : event?.audienceType ?? "ALL";
+  const [visibility, setVisibility] =
+    useState<CalendarEventVisibility>(initialVisibility);
   const [audienceType, setAudienceType] = useState<CalendarAudienceType>(initialAudience);
 
   const durationDefault = useMemo(() => {
@@ -102,24 +117,52 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
         required
       />
+      <input
+        name="location"
+        placeholder="Ubicación"
+        defaultValue={event?.location ?? ""}
+        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+      />
       <select
-        name="audienceType"
-        value={audienceType}
-        onChange={(e) => setAudienceType(e.target.value as CalendarAudienceType)}
+        name="visibility"
+        value={visibility}
+        onChange={(e) => {
+          const nextVisibility = e.target.value as CalendarEventVisibility;
+          setVisibility(nextVisibility);
+          if (nextVisibility === "PUBLIC") {
+            setAudienceType("ALL");
+          }
+        }}
         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
       >
-        {audienceOptions.map((o) => (
+        {visibilityOptions.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
           </option>
         ))}
       </select>
+      {visibility === "PUBLIC" ? (
+        <input type="hidden" name="audienceType" value="ALL" />
+      ) : (
+        <select
+          name="audienceType"
+          value={audienceType}
+          onChange={(e) => setAudienceType(e.target.value as CalendarAudienceType)}
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+        >
+          {audienceOptions.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      )}
       <select name="kind" defaultValue={event?.kind ?? "EVENT"} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
         <option value="EVENT">Evento</option>
         <option value="MEETING">Reuni\u00f3n</option>
       </select>
 
-      {audienceType === "PRIVATE" ? (
+      {visibility !== "PUBLIC" && audienceType === "PRIVATE" ? (
         <select name="privateAudienceUserIds" multiple className="h-24 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
           {users.map((u) => (
             <option key={u.id} value={u.id} defaultChecked={privateDefaults.has(u.id)}>

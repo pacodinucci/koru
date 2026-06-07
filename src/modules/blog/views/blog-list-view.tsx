@@ -1,7 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { MessageCircleIcon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  ClockIcon,
+  MapPinIcon,
+  MessageCircleIcon,
+} from "lucide-react";
 import { BlogPostVisibility } from "@prisma/client";
 
 import { auth } from "@/lib/auth";
@@ -10,6 +15,11 @@ import {
   getPublishedBlogTags,
   getPublishedPosts,
 } from "@/modules/blog/server/blog.repository";
+import { listUpcomingPublicCalendarEvents } from "@/modules/dashboard/server/calendar.repository";
+
+type BlogCalendarEvent = Awaited<
+  ReturnType<typeof listUpcomingPublicCalendarEvents>
+>[number];
 
 function formatDate(date: Date | null) {
   if (!date) return "Sin fecha";
@@ -36,15 +46,89 @@ function initials(name: string | null) {
     .join("");
 }
 
+function formatEventTime(start: Date, end: Date) {
+  return `${start.toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })} - ${end.toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
+}
+
+function BlogEventsSidebar({ events }: { events: BlogCalendarEvent[] }) {
+  return (
+    <aside className="space-y-3 [font-family:var(--font-montserrat)]">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Calendario
+        </p>
+        <h2 className="mt-1 text-xl font-semibold leading-tight">
+          Próximos eventos
+        </h2>
+      </div>
+
+      <div className="overflow-hidden border-y border-purple-200/60 bg-[#f7f3fb]">
+        {events.length ? events.map((event) => {
+          const startsAt = new Date(event.startsAt);
+          const endsAt = new Date(event.endsAt);
+
+          return (
+            <article
+              key={event.id}
+              className="grid grid-cols-[3.7rem_minmax(0,1fr)_1.5rem] items-center border-b border-purple-200/60 bg-[#f7f3fb] transition-colors hover:bg-[#efe7f7] last:border-b-0"
+            >
+              <div className="flex h-full flex-col items-center justify-center border-r border-black/10 px-2 py-3 text-center">
+                <span className="text-[10px] font-medium leading-none text-muted-foreground">
+                  {startsAt.toLocaleDateString("es-AR", { month: "short" }).toUpperCase()}
+                </span>
+                <span className="mt-1 text-2xl font-semibold leading-none text-foreground">
+                  {startsAt.getDate()}
+                </span>
+                <span className="mt-1 text-[10px] leading-none text-muted-foreground">
+                  {startsAt.getFullYear()}
+                </span>
+              </div>
+
+              <div className="min-w-0 px-3 py-3">
+                <h3 className="truncate text-[13px] font-bold leading-tight">
+                  {event.title}
+                </h3>
+                {event.location ? (
+                  <p className="mt-1 flex items-center gap-1 text-[11px] leading-tight text-muted-foreground">
+                    <MapPinIcon className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{event.location}</span>
+                  </p>
+                ) : null}
+                <p className="mt-1 flex items-center gap-1 text-[11px] leading-tight text-muted-foreground">
+                  <ClockIcon className="h-3 w-3 shrink-0" />
+                  <span>{formatEventTime(startsAt, endsAt)}</span>
+                </p>
+              </div>
+
+              <ChevronRightIcon className="mr-2 h-4 w-4 text-foreground" />
+            </article>
+          );
+        }) : (
+          <p className="px-3 py-4 text-sm text-muted-foreground">
+            No hay próximos eventos publicados.
+          </p>
+        )}
+      </div>
+    </aside>
+  );
+}
+
 type BlogListViewProps = {
   tagSlug?: string;
 };
 
 export async function BlogListView({ tagSlug }: BlogListViewProps) {
   const session = await auth.api.getSession({ headers: await headers() });
-  const [posts, tags] = await Promise.all([
+  const [posts, tags, events] = await Promise.all([
     getPublishedPosts({ userId: session?.user.id, tagSlug }),
     getPublishedBlogTags(session?.user.id),
+    listUpcomingPublicCalendarEvents({ userId: session?.user.id }),
   ]);
 
   return (
@@ -88,106 +172,114 @@ export async function BlogListView({ tagSlug }: BlogListViewProps) {
         </nav>
       ) : null}
 
-      {posts.length === 0 ? (
-        <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
-          Todavia no hay posts publicados.
-        </div>
-      ) : (
-        <div className="space-y-9 [font-family:var(--font-montserrat)]">
-          {posts.map((post) => {
-            const coverImage = extractFirstImage(post.content);
+      <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,54rem)_17.5rem] lg:items-stretch">
+        {posts.length === 0 ? (
+          <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
+            Todavía no hay posts publicados.
+          </div>
+        ) : (
+          <div className="space-y-9 [font-family:var(--font-montserrat)]">
+            {posts.map((post) => {
+              const coverImage = extractFirstImage(post.content);
 
-            return (
-              <article
-                key={post.id}
-                className="mx-auto max-w-5xl overflow-hidden rounded-none bg-white md:grid md:grid-cols-[340px_minmax(0,1fr)] md:gap-4"
-              >
-                <Link href={`/blog/${post.slug}`} className="block bg-muted">
-                  {coverImage ? (
-                    <Image
-                      src={coverImage}
-                      alt={post.title}
-                      width={900}
-                      height={900}
-                      sizes="(max-width: 768px) 100vw, 340px"
-                      className="aspect-square w-full object-cover"
-                      unoptimized={coverImage.startsWith("http")}
-                    />
-                  ) : (
-                    <div className="flex aspect-square w-full items-center justify-center text-sm text-muted-foreground">
-                      Sin imagen
-                    </div>
-                  )}
-                </Link>
-
-                <div className="flex flex-col gap-3 bg-white py-2 md:pr-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-900)] text-xs font-bold text-white">
-                        {initials(post.authorName)}
-                      </div>
-                      <div className="flex flex-col justify-center py-1">
-                        <p className="text-sm leading-none">
-                          {post.authorName || "Usuario"}
-                        </p>
-                        <p className="mt-1 text-sm leading-none text-muted-foreground">
-                          {formatDate(post.publishedAt ?? post.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <h2 className="text-base font-semibold leading-tight md:text-lg">
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="hover:underline"
-                    >
-                      {post.title}
-                    </Link>
-                  </h2>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {post.visibility === BlogPostVisibility.MEMBERS ? (
-                      <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                        Solo miembros
-                      </span>
-                    ) : null}
-                    {post.tags.map(({ tag }) => (
-                      <Link
-                        key={tag.id}
-                        href={`/blog?tag=${tag.slug}`}
-                        className="rounded-full border border-black/10 px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        {tag.name}
-                      </Link>
-                    ))}
-                  </div>
-
-                  <p className="line-clamp-3 text-sm leading-[1.35] text-foreground/90">
-                    {post.excerpt}
-                  </p>
-
-                  <div className="mt-auto border-t border-black/15 pt-3">
-                    <div className="flex items-center gap-5">
-                      <span className="inline-flex items-center gap-1.5 text-foreground/90">
-                        <MessageCircleIcon className="h-5 w-5" />
-                        <span className="text-sm text-muted-foreground">
-                          {post._count.comments}
-                        </span>
-                      </span>
-                      <BlogLikeButton
-                        slug={post.slug}
-                        initialLiked={Boolean(post.likes?.length)}
-                        initialCount={post._count.likes}
+              return (
+                <article
+                  key={post.id}
+                  className="w-full overflow-hidden rounded-none bg-white md:grid md:grid-cols-[290px_minmax(0,1fr)] md:gap-4"
+                >
+                  <Link href={`/blog/${post.slug}`} className="block bg-muted">
+                    {coverImage ? (
+                      <Image
+                        src={coverImage}
+                        alt={post.title}
+                        width={900}
+                        height={900}
+                        sizes="(max-width: 768px) 100vw, 290px"
+                        className="aspect-square w-full object-cover"
+                        unoptimized={coverImage.startsWith("http")}
                       />
+                    ) : (
+                      <div className="flex aspect-square w-full items-center justify-center text-sm text-muted-foreground">
+                        Sin imagen
+                      </div>
+                    )}
+                  </Link>
+
+                  <div className="flex flex-col gap-3 bg-white py-2 md:pr-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-900)] text-xs font-bold text-white">
+                          {initials(post.authorName)}
+                        </div>
+                        <div className="flex flex-col justify-center py-1">
+                          <p className="text-sm leading-none">
+                            {post.authorName || "Usuario"}
+                          </p>
+                          <p className="mt-1 text-sm leading-none text-muted-foreground">
+                            {formatDate(post.publishedAt ?? post.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <h2 className="text-base font-semibold leading-tight md:text-lg">
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className="hover:underline"
+                      >
+                        {post.title}
+                      </Link>
+                    </h2>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {post.visibility === BlogPostVisibility.MEMBERS ? (
+                        <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                          Solo miembros
+                        </span>
+                      ) : null}
+                      {post.tags.map(({ tag }) => (
+                        <Link
+                          key={tag.id}
+                          href={`/blog?tag=${tag.slug}`}
+                          className="rounded-full border border-black/10 px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          {tag.name}
+                        </Link>
+                      ))}
+                    </div>
+
+                    <p className="line-clamp-3 text-sm leading-[1.35] text-foreground/90">
+                      {post.excerpt}
+                    </p>
+
+                    <div className="mt-auto border-t border-black/15 pt-3">
+                      <div className="flex items-center gap-5">
+                        <span className="inline-flex items-center gap-1.5 text-foreground/90">
+                          <MessageCircleIcon className="h-5 w-5" />
+                          <span className="text-sm text-muted-foreground">
+                            {post._count.comments}
+                          </span>
+                        </span>
+                        <BlogLikeButton
+                          slug={post.slug}
+                          initialLiked={Boolean(post.likes?.length)}
+                          initialCount={post._count.likes}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </article>
-            );
-          })}
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="relative lg:pb-32">
+          <div className="lg:sticky lg:top-28">
+            <BlogEventsSidebar events={events} />
+          </div>
         </div>
-      )}
+      </div>
     </main>
   );
 }

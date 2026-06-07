@@ -2,7 +2,11 @@
 
 import { createContext, useContext, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import type { CalendarAudienceType, UserRole } from "@prisma/client";
+import type {
+  CalendarAudienceType,
+  CalendarEventVisibility,
+  UserRole,
+} from "@prisma/client";
 
 import {
   type CalendarViewMode,
@@ -23,6 +27,8 @@ type CalendarEventItem = {
   title: string;
   startsAt: string | Date;
   endsAt: string | Date;
+  location?: string | null;
+  visibility: CalendarEventVisibility;
   audienceType: CalendarAudienceType;
   status: string;
   kind: "EVENT" | "MEETING";

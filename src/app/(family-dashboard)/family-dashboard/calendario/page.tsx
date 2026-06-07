@@ -52,6 +52,9 @@ export default async function FamilyCalendarPage() {
                     {new Date(event.startsAt).toLocaleString("es-AR")} -{" "}
                     {new Date(event.endsAt).toLocaleString("es-AR")}
                   </p>
+                  {event.location ? (
+                    <p className="mt-1 text-sm text-slate-600">{event.location}</p>
+                  ) : null}
                 </li>
               ))}
               {events.length === 0 ? (

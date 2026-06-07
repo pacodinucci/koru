@@ -156,6 +156,11 @@ enum CalendarEventStatus {
   CANCELED
 }
 
+enum CalendarEventVisibility {
+  PUBLIC
+  MEMBERS
+}
+
 enum CalendarAudienceType {
   ALL
   TEACHERS
@@ -457,6 +462,7 @@ model CalendarEvent {
   allDay       Boolean               @default(false)
   location     String?
   status       CalendarEventStatus   @default(DRAFT)
+  visibility   CalendarEventVisibility @default(MEMBERS)
   audienceType CalendarAudienceType  @default(ALL)
   kind         CalendarEventKind     @default(EVENT)
   createdById  String
@@ -467,6 +473,7 @@ model CalendarEvent {
 
   @@index([startsAt, endsAt])
   @@index([status, audienceType])
+  @@index([status, visibility, startsAt])
 }
 
 model CalendarEventAudience {

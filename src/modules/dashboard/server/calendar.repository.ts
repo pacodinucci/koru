@@ -1,6 +1,7 @@
 import {
   CalendarAudienceType,
   CalendarEventStatus,
+  CalendarEventVisibility,
   UserRole,
 } from "@prisma/client";
 
@@ -16,6 +17,7 @@ type SaveCalendarEventInput = {
   allDay: boolean;
   location?: string;
   status: CalendarEventStatus;
+  visibility: CalendarEventVisibility;
   audienceType: CalendarAudienceType;
   kind: "EVENT" | "MEETING";
   createdById: string;
@@ -42,10 +44,8 @@ export async function listCalendarEventsForAdminByRange(
 
   return prisma.calendarEvent.findMany({
     where: {
-      startsAt: {
-        gte: start,
-        lt: end,
-      },
+      startsAt: { lt: end },
+      endsAt: { gte: start },
     },
     orderBy: [{ startsAt: "asc" }],
     include: {
@@ -119,6 +119,7 @@ export async function saveCalendarEvent(input: SaveCalendarEventInput) {
         allDay: input.allDay,
         location: input.location || null,
         status: input.status,
+        visibility: input.visibility,
         audienceType: input.audienceType,
         kind: input.kind,
         audiences: {
@@ -141,6 +142,7 @@ export async function saveCalendarEvent(input: SaveCalendarEventInput) {
       allDay: input.allDay,
       location: input.location || null,
       status: input.status,
+      visibility: input.visibility,
       audienceType: input.audienceType,
       kind: input.kind,
       createdById: input.createdById,
@@ -183,5 +185,35 @@ export async function listVisibleEventsForUser(userId: string, role: UserRole) {
       ],
     },
     orderBy: [{ startsAt: "asc" }],
+  });
+}
+
+export async function listUpcomingPublicCalendarEvents({
+  userId,
+  limit = 4,
+}: {
+  userId?: string;
+  limit?: number;
+} = {}) {
+  return prisma.calendarEvent.findMany({
+    where: {
+      status: CalendarEventStatus.PUBLISHED,
+      startsAt: {
+        gte: new Date(),
+      },
+      visibility: userId
+        ? { in: [CalendarEventVisibility.PUBLIC, CalendarEventVisibility.MEMBERS] }
+        : CalendarEventVisibility.PUBLIC,
+    },
+    orderBy: [{ startsAt: "asc" }],
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      startsAt: true,
+      endsAt: true,
+      location: true,
+      visibility: true,
+    },
   });
 }
