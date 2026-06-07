@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import {
   getPendingUserInvitationByEmail,
   normalizeInvitationEmail,
@@ -28,6 +29,20 @@ function getErrorPath(basePath: string, message: string) {
   return `${basePath}?${params.toString()}`;
 }
 
+async function getPostAuthRedirect(email: string) {
+  const normalizedEmail = normalizeInvitationEmail(email);
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: { role: true },
+  });
+
+  if (user?.role === "ADMIN" || user?.role === "TEACHER") {
+    return "/dashboard";
+  }
+
+  return "/family-dashboard";
+}
+
 export async function signInAction(formData: FormData) {
   const parsed = signInSchema.safeParse({
     email: formData.get("email"),
@@ -47,7 +62,7 @@ export async function signInAction(formData: FormData) {
     redirect(getErrorPath("/sign-in", "Email o password incorrectos."));
   }
 
-  redirect("/family-dashboard");
+  redirect(await getPostAuthRedirect(parsed.data.email));
 }
 
 export async function signUpAction(formData: FormData) {
@@ -102,7 +117,7 @@ export async function signUpAction(formData: FormData) {
     );
   }
 
-  redirect("/family-dashboard");
+  redirect(await getPostAuthRedirect(normalizedEmail));
 }
 
 export async function signOutAction() {

@@ -21,6 +21,8 @@ model User {
   createdCalendarEvents CalendarEvent[] @relation("CalendarEventCreator")
   calendarEventAudiences CalendarEventAudience[]
   createdInvitations UserInvitation[] @relation("UserInvitationsCreated")
+  teacherProfile TeacherProfile?
+  studentGuardianLinks StudentGuardian[]
 
   @@unique([email])
   @@map("user")
@@ -106,6 +108,16 @@ enum BlogPostStatus {
   PUBLISHED
 }
 
+enum BlogPostVisibility {
+  PUBLIC
+  MEMBERS
+}
+
+enum BlogTagType {
+  GROUP
+  CUSTOM
+}
+
 enum ContactMessageStatus {
   NEW
   READ
@@ -124,6 +136,20 @@ enum UserRole {
   PARENT
 }
 
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+}
+
+enum StudentGuardianRelationship {
+  MOTHER
+  FATHER
+  TUTOR
+  GUARDIAN
+  OTHER
+}
+
 enum CalendarEventStatus {
   DRAFT
   PUBLISHED
@@ -140,6 +166,11 @@ enum CalendarAudienceType {
 enum CalendarEventKind {
   EVENT
   MEETING
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
 }
 
 model Page {
@@ -196,21 +227,49 @@ model CmsTextEntry {
 }
 
 model BlogPost {
-  id          String         @id @default(cuid())
-  slug        String         @unique
-  title       String
-  excerpt     String
-  content     String
+  id            String             @id @default(cuid())
+  slug          String             @unique
+  title         String
+  excerpt       String
+  content       String
   contentBlocks Json?
-  status      BlogPostStatus @default(DRAFT)
-  authorName  String?
-  publishedAt DateTime?
-  comments    BlogComment[]
-  likes       BlogPostLike[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  status        BlogPostStatus     @default(DRAFT)
+  visibility    BlogPostVisibility @default(PUBLIC)
+  authorName    String?
+  publishedAt   DateTime?
+  comments      BlogComment[]
+  likes         BlogPostLike[]
+  tags          BlogPostTag[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   @@index([status, publishedAt])
+  @@index([status, visibility, publishedAt])
+}
+
+model BlogTag {
+  id        String        @id @default(cuid())
+  name      String
+  slug      String        @unique
+  type      BlogTagType   @default(CUSTOM)
+  groupId   String?
+  group     StudentGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  posts     BlogPostTag[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([type])
+  @@index([groupId])
+}
+
+model BlogPostTag {
+  postId String
+  tagId  String
+  post   BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([tagId])
 }
 
 model BlogPostLike {
@@ -266,6 +325,127 @@ model UserInvitation {
   @@unique([email])
   @@index([status, createdAt])
   @@index([invitedById])
+}
+
+model StudentGroup {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  ageRange    String
+  description String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  students    Student[]
+  teacherResponsibilities StudentGroupTeacher[]
+  exams       Exam[]
+  blogTags    BlogTag[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model TeacherProfile {
+  id          String    @id @default(cuid())
+  userId      String?   @unique
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  displayName String
+  email       String?
+  phone       String?
+  bio         String?
+  isActive    Boolean   @default(true)
+  groupResponsibilities StudentGroupTeacher[]
+  exams       Exam[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive, displayName])
+  @@index([email])
+}
+
+model StudentGroupTeacher {
+  id        String         @id @default(cuid())
+  groupId   String
+  group     StudentGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+
+  @@unique([groupId, teacherId])
+  @@index([groupId])
+  @@index([teacherId])
+}
+
+model Student {
+  id               String            @id @default(cuid())
+  firstName        String
+  lastName         String
+  birthDate        DateTime
+  groupId          String
+  group            StudentGroup      @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  status           StudentStatus     @default(ACTIVE)
+  notes            String?
+  guardians        StudentGuardian[]
+  examGrades       ExamGrade[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([groupId, status])
+  @@index([lastName, firstName])
+}
+
+model Exam {
+  id          String         @id @default(cuid())
+  groupId     String
+  group       StudentGroup   @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  teacherId   String
+  teacher     TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  title       String
+  subject     String?
+  examDate    DateTime
+  description String?
+  status      ExamStatus     @default(DRAFT)
+  grades      ExamGrade[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([groupId, examDate])
+  @@index([teacherId, examDate])
+  @@index([status, examDate])
+}
+
+model ExamGrade {
+  id           String   @id @default(cuid())
+  examId       String
+  exam         Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  score        Decimal  @db.Decimal(5, 2)
+  observations String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([examId, studentId])
+  @@index([studentId])
+}
+
+model StudentGuardian {
+  id               String                      @id @default(cuid())
+  studentId        String
+  student          Student                     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  userId           String?
+  user             User?                       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email            String
+  relationship     StudentGuardianRelationship @default(GUARDIAN)
+  isPrimary        Boolean                     @default(false)
+  canPickup        Boolean                     @default(false)
+  emergencyContact Boolean                     @default(false)
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+
+  @@unique([studentId, email])
+  @@index([userId])
+  @@index([email])
 }
 
 model CalendarEvent {

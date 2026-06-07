@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "incremental": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noEmit": false,
+    "outDir": ".tmp-domain-tests",
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": [
+    "tests/domain/**/*.ts",
+    "src/modules/students/lib/**/*.ts",
+    "src/modules/teachers/lib/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

@@ -1,12 +1,18 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 import { MessageCircleIcon } from "lucide-react";
 import { headers } from "next/headers";
+import { BlogPostVisibility } from "@prisma/client";
 
 import { auth } from "@/lib/auth";
+import { BlogEventToast } from "@/modules/blog/components/blog-event-toast";
 import { BlogLikeButton } from "@/modules/blog/components/blog-like-button";
 import { Textarea } from "@/components/ui/textarea";
 import { createBlogCommentAction } from "@/modules/blog/server/blog.actions";
-import { getPublishedPostBySlug } from "@/modules/blog/server/blog.repository";
+import {
+  getPublishedPostAccessBySlug,
+  getPublishedPostBySlug,
+} from "@/modules/blog/server/blog.repository";
 
 type BlogPostViewProps = {
   slug: string;
@@ -53,6 +59,12 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
   const post = await getPublishedPostBySlug(slug, session?.user.id);
 
   if (!post) {
+    if (!session) {
+      const access = await getPublishedPostAccessBySlug(slug);
+      if (access?.visibility === BlogPostVisibility.MEMBERS) {
+        redirect("/sign-in");
+      }
+    }
     notFound();
   }
 
@@ -60,6 +72,7 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
 
   return (
     <main className="mx-auto w-full max-w-5xl space-y-8 pl-6 pr-12 py-10 md:pl-10 md:pr-20 lg:pl-14 lg:pr-48">
+      <BlogEventToast comment={commentStatus} />
       <header className="space-y-1">
         <h1 className="text-3xl font-semibold tracking-tight [font-family:var(--font-roboto-condensed)] md:text-4xl">
           Koru OSA
@@ -85,6 +98,23 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
             <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
               {post.title}
             </h1>
+
+            <div className="flex flex-wrap gap-1.5">
+              {post.visibility === BlogPostVisibility.MEMBERS ? (
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                  Solo miembros
+                </span>
+              ) : null}
+              {post.tags.map(({ tag }) => (
+                <Link
+                  key={tag.id}
+                  href={`/blog?tag=${tag.slug}`}
+                  className="rounded-full border border-black/10 px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {tag.name}
+                </Link>
+              ))}
+            </div>
           </header>
 
           <div
@@ -109,12 +139,6 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
         <div className="border-t border-black/15" />
 
         <h2 className="text-xl font-semibold">Comentarios</h2>
-
-        {commentStatus === "error" ? (
-          <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            No pudimos enviar tu comentario. Revisa los datos.
-          </p>
-        ) : null}
 
         <form
           action={createBlogCommentAction}

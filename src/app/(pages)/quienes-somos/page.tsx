@@ -109,7 +109,7 @@ export default function QuienesSomosPage() {
         <div className="relative mx-auto w-full max-w-[28rem]">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
             <Image
-              src="/assets/img4.jpg"
+              src="/assets/images/DSC01400.png"
               alt="Niñas y niños compartiendo una actividad en comunidad"
               fill
               className="object-cover"

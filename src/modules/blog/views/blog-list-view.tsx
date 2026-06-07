@@ -2,10 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { MessageCircleIcon } from "lucide-react";
+import { BlogPostVisibility } from "@prisma/client";
 
 import { auth } from "@/lib/auth";
 import { BlogLikeButton } from "@/modules/blog/components/blog-like-button";
-import { getPublishedPosts } from "@/modules/blog/server/blog.repository";
+import {
+  getPublishedBlogTags,
+  getPublishedPosts,
+} from "@/modules/blog/server/blog.repository";
 
 function formatDate(date: Date | null) {
   if (!date) return "Sin fecha";
@@ -32,9 +36,16 @@ function initials(name: string | null) {
     .join("");
 }
 
-export async function BlogListView() {
+type BlogListViewProps = {
+  tagSlug?: string;
+};
+
+export async function BlogListView({ tagSlug }: BlogListViewProps) {
   const session = await auth.api.getSession({ headers: await headers() });
-  const posts = await getPublishedPosts(session?.user.id);
+  const [posts, tags] = await Promise.all([
+    getPublishedPosts({ userId: session?.user.id, tagSlug }),
+    getPublishedBlogTags(session?.user.id),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-7xl bg-white px-6 pb-16 pt-10 md:px-10 lg:px-14">
@@ -48,6 +59,34 @@ export async function BlogListView() {
           </p>
         </div>
       </header>
+
+      {tags.length > 0 ? (
+        <nav className="mx-auto mb-8 flex max-w-5xl flex-wrap gap-2 [font-family:var(--font-montserrat)]">
+          <Link
+            href="/blog"
+            className={`rounded-full border px-3 py-1.5 text-sm ${
+              tagSlug
+                ? "border-black/15 text-muted-foreground"
+                : "border-[var(--brand-900)] bg-[var(--brand-900)] text-white"
+            }`}
+          >
+            Todos
+          </Link>
+          {tags.map((tag) => (
+            <Link
+              key={tag.id}
+              href={`/blog?tag=${tag.slug}`}
+              className={`rounded-full border px-3 py-1.5 text-sm ${
+                tagSlug === tag.slug
+                  ? "border-[var(--brand-900)] bg-[var(--brand-900)] text-white"
+                  : "border-black/15 text-muted-foreground"
+              }`}
+            >
+              {tag.name}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
 
       {posts.length === 0 ? (
         <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
@@ -106,6 +145,23 @@ export async function BlogListView() {
                       {post.title}
                     </Link>
                   </h2>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {post.visibility === BlogPostVisibility.MEMBERS ? (
+                      <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                        Solo miembros
+                      </span>
+                    ) : null}
+                    {post.tags.map(({ tag }) => (
+                      <Link
+                        key={tag.id}
+                        href={`/blog?tag=${tag.slug}`}
+                        className="rounded-full border border-black/10 px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        {tag.name}
+                      </Link>
+                    ))}
+                  </div>
 
                   <p className="line-clamp-3 text-sm leading-[1.35] text-foreground/90">
                     {post.excerpt}

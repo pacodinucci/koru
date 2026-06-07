@@ -85,3 +85,22 @@ export async function requireAdmin(
 
   return user;
 }
+
+export async function requireRole(
+  roles: AuthenticatedUser["role"][],
+  forbiddenRedirectTo = "/dashboard?error=forbidden",
+) {
+  const user = await requireUser();
+
+  if (!roles.includes(user.role)) {
+    redirect(forbiddenRedirectTo);
+  }
+
+  return user;
+}
+
+export async function requireDashboardUser(
+  forbiddenRedirectTo = "/dashboard?error=forbidden",
+) {
+  return requireRole(["ADMIN", "TEACHER"], forbiddenRedirectTo);
+}

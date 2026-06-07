@@ -47,6 +47,8 @@ import {
 import TextAlign from "@tiptap/extension-text-align";
 import { Node } from "@tiptap/core";
 
+import { useToast } from "@/components/ui/toast";
+
 const DEFAULT_CONTENT: JSONContent = {
   type: "doc",
   content: [
@@ -60,6 +62,8 @@ const DEFAULT_CONTENT: JSONContent = {
 type NovelBlogEditorProps = {
   jsonInputName?: string;
   htmlInputName?: string;
+  initialJson?: string | null;
+  initialHtml?: string | null;
   controlsInPanel?: boolean;
   onReady?: (actions: NovelBlogEditorActions | null) => void;
   onHtmlChange?: (html: string) => void;
@@ -486,14 +490,28 @@ function createGalleryId() {
 export function NovelBlogEditor({
   jsonInputName = "contentJson",
   htmlInputName = "contentHtml",
+  initialJson,
+  initialHtml,
   controlsInPanel = false,
   onReady,
   onHtmlChange,
 }: NovelBlogEditorProps) {
-  const [jsonValue, setJsonValue] = useState<string>(JSON.stringify(DEFAULT_CONTENT));
-  const [htmlValue, setHtmlValue] = useState<string>(
-    "<p>Empieza a escribir el contenido del post...</p>",
-  );
+  const { toast } = useToast();
+  const initialContent = useMemo<JSONContent>(() => {
+    if (!initialJson) {
+      return DEFAULT_CONTENT;
+    }
+
+    try {
+      return JSON.parse(initialJson) as JSONContent;
+    } catch {
+      return DEFAULT_CONTENT;
+    }
+  }, [initialJson]);
+  const initialJsonValue = useMemo(() => JSON.stringify(initialContent), [initialContent]);
+  const initialHtmlValue = initialHtml || "<p>Empieza a escribir el contenido del post...</p>";
+  const [jsonValue, setJsonValue] = useState<string>(initialJsonValue);
+  const [htmlValue, setHtmlValue] = useState<string>(initialHtmlValue);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadNotice, setUploadNotice] = useState<string>("");
   const [singleImageMode, setSingleImageMode] = useState<ImageInsertMode>("original");
@@ -947,6 +965,7 @@ export function NovelBlogEditor({
           setUploadingImage(true);
           try {
             const url = await uploadImage(file);
+            toast("Imagen subida correctamente.", "success");
 
             if (pendingMasonrySlot) {
               const currentNode = editorRef.current.state.doc.nodeAt(
@@ -1013,11 +1032,12 @@ export function NovelBlogEditor({
               editorRef.current.chain().focus().setImage(attrs).run();
             }
           } catch (error) {
-            setUploadNotice(
+            const message =
               error instanceof Error && error.message
                 ? error.message
-                : "No pudimos subir la imagen.",
-            );
+                : "No pudimos subir la imagen.";
+            setUploadNotice(message);
+            toast(message, "error");
           } finally {
             setUploadingImage(false);
           }
@@ -1028,7 +1048,7 @@ export function NovelBlogEditor({
 
       <EditorRoot>
         <EditorContent
-          initialContent={DEFAULT_CONTENT}
+          initialContent={initialContent}
           extensions={extensions}
           editorProps={{
             handleDOMEvents: {

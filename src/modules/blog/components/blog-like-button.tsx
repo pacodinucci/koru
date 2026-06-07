@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { HeartIcon } from "lucide-react";
 
+import { useToast } from "@/components/ui/toast";
+
 type BlogLikeButtonProps = {
   slug: string;
   initialLiked: boolean;
@@ -16,6 +18,7 @@ export function BlogLikeButton({
   initialCount,
 }: BlogLikeButtonProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [liked, setLiked] = useState(initialLiked);
   const [count, setCount] = useState(initialCount);
   const [pending, setPending] = useState(false);
@@ -40,6 +43,7 @@ export function BlogLikeButton({
       });
 
       if (response.status === 401) {
+        toast("Iniciá sesión para indicar que te gusta el post.", "error");
         router.push("/sign-in");
         return;
       }
@@ -47,6 +51,7 @@ export function BlogLikeButton({
       if (!response.ok) {
         setLiked(prevLiked);
         setCount(prevCount);
+        toast("No pudimos actualizar el me gusta.", "error");
         return;
       }
 
@@ -59,14 +64,17 @@ export function BlogLikeButton({
       if (!data.ok || typeof data.liked !== "boolean" || typeof data.count !== "number") {
         setLiked(prevLiked);
         setCount(prevCount);
+        toast("No pudimos actualizar el me gusta.", "error");
         return;
       }
 
       setLiked(data.liked);
       setCount(data.count);
+      toast(data.liked ? "Me gusta agregado." : "Me gusta quitado.", "success");
     } catch {
       setLiked(prevLiked);
       setCount(prevCount);
+      toast("No pudimos actualizar el me gusta.", "error");
     } finally {
       setPending(false);
     }

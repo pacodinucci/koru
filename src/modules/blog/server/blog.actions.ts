@@ -1,6 +1,6 @@
-﻿"use server";
+"use server";
 
-import { BlogPostStatus, Prisma } from "@prisma/client";
+import { BlogPostStatus, BlogPostVisibility, Prisma } from "@prisma/client";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -17,6 +17,7 @@ const createPostSchema = z.object({
   contentJson: z.string().min(2),
   contentHtml: z.string().min(2),
   status: z.nativeEnum(BlogPostStatus),
+  visibility: z.nativeEnum(BlogPostVisibility),
 });
 
 const createCommentSchema = z.object({
@@ -38,7 +39,7 @@ function slugify(value: string) {
 
 function resolveDashboardPath(formData: FormData) {
   const raw = String(formData.get("dashboardPath") ?? "").trim();
-  if (raw === "/dashboard/blog" || raw === "/dashboard/blog") {
+  if (raw === "/dashboard/blog" || /^\/dashboard\/blog\/[^/]+\/edit$/.test(raw)) {
     return raw;
   }
   return "/dashboard/blog";
@@ -73,6 +74,117 @@ function stripHtml(value: string) {
     .trim();
 }
 
+function parseCustomTagNames(formData: FormData) {
+  const raw = String(formData.get("customTags") ?? "");
+  return Array.from(
+    new Set(
+      raw
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0)
+        .map((tag) => tag.slice(0, 48)),
+    ),
+  );
+}
+
+async function resolveBlogTagIds(
+  tx: Prisma.TransactionClient,
+  formData: FormData,
+) {
+  const tagIds = new Set<string>();
+  const groupIds = Array.from(
+    new Set(
+      formData
+        .getAll("groupTagIds")
+        .map((value) => String(value).trim())
+        .filter(Boolean),
+    ),
+  );
+
+  if (groupIds.length > 0) {
+    const groups = await tx.studentGroup.findMany({
+      where: {
+        id: { in: groupIds },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+    });
+
+    for (const group of groups) {
+      const tag = await tx.blogTag.upsert({
+        where: { slug: `grupo-${group.slug}` },
+        create: {
+          name: group.name,
+          slug: `grupo-${group.slug}`,
+          type: "GROUP",
+          groupId: group.id,
+        },
+        update: {
+          name: group.name,
+          type: "GROUP",
+          groupId: group.id,
+        },
+        select: { id: true },
+      });
+      tagIds.add(tag.id);
+    }
+  }
+
+  for (const name of parseCustomTagNames(formData)) {
+    const baseSlug = slugify(name);
+    if (!baseSlug) {
+      continue;
+    }
+
+    const existing = await tx.blogTag.findUnique({
+      where: { slug: baseSlug },
+      select: { id: true, type: true },
+    });
+    const slug = existing?.type === "GROUP" ? `custom-${baseSlug}` : baseSlug;
+
+    const tag = await tx.blogTag.upsert({
+      where: { slug },
+      create: {
+        name,
+        slug,
+        type: "CUSTOM",
+      },
+      update: {
+        name,
+      },
+      select: { id: true },
+    });
+    tagIds.add(tag.id);
+  }
+
+  return Array.from(tagIds);
+}
+
+async function syncBlogPostTags(
+  tx: Prisma.TransactionClient,
+  postId: string,
+  formData: FormData,
+) {
+  const tagIds = await resolveBlogTagIds(tx, formData);
+
+  await tx.blogPostTag.deleteMany({
+    where: { postId },
+  });
+
+  if (tagIds.length === 0) {
+    return;
+  }
+
+  await tx.blogPostTag.createMany({
+    data: tagIds.map((tagId) => ({ postId, tagId })),
+    skipDuplicates: true,
+  });
+}
+
 export async function createBlogPostAction(formData: FormData) {
   const dashboardPath = resolveDashboardPath(formData);
   const user = await requireAdmin();
@@ -88,6 +200,7 @@ export async function createBlogPostAction(formData: FormData) {
     contentJson: String(formData.get("contentJson") ?? "").trim(),
     contentHtml: String(formData.get("contentHtml") ?? "").trim(),
     status: formData.get("status"),
+    visibility: formData.get("visibility"),
   });
 
   if (!parsed.success) {
@@ -134,17 +247,23 @@ export async function createBlogPostAction(formData: FormData) {
   const authorName =
     user.name?.trim() || user.email.split("@")[0]?.trim() || "Usuario";
 
-  await prisma.blogPost.create({
-    data: {
-      title: parsed.data.title,
-      slug: parsed.data.slug,
-      excerpt: parsed.data.excerpt,
-      content: parsed.data.contentHtml,
-      contentBlocks: parsedContentJson,
-      status: parsed.data.status,
-      authorName,
-      publishedAt,
-    },
+  await prisma.$transaction(async (tx) => {
+    const post = await tx.blogPost.create({
+      data: {
+        title: parsed.data.title,
+        slug: parsed.data.slug,
+        excerpt: parsed.data.excerpt,
+        content: parsed.data.contentHtml,
+        contentBlocks: parsedContentJson,
+        status: parsed.data.status,
+        visibility: parsed.data.visibility,
+        authorName,
+        publishedAt,
+      },
+      select: { id: true },
+    });
+
+    await syncBlogPostTags(tx, post.id, formData);
   });
 
   revalidatePath("/blog");
@@ -155,6 +274,136 @@ export async function createBlogPostAction(formData: FormData) {
   revalidatePath("/dashboard/blog");
 
   redirect(buildDashboardSuccess("Post creado correctamente.", dashboardPath));
+}
+
+export async function updateBlogPostAction(formData: FormData) {
+  const dashboardPath = resolveDashboardPath(formData);
+  await requireAdmin();
+
+  const postId = String(formData.get("postId") ?? "").trim();
+  const rawTitle = String(formData.get("title") ?? "").trim();
+  const rawSlug = String(formData.get("slug") ?? "").trim();
+  const normalizedSlug = slugify(rawSlug || rawTitle);
+
+  if (!postId) {
+    redirect(buildDashboardError("Post invalido.", "/dashboard/blog"));
+  }
+
+  const parsed = createPostSchema.safeParse({
+    title: rawTitle,
+    excerpt: String(formData.get("excerpt") ?? "").trim(),
+    slug: normalizedSlug,
+    contentJson: String(formData.get("contentJson") ?? "").trim(),
+    contentHtml: String(formData.get("contentHtml") ?? "").trim(),
+    status: formData.get("status"),
+    visibility: formData.get("visibility"),
+  });
+
+  if (!parsed.success) {
+    redirect(buildDashboardError("Revisa los datos del post.", dashboardPath));
+  }
+
+  const currentPost = await prisma.blogPost.findUnique({
+    where: { id: postId },
+    select: { id: true, slug: true, status: true, publishedAt: true },
+  });
+
+  if (!currentPost) {
+    redirect(buildDashboardError("El post no existe.", "/dashboard/blog"));
+  }
+
+  const slugOwner = await prisma.blogPost.findUnique({
+    where: { slug: parsed.data.slug },
+    select: { id: true },
+  });
+
+  if (slugOwner && slugOwner.id !== postId) {
+    redirect(buildDashboardError("El slug ya existe.", dashboardPath));
+  }
+
+  let parsedContentJson: Prisma.InputJsonValue = {};
+  try {
+    parsedContentJson = JSON.parse(parsed.data.contentJson) as Prisma.InputJsonValue;
+  } catch {
+    redirect(buildDashboardError("El contenido del post es invalido.", dashboardPath));
+  }
+
+  if (parsed.data.contentHtml.includes('data-placeholder="true"')) {
+    redirect(
+      buildDashboardError(
+        "Completa todas las imagenes pendientes de la galeria antes de guardar.",
+        dashboardPath,
+      ),
+    );
+  }
+
+  const plainTextContent = stripHtml(parsed.data.contentHtml);
+  if (plainTextContent.length < 30) {
+    redirect(
+      buildDashboardError(
+        "El post necesita mas contenido de texto para publicarse.",
+        dashboardPath,
+      ),
+    );
+  }
+
+  const publishedAt =
+    parsed.data.status === BlogPostStatus.PUBLISHED
+      ? currentPost.publishedAt ?? new Date()
+      : null;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.blogPost.update({
+      where: { id: postId },
+      data: {
+        title: parsed.data.title,
+        slug: parsed.data.slug,
+        excerpt: parsed.data.excerpt,
+        content: parsed.data.contentHtml,
+        contentBlocks: parsedContentJson,
+        status: parsed.data.status,
+        visibility: parsed.data.visibility,
+        publishedAt,
+      },
+    });
+
+    await syncBlogPostTags(tx, postId, formData);
+  });
+
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${currentPost.slug}`);
+  revalidatePath(`/blog/${parsed.data.slug}`);
+  revalidatePath("/dashboard/blog");
+
+  redirect(buildDashboardSuccess("Post actualizado correctamente.", "/dashboard/blog"));
+}
+
+export async function deleteBlogPostAction(formData: FormData) {
+  await requireAdmin();
+
+  const postId = String(formData.get("postId") ?? "").trim();
+  if (!postId) {
+    redirect(buildDashboardError("Post invalido.", "/dashboard/blog"));
+  }
+
+  const post = await prisma.blogPost.findUnique({
+    where: { id: postId },
+    select: { slug: true },
+  });
+
+  if (!post) {
+    redirect(buildDashboardError("El post no existe.", "/dashboard/blog"));
+  }
+
+  await prisma.blogPost.delete({
+    where: { id: postId },
+  });
+
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${post.slug}`);
+  revalidatePath("/dashboard/blog");
+
+  redirect(buildDashboardSuccess("Post eliminado correctamente.", "/dashboard/blog"));
 }
 
 export async function createBlogCommentAction(formData: FormData) {
