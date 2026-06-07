@@ -1,4 +1,8 @@
-import { CalendarAudienceType, UserRole } from "@prisma/client";
+import type {
+  CalendarAudienceType,
+  CalendarEventVisibility,
+  UserRole,
+} from "@prisma/client";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { type CalendarViewMode, getNextCursor } from "@/modules/dashboard/lib/calendar-range";
@@ -11,6 +15,8 @@ type CalendarEventItem = {
   title: string;
   startsAt: Date;
   endsAt: Date;
+  location?: string | null;
+  visibility: CalendarEventVisibility;
   audienceType: CalendarAudienceType;
   status: string;
   kind: "EVENT" | "MEETING";
@@ -312,23 +318,29 @@ export function DashboardCalendarSidePanel({
           ) : null}
         </div>
         <div className="mt-3 overflow-hidden rounded-lg border border-slate-200">
-          <div className="grid grid-cols-[88px_96px_1fr] border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <div className="grid grid-cols-[72px_76px_minmax(0,1fr)] border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             <span>Fecha</span>
             <span>Hora</span>
             <span>Evento</span>
           </div>
           {upcomingEvents.length ? upcomingEvents.map((event) => (
             onSelectEvent ? (
-              <button type="button" key={event.id} onClick={() => onSelectEvent(event.id)} className="grid w-full grid-cols-[88px_96px_1fr] items-center border-b border-slate-100 px-2 py-2 text-left text-xs hover:bg-slate-50 last:border-b-0">
+              <button type="button" key={event.id} onClick={() => onSelectEvent(event.id)} className="grid w-full grid-cols-[72px_76px_minmax(0,1fr)] items-center border-b border-slate-100 px-2 py-2 text-left text-xs hover:bg-slate-50 last:border-b-0">
                 <span className="text-slate-600">{new Date(event.startsAt).toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })}</span>
                 <span className="text-slate-600">{formatRange(new Date(event.startsAt), new Date(event.endsAt)).split(" - ")[0]}</span>
-                <span className="truncate font-semibold text-slate-900">{event.title}</span>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold text-slate-900">{event.title}</span>
+                  {event.location ? <span className="block truncate text-[11px] text-slate-500">{event.location}</span> : null}
+                </span>
               </button>
             ) : (
-              <Link key={event.id} href={hrefWith(dateCursor, viewMode, event.id)} className="grid grid-cols-[88px_96px_1fr] items-center border-b border-slate-100 px-2 py-2 text-xs hover:bg-slate-50 last:border-b-0">
+              <Link key={event.id} href={hrefWith(dateCursor, viewMode, event.id)} className="grid grid-cols-[72px_76px_minmax(0,1fr)] items-center border-b border-slate-100 px-2 py-2 text-xs hover:bg-slate-50 last:border-b-0">
                 <span className="text-slate-600">{new Date(event.startsAt).toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })}</span>
                 <span className="text-slate-600">{formatRange(new Date(event.startsAt), new Date(event.endsAt)).split(" - ")[0]}</span>
-                <span className="truncate font-semibold text-slate-900">{event.title}</span>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold text-slate-900">{event.title}</span>
+                  {event.location ? <span className="block truncate text-[11px] text-slate-500">{event.location}</span> : null}
+                </span>
               </Link>
             )
           )) : <p className="px-2 py-3 text-sm text-slate-500">No hay pr?ximos eventos.</p>}
@@ -358,6 +370,7 @@ export function DashboardCalendarUpcomingTable({
               <th className="px-4 py-3">Hora inicio</th>
               <th className="px-4 py-3">Hora fin</th>
               <th className="px-4 py-3">Evento</th>
+              <th className="px-4 py-3">Ubicación</th>
             </tr>
           </thead>
           <tbody>
@@ -382,10 +395,13 @@ export function DashboardCalendarUpcomingTable({
                     </button>
                   ) : event.title}
                 </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {event.location ?? "-"}
+                </td>
               </tr>
             )) : (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-sm text-slate-500">
+                <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">
                   No hay próximos eventos.
                 </td>
               </tr>

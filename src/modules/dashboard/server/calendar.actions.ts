@@ -1,6 +1,10 @@
 "use server";
 
-import { CalendarAudienceType, CalendarEventStatus } from "@prisma/client";
+import {
+  CalendarAudienceType,
+  CalendarEventStatus,
+  CalendarEventVisibility,
+} from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { requireAdmin } from "@/modules/auth/server/auth-guards";
@@ -25,6 +29,12 @@ function parseAudience(value: string): CalendarAudienceType {
   return CalendarAudienceType.ALL;
 }
 
+function parseVisibility(value: string): CalendarEventVisibility {
+  if (Object.values(CalendarEventVisibility).includes(value as CalendarEventVisibility)) {
+    return value as CalendarEventVisibility;
+  }
+  return CalendarEventVisibility.MEMBERS;
+}
 
 function parseDurationMinutes(value: string) {
   const minutes = Number.parseInt(value, 10);
@@ -61,14 +71,21 @@ export async function saveCalendarEventAction(formData: FormData) {
     const endsAt = new Date(startsAt.getTime() + durationMinutes * 60_000);
     const allDay = getBoolean(formData, "allDay");
     const location = getString(formData, "location").trim();
-    const audienceType = parseAudience(getString(formData, "audienceType"));
+    const visibility = parseVisibility(getString(formData, "visibility"));
+    const audienceType =
+      visibility === CalendarEventVisibility.PUBLIC
+        ? CalendarAudienceType.ALL
+        : parseAudience(getString(formData, "audienceType"));
     const status = CalendarEventStatus.PUBLISHED;
     const kind = getString(formData, "kind") === "MEETING" ? "MEETING" : "EVENT";
-    const privateAudienceUserIds = formData
-      .getAll("privateAudienceUserIds")
-      .filter((value): value is string => typeof value === "string")
-      .map((value) => value.trim())
-      .filter(Boolean);
+    const privateAudienceUserIds =
+      visibility === CalendarEventVisibility.PUBLIC
+        ? []
+        : formData
+            .getAll("privateAudienceUserIds")
+            .filter((value): value is string => typeof value === "string")
+            .map((value) => value.trim())
+            .filter(Boolean);
 
     if (!title) {
       redirect("/dashboard/calendar?error=missing_title");
@@ -82,6 +99,7 @@ export async function saveCalendarEventAction(formData: FormData) {
       endsAt,
       allDay,
       location,
+      visibility,
       audienceType,
       status,
       kind,

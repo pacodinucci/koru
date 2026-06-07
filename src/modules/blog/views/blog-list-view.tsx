@@ -15,41 +15,11 @@ import {
   getPublishedBlogTags,
   getPublishedPosts,
 } from "@/modules/blog/server/blog.repository";
+import { listUpcomingPublicCalendarEvents } from "@/modules/dashboard/server/calendar.repository";
 
-const eventPreviewItems = [
-  {
-    title: "Encuentro abierto Koru",
-    month: "JUN",
-    day: "28",
-    year: "2026",
-    location: "Koru OSA / Comunidad",
-    time: "10.00 - 12.00 pm",
-  },
-  {
-    title: "Actividad para miembros",
-    month: "JUL",
-    day: "05",
-    year: "2026",
-    location: "Koru OSA / Familias",
-    time: "09.30 - 11.00 am",
-  },
-  {
-    title: "Taller de acompañamiento",
-    month: "JUL",
-    day: "12",
-    year: "2026",
-    location: "Koru OSA / Comunidad",
-    time: "04.00 - 06.00 pm",
-  },
-  {
-    title: "Reunión de seguimiento",
-    month: "JUL",
-    day: "19",
-    year: "2026",
-    location: "Koru OSA / Familias",
-    time: "02.00 - 03.30 pm",
-  },
-];
+type BlogCalendarEvent = Awaited<
+  ReturnType<typeof listUpcomingPublicCalendarEvents>
+>[number];
 
 function formatDate(date: Date | null) {
   if (!date) return "Sin fecha";
@@ -76,7 +46,17 @@ function initials(name: string | null) {
     .join("");
 }
 
-function BlogEventsSidebar() {
+function formatEventTime(start: Date, end: Date) {
+  return `${start.toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })} - ${end.toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
+}
+
+function BlogEventsSidebar({ events }: { events: BlogCalendarEvent[] }) {
   return (
     <aside className="space-y-3 [font-family:var(--font-montserrat)]">
       <div>
@@ -89,40 +69,51 @@ function BlogEventsSidebar() {
       </div>
 
       <div className="overflow-hidden border-y border-purple-200/60 bg-[#f7f3fb]">
-        {eventPreviewItems.map((event) => (
-          <article
-            key={event.title}
-            className="grid grid-cols-[3.7rem_minmax(0,1fr)_1.5rem] items-center border-b border-purple-200/60 bg-[#f7f3fb] transition-colors hover:bg-[#efe7f7] last:border-b-0"
-          >
-            <div className="flex h-full flex-col items-center justify-center border-r border-black/10 px-2 py-3 text-center">
-              <span className="text-[10px] font-medium leading-none text-muted-foreground">
-                {event.month}
-              </span>
-              <span className="mt-1 text-2xl font-semibold leading-none text-foreground">
-                {event.day}
-              </span>
-              <span className="mt-1 text-[10px] leading-none text-muted-foreground">
-                {event.year}
-              </span>
-            </div>
+        {events.length ? events.map((event) => {
+          const startsAt = new Date(event.startsAt);
+          const endsAt = new Date(event.endsAt);
 
-            <div className="min-w-0 px-3 py-3">
-              <h3 className="truncate text-[13px] font-bold leading-tight">
-                {event.title}
-              </h3>
-              <p className="mt-1 flex items-center gap-1 text-[11px] leading-tight text-muted-foreground">
-                <MapPinIcon className="h-3 w-3 shrink-0" />
-                <span className="truncate">{event.location}</span>
-              </p>
-              <p className="mt-1 flex items-center gap-1 text-[11px] leading-tight text-muted-foreground">
-                <ClockIcon className="h-3 w-3 shrink-0" />
-                <span>{event.time}</span>
-              </p>
-            </div>
+          return (
+            <article
+              key={event.id}
+              className="grid grid-cols-[3.7rem_minmax(0,1fr)_1.5rem] items-center border-b border-purple-200/60 bg-[#f7f3fb] transition-colors hover:bg-[#efe7f7] last:border-b-0"
+            >
+              <div className="flex h-full flex-col items-center justify-center border-r border-black/10 px-2 py-3 text-center">
+                <span className="text-[10px] font-medium leading-none text-muted-foreground">
+                  {startsAt.toLocaleDateString("es-AR", { month: "short" }).toUpperCase()}
+                </span>
+                <span className="mt-1 text-2xl font-semibold leading-none text-foreground">
+                  {startsAt.getDate()}
+                </span>
+                <span className="mt-1 text-[10px] leading-none text-muted-foreground">
+                  {startsAt.getFullYear()}
+                </span>
+              </div>
 
-            <ChevronRightIcon className="mr-2 h-4 w-4 text-foreground" />
-          </article>
-        ))}
+              <div className="min-w-0 px-3 py-3">
+                <h3 className="truncate text-[13px] font-bold leading-tight">
+                  {event.title}
+                </h3>
+                {event.location ? (
+                  <p className="mt-1 flex items-center gap-1 text-[11px] leading-tight text-muted-foreground">
+                    <MapPinIcon className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{event.location}</span>
+                  </p>
+                ) : null}
+                <p className="mt-1 flex items-center gap-1 text-[11px] leading-tight text-muted-foreground">
+                  <ClockIcon className="h-3 w-3 shrink-0" />
+                  <span>{formatEventTime(startsAt, endsAt)}</span>
+                </p>
+              </div>
+
+              <ChevronRightIcon className="mr-2 h-4 w-4 text-foreground" />
+            </article>
+          );
+        }) : (
+          <p className="px-3 py-4 text-sm text-muted-foreground">
+            No hay próximos eventos publicados.
+          </p>
+        )}
       </div>
     </aside>
   );
@@ -134,9 +125,10 @@ type BlogListViewProps = {
 
 export async function BlogListView({ tagSlug }: BlogListViewProps) {
   const session = await auth.api.getSession({ headers: await headers() });
-  const [posts, tags] = await Promise.all([
+  const [posts, tags, events] = await Promise.all([
     getPublishedPosts({ userId: session?.user.id, tagSlug }),
     getPublishedBlogTags(session?.user.id),
+    listUpcomingPublicCalendarEvents({ userId: session?.user.id }),
   ]);
 
   return (
@@ -284,7 +276,7 @@ export async function BlogListView({ tagSlug }: BlogListViewProps) {
 
         <div className="relative lg:pb-32">
           <div className="lg:sticky lg:top-28">
-            <BlogEventsSidebar />
+            <BlogEventsSidebar events={events} />
           </div>
         </div>
       </div>
