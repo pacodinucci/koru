@@ -235,3 +235,32 @@ Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
 [2m[ 11.78ms][22m  [2m ↳ [22mBuild utilities
 [2m[ 38.67ms][22m  [2m ↳ [22mUpdate PostCSS AST
 
+
+[2m[159.26ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.04ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.68ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 79.63ms][22m  [2m ↳ [22mScan for candidates
+[2m[  3.54ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 46.54ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 22.75ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  5.76ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[380.25ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.58ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[134.75ms][22m  [2m ↳ [22mScan for candidates
+[2m[  6.87ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[188.37ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 35.80ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 13.63ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[133.94ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.49ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[106.69ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 19.61ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  1.05ms][22m  [2m ↳ [22mBuild utilities
+[2m[  5.67ms][22m  [2m ↳ [22mUpdate PostCSS AST
+

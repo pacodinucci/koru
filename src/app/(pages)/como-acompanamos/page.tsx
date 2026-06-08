@@ -276,12 +276,12 @@ function ContentCard({ block }: { block: TextBlock }) {
 
 function AccompanyPillarCard({ pillar }: { pillar: AccompanyPillar }) {
   return (
-    <article className="grid overflow-hidden rounded-[2rem] border border-complement-600 bg-white shadow-sm md:grid-cols-[1.35fr_0.9fr]">
+    <article className="grid overflow-hidden rounded-[2rem] border border-complement-600 bg-[color-mix(in_srgb,var(--complement-700)_22%,transparent)] shadow-sm md:grid-cols-[1.35fr_0.9fr]">
       <div className="p-6 md:p-8">
-        <h3 className="mb-3 text-3xl leading-none text-black" style={{ fontFamily: "var(--font-indie-flower)" }}>
+        <h3 className="mb-3 text-3xl leading-none text-[var(--complement-900)]" style={{ fontFamily: "var(--font-indie-flower)" }}>
           {pillar.title}
         </h3>
-        <div className="max-w-2xl space-y-3 text-base leading-relaxed text-black/80 md:text-lg">
+        <div className="max-w-2xl space-y-3 text-base leading-relaxed text-[var(--complement-900)] md:text-lg">
           {pillar.paragraphs?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
         </div>
       </div>
