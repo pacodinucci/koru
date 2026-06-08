@@ -120,20 +120,20 @@ function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
           title: "Cómo acompañamos",
           links: [
             {
-              label: "Grupo Esporas",
-              href: "/como-acompanamos#grupo-esporas",
+              label: "¿Cómo acompañamos?",
+              href: "/como-acompanamos#como-acompanamos",
             },
             {
-              label: "Grupo Koru",
-              href: "/como-acompanamos#grupo-koru",
+              label: "Grupos de acompañamiento",
+              href: "/como-acompanamos#grupos-de-acompanamiento",
             },
             {
-              label: "Grupo Helechos 1",
-              href: "/como-acompanamos#grupo-helechos-1",
+              label: "Metodologías y experiencias de aprendizaje",
+              href: "/como-acompanamos#metodologias-y-experiencias",
             },
             {
-              label: "Grupo Helechos 2",
-              href: "/como-acompanamos#grupo-helechos-2",
+              label: "Evaluación",
+              href: "/como-acompanamos#evaluacion",
             },
           ],
         },

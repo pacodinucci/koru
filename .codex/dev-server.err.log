@@ -30,3 +30,133 @@
 
 [browser] Image with src "https://res.cloudinary.com/ddtpavjz2/image/upload/v1778610385/koru/blog/gfnstuinav9qwyfqn880.jpg" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
 Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+[browser] Image with src "/branding/koru-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+
+[2m[140.37ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.07ms][22m  [2m ↳ [22mQuick bail check
+[2m[  3.28ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 69.27ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.83ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  7.12ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 56.12ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+Image with src "/assets/images/DSC01345.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "/assets/images/DSC01338.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "/assets/images/DSC01402.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "/assets/images/DSC02336.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/assets/images/DSC01345.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/assets/images/DSC01338.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/assets/images/DSC01402.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/assets/images/DSC02336.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/assets/images/DSC01443.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+
+[2m[159.81ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  1.20ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 60.77ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.09ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 57.52ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 30.91ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  8.13ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[140.89ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.36ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[106.47ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 11.16ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 18.13ms][22m  [2m ↳ [22mBuild utilities
+[2m[  4.58ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+[browser] Image with src "/assets/img6.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/img8.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/img9.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/img8.jpg" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+[browser] Image with src "/assets/img7.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/img4.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/branding/koru-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+
+[2m[110.21ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.37ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 54.68ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.34ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 35.32ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 13.25ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  5.07ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[75.28ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.02ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.61ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[59.13ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 0.73ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 3.44ms][22m  [2m ↳ [22mBuild utilities
+[2m[11.16ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[75.45ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.40ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[64.01ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 2.14ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 1.54ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 7.14ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[249.34ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  1.73ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 84.32ms][22m  [2m ↳ [22mScan for candidates
+[2m[  0.87ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 98.16ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 53.23ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 10.79ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[150.43ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.44ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 67.81ms][22m  [2m ↳ [22mScan for candidates
+[2m[  3.11ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 53.83ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 19.89ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  5.08ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[59.80ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.64ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[48.98ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 3.88ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 2.24ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 3.73ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[207.45ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.52ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 84.70ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.81ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 80.74ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 23.79ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 15.66ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[105.42ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.02ms][22m  [2m ↳ [22mQuick bail check
+[2m[  2.43ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 92.51ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.40ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  0.70ms][22m  [2m ↳ [22mBuild utilities
+[2m[  8.21ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
