@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FloatingSkills } from "./floating-skills";
 
 type TextBlock = {
   title: string;
@@ -322,18 +323,7 @@ export default function ComoAcompanamosPage() {
           {accompanyPillars.map((pillar) => <AccompanyPillarCard key={pillar.title} pillar={pillar} />)}
         </div>
 
-        <div className="mt-20 rounded-[2rem] bg-[#f3f2ef] p-6 md:mt-24">
-          <h3 className="mb-4 text-3xl leading-none text-black" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
-            Habilidades que cultivamos
-          </h3>
-          <div className="flex flex-wrap gap-3">
-            {cultivatedSkills.map((skill) => (
-              <span key={skill} className="rounded-full border border-complement-600 bg-white px-4 py-2 text-sm font-semibold text-black/80">
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
+        <FloatingSkills skills={cultivatedSkills} />
       </section>
 
       <section id="grupos-de-acompanamiento" className="scroll-mt-28 bg-[#f7f6f1]">
