@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FloatingSkills } from "./floating-skills";
+import { AccompanimentGroupsTabs } from "./accompaniment-groups-tabs";
 
 type TextBlock = {
   title: string;
@@ -27,7 +27,7 @@ const accompanyCopy = {
 const accompanyPillars: AccompanyPillar[] = [
   {
     title: "Aprendizaje con propósito",
-    imageSrc: "/assets/img7.jpg",
+    imageSrc: "/assets/images/DSC01367.png",
     imageAlt: "Niñas y niños explorando aprendizajes con propósito",
     paragraphs: [
       "Las niñas y los niños aprenden a través de proyectos transdisciplinarios y experiencias significativas conectadas con sus intereses, preguntas y motivaciones.",
@@ -35,7 +35,7 @@ const accompanyPillars: AccompanyPillar[] = [
   },
   {
     title: "Acompañamiento personalizado",
-    imageSrc: "/assets/img8.jpg",
+    imageSrc: "/assets/images/DSC01352.png",
     imageAlt: "Acompañamiento personalizado en comunidad",
     paragraphs: [
       "Reconocemos que cada niña y niño es único. Por ello, adaptamos la propuesta educativa a sus intereses, necesidades y etapas evolutivas, respetando la singularidad de cada proceso de aprendizaje.",
@@ -43,7 +43,7 @@ const accompanyPillars: AccompanyPillar[] = [
   },
   {
     title: "Desarrollo integral",
-    imageSrc: "/assets/img4.jpg",
+    imageSrc: "/assets/images/DSC01378.png",
     imageAlt: "Niñez desarrollando capacidades integrales",
     paragraphs: [
       "Cultivamos capacidades cognitivas, emocionales, sociales y prácticas que permiten a niñas y niños desenvolverse con confianza, creatividad y sentido de propósito en un mundo cambiante.",
@@ -51,7 +51,7 @@ const accompanyPillars: AccompanyPillar[] = [
   },
   {
     title: "Comunidad y naturaleza",
-    imageSrc: "/assets/img9.jpg",
+    imageSrc: "/assets/images/DSC01384.png",
     imageAlt: "Comunidad educativa en conexión con la naturaleza",
     paragraphs: [
       "Entendemos el aprendizaje como un proceso relacional. Aprendemos en comunidad y en conexión con la naturaleza, reconociendo que formamos parte de sistemas vivos interdependientes.",
@@ -73,7 +73,7 @@ const accompanimentGroups = [
   {
     title: "Grupo Esporas",
     ageRange: "3 a 6 años",
-    imageSrc: "/assets/img7.jpg",
+    imageSrc: "/assets/images/DSC01338.png",
     imageAlt: "Niñas y niños pequeños explorando en la naturaleza",
     paragraphs: [
       "El primer septenio en KORU, sigue un enfoque con influencia antroposófica por lo que para el grupo esporas llevamos un ritmo basado en la pedagogía Waldorf.",
@@ -97,7 +97,7 @@ const accompanimentGroups = [
   {
     title: "Grupo Koru",
     ageRange: "6 a 8 años",
-    imageSrc: "/assets/img9.jpg",
+    imageSrc: "/assets/images/DSC01384.png",
     imageAlt: "Niñas y niños en una etapa de transición de aprendizaje",
     paragraphs: [
       "Grupo Koru continúa con la influencia antroposófica, sin embargo se enfoca en crear el espacio y los recursos para una transición hacia el siguiente septenio.",
@@ -109,7 +109,8 @@ const accompanimentGroups = [
       "El paso del juego libre al aprendizaje con propósito",
       "El inicio del pensamiento más estructurado",
     ],
-    closing: "Creamos experiencias concretas, significativas y vivenciales que les permitan comprender el mundo desde la experiencia.",
+    closing:
+      "Creamos experiencias concretas, significativas y vivenciales que les permitan comprender el mundo desde la experiencia.",
     rhythmIntro: "Esto se logra en un ritmo donde observaremos:",
     rhythmBullets: [
       "Tareas de hogar: hacer pan, cocinar, limpiar, lavar platos, ordenar espacios, cuidar el entorno.",
@@ -126,7 +127,7 @@ const accompanimentGroups = [
   {
     title: "Grupo Helechos 1",
     ageRange: "8 a 10 años",
-    imageSrc: "/assets/img4.jpg",
+    imageSrc: "/assets/images/DSC01379.png",
     imageAlt: "Grupo escolar en actividades colaborativas",
     paragraphs: ["En este momento acompañamos:"],
     bullets: [
@@ -155,7 +156,7 @@ const accompanimentGroups = [
   {
     title: "Grupo Helechos 2",
     ageRange: "10 a 12 años",
-    imageSrc: "/assets/img6.jpg",
+    imageSrc: "/assets/images/DSC01280.png",
     imageAlt: "Niñez desarrollando autonomía y pensamiento crítico",
     paragraphs: [
       "En esta etapa, las niñas y niños avanzan hacia una mayor conciencia de sí mism@s, de sus decisiones y de su impacto en el entorno.",
@@ -190,7 +191,8 @@ const methodologies: TextBlock[] = [
     cta: { label: "Conocer más", href: "#inteligencia-socioemocional" },
   },
   {
-    title: "3. Desarrollo de habilidades fundamentales (lectura, escritura y matemáticas)",
+    title:
+      "3. Desarrollo de habilidades fundamentales (lectura, escritura y matemáticas)",
     paragraphs: [
       "Acompañamos el desarrollo de la lectoescritura y el pensamiento matemático a través de metodologías estructuradas, respetuosas de los procesos individuales y reconocidas por su efectividad, integrando el aprendizaje de forma significativa y no mecánica.",
       "Basada en una metodología premiada con más de 40 años de experiencia.",
@@ -243,14 +245,33 @@ const ecoCycleStages = [
   "Fuego: El potencial entra en una fase de transformación, donde necesita renovarse para seguir evolucionando.",
 ];
 
-function SectionHeading({ eyebrow, title, children }: { eyebrow?: string; title: string; children?: React.ReactNode }) {
+function SectionHeading({
+  eyebrow,
+  title,
+  children,
+}: {
+  eyebrow?: string;
+  title: string;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="max-w-4xl space-y-5">
-      {eyebrow ? <p className="text-sm font-medium tracking-[0.18em] text-[#6d7e96]">{eyebrow}</p> : null}
-      <h2 className="text-4xl leading-[0.95] tracking-tight text-black md:text-5xl lg:text-6xl" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
+      {eyebrow ? (
+        <p className="text-sm font-medium tracking-[0.18em] text-[#6d7e96]">
+          {eyebrow}
+        </p>
+      ) : null}
+      <h2
+        className="text-4xl leading-[0.95] tracking-tight text-black md:text-5xl lg:text-6xl"
+        style={{ fontFamily: "var(--font-roboto-condensed)" }}
+      >
         {title}
       </h2>
-      {children ? <div className="space-y-4 text-base leading-relaxed text-black/85 md:text-lg">{children}</div> : null}
+      {children ? (
+        <div className="space-y-4 text-base leading-relaxed text-black/85 md:text-lg">
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -258,15 +279,23 @@ function SectionHeading({ eyebrow, title, children }: { eyebrow?: string; title:
 function ContentCard({ block }: { block: TextBlock }) {
   return (
     <article className="rounded-[2rem] border border-complement-600 bg-white/70 p-6 shadow-sm">
-      <h3 className="mb-3 text-2xl leading-none text-black" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
+      <h3
+        className="mb-3 text-2xl leading-none text-black"
+        style={{ fontFamily: "var(--font-roboto-condensed)" }}
+      >
         {block.title}
       </h3>
       <div className="space-y-3 text-sm leading-relaxed text-black/80 md:text-base">
-        {block.paragraphs?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+        {block.paragraphs?.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
         {block.bullets ? <BulletList items={block.bullets} /> : null}
       </div>
       {block.cta ? (
-        <a href={block.cta.href} className="mt-5 inline-flex rounded-full border border-complement-700 px-4 py-2 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]">
+        <a
+          href={block.cta.href}
+          className="mt-5 inline-flex rounded-full border border-complement-700 px-4 py-2 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]"
+        >
           {block.cta.label}
         </a>
       ) : null}
@@ -278,15 +307,25 @@ function AccompanyPillarCard({ pillar }: { pillar: AccompanyPillar }) {
   return (
     <article className="grid overflow-hidden rounded-[2rem] border border-complement-600 bg-[color-mix(in_srgb,var(--complement-700)_22%,transparent)] shadow-sm md:grid-cols-[1.35fr_0.9fr]">
       <div className="p-6 md:p-8">
-        <h3 className="mb-3 text-3xl leading-none text-[var(--complement-900)]" style={{ fontFamily: "var(--font-indie-flower)" }}>
+        <h3
+          className="mb-3 text-3xl leading-none text-[var(--complement-900)]"
+          style={{ fontFamily: "var(--font-indie-flower)" }}
+        >
           {pillar.title}
         </h3>
         <div className="max-w-2xl space-y-3 text-base leading-relaxed text-[var(--complement-900)] md:text-lg">
-          {pillar.paragraphs?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          {pillar.paragraphs?.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
         </div>
       </div>
       <div className="relative min-h-[13rem] border-t border-complement-600 md:min-h-full md:border-t-0 md:border-l">
-        <Image src={pillar.imageSrc} alt={pillar.imageAlt} fill className="object-cover" />
+        <Image
+          src={pillar.imageSrc}
+          alt={pillar.imageAlt}
+          fill
+          className="object-cover"
+        />
       </div>
     </article>
   );
@@ -296,7 +335,10 @@ function BulletList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-2 pl-5 text-black/80">
       {items.map((item) => (
-        <li key={item} className="list-disc marker:text-[var(--complement-800)]">
+        <li
+          key={item}
+          className="list-disc marker:text-[var(--complement-800)]"
+        >
           {item}
         </li>
       ))}
@@ -307,79 +349,84 @@ function BulletList({ items }: { items: string[] }) {
 export default function ComoAcompanamosPage() {
   return (
     <main className="bg-white" style={{ fontFamily: "var(--font-montserrat)" }}>
-      <section id="como-acompanamos" className="scroll-mt-28 mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
+      <section
+        id="como-acompanamos"
+        className="scroll-mt-28 mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14"
+      >
         <div className="grid items-start gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
-          <SectionHeading eyebrow={accompanyCopy.eyebrow} title={accompanyCopy.title}>
+          <SectionHeading
+            eyebrow={accompanyCopy.eyebrow}
+            title={accompanyCopy.title}
+          >
             <p>{accompanyCopy.intro}</p>
           </SectionHeading>
           <div className="relative mx-auto w-full max-w-[22rem] lg:pt-20">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <Image src="/assets/img6.jpg" alt="Acompañantes y niñez compartiendo un espacio de aprendizaje" fill className="object-cover" priority />
+              <Image
+                src="/assets/images/DSC01280.png"
+                alt="Acompañantes y niñez compartiendo un espacio de aprendizaje"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
           </div>
         </div>
 
         <div className="mt-20 space-y-6 md:mt-24">
-          {accompanyPillars.map((pillar) => <AccompanyPillarCard key={pillar.title} pillar={pillar} />)}
+          {accompanyPillars.map((pillar) => (
+            <AccompanyPillarCard key={pillar.title} pillar={pillar} />
+          ))}
         </div>
 
         <FloatingSkills skills={cultivatedSkills} />
       </section>
 
-      <section id="grupos-de-acompanamiento" className="scroll-mt-28 bg-[#f7f6f1]">
+      <section
+        id="grupos-de-acompanamiento"
+        className="scroll-mt-28 bg-[#f7f6f1]"
+      >
         <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
           <SectionHeading title="Grupos de acompañamiento">
-            <p>Nuestros grupos se organizan a partir de las etapas evolutivas, respondiendo a las necesidades físicas, emocionales, sociales y cognitivas de cada momento del desarrollo.</p>
+            <p>
+              Nuestros grupos se organizan a partir de las etapas evolutivas,
+              respondiendo a las necesidades físicas, emocionales, sociales y
+              cognitivas de cada momento del desarrollo.
+            </p>
           </SectionHeading>
-          <Tabs defaultValue={accompanimentGroups[0].title} className="mt-10 grid gap-6 md:grid-cols-[18rem_minmax(0,1fr)] md:items-stretch">
-            <TabsList className="grid h-[32rem] w-full grid-rows-4 gap-0 rounded-none bg-transparent px-0 py-2">
-              {accompanimentGroups.map((group, index) => (
-                <TabsTrigger key={group.title} value={group.title} className="relative h-full w-full flex-col items-start justify-center rounded-none border-0 bg-transparent px-3 py-4 text-left font-normal whitespace-normal text-black/85 data-[active]:bg-transparent data-[active]:!text-[var(--complement-800)] data-[selected]:!text-[var(--complement-800)] aria-selected:!text-[var(--complement-800)]">
-                  <span className="block text-[1.9rem] leading-[0.95]" style={{ fontFamily: "var(--font-roboto-condensed)" }}>{group.title}</span>
-                  <span className="mt-2 block text-[1.8rem] leading-none" style={{ fontFamily: "var(--font-indie-flower)" }}>{group.ageRange}</span>
-                  {index < accompanimentGroups.length - 1 ? <span aria-hidden="true" className="pointer-events-none absolute right-0 bottom-0 left-0 h-px" style={{ backgroundImage: "repeating-linear-gradient(to right, currentColor 0 10px, transparent 10px 18px)", color: "rgb(var(--complement-700) / 0.75)" }} /> : null}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            {accompanimentGroups.map((group) => (
-              <TabsContent key={group.title} value={group.title} className="mt-0 h-full rounded-[2rem] border border-complement-600 bg-white/60 p-3 md:p-4">
-                <div className="grid gap-8 p-4 md:p-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-                  <div>
-                    <h3 className="mb-2 text-3xl leading-none text-black md:text-4xl" style={{ fontFamily: "var(--font-roboto-condensed)" }}>{group.title}</h3>
-                    <p className="mb-5 text-3xl leading-none text-black/75" style={{ fontFamily: "var(--font-indie-flower)" }}>{group.ageRange}</p>
-                    <div className="space-y-4 text-base leading-relaxed text-black/85 md:text-lg">
-                      {group.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-                      {group.bullets ? <BulletList items={group.bullets} /> : null}
-                      {group.closing ? <p>{group.closing}</p> : null}
-                      {group.rhythmIntro ? <p>{group.rhythmIntro}</p> : null}
-                      {group.rhythmBullets ? <BulletList items={group.rhythmBullets} /> : null}
-                    </div>
-                  </div>
-                  <div className="relative mx-auto w-full max-w-[22rem]">
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-                      <Image src={group.imageSrc} alt={group.imageAlt} fill className="object-cover" />
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
+          <AccompanimentGroupsTabs groups={accompanimentGroups} />
         </div>
       </section>
 
-      <section id="metodologias-y-experiencias" className="scroll-mt-28 bg-white">
+      <section
+        id="metodologias-y-experiencias"
+        className="scroll-mt-28 bg-white"
+      >
         <div className="mx-auto grid w-full max-w-7xl gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10 lg:px-14 lg:py-14">
           <div className="lg:order-2">
             <SectionHeading title="Metodologías y experiencias de aprendizaje">
-              <p>Nuestro enfoque pedagógico se vive a través de metodologías activas, vivenciales y transdisciplinarias que integran el pensamiento, la emoción, el cuerpo y la acción. No enseñamos contenidos aislados, sino experiencias que conectan a las niñas y niños con el mundo y consigo mism@s.</p>
+              <p>
+                Nuestro enfoque pedagógico se vive a través de metodologías
+                activas, vivenciales y transdisciplinarias que integran el
+                pensamiento, la emoción, el cuerpo y la acción. No enseñamos
+                contenidos aislados, sino experiencias que conectan a las niñas
+                y niños con el mundo y consigo mism@s.
+              </p>
             </SectionHeading>
             <div className="mt-8 grid gap-4">
-              {methodologies.map((methodology) => <ContentCard key={methodology.title} block={methodology} />)}
+              {methodologies.map((methodology) => (
+                <ContentCard key={methodology.title} block={methodology} />
+              ))}
             </div>
           </div>
           <div className="relative mx-auto w-full max-w-[22rem] lg:order-1">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <Image src="/assets/img9.jpg" alt="Niñez colaborando en una experiencia de proyecto" fill className="object-cover" />
+              <Image
+                src="/assets/images/DSC01384.png"
+                alt="Niñez colaborando en una experiencia de proyecto"
+                fill
+                className="object-cover"
+              />
             </div>
           </div>
         </div>
@@ -389,22 +436,92 @@ export default function ComoAcompanamosPage() {
         <div className="mx-auto grid w-full max-w-7xl items-start gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-14 lg:py-14">
           <div className="space-y-8">
             <SectionHeading title="Evaluación">
-              <p className="text-2xl font-semibold text-black">Evaluamos para acompañar, no para clasificar.</p>
-              <p>A través de la observación continua, el Ecociclo y el diálogo con las familias, hacemos visible el desarrollo integral de cada niñ@.</p>
-              <p>Nuestro enfoque reconoce el aprendizaje como un proceso vivo, único y en constante evolución para toda la comunidad.</p>
-              <a href="#evaluacion-detallada" className="inline-flex rounded-full border border-complement-700 px-4 py-2 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]">Conocer más</a>
+              <p className="text-2xl font-semibold text-black">
+                Evaluamos para acompañar, no para clasificar.
+              </p>
+              <p>
+                A través de la observación continua, el Ecociclo y el diálogo
+                con las familias, hacemos visible el desarrollo integral de cada
+                niñ@.
+              </p>
+              <p>
+                Nuestro enfoque reconoce el aprendizaje como un proceso vivo,
+                único y en constante evolución para toda la comunidad.
+              </p>
+              <a
+                href="#evaluacion-detallada"
+                className="inline-flex rounded-full border border-complement-700 px-4 py-2 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]"
+              >
+                Conocer más
+              </a>
             </SectionHeading>
 
             <div id="evaluacion-detallada" className="scroll-mt-28 grid gap-4">
-              <ContentCard block={{ title: "Evaluación a aprendices", paragraphs: ["Entendemos la evaluación como un proceso continuo de crecimiento, y auto-observación, no como un momento aislado, ni como una definición.", "Observamos, registramos y compartimos el proceso de cada niñ@, haciendo visible su desarrollo en distintas dimensiones: corporal, emocional, social, cognitiva y de autogestión.", "Este seguimiento se construye en el día a día, a través de la interacción, la observación y el vínculo del acompañante y l@s niñ@s.", "Más que emitir juicios, buscamos comprender el proceso y generar acciones que apoyen el crecimiento de cada niñ@.", "El proceso de cada niñ@ es acompañado de manera cercana también con su familia."], bullets: ["Reconocer avances y fortalezas", "Identificar áreas de oportunidad", "Ajustar el acompañamiento", "Trazar nuevas rutas de desarrollo", "Espacios de seguimiento", "Comunicación continua", "Acuerdos compartidos", "Cada niñ@ cuenta con un registro donde se documentan avances, procesos y acuerdos, permitiendo que las familias estén informadas y puedan dar continuidad desde casa."] }} />
-              <ContentCard block={{ title: "Nuestra herramienta de evaluación", paragraphs: ["Utilizamos el Ecociclo como una herramienta para comprender y comunicar el desarrollo de cada niñ@ de forma integral.", "A diferencia de los sistemas tradicionales, el Ecociclo no mide desde la comparación, sino que reconoce el desarrollo como un proceso continuo, dinámico y en constante transformación.", "Este modelo permite ubicar los distintos potenciales del niñ@ dentro de un proceso evolutivo, entendiendo que cada aspecto del desarrollo tiene su propio ritmo.", "Las etapas del Ecociclo. El desarrollo se observa como un ciclo vivo:"], bullets: ecoCycleStages, cta: { label: "Conocer más", href: "#ecociclo" } }} />
-              <ContentCard block={{ title: "Evaluación del equipo", paragraphs: ["El acompañamiento que ofrecemos a las niñas y niños parte de un principio fundamental: quienes acompañamos también estamos en constante aprendizaje.", "Por ello, sostenemos prácticas de evaluación y reflexión continua que nos permiten revisar, ajustar y enriquecer nuestra labor pedagógica y comunitaria."] }} />
-              <ContentCard block={{ title: "Evaluación entre colaboradores y familias", paragraphs: ["Fomentamos una cultura de retroalimentación basada en los principios de la Comunicación NoViolenta.", "A través de espacios de observación entre pares y acompañamiento pedagógico, el equipo comparte miradas, se escucha y se nutre, fortaleciendo la coherencia y la calidad del acompañamiento.", "Entendemos la comunidad como un sistema vivo en constante evolución.", "Así como acompañamos el desarrollo de cada niñ@, también observamos y ajustamos el funcionamiento del equipo, la relación con las familias y la dinámica comunitaria en su conjunto."] }} />
+              <ContentCard
+                block={{
+                  title: "Evaluación a aprendices",
+                  paragraphs: [
+                    "Entendemos la evaluación como un proceso continuo de crecimiento, y auto-observación, no como un momento aislado, ni como una definición.",
+                    "Observamos, registramos y compartimos el proceso de cada niñ@, haciendo visible su desarrollo en distintas dimensiones: corporal, emocional, social, cognitiva y de autogestión.",
+                    "Este seguimiento se construye en el día a día, a través de la interacción, la observación y el vínculo del acompañante y l@s niñ@s.",
+                    "Más que emitir juicios, buscamos comprender el proceso y generar acciones que apoyen el crecimiento de cada niñ@.",
+                    "El proceso de cada niñ@ es acompañado de manera cercana también con su familia.",
+                  ],
+                  bullets: [
+                    "Reconocer avances y fortalezas",
+                    "Identificar áreas de oportunidad",
+                    "Ajustar el acompañamiento",
+                    "Trazar nuevas rutas de desarrollo",
+                    "Espacios de seguimiento",
+                    "Comunicación continua",
+                    "Acuerdos compartidos",
+                    "Cada niñ@ cuenta con un registro donde se documentan avances, procesos y acuerdos, permitiendo que las familias estén informadas y puedan dar continuidad desde casa.",
+                  ],
+                }}
+              />
+              <ContentCard
+                block={{
+                  title: "Nuestra herramienta de evaluación",
+                  paragraphs: [
+                    "Utilizamos el Ecociclo como una herramienta para comprender y comunicar el desarrollo de cada niñ@ de forma integral.",
+                    "A diferencia de los sistemas tradicionales, el Ecociclo no mide desde la comparación, sino que reconoce el desarrollo como un proceso continuo, dinámico y en constante transformación.",
+                    "Este modelo permite ubicar los distintos potenciales del niñ@ dentro de un proceso evolutivo, entendiendo que cada aspecto del desarrollo tiene su propio ritmo.",
+                    "Las etapas del Ecociclo. El desarrollo se observa como un ciclo vivo:",
+                  ],
+                  bullets: ecoCycleStages,
+                  cta: { label: "Conocer más", href: "#ecociclo" },
+                }}
+              />
+              <ContentCard
+                block={{
+                  title: "Evaluación del equipo",
+                  paragraphs: [
+                    "El acompañamiento que ofrecemos a las niñas y niños parte de un principio fundamental: quienes acompañamos también estamos en constante aprendizaje.",
+                    "Por ello, sostenemos prácticas de evaluación y reflexión continua que nos permiten revisar, ajustar y enriquecer nuestra labor pedagógica y comunitaria.",
+                  ],
+                }}
+              />
+              <ContentCard
+                block={{
+                  title: "Evaluación entre colaboradores y familias",
+                  paragraphs: [
+                    "Fomentamos una cultura de retroalimentación basada en los principios de la Comunicación NoViolenta.",
+                    "A través de espacios de observación entre pares y acompañamiento pedagógico, el equipo comparte miradas, se escucha y se nutre, fortaleciendo la coherencia y la calidad del acompañamiento.",
+                    "Entendemos la comunidad como un sistema vivo en constante evolución.",
+                    "Así como acompañamos el desarrollo de cada niñ@, también observamos y ajustamos el funcionamiento del equipo, la relación con las familias y la dinámica comunitaria en su conjunto.",
+                  ],
+                }}
+              />
             </div>
           </div>
           <div className="relative mx-auto w-full max-w-[22rem]">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <Image src="/assets/img4.jpg" alt="Acompañante registrando procesos de aprendizaje en comunidad" fill className="object-cover" />
+              <Image
+                src="/assets/images/DSC01386.png"
+                alt="Acompañante registrando procesos de aprendizaje en comunidad"
+                fill
+                className="object-cover"
+              />
             </div>
           </div>
         </div>

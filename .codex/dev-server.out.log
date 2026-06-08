@@ -85,3 +85,32 @@ Creating turbopack project {
 ✓ Compiled in 322ms
  GET /dashboard/mailing 200 in 3.8s (next.js: 6ms, application-code: 3.8s)
  GET /como-acompanamos 200 in 4.1s (next.js: 544ms, application-code: 3.5s)
+✓ Compiled in 852ms
+ GET /como-acompanamos 200 in 2.8s (next.js: 362ms, application-code: 2.5s)
+ GET /dashboard/mailing 200 in 4.0s (next.js: 104ms, application-code: 3.9s)
+✓ Compiled in 1051ms
+ GET /como-acompanamos 200 in 2.6s (next.js: 366ms, application-code: 2.2s)
+ GET /como-acompanamos 200 in 2.1s (next.js: 4ms, application-code: 2.1s)
+ GET /como-acompanamos 200 in 2.1s (next.js: 101ms, application-code: 2.0s)
+ GET /como-acompanamos 200 in 2.1s (next.js: 53ms, application-code: 2.1s)
+ GET /como-acompanamos 200 in 2.1s (next.js: 6ms, application-code: 2.1s)
+ GET /dashboard/mailing 200 in 3.8s (next.js: 145ms, application-code: 3.6s)
+ GET /dashboard/mailing 200 in 3.3s (next.js: 6ms, application-code: 3.3s)
+ GET /dashboard/mailing 200 in 3.6s (next.js: 155ms, application-code: 3.5s)
+ GET /dashboard/mailing 200 in 3.3s (next.js: 5ms, application-code: 3.3s)
+ GET /dashboard/mailing 200 in 3.4s (next.js: 5ms, application-code: 3.4s)
+✓ Compiled in 407ms
+✓ Compiled in 278ms
+ GET /como-acompanamos 200 in 3.1s (next.js: 398ms, application-code: 2.7s)
+ GET /dashboard/mailing 200 in 4.7s (next.js: 7ms, application-code: 4.7s)
+ GET /como-acompanamos 200 in 2.9s (next.js: 497ms, application-code: 2.4s)
+ GET /dashboard/mailing 200 in 3.8s (next.js: 7ms, application-code: 3.8s)
+✓ Compiled in 254ms
+ GET /como-acompanamos 200 in 2.8s (next.js: 471ms, application-code: 2.3s)
+ GET /dashboard/mailing 200 in 3.9s (next.js: 7ms, application-code: 3.9s)
+✓ Compiled in 245ms
+ GET /como-acompanamos 200 in 2.6s (next.js: 376ms, application-code: 2.2s)
+ GET /dashboard/mailing 200 in 3.5s (next.js: 6ms, application-code: 3.5s)
+✓ Compiled in 253ms
+ GET /como-acompanamos 200 in 2.8s (next.js: 424ms, application-code: 2.4s)
+ GET /dashboard/mailing 200 in 3.8s (next.js: 6ms, application-code: 3.8s)

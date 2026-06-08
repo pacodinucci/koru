@@ -320,13 +320,13 @@ export function FloatingSkills({ skills }: FloatingSkillsProps) {
   return (
     <div
       ref={containerRef}
-      className="relative mt-20 min-h-[20rem] overflow-hidden rounded-[2rem] p-8 md:mt-24 md:min-h-[24rem]"
+      className="isolate relative z-0 mt-20 min-h-[20rem] overflow-hidden rounded-[2rem] p-8 md:mt-24 md:min-h-[24rem]"
       style={{
         background:
           "radial-gradient(circle at 18% 18%, var(--orange-500) 0%, transparent 30%), radial-gradient(circle at 82% 22%, var(--brand-600) 0%, transparent 34%), radial-gradient(circle at 70% 86%, var(--complement-700) 0%, transparent 38%), linear-gradient(135deg, var(--complement-900) 0%, var(--brand-800) 52%, var(--orange-700) 100%)",
       }}
     >
-      <h3 className="absolute top-8 left-8 z-10 max-w-xl text-4xl leading-none text-white md:text-5xl" style={{ fontFamily: "var(--font-indie-flower)" }}>
+      <h3 className="absolute top-8 left-8 z-[1] max-w-xl text-4xl leading-none text-white md:text-5xl" style={{ fontFamily: "var(--font-indie-flower)" }}>
         Habilidades que cultivamos
       </h3>
 
@@ -345,7 +345,7 @@ export function FloatingSkills({ skills }: FloatingSkillsProps) {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          className="absolute z-20 cursor-grab touch-none select-none rounded-md border border-white/40 bg-white/25 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white shadow-sm backdrop-blur transition-transform active:cursor-grabbing active:scale-105"
+          className="absolute z-[2] cursor-grab touch-none select-none rounded-md border border-white/40 bg-white/25 px-4 py-2 text-sm font-semibold whitespace-nowrap text-white shadow-sm backdrop-blur transition-transform active:cursor-grabbing active:scale-105"
           style={{
             transform: `translate3d(${item.x}px, ${item.y}px, 0)`,
             fontFamily:
