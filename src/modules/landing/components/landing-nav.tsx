@@ -147,7 +147,7 @@ function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
 
   return {
     featured: {
-      imageSrc: "/assets/images/image2.png",
+      imageSrc: "/assets/images/comu7.png",
       imageAlt: "Comunidad Koru",
       title: "Comunidad Koru",
       href: "/comunidad",
@@ -156,10 +156,17 @@ function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
       {
         title: "Comunidad",
         links: [
-          { label: "Nuestra comunidad", href: "/comunidad#nuestra-comunidad" },
           {
             label: "Escuela para familias",
             href: "/comunidad#escuela-para-familias",
+          },
+          {
+            label: "Protocolos y cuidado",
+            href: "/comunidad#protocolos-y-cuidado",
+          },
+          {
+            label: "El día a día en KORU",
+            href: "/comunidad#dia-a-dia-en-koru",
           },
           { label: "Únete al equipo", href: "/comunidad#unete-al-equipo" },
         ],

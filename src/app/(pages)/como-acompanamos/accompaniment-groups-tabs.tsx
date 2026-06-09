@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -38,15 +39,54 @@ function scrollToGroupsTop() {
     ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function groupSlug(title: string) {
+  return title
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export function AccompanimentGroupsTabs({ groups }: AccompanimentGroupsTabsProps) {
+  const slugsByTitle = useMemo(
+    () => new Map(groups.map((group) => [groupSlug(group.title), group.title])),
+    [groups],
+  );
+  const [activeGroup, setActiveGroup] = useState(groups[0]?.title ?? "");
+
+  useEffect(() => {
+    function syncFromHash() {
+      const hash = window.location.hash.replace("#", "");
+      const groupTitle = slugsByTitle.get(hash);
+
+      if (groupTitle) {
+        setActiveGroup(groupTitle);
+        scrollToGroupsTop();
+      }
+    }
+
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+
+    return () => window.removeEventListener("hashchange", syncFromHash);
+  }, [slugsByTitle]);
+
   return (
-    <Tabs defaultValue={groups[0]?.title} className="mt-10 grid gap-6 md:grid-cols-[18rem_minmax(0,1fr)] md:items-start">
+    <Tabs
+      value={activeGroup}
+      onValueChange={setActiveGroup}
+      className="mt-10 grid gap-6 md:grid-cols-[18rem_minmax(0,1fr)] md:items-start"
+    >
       <TabsList className="grid h-[32rem] w-full grid-rows-4 gap-0 rounded-none bg-transparent px-0 py-2 md:sticky md:top-28 md:self-start">
         {groups.map((group, index) => (
           <TabsTrigger
             key={group.title}
             value={group.title}
-            onClick={scrollToGroupsTop}
+            onClick={() => {
+              window.history.replaceState(null, "", `#${groupSlug(group.title)}`);
+              scrollToGroupsTop();
+            }}
             className="relative h-full w-full flex-col items-start justify-center rounded-none border-0 bg-transparent px-3 py-4 text-left font-normal whitespace-normal text-black/85 data-[active]:bg-transparent data-[active]:!text-[var(--complement-800)] data-[selected]:!text-[var(--complement-800)] aria-selected:!text-[var(--complement-800)]"
           >
             <span className="block text-[1.45rem] leading-[0.95]" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
@@ -70,7 +110,12 @@ export function AccompanimentGroupsTabs({ groups }: AccompanimentGroupsTabsProps
       </TabsList>
 
       {groups.map((group) => (
-        <TabsContent key={group.title} value={group.title} className="mt-0 h-full rounded-[2rem] border border-complement-600 bg-white/60 p-3 md:p-4">
+        <TabsContent
+          id={groupSlug(group.title)}
+          key={group.title}
+          value={group.title}
+          className="mt-0 h-full scroll-mt-36 rounded-[2rem] border border-complement-600 bg-white/60 p-3 md:p-4"
+        >
           <div className="grid gap-8 p-4 md:p-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
             <div>
               <h3 className="mb-2 text-3xl leading-none text-black md:text-4xl" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
