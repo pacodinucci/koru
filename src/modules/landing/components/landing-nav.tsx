@@ -110,7 +110,7 @@ function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
   if (normalized === "como acompanamos") {
     return {
       featured: {
-        imageSrc: "/assets/img1.jpg",
+        imageSrc: "/assets/images/image1.png",
         imageAlt: "Cómo acompañamos",
         title: "Cómo acompañamos",
         href: "/como-acompanamos",
@@ -147,7 +147,7 @@ function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
 
   return {
     featured: {
-      imageSrc: "/assets/img1.jpg",
+      imageSrc: "/assets/images/image2.png",
       imageAlt: "Comunidad Koru",
       title: "Comunidad Koru",
       href: "/comunidad",
@@ -690,14 +690,14 @@ export function LandingNav({
             {activeSubmenu.featured ? (
               <a
                 href={activeSubmenu.featured.href || "#"}
-                className="group relative hidden w-[320px] shrink-0 overflow-hidden md:block"
+                className="group relative hidden h-[260px] w-[320px] shrink-0 overflow-hidden md:block"
               >
                 <Image
                   src={activeSubmenu.featured.imageSrc}
                   alt={activeSubmenu.featured.imageAlt}
                   width={640}
                   height={640}
-                  className="h-full min-h-[200px] w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                 />
                 {activeSubmenu.featured.title ? (
                   <span className="absolute right-4 bottom-4 text-sm font-semibold tracking-wider text-white">

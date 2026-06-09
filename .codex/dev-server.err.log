@@ -559,3 +559,13 @@ Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
 [2m[ 0.97ms][22m  [2m ↳ [22mBuild utilities
 [2m[ 8.81ms][22m  [2m ↳ [22mUpdate PostCSS AST
 
+
+[2m[313.54ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.03ms][22m  [2m ↳ [22mQuick bail check
+[2m[  5.91ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[130.53ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.91ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[115.19ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 52.49ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  7.07ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
