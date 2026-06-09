@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
+import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
 import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
 import {
   getSectionFieldKey,
@@ -180,7 +181,8 @@ export function ImageGridSection({
           style={sectionBackgroundStyle}
         />
       ) : null}
-      <div
+      <ScrollReveal
+        direction="none"
         className="mx-auto w-full max-w-[110rem] py-20"
         style={bodyPaddingStyle}
       >
@@ -313,7 +315,7 @@ export function ImageGridSection({
           responsiveMode={responsiveMode}
           orderMap={orderMap}
         />
-      </div>
+      </ScrollReveal>
     </section>
   );
 }

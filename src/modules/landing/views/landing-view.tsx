@@ -29,6 +29,7 @@ import {
   type LandingResponsiveMode,
 } from "@/modules/landing/types/landing-text";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
+import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
 import { CardsSection } from "@/modules/landing/views/sections/cards-section";
 import { FooterSection } from "@/modules/landing/views/sections/footer-section";
 import { GallerySection } from "@/modules/landing/views/sections/gallery-section";
@@ -70,7 +71,7 @@ function LandingVisionBridgeSection() {
         style={{ right: "-64px", bottom: "32px", left: "auto", top: "auto" }}
       />
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 md:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16 lg:px-14 lg:py-24">
-        <div className="lg:order-2">
+        <ScrollReveal direction="right" className="lg:order-2">
           <h2
             className="mb-8 text-5xl leading-[0.95] tracking-tight text-black md:text-6xl"
             style={{ fontFamily: "var(--font-roboto-condensed)" }}
@@ -89,9 +90,12 @@ function LandingVisionBridgeSection() {
               regeneración social y ecológica.
             </p>
           </div>
-        </div>
+        </ScrollReveal>
 
-        <div className="relative mx-auto w-full max-w-[28rem] lg:order-1">
+        <ScrollReveal
+          direction="left"
+          className="relative mx-auto w-full max-w-[28rem] lg:order-1"
+        >
           <div className="relative aspect-square overflow-hidden rounded-full">
             {imageUrl ? (
               <Image
@@ -102,7 +106,7 @@ function LandingVisionBridgeSection() {
               />
             ) : null}
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );
@@ -111,7 +115,10 @@ function LandingVisionBridgeSection() {
 function LandingQuoteSection() {
   return (
     <section className="bg-white">
-      <div className="mx-auto w-full max-w-6xl px-6 py-16 text-center md:px-10 lg:px-14 lg:py-20">
+      <ScrollReveal
+        direction="up"
+        className="mx-auto w-full max-w-6xl px-6 py-16 text-center md:px-10 lg:px-14 lg:py-20"
+      >
         <blockquote
           className="mx-auto max-w-5xl text-[clamp(1.5rem,3.4vw,2.9rem)] leading-[1.16] text-[var(--complement-800)]"
           style={{ fontFamily: "var(--font-indie-flower)" }}
@@ -131,7 +138,7 @@ function LandingQuoteSection() {
           />
         </div>
         <p className="mt-5 text-center text-xl text-black">Tutor de Koru</p>
-      </div>
+      </ScrollReveal>
     </section>
   );
 }
