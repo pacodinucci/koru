@@ -12,6 +12,13 @@ type TextBlock = {
   };
 };
 
+const methodologyCardBackgrounds = [
+  "color-mix(in srgb, var(--complement-700) 34%, white)",
+  "color-mix(in srgb, var(--brand-600) 28%, white)",
+  "color-mix(in srgb, var(--orange-500) 34%, white)",
+  "color-mix(in srgb, var(--complement-900) 24%, white)",
+];
+
 type AccompanyPillar = TextBlock & {
   imageSrc: string;
   imageAlt: string;
@@ -276,9 +283,12 @@ function SectionHeading({
   );
 }
 
-function ContentCard({ block }: { block: TextBlock }) {
+function ContentCard({ block, background }: { block: TextBlock; background?: string }) {
   return (
-    <article className="rounded-[2rem] border border-complement-600 bg-white/70 p-6 shadow-sm">
+    <article
+      className="rounded-[2rem] border border-complement-600 bg-white/70 p-6 shadow-sm"
+      style={background ? { background } : undefined}
+    >
       <h3
         className="mb-3 text-2xl leading-none text-black"
         style={{ fontFamily: "var(--font-roboto-condensed)" }}
@@ -413,9 +423,18 @@ export default function ComoAcompanamosPage() {
                 y niños con el mundo y consigo mism@s.
               </p>
             </SectionHeading>
-            <div className="mt-8 grid gap-4">
-              {methodologies.map((methodology) => (
-                <ContentCard key={methodology.title} block={methodology} />
+            <div className="mt-10 space-y-8 pb-28">
+              {methodologies.map((methodology, index) => (
+                <div
+                  key={methodology.title}
+                  className="sticky top-28"
+                  style={{ zIndex: index + 1 }}
+                >
+                  <ContentCard
+                    block={methodology}
+                    background={methodologyCardBackgrounds[index % methodologyCardBackgrounds.length]}
+                  />
+                </div>
               ))}
             </div>
           </div>

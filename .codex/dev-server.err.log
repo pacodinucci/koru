@@ -348,3 +348,50 @@ Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
 [2m[ 9.24ms][22m  [2m ↳ [22mUpdate PostCSS AST
 
 [browser] Image with src "/assets/images/DSC01386.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+
+[2m[344.71ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  1.76ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[205.97ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 24.39ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 68.38ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 20.30ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 23.60ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[273.45ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.02ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.89ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[247.42ms][22m  [2m ↳ [22mScan for candidates
+[2m[  2.00ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 14.44ms][22m  [2m ↳ [22mBuild utilities
+[2m[  8.24ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[177.06ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.47ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 94.94ms][22m  [2m ↳ [22mScan for candidates
+[2m[  0.96ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 51.06ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 24.58ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  4.85ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[240.58ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.50ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[225.73ms][22m  [2m ↳ [22mScan for candidates
+[2m[  4.70ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  0.90ms][22m  [2m ↳ [22mBuild utilities
+[2m[  8.57ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[94.75ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.45ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[67.73ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 4.53ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[12.56ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 9.31ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
