@@ -63,10 +63,10 @@ export function ScrollFloatingFerns({ sectionId }: ScrollFloatingFernsProps) {
     let animationFrameId: number | null = null;
     let startTime: number | null = null;
 
-    function animate(now: number) {
+    function animate(now: number, activeSection: HTMLElement) {
       startTime ??= now;
       const time = (now - startTime) / 1000;
-      progressRef.current = getScrollProgress(section);
+      progressRef.current = getScrollProgress(activeSection);
       const scrollEase = progressRef.current * progressRef.current * (3 - 2 * progressRef.current);
 
       floatingFerns.forEach((fern, index) => {
@@ -84,10 +84,14 @@ export function ScrollFloatingFerns({ sectionId }: ScrollFloatingFernsProps) {
         node.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rotation}deg)`;
       });
 
-      animationFrameId = window.requestAnimationFrame(animate);
+      animationFrameId = window.requestAnimationFrame((nextNow) =>
+        animate(nextNow, activeSection),
+      );
     }
 
-    animationFrameId = window.requestAnimationFrame(animate);
+    animationFrameId = window.requestAnimationFrame((now) =>
+      animate(now, section),
+    );
 
     return () => {
       if (animationFrameId !== null) {
