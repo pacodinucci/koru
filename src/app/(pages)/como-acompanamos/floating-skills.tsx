@@ -171,8 +171,8 @@ export function FloatingSkills({ skills }: FloatingSkillsProps) {
       return;
     }
 
-    function initialize() {
-      const rect = container.getBoundingClientRect();
+    function initialize(activeContainer: HTMLDivElement) {
+      const rect = activeContainer.getBoundingClientRect();
       const nextItems = createInitialSkills(skills, rect.width, rect.height);
 
       for (const item of nextItems) {
@@ -192,8 +192,8 @@ export function FloatingSkills({ skills }: FloatingSkillsProps) {
       setItems(nextItems.map((item) => ({ ...item })));
     }
 
-    initialize();
-    const resizeObserver = new ResizeObserver(initialize);
+    initialize(container);
+    const resizeObserver = new ResizeObserver(() => initialize(container));
     resizeObserver.observe(container);
 
     return () => resizeObserver.disconnect();
