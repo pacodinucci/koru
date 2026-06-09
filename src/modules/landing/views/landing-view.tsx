@@ -82,8 +82,8 @@ function LandingVisionBridgeSection() {
           <div className="max-w-3xl space-y-6 text-xl leading-relaxed text-black/85">
             <p>
               Co-creamos una cultura viva donde niñas, niños, familias y
-              acompañantes asumen un rol activo y corresponsable en los
-              procesos de aprendizaje y desarrollo.
+              acompañantes asumen un rol activo y corresponsable en los procesos
+              de aprendizaje y desarrollo.
             </p>
             <p>
               Queremos una comunidad donde cada persona fortalezca su brújula
@@ -124,9 +124,9 @@ function LandingQuoteSection() {
           className="mx-auto max-w-5xl text-[clamp(1.5rem,3.4vw,2.9rem)] leading-[1.16] text-[var(--complement-800)]"
           style={{ fontFamily: "var(--font-indie-flower)" }}
         >
-          “Koru ha sido mágico para nuestra hija. Su creatividad, su bondad y
-          su curiosidad por el mundo florecen cada día. La vemos crecer en su
-          mejor versión.”
+          “Koru ha sido mágico para nuestra hija. Su creatividad, su bondad y su
+          curiosidad por el mundo florecen cada día. La vemos crecer en su mejor
+          versión.”
         </blockquote>
         <div className="mt-7 flex justify-center">
           <Image
@@ -149,12 +149,28 @@ function LandingAdmissionsCtaSection() {
     <section className="bg-white px-6 pt-16 pb-32 md:px-10 md:pb-40 lg:px-14 lg:pt-20 lg:pb-52">
       <ScrollReveal
         direction="up"
-        className="relative mx-auto flex min-h-[24rem] max-w-6xl flex-col items-center justify-center overflow-hidden rounded-[2rem] px-6 py-20 text-center shadow-sm shadow-[var(--brand-900)]/10 md:min-h-[28rem] md:px-10 lg:py-24"
+        className="relative mx-auto flex min-h-[24rem] max-w-6xl flex-col items-center justify-center overflow-hidden rounded-none px-6 py-20 text-center shadow-sm shadow-[var(--brand-900)]/10 md:min-h-[28rem] md:px-10 lg:py-24"
         style={{
           background:
             "radial-gradient(circle at 18% 18%, var(--orange-300) 0%, transparent 28%), radial-gradient(circle at 82% 24%, var(--brand-500) 0%, transparent 30%), linear-gradient(135deg, var(--brand-800) 0%, var(--brand-600) 42%, var(--complement-700) 100%)",
         }}
       >
+        <FernShape
+          x="-42px"
+          y="28px"
+          size={190}
+          color="var(--complement-800)"
+          opacity={0.22}
+          rotate={-8}
+        />
+        <FernShape
+          size={230}
+          color="var(--brand-800)"
+          opacity={0.16}
+          rotate={178}
+          flipX
+          style={{ right: "-54px", bottom: "24px", left: "auto", top: "auto" }}
+        />
         <div className="absolute inset-0 bg-white/35" aria-hidden="true" />
         <h2
           className="relative z-10 text-[clamp(2rem,4.6vw,4.25rem)] leading-[0.95] tracking-tight text-white"
@@ -556,4 +572,3 @@ export function LandingView({
     </div>
   );
 }
-

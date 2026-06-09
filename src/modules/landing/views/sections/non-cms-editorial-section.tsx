@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Image from "next/image";
+import { FernShape } from "@/components/fern-shape";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
 import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
 
@@ -38,7 +39,23 @@ export function NonCmsEditorialSection({
   } as const;
 
   return (
-    <section className="bg-white">
+    <section className="relative overflow-hidden bg-white">
+      <FernShape
+        x="-48px"
+        y="112px"
+        size={210}
+        color="var(--complement-800)"
+        opacity={0.13}
+        rotate={-10}
+      />
+      <FernShape
+        size={250}
+        color="var(--brand-700)"
+        opacity={0.1}
+        rotate={174}
+        flipX
+        style={{ right: "-66px", top: "34%", left: "auto" }}
+      />
       <ScrollReveal direction="up">
         {bannerTitle ? (
           <div className={`${bannerClassName} py-6`}>
@@ -53,7 +70,7 @@ export function NonCmsEditorialSection({
           </div>
         ) : null}
         <div
-          className="mx-auto grid w-full max-w-7xl items-start gap-10 px-6 py-20 md:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:px-14"
+          className="relative z-10 mx-auto grid w-full max-w-7xl items-start gap-10 px-6 py-20 md:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:px-14"
           style={{ fontFamily: "var(--font-montserrat)" }}
         >
           <div>
