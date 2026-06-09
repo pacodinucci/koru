@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -53,14 +52,25 @@ function ensureMovement(value: number, fallback: number) {
 
 function createInitialSkills(skills: string[], width: number, height: number) {
   const columns = Math.max(2, Math.ceil(Math.sqrt(skills.length)));
-  const rowGap = Math.max(84, (height - PADDING * 2) / Math.ceil(skills.length / columns));
+  const rowGap = Math.max(
+    84,
+    (height - PADDING * 2) / Math.ceil(skills.length / columns),
+  );
   const columnGap = Math.max(190, (width - PADDING * 2) / columns);
 
   return skills.map((label, index) => {
     const column = index % columns;
     const row = Math.floor(index / columns);
-    const x = clamp(PADDING + column * columnGap + (index % 2) * 18, PADDING, width - DEFAULT_CHIP_WIDTH - PADDING);
-    const y = clamp(PADDING + row * rowGap + (index % 3) * 12, PADDING, height - DEFAULT_CHIP_HEIGHT - PADDING);
+    const x = clamp(
+      PADDING + column * columnGap + (index % 2) * 18,
+      PADDING,
+      width - DEFAULT_CHIP_WIDTH - PADDING,
+    );
+    const y = clamp(
+      PADDING + row * rowGap + (index % 3) * 12,
+      PADDING,
+      height - DEFAULT_CHIP_HEIGHT - PADDING,
+    );
     const direction = index % 2 === 0 ? 1 : -1;
 
     return {
@@ -88,15 +98,19 @@ function resolveCollisions(items: FloatingSkill[]) {
         const aCenterY = a.y + a.height / 2;
         const bCenterX = b.x + b.width / 2;
         const bCenterY = b.y + b.height / 2;
-        const overlapX = a.width / 2 + b.width / 2 - Math.abs(aCenterX - bCenterX);
-        const overlapY = a.height / 2 + b.height / 2 - Math.abs(aCenterY - bCenterY);
+        const overlapX =
+          a.width / 2 + b.width / 2 - Math.abs(aCenterX - bCenterX);
+        const overlapY =
+          a.height / 2 + b.height / 2 - Math.abs(aCenterY - bCenterY);
 
         if (overlapX <= 0 || overlapY <= 0) {
           continue;
         }
 
-        const normalX = overlapX < overlapY ? Math.sign(bCenterX - aCenterX) || 1 : 0;
-        const normalY = overlapX < overlapY ? 0 : Math.sign(bCenterY - aCenterY) || 1;
+        const normalX =
+          overlapX < overlapY ? Math.sign(bCenterX - aCenterX) || 1 : 0;
+        const normalY =
+          overlapX < overlapY ? 0 : Math.sign(bCenterY - aCenterY) || 1;
         const overlap = overlapX < overlapY ? overlapX : overlapY;
         const separation = overlap / 2 + 0.5;
 
@@ -107,7 +121,8 @@ function resolveCollisions(items: FloatingSkill[]) {
 
         const relativeVelocityX = b.vx - a.vx;
         const relativeVelocityY = b.vy - a.vy;
-        const velocityAlongNormal = relativeVelocityX * normalX + relativeVelocityY * normalY;
+        const velocityAlongNormal =
+          relativeVelocityX * normalX + relativeVelocityY * normalY;
 
         if (velocityAlongNormal > 0) {
           continue;
@@ -120,10 +135,22 @@ function resolveCollisions(items: FloatingSkill[]) {
         b.vy = limitVelocity(b.vy + impulse * normalY);
 
         const tangentKick = 0.18;
-        a.vx = ensureMovement(a.vx + normalY * MIN_SPEED * tangentKick, -normalX * MIN_SPEED);
-        a.vy = ensureMovement(a.vy - normalX * MIN_SPEED * tangentKick, -normalY * MIN_SPEED);
-        b.vx = ensureMovement(b.vx - normalY * MIN_SPEED * tangentKick, normalX * MIN_SPEED);
-        b.vy = ensureMovement(b.vy + normalX * MIN_SPEED * tangentKick, normalY * MIN_SPEED);
+        a.vx = ensureMovement(
+          a.vx + normalY * MIN_SPEED * tangentKick,
+          -normalX * MIN_SPEED,
+        );
+        a.vy = ensureMovement(
+          a.vy - normalX * MIN_SPEED * tangentKick,
+          -normalY * MIN_SPEED,
+        );
+        b.vx = ensureMovement(
+          b.vx - normalY * MIN_SPEED * tangentKick,
+          normalX * MIN_SPEED,
+        );
+        b.vy = ensureMovement(
+          b.vy + normalX * MIN_SPEED * tangentKick,
+          normalY * MIN_SPEED,
+        );
       }
     }
   }
@@ -243,7 +270,10 @@ export function FloatingSkills({ skills }: FloatingSkillsProps) {
     };
   }, []);
 
-  function handlePointerDown(event: React.PointerEvent<HTMLButtonElement>, item: FloatingSkill) {
+  function handlePointerDown(
+    event: React.PointerEvent<HTMLButtonElement>,
+    item: FloatingSkill,
+  ) {
     const container = containerRef.current;
     if (!container) {
       return;
@@ -280,8 +310,16 @@ export function FloatingSkills({ skills }: FloatingSkillsProps) {
       return;
     }
 
-    item.x = clamp(event.clientX - containerRect.left - drag.offsetX, PADDING, containerRect.width - item.width - PADDING);
-    item.y = clamp(event.clientY - containerRect.top - drag.offsetY, PADDING, containerRect.height - item.height - PADDING);
+    item.x = clamp(
+      event.clientX - containerRect.left - drag.offsetX,
+      PADDING,
+      containerRect.width - item.width - PADDING,
+    );
+    item.y = clamp(
+      event.clientY - containerRect.top - drag.offsetY,
+      PADDING,
+      containerRect.height - item.height - PADDING,
+    );
     item.vx = limitVelocity((event.clientX - drag.lastX) / dt);
     item.vy = limitVelocity((event.clientY - drag.lastY) / dt);
     drag.vx = item.vx;
@@ -320,13 +358,16 @@ export function FloatingSkills({ skills }: FloatingSkillsProps) {
   return (
     <div
       ref={containerRef}
-      className="isolate relative z-0 mt-20 min-h-[20rem] overflow-hidden rounded-[2rem] p-8 md:mt-24 md:min-h-[24rem]"
+      className="isolate relative z-0 mt-20 min-h-[36rem] overflow-hidden rounded-[2rem] p-8 md:mt-24 md:min-h-[24rem]"
       style={{
         background:
           "radial-gradient(circle at 18% 18%, var(--orange-500) 0%, transparent 30%), radial-gradient(circle at 82% 22%, var(--brand-600) 0%, transparent 34%), radial-gradient(circle at 70% 86%, var(--complement-700) 0%, transparent 38%), linear-gradient(135deg, var(--complement-900) 0%, var(--brand-800) 52%, var(--orange-700) 100%)",
       }}
     >
-      <h3 className="absolute top-8 left-8 z-[1] max-w-xl text-4xl leading-none text-white md:text-5xl" style={{ fontFamily: "var(--font-indie-flower)" }}>
+      <h3
+        className="absolute top-8 left-8 z-[1] max-w-xl text-4xl leading-none text-white md:text-5xl"
+        style={{ fontFamily: "var(--font-indie-flower)" }}
+      >
         Habilidades que cultivamos
       </h3>
 

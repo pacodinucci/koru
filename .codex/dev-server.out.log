@@ -159,3 +159,5 @@ Creating turbopack project {
 ✓ Compiled in 940ms
  GET /como-acompanamos 200 in 2.4s (next.js: 462ms, application-code: 1984ms)
  GET /dashboard/mailing 200 in 3.4s (next.js: 8ms, application-code: 3.4s)
+✓ Compiled in 374ms
+✓ Compiled in 779ms
