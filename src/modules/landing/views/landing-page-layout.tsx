@@ -293,7 +293,8 @@ export function LandingPageLayout({
   const layoutPaddingX = getLayoutPaddingX(
     responsiveMap[LANDING_LAYOUT_PADDING_X_KEY],
   );
-  const navBackgroundColor = isLandingRoute || previewMode ? "transparent" : "#ffffff";
+  const navBackgroundColor =
+    isLandingRoute || previewMode ? "transparent" : "#ffffff";
   const navTextColor = completeMap[LANDING_LAYOUT_NAV_TEXT_KEY] ?? "#111111";
   const navHeight = getLayoutNavHeight(
     completeMap[LANDING_LAYOUT_NAV_HEIGHT_KEY],
@@ -949,11 +950,3 @@ export function LandingPageLayout({
     </div>
   );
 }
-
-
-
-
-
-
-
-
