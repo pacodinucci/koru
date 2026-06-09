@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { FernShape } from "@/components/fern-shape";
 import { SporeShape } from "@/components/spore-shape";
 import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
@@ -138,6 +139,36 @@ function LandingQuoteSection() {
           />
         </div>
         <p className="mt-5 text-center text-xl text-black">Tutor de Koru</p>
+      </ScrollReveal>
+    </section>
+  );
+}
+
+function LandingAdmissionsCtaSection() {
+  return (
+    <section className="bg-white px-6 pt-16 pb-32 md:px-10 md:pb-40 lg:px-14 lg:pt-20 lg:pb-52">
+      <ScrollReveal
+        direction="up"
+        className="relative mx-auto flex min-h-[24rem] max-w-6xl flex-col items-center justify-center overflow-hidden rounded-[2rem] px-6 py-20 text-center shadow-sm shadow-[var(--brand-900)]/10 md:min-h-[28rem] md:px-10 lg:py-24"
+        style={{
+          background:
+            "radial-gradient(circle at 18% 18%, var(--orange-300) 0%, transparent 28%), radial-gradient(circle at 82% 24%, var(--brand-500) 0%, transparent 30%), linear-gradient(135deg, var(--brand-800) 0%, var(--brand-600) 42%, var(--complement-700) 100%)",
+        }}
+      >
+        <div className="absolute inset-0 bg-white/35" aria-hidden="true" />
+        <h2
+          className="relative z-10 text-[clamp(2rem,4.6vw,4.25rem)] leading-[0.95] tracking-tight text-white"
+          style={{ fontFamily: "var(--font-roboto-condensed)" }}
+        >
+          ¿Te interesa aplicar a Koru?
+        </h2>
+        <Link
+          href="/admisiones"
+          className="relative z-10 mt-8 inline-flex rounded-md bg-white px-8 py-4 text-base font-semibold uppercase tracking-[0.18em] text-[var(--brand-800)] hover:bg-[var(--complement-500)]"
+          style={{ fontFamily: "var(--font-montserrat)" }}
+        >
+          Ir a admisiones
+        </Link>
       </ScrollReveal>
     </section>
   );
@@ -521,6 +552,7 @@ export function LandingView({
           </ScopeBackground>
         );
       })}
+      <LandingAdmissionsCtaSection />
     </div>
   );
 }
