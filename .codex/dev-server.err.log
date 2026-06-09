@@ -30,3 +30,505 @@
 
 [browser] Image with src "https://res.cloudinary.com/ddtpavjz2/image/upload/v1778610385/koru/blog/gfnstuinav9qwyfqn880.jpg" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
 Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+[browser] Image with src "/branding/koru-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+
+[2m[140.37ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.07ms][22m  [2m ↳ [22mQuick bail check
+[2m[  3.28ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 69.27ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.83ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  7.12ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 56.12ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+Image with src "/assets/images/DSC01345.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "/assets/images/DSC01338.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "/assets/images/DSC01402.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "/assets/images/DSC02336.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/assets/images/DSC01345.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/assets/images/DSC01338.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/assets/images/DSC01402.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/assets/images/DSC02336.png" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/assets/images/DSC01443.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+
+[2m[159.81ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  1.20ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 60.77ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.09ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 57.52ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 30.91ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  8.13ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[140.89ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.36ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[106.47ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 11.16ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 18.13ms][22m  [2m ↳ [22mBuild utilities
+[2m[  4.58ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+[browser] Image with src "/assets/img6.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/img8.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/img9.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/img8.jpg" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+[browser] Image with src "/assets/img7.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/img4.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/branding/koru-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+
+[2m[110.21ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.37ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 54.68ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.34ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 35.32ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 13.25ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  5.07ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[75.28ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.02ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.61ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[59.13ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 0.73ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 3.44ms][22m  [2m ↳ [22mBuild utilities
+[2m[11.16ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[75.45ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.40ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[64.01ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 2.14ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 1.54ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 7.14ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[249.34ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  1.73ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 84.32ms][22m  [2m ↳ [22mScan for candidates
+[2m[  0.87ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 98.16ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 53.23ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 10.79ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[150.43ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.44ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 67.81ms][22m  [2m ↳ [22mScan for candidates
+[2m[  3.11ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 53.83ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 19.89ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  5.08ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[59.80ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.64ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[48.98ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 3.88ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 2.24ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 3.73ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[207.45ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.52ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 84.70ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.81ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 80.74ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 23.79ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 15.66ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[105.42ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.02ms][22m  [2m ↳ [22mQuick bail check
+[2m[  2.43ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 92.51ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.40ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  0.70ms][22m  [2m ↳ [22mBuild utilities
+[2m[  8.21ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[414.27ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.66ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 81.01ms][22m  [2m ↳ [22mSetup compiler
+[2m[  0.91ms][22m    [2m ↳ [22mPostCSS AST -> Tailwind CSS AST
+[2m[ 79.47ms][22m    [2m ↳ [22mCreate compiler
+[2m[  5.34ms][22m  [2m ↳ [22mSetup scanner
+[2m[110.48ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 53.36ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[142.84ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 15.12ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  5.18ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[308.95ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.34ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 23.20ms][22m  [2m ↳ [22mSetup compiler
+[2m[  0.63ms][22m    [2m ↳ [22mPostCSS AST -> Tailwind CSS AST
+[2m[ 22.55ms][22m    [2m ↳ [22mCreate compiler
+[2m[  0.49ms][22m  [2m ↳ [22mSetup scanner
+[2m[ 98.79ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 49.60ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[113.02ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 16.79ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  6.32ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[308.20ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.02ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.81ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[197.15ms][22m  [2m ↳ [22mScan for candidates
+[2m[  9.10ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 66.16ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 28.14ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  6.37ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[110.16ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.47ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 99.96ms][22m  [2m ↳ [22mScan for candidates
+[2m[  3.01ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  0.91ms][22m  [2m ↳ [22mBuild utilities
+[2m[  5.60ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[220.33ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.15ms][22m  [2m ↳ [22mQuick bail check
+[2m[  1.18ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[104.07ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.02ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 53.43ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 52.46ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  7.56ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[94.74ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.45ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[83.00ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 2.73ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 0.82ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 7.56ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[157.08ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.00ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.46ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[101.42ms][22m  [2m ↳ [22mScan for candidates
+[2m[  4.57ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 11.78ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 38.67ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[159.26ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.04ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.68ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 79.63ms][22m  [2m ↳ [22mScan for candidates
+[2m[  3.54ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 46.54ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 22.75ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  5.76ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[380.25ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.58ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[134.75ms][22m  [2m ↳ [22mScan for candidates
+[2m[  6.87ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[188.37ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 35.80ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 13.63ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[133.94ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.49ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[106.69ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 19.61ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  1.05ms][22m  [2m ↳ [22mBuild utilities
+[2m[  5.67ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[211.98ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.52ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[100.02ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.14ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 58.71ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 39.92ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 11.32ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+[browser] Image with src "/assets/img4.jpg" has "fill" and a height value of 0. This is likely because the parent element of the image has not been styled to have a set height.
+
+[2m[203.30ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.02ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.45ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[101.65ms][22m  [2m ↳ [22mScan for candidates
+[2m[  3.87ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 61.25ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 28.03ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  7.68ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[147.47ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.46ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[139.02ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.43ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  1.59ms][22m  [2m ↳ [22mBuild utilities
+[2m[  4.77ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[112.01ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  1.84ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 92.36ms][22m  [2m ↳ [22mScan for candidates
+[2m[  7.45ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  1.12ms][22m  [2m ↳ [22mBuild utilities
+[2m[  8.95ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+[browser] Image with src "/assets/images/DSC01280.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/images/DSC01338.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/images/DSC01352.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/images/DSC02346.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/images/DSC01384.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+
+[2m[103.19ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.35ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 90.24ms][22m  [2m ↳ [22mScan for candidates
+[2m[  0.83ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  6.14ms][22m  [2m ↳ [22mBuild utilities
+[2m[  5.46ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+[browser] Image with src "/assets/images/DSC01367.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+
+[2m[72.08ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.43ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[62.88ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 0.54ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 0.59ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 7.53ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+[browser] Image with src "/assets/images/DSC01378.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+
+[2m[43.03ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.67ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[37.27ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 0.69ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 0.78ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 3.45ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+[browser] Image with src "/assets/images/DSC01379.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+
+[2m[54.85ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 1.11ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[43.00ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 0.71ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 0.42ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 9.24ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+[browser] Image with src "/assets/images/DSC01386.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+
+[2m[344.71ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  1.76ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[205.97ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 24.39ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 68.38ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 20.30ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 23.60ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[273.45ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.02ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.89ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[247.42ms][22m  [2m ↳ [22mScan for candidates
+[2m[  2.00ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 14.44ms][22m  [2m ↳ [22mBuild utilities
+[2m[  8.24ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[177.06ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.47ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 94.94ms][22m  [2m ↳ [22mScan for candidates
+[2m[  0.96ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 51.06ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 24.58ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  4.85ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[240.58ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.50ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[225.73ms][22m  [2m ↳ [22mScan for candidates
+[2m[  4.70ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  0.90ms][22m  [2m ↳ [22mBuild utilities
+[2m[  8.57ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[94.75ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.45ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[67.73ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 4.53ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[12.56ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 9.31ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[135.91ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.48ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 65.60ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.03ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 50.08ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 14.65ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  3.88ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[99.55ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.33ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[78.51ms][22m  [2m ↳ [22mScan for candidates
+[2m[16.62ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 0.88ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 3.04ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[179.09ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.38ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 74.31ms][22m  [2m ↳ [22mScan for candidates
+[2m[  0.85ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 69.96ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 23.20ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 10.19ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[76.89ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.42ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[59.29ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 0.66ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 7.11ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 9.25ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+[browser] React instrumentation encountered an error: 'Error: The children should not have changed if we pass in the same set.\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:121140)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116568)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:121073)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116568)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:121073)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116568)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateVirtualInstanceRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:115002)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116771)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)' (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:86461)
+
+[2m[226.95ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.39ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 58.15ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 28.33ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 82.95ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 50.18ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  6.75ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[444.83ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.39ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[178.35ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 22.73ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[165.77ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 34.85ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 42.52ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[182.21ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.60ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[100.02ms][22m  [2m ↳ [22mScan for candidates
+[2m[  5.83ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 51.17ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 18.38ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  5.99ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[195.01ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.40ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[185.24ms][22m  [2m ↳ [22mScan for candidates
+[2m[  4.50ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  0.90ms][22m  [2m ↳ [22mBuild utilities
+[2m[  3.79ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[148.08ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.42ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[131.06ms][22m  [2m ↳ [22mScan for candidates
+[2m[  2.70ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[  1.43ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 12.31ms][22m  [2m ↳ [22mUpdate PostCSS AST
+

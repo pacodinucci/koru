@@ -29,3 +29,135 @@ Creating turbopack project {
  POST /dashboard/users 200 in 3.8s (next.js: 5ms, application-code: 3.8s)
   └─ ƒ createUserInvitationAction({}) in 756ms src/modules/users/server/user-invitations.actions.ts
  GET /dashboard/mailing 200 in 3.0s (next.js: 5ms, application-code: 3.0s)
+⚠ Console Ninja Turbopack support is a PRO feature, [33mcurrently available to community users while in preview[0m
+✓ Compiled in 1520ms
+ GET /dashboard/mailing 200 in 4.4s (next.js: 184ms, application-code: 4.2s)
+○ Compiling / ...
+ GET / 200 in 10.1s (next.js: 7.8s, application-code: 2.3s)
+✓ Compiled in 958ms
+✓ Compiled in 951ms
+ GET /como-acompanamos 200 in 5.8s (next.js: 2.2s, application-code: 3.6s)
+✓ Compiled in 460ms
+ GET /como-acompanamos 200 in 4.4s (next.js: 430ms, application-code: 3.9s)
+ GET /dashboard/mailing 200 in 6.2s (next.js: 1525ms, application-code: 4.7s)
+✓ Compiled in 213ms
+ GET /como-acompanamos 200 in 2.6s (next.js: 347ms, application-code: 2.2s)
+ GET /dashboard/mailing 200 in 3.6s (next.js: 6ms, application-code: 3.6s)
+✓ Compiled in 212ms
+ GET /como-acompanamos 200 in 2.3s (next.js: 311ms, application-code: 1974ms)
+ GET /dashboard/mailing 200 in 3.4s (next.js: 7ms, application-code: 3.4s)
+ GET /como-acompanamos 200 in 3.6s (next.js: 774ms, application-code: 2.8s)
+ GET /dashboard/mailing 200 in 4.4s (next.js: 298ms, application-code: 4.1s)
+✓ Compiled in 636ms
+ GET /como-acompanamos 200 in 3.6s (next.js: 607ms, application-code: 3.0s)
+ GET /dashboard/mailing 200 in 4.6s (next.js: 926ms, application-code: 3.7s)
+ GET /como-acompanamos 200 in 2.4s (next.js: 376ms, application-code: 2.0s)
+ GET /dashboard/mailing 200 in 3.5s (next.js: 13ms, application-code: 3.4s)
+✓ Compiled in 942ms
+ GET /como-acompanamos 200 in 2.9s (next.js: 585ms, application-code: 2.3s)
+ GET /dashboard/mailing 200 in 3.9s (next.js: 146ms, application-code: 3.7s)
+ GET /como-acompanamos 200 in 2.6s (next.js: 288ms, application-code: 2.3s)
+ GET /dashboard/mailing 200 in 2.8s (next.js: 7ms, application-code: 2.8s)
+✓ Compiled in 919ms
+✓ Compiled in 846ms
+ GET /como-acompanamos 200 in 2.6s (next.js: 424ms, application-code: 2.2s)
+ GET /dashboard/mailing 200 in 3.5s (next.js: 717ms, application-code: 2.8s)
+✓ Compiled in 1342ms
+ GET /como-acompanamos 200 in 1953ms (next.js: 147ms, application-code: 1807ms)
+ GET /como-acompanamos 200 in 2.2s (next.js: 9ms, application-code: 2.2s)
+ GET /como-acompanamos 200 in 3.4s (next.js: 359ms, application-code: 3.0s)
+ GET /como-acompanamos 200 in 2.2s (next.js: 89ms, application-code: 2.1s)
+ GET /como-acompanamos 200 in 2.5s (next.js: 8ms, application-code: 2.5s)
+ GET /dashboard/mailing 200 in 5.0s (next.js: 15ms, application-code: 5.0s)
+ GET /dashboard/mailing 200 in 4.8s (next.js: 760ms, application-code: 4.0s)
+ GET /dashboard/mailing 200 in 3.9s (next.js: 217ms, application-code: 3.7s)
+ GET /dashboard/mailing 200 in 3.7s (next.js: 214ms, application-code: 3.5s)
+ GET /dashboard/mailing 200 in 3.5s (next.js: 8ms, application-code: 3.5s)
+✓ Compiled in 299ms
+✓ Compiled in 866ms
+✓ Compiled in 330ms
+✓ Compiled in 432ms
+ GET /como-acompanamos 200 in 3.5s (next.js: 550ms, application-code: 2.9s)
+ GET /dashboard/mailing 200 in 4.0s (next.js: 10ms, application-code: 4.0s)
+✓ Compiled in 1021ms
+ GET /como-acompanamos 200 in 4.5s (next.js: 1381ms, application-code: 3.1s)
+ GET /dashboard/mailing 200 in 3.3s (next.js: 19ms, application-code: 3.3s)
+✓ Compiled in 322ms
+ GET /dashboard/mailing 200 in 3.8s (next.js: 6ms, application-code: 3.8s)
+ GET /como-acompanamos 200 in 4.1s (next.js: 544ms, application-code: 3.5s)
+✓ Compiled in 852ms
+ GET /como-acompanamos 200 in 2.8s (next.js: 362ms, application-code: 2.5s)
+ GET /dashboard/mailing 200 in 4.0s (next.js: 104ms, application-code: 3.9s)
+✓ Compiled in 1051ms
+ GET /como-acompanamos 200 in 2.6s (next.js: 366ms, application-code: 2.2s)
+ GET /como-acompanamos 200 in 2.1s (next.js: 4ms, application-code: 2.1s)
+ GET /como-acompanamos 200 in 2.1s (next.js: 101ms, application-code: 2.0s)
+ GET /como-acompanamos 200 in 2.1s (next.js: 53ms, application-code: 2.1s)
+ GET /como-acompanamos 200 in 2.1s (next.js: 6ms, application-code: 2.1s)
+ GET /dashboard/mailing 200 in 3.8s (next.js: 145ms, application-code: 3.6s)
+ GET /dashboard/mailing 200 in 3.3s (next.js: 6ms, application-code: 3.3s)
+ GET /dashboard/mailing 200 in 3.6s (next.js: 155ms, application-code: 3.5s)
+ GET /dashboard/mailing 200 in 3.3s (next.js: 5ms, application-code: 3.3s)
+ GET /dashboard/mailing 200 in 3.4s (next.js: 5ms, application-code: 3.4s)
+✓ Compiled in 407ms
+✓ Compiled in 278ms
+ GET /como-acompanamos 200 in 3.1s (next.js: 398ms, application-code: 2.7s)
+ GET /dashboard/mailing 200 in 4.7s (next.js: 7ms, application-code: 4.7s)
+ GET /como-acompanamos 200 in 2.9s (next.js: 497ms, application-code: 2.4s)
+ GET /dashboard/mailing 200 in 3.8s (next.js: 7ms, application-code: 3.8s)
+✓ Compiled in 254ms
+ GET /como-acompanamos 200 in 2.8s (next.js: 471ms, application-code: 2.3s)
+ GET /dashboard/mailing 200 in 3.9s (next.js: 7ms, application-code: 3.9s)
+✓ Compiled in 245ms
+ GET /como-acompanamos 200 in 2.6s (next.js: 376ms, application-code: 2.2s)
+ GET /dashboard/mailing 200 in 3.5s (next.js: 6ms, application-code: 3.5s)
+✓ Compiled in 253ms
+ GET /como-acompanamos 200 in 2.8s (next.js: 424ms, application-code: 2.4s)
+ GET /dashboard/mailing 200 in 3.8s (next.js: 6ms, application-code: 3.8s)
+✓ Compiled in 2.1s
+ GET /como-acompanamos 200 in 3.8s (next.js: 452ms, application-code: 3.3s)
+ GET /dashboard/mailing 200 in 4.3s (next.js: 11ms, application-code: 4.3s)
+✓ Compiled in 675ms
+ GET /como-acompanamos 200 in 3.2s (next.js: 533ms, application-code: 2.7s)
+ GET /dashboard/mailing 200 in 3.9s (next.js: 7ms, application-code: 3.9s)
+✓ Compiled in 953ms
+ GET /como-acompanamos 200 in 2.4s (next.js: 378ms, application-code: 2.0s)
+ GET /dashboard/mailing 200 in 2.7s (next.js: 21ms, application-code: 2.7s)
+✓ Compiled in 754ms
+ GET /como-acompanamos 200 in 2.8s (next.js: 387ms, application-code: 2.4s)
+ GET /dashboard/mailing 200 in 3.2s (next.js: 5ms, application-code: 3.2s)
+✓ Compiled in 365ms
+ GET /como-acompanamos 200 in 2.4s (next.js: 383ms, application-code: 1990ms)
+ GET /dashboard/mailing 200 in 3.4s (next.js: 6ms, application-code: 3.4s)
+✓ Compiled in 656ms
+✓ Compiled in 814ms
+ GET /como-acompanamos 200 in 2.5s (next.js: 16ms, application-code: 2.5s)
+ GET /como-acompanamos 200 in 2.5s (next.js: 63ms, application-code: 2.4s)
+ GET /como-acompanamos 200 in 2.9s (next.js: 55ms, application-code: 2.8s)
+ GET /como-acompanamos 200 in 2.7s (next.js: 107ms, application-code: 2.6s)
+ GET /como-acompanamos 200 in 4.1s (next.js: 367ms, application-code: 3.7s)
+ GET /dashboard/mailing 200 in 5.3s (next.js: 760ms, application-code: 4.6s)
+ GET /dashboard/mailing 200 in 3.7s (next.js: 4ms, application-code: 3.7s)
+ GET /dashboard/mailing 200 in 4.2s (next.js: 122ms, application-code: 4.0s)
+ GET /dashboard/mailing 200 in 3.8s (next.js: 6ms, application-code: 3.8s)
+ GET /dashboard/mailing 200 in 4.0s (next.js: 154ms, application-code: 3.8s)
+✓ Compiled in 719ms
+ GET /como-acompanamos 200 in 2.8s (next.js: 33ms, application-code: 2.8s)
+ GET /como-acompanamos 200 in 4.4s (next.js: 799ms, application-code: 3.6s)
+ GET /como-acompanamos 200 in 3.2s (next.js: 86ms, application-code: 3.1s)
+ GET /como-acompanamos 200 in 3.2s (next.js: 130ms, application-code: 3.1s)
+ GET /como-acompanamos 200 in 3.2s (next.js: 35ms, application-code: 3.2s)
+ GET /dashboard/mailing 200 in 5.3s (next.js: 299ms, application-code: 5.0s)
+ GET /dashboard/mailing 200 in 4.1s (next.js: 8ms, application-code: 4.1s)
+ GET /dashboard/mailing 200 in 4.1s (next.js: 7ms, application-code: 4.1s)
+ GET /dashboard/mailing 200 in 4.0s (next.js: 5ms, application-code: 4.0s)
+ GET /dashboard/mailing 200 in 4.4s (next.js: 5ms, application-code: 4.4s)
+✓ Compiled in 198ms
+✓ Compiled in 899ms
+ GET /como-acompanamos 200 in 7.5s (next.js: 2.9s, application-code: 4.6s)
+ GET /dashboard/mailing 200 in 4.4s (next.js: 14ms, application-code: 4.4s)
+✓ Compiled in 940ms
+ GET /como-acompanamos 200 in 2.4s (next.js: 462ms, application-code: 1984ms)
+ GET /dashboard/mailing 200 in 3.4s (next.js: 8ms, application-code: 3.4s)
+✓ Compiled in 374ms
+✓ Compiled in 779ms
