@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { FloatingSkills } from "./floating-skills";
+import { ScrollFloatingFerns } from "./scroll-floating-ferns";
 import { AccompanimentGroupsTabs } from "./accompaniment-groups-tabs";
 
 type TextBlock = {
@@ -283,10 +284,18 @@ function SectionHeading({
   );
 }
 
-function ContentCard({ block, background }: { block: TextBlock; background?: string }) {
+function ContentCard({
+  block,
+  background,
+  className = "",
+}: {
+  block: TextBlock;
+  background?: string;
+  className?: string;
+}) {
   return (
     <article
-      className="rounded-[2rem] border border-complement-600 bg-white/70 p-6 shadow-sm"
+      className={`rounded-[2rem] border border-complement-600 bg-white/70 p-6 shadow-sm ${className}`}
       style={background ? { background } : undefined}
     >
       <h3
@@ -433,20 +442,14 @@ export default function ComoAcompanamosPage() {
                   <ContentCard
                     block={methodology}
                     background={methodologyCardBackgrounds[index % methodologyCardBackgrounds.length]}
+                    className="h-[20.5rem] overflow-y-auto md:h-[22rem]"
                   />
                 </div>
               ))}
             </div>
           </div>
-          <div className="relative mx-auto w-full max-w-[22rem] lg:order-1">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <Image
-                src="/assets/images/DSC01384.png"
-                alt="Niñez colaborando en una experiencia de proyecto"
-                fill
-                className="object-cover"
-              />
-            </div>
+          <div className="hidden lg:order-1 lg:block">
+            <ScrollFloatingFerns sectionId="metodologias-y-experiencias" />
           </div>
         </div>
       </section>

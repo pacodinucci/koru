@@ -395,3 +395,122 @@ Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
 [2m[12.56ms][22m  [2m ↳ [22mBuild utilities
 [2m[ 9.31ms][22m  [2m ↳ [22mUpdate PostCSS AST
 
+
+[2m[135.91ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.48ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 65.60ms][22m  [2m ↳ [22mScan for candidates
+[2m[  1.03ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 50.08ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 14.65ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  3.88ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[99.55ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.33ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[78.51ms][22m  [2m ↳ [22mScan for candidates
+[2m[16.62ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 0.88ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 3.04ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[179.09ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.38ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 74.31ms][22m  [2m ↳ [22mScan for candidates
+[2m[  0.85ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 69.96ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 23.20ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 10.19ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[76.89ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[ 0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[ 0.42ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[59.29ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 0.66ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 7.11ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 9.25ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+[browser] React instrumentation encountered an error: 'Error: The children should not have changed if we pass in the same set.\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:121140)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116568)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:121073)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116568)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:121073)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116568)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateVirtualInstanceRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:115002)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116771)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)\n' +
+  '    at updateFiberRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:120463)\n' +
+  '    at updateVirtualChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116478)\n' +
+  '    at updateChildrenRecursively (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:116917)' (chrome-extension://fmkadmapgofadopljbjfkapdkoienihi/build/installHook.js:1:86461)
+
+[2m[226.95ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.39ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 58.15ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 28.33ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 82.95ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 50.18ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  6.75ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[444.83ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.39ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[178.35ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 22.73ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[165.77ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 34.85ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 42.52ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[182.21ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[  0.01ms][22m  [2m ↳ [22mQuick bail check
+[2m[  0.60ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[100.02ms][22m  [2m ↳ [22mScan for candidates
+[2m[  5.83ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 51.17ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 18.38ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[  5.99ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
