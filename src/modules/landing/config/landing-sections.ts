@@ -574,13 +574,13 @@ export const landingSectionCatalog: Record<
       {
         key: "title",
         label: "Titulo principal",
-        defaultValue: "ADVENTURE AS",
+        defaultValue: "",
         defaultSize: 56,
       },
       {
         key: "subtitle",
         label: "Subtitulo",
-        defaultValue: "Agency",
+        defaultValue: "",
         defaultSize: 56,
       },
       {

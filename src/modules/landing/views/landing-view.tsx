@@ -290,7 +290,22 @@ function SectionRenderer({
           bannerClassName={
             section.id.includes("-copy")
               ? "bg-[var(--complement-900)]"
-              : "bg-[var(--brand-900)]"
+              : "bg-[var(--complement-900)]"
+          }
+          bodyText={
+            section.id.includes("-copy")
+              ? "Koru propone un enfoque pedagógico integral que combina mirada antroposófica, inteligencia socioemocional, aprendizaje transdisciplinario por proyectos y habilidades del siglo XXI."
+              : undefined
+          }
+          highlightText={
+            section.id.includes("-copy")
+              ? "Las niñas y los niños aprenden a partir de experiencias significativas conectadas con sus intereses."
+              : undefined
+          }
+          closingText={
+            section.id.includes("-copy")
+              ? "Acompañamos cada proceso de forma personalizada, cultivando capacidades cognitivas, emocionales, sociales y prácticas en comunidad y en vínculo con la naturaleza."
+              : undefined
           }
           imageSrc={
             section.id.includes("-copy")

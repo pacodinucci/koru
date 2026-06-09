@@ -7,6 +7,9 @@ import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
 type NonCmsEditorialSectionProps = {
   bannerTitle?: string;
   bannerClassName?: string;
+  bodyText?: string;
+  highlightText?: string;
+  closingText?: string;
   imageSrc?: string;
   imageFrameWidth?: string;
   imageFrameHeight?: string;
@@ -16,6 +19,9 @@ type NonCmsEditorialSectionProps = {
 export function NonCmsEditorialSection({
   bannerTitle,
   bannerClassName = "bg-[var(--brand-900)]",
+  bodyText = "Creemos que la educación es un proceso compartido. Niñas, niños, familias y colaboradores formamos un mismo organismo, donde cada parte influye en el desarrollo individual y colectivo.",
+  highlightText = "Por eso, el acompañamiento no ocurre sólo dentro del espacio educativo, sino también en casa y en la relación cotidiana.",
+  closingText = "Ser parte de esta comunidad implica una participación activa y comprometida. Ser parte de este espacio implica formar parte de una comunidad que aprende, se cuestiona y evoluciona.",
   imageSrc = cloudinaryImageUrl(
     "koru/landing/DSC01342",
     "/assets/images/DSC01342.png",
@@ -33,7 +39,7 @@ export function NonCmsEditorialSection({
 
   return (
     <section className="bg-white">
-      <ScrollReveal direction="orbit-bottom-right">
+      <ScrollReveal direction="up">
         {bannerTitle ? (
           <div className={`${bannerClassName} py-6`}>
             <div className="mx-auto w-full max-w-7xl px-6 md:px-10 lg:px-14">
@@ -51,33 +57,16 @@ export function NonCmsEditorialSection({
           style={{ fontFamily: "var(--font-montserrat)" }}
         >
           <div>
-            <h2 className="space-y-1 text-4xl leading-[0.9] tracking-tight text-black md:text-6xl">
-              <span
-                className="block font-light uppercase"
-                style={{ fontFamily: "var(--font-roboto-condensed)" }}
-              >
-                Adventure as
-              </span>
-              <span
-                className="block italic"
-                style={{ fontFamily: "var(--font-indie-flower)" }}
-              >
-                Agency
-              </span>
-            </h2>
-
             <p className="mt-6 max-w-3xl text-base leading-relaxed text-black/85 md:text-xl">
-              Texto descriptivo principal para contar la idea de la sección. Texto
-              descriptivo principal para contar la idea de la sección.
+              {bodyText}
             </p>
 
             <p className="mt-6 max-w-3xl text-2xl leading-tight text-black/90 md:text-4xl">
-              Texto destacado en negrita para reforzar el mensaje central.
+              {highlightText}
             </p>
 
             <p className="mt-6 max-w-3xl text-base leading-relaxed text-black/85 md:text-xl">
-              Párrafo complementario con detalles y cierre del bloque de contenido.
-              Párrafo complementario con detalles y cierre del bloque de contenido.
+              {closingText}
             </p>
           </div>
 

@@ -9,8 +9,7 @@ type ScrollRevealDirection =
   | "right"
   | "up"
   | "down"
-  | "none"
-  | "orbit-bottom-right";
+  | "none";
 
 type ScrollRevealProps = {
   children: ReactNode;
@@ -27,8 +26,6 @@ const hiddenDirectionClass: Record<ScrollRevealDirection, string> = {
   up: "translate-y-12 translate-x-0",
   down: "-translate-y-12 translate-x-0",
   none: "translate-x-0 translate-y-0",
-  "orbit-bottom-right":
-    "translate-x-24 translate-y-24 rotate-12 scale-95 origin-bottom-right",
 };
 
 export function ScrollReveal({
