@@ -127,20 +127,24 @@ export function DashboardShell({
   const [cmsOpen, setCmsOpen] = useState(isCmsActive);
   const [pagesOpen, setPagesOpen] = useState(isLandingActive);
   const isAdmin = userRole === "ADMIN";
+  const sidebarMenuButtonClass = "h-10 rounded-xl px-3 text-slate-600 hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
+
 
   return (
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader>
           <div className="flex items-center justify-center px-3 py-3 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-2">
-            <Image
-              src="/branding/koru-logo.png"
-              alt="Koru"
-              width={120}
-              height={34}
-              className="h-8 w-auto object-contain group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7"
-              priority
-            />
+            <Link href="/" aria-label="Volver al inicio">
+              <Image
+                src="/branding/koru-logo.png"
+                alt="Koru"
+                width={120}
+                height={34}
+                className="h-8 w-auto object-contain group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7"
+                priority
+              />
+            </Link>
           </div>
         </SidebarHeader>
 
@@ -154,7 +158,7 @@ export function DashboardShell({
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={isBlogActive}
-                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                    className={sidebarMenuButtonClass}
                     render={<Link href="/dashboard/blog" />}
                   >
                     <NotebookPen />
@@ -166,7 +170,7 @@ export function DashboardShell({
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isCmsActive}
-                      className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                      className={sidebarMenuButtonClass}
                       onClick={() => setCmsOpen((previous) => !previous)}
                     >
                       <LayoutDashboard />
@@ -233,7 +237,7 @@ export function DashboardShell({
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={isCalendarActive}
-                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                    className={sidebarMenuButtonClass}
                     render={<Link href="/dashboard/calendar" />}
                   >
                     <CalendarDays />
@@ -245,7 +249,7 @@ export function DashboardShell({
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isUsersActive}
-                      className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                      className={sidebarMenuButtonClass}
                       render={<Link href="/dashboard/users" />}
                     >
                       <Users />
@@ -258,7 +262,7 @@ export function DashboardShell({
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isMailingActive}
-                      className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                      className={sidebarMenuButtonClass}
                       render={<Link href="/dashboard/mailing" />}
                     >
                       <Mail />
@@ -270,7 +274,7 @@ export function DashboardShell({
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={isStudentsActive}
-                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                    className={sidebarMenuButtonClass}
                     render={<Link href="/dashboard/students" />}
                   >
                     <Users />
@@ -281,7 +285,7 @@ export function DashboardShell({
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={isExamsActive}
-                    className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                    className={sidebarMenuButtonClass}
                     render={<Link href="/dashboard/exams" />}
                   >
                     <ClipboardList />
@@ -294,7 +298,7 @@ export function DashboardShell({
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         isActive={isTeachersActive}
-                        className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 data-active:bg-slate-100 data-active:text-slate-900"
+                        className={sidebarMenuButtonClass}
                         render={<Link href="/dashboard/teachers" />}
                       >
                         <User2 />
@@ -303,7 +307,7 @@ export function DashboardShell({
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        className={sidebarMenuButtonClass}
                         render={<Link href="#" />}
                       >
                         <HandCoins />
@@ -312,7 +316,7 @@ export function DashboardShell({
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        className={sidebarMenuButtonClass}
                         render={<Link href="#" />}
                       >
                         <ShieldCheck />
@@ -321,7 +325,7 @@ export function DashboardShell({
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        className="h-10 rounded-xl px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        className={sidebarMenuButtonClass}
                         render={<Link href="#" />}
                       >
                         <Settings />
@@ -353,7 +357,11 @@ export function DashboardShell({
               <span className="truncate text-sm">{userEmail}</span>
               <ChevronUp className="ml-auto h-4 w-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-56">
+            <DropdownMenuContent
+              side="top"
+              align="start"
+              className="w-56 [font-family:var(--font-montserrat)]"
+            >
               <DropdownMenuItem>
                 <User2 className="h-4 w-4" />
                 Account

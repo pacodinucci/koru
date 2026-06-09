@@ -7,12 +7,20 @@ import {
   BookOpen,
   CalendarDays,
   ChevronUp,
+  ClipboardList,
+  FileText,
+  Handshake,
   Home,
+  Images,
   LifeBuoy,
   LogOut,
   MessageSquare,
+  Newspaper,
+  Sprout,
   Settings2,
+  TrendingUp,
   User2,
+  Users,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -42,9 +50,50 @@ import { signOutAction } from "@/modules/auth/server/auth-actions";
 const mainItems = [
   { title: "Inicio", href: "/family-dashboard", icon: Home },
   { title: "Calendario", href: "/family-dashboard/calendario", icon: CalendarDays },
-  { title: "Recursos", href: "/family-dashboard/recursos", icon: BookOpen },
   { title: "Mensajes", href: "/family-dashboard/mensajes", icon: MessageSquare },
 ];
+
+const studentItems = [
+  { title: "Expediente de cada niñ@", href: "/family-dashboard/expediente", icon: FileText },
+  { title: "Avances de tu hij@", href: "/family-dashboard/avances", icon: TrendingUp },
+  { title: "Ecociclos", href: "/family-dashboard/ecociclos", icon: Sprout },
+  {
+    title: "Acuerdos de seguimiento",
+    href: "/family-dashboard/acuerdos-seguimiento",
+    icon: Handshake,
+  },
+  { title: "Reportes", href: "/family-dashboard/reportes", icon: ClipboardList },
+  {
+    title: "Evidencias de avance",
+    href: "/family-dashboard/evidencias",
+    icon: Images,
+  },
+];
+
+const communityItems = [
+  {
+    title: "Blog interno de proyectos",
+    href: "/family-dashboard/blog-interno",
+    icon: BookOpen,
+  },
+  {
+    title: "Boletín de unidades",
+    href: "/family-dashboard/boletin-unidades",
+    icon: Newspaper,
+  },
+  {
+    title: "Fotos comunidad",
+    href: "/family-dashboard/fotos-comunidad",
+    icon: Users,
+  },
+  {
+    title: "Fotos de proyectos personales",
+    href: "/family-dashboard/proyectos-personales",
+    icon: Images,
+  },
+];
+
+const sidebarMenuButtonClass = "hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
 
 const supportItems = [
   { title: "Soporte", href: "/family-dashboard/soporte", icon: LifeBuoy },
@@ -67,6 +116,10 @@ function getInitials(name: string) {
   return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
 }
 
+function isActivePath(pathname: string, href: string) {
+  return pathname === href || (href !== "/family-dashboard" && pathname.startsWith(`${href}/`));
+}
+
 export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
   const pathname = usePathname();
   const userInitials = getInitials(userName);
@@ -75,14 +128,16 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
         <div className="flex items-center justify-center px-3 py-3 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-2">
-          <Image
-            src="/branding/koru-logo.png"
-            alt="Koru"
-            width={120}
-            height={34}
-            className="h-8 w-auto object-contain group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7"
-            priority
-          />
+          <Link href="/" aria-label="Volver al inicio">
+            <Image
+              src="/branding/koru-logo.png"
+              alt="Koru"
+              width={120}
+              height={34}
+              className="h-8 w-auto object-contain group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7"
+              priority
+            />
+          </Link>
         </div>
       </SidebarHeader>
 
@@ -100,7 +155,52 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
                         <span>{item.title}</span>
                       </Link>
                     }
-                    isActive={pathname === item.href}
+                    isActive={isActivePath(pathname, item.href)}
+                    className={sidebarMenuButtonClass}
+                  />
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Seguimiento de tu hij@</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {studentItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    render={
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    }
+                    isActive={isActivePath(pathname, item.href)}
+                    className={sidebarMenuButtonClass}
+                  />
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Comunidad y proyectos</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {communityItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    render={
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    }
+                    isActive={isActivePath(pathname, item.href)}
+                    className={sidebarMenuButtonClass}
                   />
                 </SidebarMenuItem>
               ))}
@@ -121,7 +221,8 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
                         <span>{item.title}</span>
                       </Link>
                     }
-                    isActive={pathname === item.href}
+                    isActive={isActivePath(pathname, item.href)}
+                    className={sidebarMenuButtonClass}
                   />
                 </SidebarMenuItem>
               ))}
@@ -137,6 +238,7 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
               <SidebarMenuButton
                 render={<DropdownMenuTrigger />}
                 size="lg"
+                className={sidebarMenuButtonClass}
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarFallback className="rounded-lg">{userInitials}</AvatarFallback>
@@ -148,7 +250,7 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
                 <ChevronUp className="ml-auto size-4" />
               </SidebarMenuButton>
               <DropdownMenuContent
-                className="w-56 rounded-lg"
+                className="w-56 rounded-lg [font-family:var(--font-montserrat)]"
                 side="top"
                 align="end"
                 sideOffset={4}
@@ -172,7 +274,7 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Settings2 />
-                    Configuracion
+                    Configuración
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />

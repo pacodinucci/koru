@@ -1,68 +1,65 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { requireUser } from "@/modules/auth/server/auth-guards";
+import { type CalendarViewMode } from "@/modules/dashboard/lib/calendar-range";
+import {
+  listUpcomingVisibleEventsForUser,
+  listVisibleEventsForUserByRange,
+} from "@/modules/dashboard/server/calendar.repository";
+import { FamilyDashboardHeader } from "@/modules/family-dashboard/components/family-dashboard-header";
 import { FamilySidebar } from "@/modules/family-dashboard/components/family-sidebar";
-import { listVisibleEventsForUser } from "@/modules/dashboard/server/calendar.repository";
+import {
+  FamilyCalendarClientProvider,
+  FamilyCalendarGridClient,
+  FamilyCalendarSidePanelClient,
+} from "@/modules/family-dashboard/views/family-calendar-client";
 
-export default async function FamilyCalendarPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+type FamilyCalendarPageProps = {
+  searchParams: Promise<{
+    date?: string;
+    view?: string;
+  }>;
+};
 
-  const sessionEmail =
-    typeof session?.user?.email === "string" ? session.user.email.trim() : "";
+function parseView(view?: string): CalendarViewMode {
+  return view === "day" || view === "month" ? view : "week";
+}
 
-  if (!sessionEmail) {
-    redirect("/sign-in");
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { email: sessionEmail },
-    select: { id: true, role: true, name: true, email: true },
-  });
-
-  if (!user) {
-    redirect("/sign-in");
-  }
-
-  const events = await listVisibleEventsForUser(user.id, user.role);
+export default async function FamilyCalendarPage({
+  searchParams,
+}: FamilyCalendarPageProps) {
+  const user = await requireUser();
+  const { date, view } = await searchParams;
+  const parsedDate = date ? new Date(`${date}T00:00:00`) : new Date();
+  const dateCursor = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+  const viewMode = parseView(view);
+  const [events, upcomingEvents] = await Promise.all([
+    listVisibleEventsForUserByRange(user.id, user.role, dateCursor, viewMode),
+    listUpcomingVisibleEventsForUser(user.id, user.role, 6),
+  ]);
 
   return (
     <SidebarProvider>
       <FamilySidebar userName={user.name} userEmail={user.email} />
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
-          <SidebarTrigger />
-          <h1 className="text-lg font-semibold">Calendario</h1>
-        </header>
-        <main className="p-6">
-          <div className="rounded-xl border bg-white p-4">
-            <ul className="space-y-3">
-              {events.map((event) => (
-                <li key={event.id} className="rounded-lg border p-3">
-                  <p className="font-medium">{event.title}</p>
-                  <p className="text-sm text-slate-600">
-                    {new Date(event.startsAt).toLocaleString("es-AR")} -{" "}
-                    {new Date(event.endsAt).toLocaleString("es-AR")}
-                  </p>
-                  {event.location ? (
-                    <p className="mt-1 text-sm text-slate-600">{event.location}</p>
-                  ) : null}
-                </li>
-              ))}
-              {events.length === 0 ? (
-                <li className="text-sm text-slate-500">No hay eventos visibles por ahora.</li>
-              ) : null}
-            </ul>
-          </div>
-        </main>
+        <FamilyDashboardHeader title="Calendario" />
+        <FamilyCalendarClientProvider
+          initialEvents={events}
+          initialUpcomingEvents={upcomingEvents}
+          initialDateCursor={dateCursor}
+          initialViewMode={viewMode}
+        >
+          <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="min-w-0 overflow-hidden rounded-xl border bg-white">
+              <FamilyCalendarGridClient />
+            </div>
+            <aside className="rounded-xl border bg-white">
+              <FamilyCalendarSidePanelClient />
+            </aside>
+          </main>
+        </FamilyCalendarClientProvider>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -14,8 +14,8 @@ export async function SignInView({ searchParams }: SignInViewProps) {
 
   return (
     <AuthSplitShell
-      title="Ingresá a tu cuenta"
-      description="Accedé al espacio privado de Koru para gestionar contenido y acompañar la comunidad."
+      title="Ingresa a tu cuenta"
+      description="Accede al espacio privado de Koru para gestionar contenido y acompañar a la comunidad."
       footer={
         <>
           ¿No tienes usuario?{" "}
@@ -52,7 +52,7 @@ export async function SignInView({ searchParams }: SignInViewProps) {
             htmlFor="password"
             className="text-sm font-semibold text-[#2f3716]"
           >
-            Password
+            Contraseña
           </label>
           <input
             id="password"

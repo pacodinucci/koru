@@ -41,15 +41,16 @@ export function AuthSplitShell({
       </section>
 
       <section className="relative hidden min-h-screen overflow-hidden lg:block">
-        <Image
-          src="/assets/img3.jpg"
-          alt="Niños jugando al aire libre en Koru"
-          fill
-          priority
-          sizes="50vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1f2610]/45 via-transparent to-transparent" />
+        <div className="absolute inset-0 scale-[1.45]">
+          <Image
+            src="/assets/images/DSC01443.png"
+            alt="Niños en Koru"
+            fill
+            priority
+            sizes="50vw"
+            className="rotate-90 object-cover"
+          />
+        </div>
       </section>
     </main>
   );
