@@ -164,6 +164,48 @@ export async function cancelCalendarEvent(eventId: string) {
 }
 
 export async function listVisibleEventsForUser(userId: string, role: UserRole) {
+  return prisma.calendarEvent.findMany({
+    where: getVisibleEventsWhere(userId, role),
+    orderBy: [{ startsAt: "asc" }],
+  });
+}
+
+export async function listVisibleEventsForUserByRange(
+  userId: string,
+  role: UserRole,
+  dateCursor: Date,
+  viewMode: CalendarViewMode,
+) {
+  const { start, end } = getRangeForView(dateCursor, viewMode);
+
+  return prisma.calendarEvent.findMany({
+    where: {
+      ...getVisibleEventsWhere(userId, role),
+      startsAt: { lt: end },
+      endsAt: { gte: start },
+    },
+    orderBy: [{ startsAt: "asc" }],
+  });
+}
+
+export async function listUpcomingVisibleEventsForUser(
+  userId: string,
+  role: UserRole,
+  limit = 6,
+) {
+  return prisma.calendarEvent.findMany({
+    where: {
+      ...getVisibleEventsWhere(userId, role),
+      startsAt: {
+        gte: new Date(),
+      },
+    },
+    orderBy: [{ startsAt: "asc" }],
+    take: limit,
+  });
+}
+
+function getVisibleEventsWhere(userId: string, role: UserRole) {
   const audienceByRole: Record<UserRole, CalendarAudienceType> = {
     ADMIN: CalendarAudienceType.ALL,
     PARENT: CalendarAudienceType.PARENTS,
@@ -172,20 +214,17 @@ export async function listVisibleEventsForUser(userId: string, role: UserRole) {
 
   const audience = audienceByRole[role];
 
-  return prisma.calendarEvent.findMany({
-    where: {
-      status: CalendarEventStatus.PUBLISHED,
-      OR: [
-        { audienceType: CalendarAudienceType.ALL },
-        { audienceType: audience },
-        {
-          audienceType: CalendarAudienceType.PRIVATE,
-          audiences: { some: { userId } },
-        },
-      ],
-    },
-    orderBy: [{ startsAt: "asc" }],
-  });
+  return {
+    status: CalendarEventStatus.PUBLISHED,
+    OR: [
+      { audienceType: CalendarAudienceType.ALL },
+      { audienceType: audience },
+      {
+        audienceType: CalendarAudienceType.PRIVATE,
+        audiences: { some: { userId } },
+      },
+    ],
+  };
 }
 
 export async function listUpcomingPublicCalendarEvents({

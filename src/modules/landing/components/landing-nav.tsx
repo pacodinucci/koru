@@ -2,12 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ChevronDown,
-  LogOut,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
+import { ChevronDown, LogOut, ShieldCheck, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -265,15 +260,16 @@ export function LandingNav({
 
   const isTransparentNav =
     backgroundColor.trim().toLowerCase() === "transparent";
-  const effectiveIsScrolled = fixed && !disableScrollBackgroundChange && isScrolled;
-  const effectiveBackgroundColor =
-    effectiveIsScrolled ? "#ffffff" : backgroundColor;
+  const effectiveIsScrolled =
+    fixed && !disableScrollBackgroundChange && isScrolled;
+  const effectiveBackgroundColor = effectiveIsScrolled
+    ? "#ffffff"
+    : backgroundColor;
   const effectiveTextColor =
     fixed && !effectiveIsScrolled && isTransparentNav ? "#ffffff" : textColor;
-  const shouldUseBackdropBlur =
-    fixed
-      ? !(isTransparentNav && !effectiveIsScrolled)
-      : !isTransparentNav;
+  const shouldUseBackdropBlur = fixed
+    ? !(isTransparentNav && !effectiveIsScrolled)
+    : !isTransparentNav;
   const resolvedHeaderBackgroundColor = effectiveBackgroundColor;
 
   const [activeSubmenuId, setActiveSubmenuId] = useState<string | null>(null);
@@ -308,7 +304,6 @@ export function LandingNav({
   const activeSubmenu = navLinksWithSubmenu.find(
     (item, index) => (item.id?.trim() || `nav-${index}`) === activeSubmenuId,
   )?.submenu;
-
 
   function renderUserDropdown(
     menu: "desktop" | "mobile",
@@ -349,7 +344,9 @@ export function LandingNav({
             align="end"
             sideOffset={14}
             className="w-[300px] rounded-lg border border-black/10 bg-white p-3 font-['Montserrat'] text-slate-950 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.45)]"
-            onMouseEnter={isMobileUserMenu ? undefined : () => openUserMenu(menu)}
+            onMouseEnter={
+              isMobileUserMenu ? undefined : () => openUserMenu(menu)
+            }
             onMouseLeave={
               isMobileUserMenu ? undefined : () => scheduleUserMenuClose(menu)
             }
@@ -400,7 +397,7 @@ export function LandingNav({
                     className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border border-black/10 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:outline-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
                   >
                     <LogOut />
-                    Cerrar sesi?n
+                    Cerrar sesión
                   </button>
                 </form>
               </>
@@ -691,7 +688,10 @@ export function LandingNav({
       {activeSubmenu ? (
         <div
           className={`w-full px-10 py-8 font-['Roboto_Condensed'] shadow-[0_14px_24px_-18px_rgba(0,0,0,0.45)] transition-[background-color,backdrop-filter] duration-300 backdrop-blur`}
-          style={{ backgroundColor: effectiveBackgroundColor, color: effectiveTextColor }}
+          style={{
+            backgroundColor: effectiveBackgroundColor,
+            color: effectiveTextColor,
+          }}
         >
           <div className="mx-auto flex min-h-[260px] max-w-[1400px] items-stretch gap-12">
             {activeSubmenu.featured ? (
@@ -741,4 +741,3 @@ export function LandingNav({
     </header>
   );
 }
-

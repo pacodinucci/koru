@@ -15,16 +15,16 @@ export async function SignUpView({ searchParams }: SignUpViewProps) {
 
   return (
     <AuthSplitShell
-      title="Creá tu usuario"
-      description="Completá tus datos para iniciar el acceso privado al ecosistema Koru."
+      title="Crea tu usuario"
+      description="Completa tus datos para acceder al espacio privado de Koru."
       footer={
         <>
-          ¿Ya tenés cuenta?{" "}
+          ¿Ya tienes cuenta?{" "}
           <Link
             className="font-semibold text-[var(--complement-900)] underline underline-offset-4"
             href="/sign-in"
           >
-            Ingresar
+            Iniciar sesión
           </Link>
         </>
       }
@@ -67,7 +67,7 @@ export async function SignUpView({ searchParams }: SignUpViewProps) {
             htmlFor="password"
             className="text-sm font-semibold text-[#2f3716]"
           >
-            Password
+            Contraseña
           </label>
           <input
             id="password"
