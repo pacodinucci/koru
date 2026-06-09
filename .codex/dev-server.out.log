@@ -161,3 +161,4 @@ Creating turbopack project {
  GET /dashboard/mailing 200 in 3.4s (next.js: 8ms, application-code: 3.4s)
 ✓ Compiled in 374ms
 ✓ Compiled in 779ms
+✓ Compiled in 2.2s

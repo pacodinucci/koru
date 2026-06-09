@@ -154,7 +154,7 @@ export function ImageGridSection({
   const sectionStyle: CSSProperties = hasImageLayer
     ? sectionBorderStyle
     : {
-        backgroundColor: "#eef0dd",
+        backgroundColor: "#caa27d",
         ...sectionBackgroundStyle,
         ...sectionBorderStyle,
         ...sectionMarginStyle,
@@ -168,10 +168,6 @@ export function ImageGridSection({
       ? "var(--landing-body-padding-x, 24px)"
       : "0px",
   };
-  const topCardSize = Math.round(imageGridImageSize * 0.74);
-  const topGridGap = Math.max(6, Math.round(topCardSize * 0.035));
-  const topGridMaxWidth = topCardSize * 2 + topGridGap;
-
   return (
     <section
       className="relative isolate overflow-hidden border-y border-black/10"
@@ -190,35 +186,38 @@ export function ImageGridSection({
       >
         <div className="flex justify-center">
           <div
-            className="grid grid-cols-1 md:grid-cols-2"
+            className="grid w-full grid-cols-2 md:grid-cols-4"
             style={{
               order: getOrder(orderMap, "base:grid", 0),
-              width: `min(100%, ${topGridMaxWidth}px)`,
-              gap: `${topGridGap}px`,
+              maxWidth: "80rem",
+              gap: "0px",
             }}
           >
             {topCards.map((card, index) => (
               <article
                 key={card.key}
-                className="group relative aspect-square w-full cursor-pointer overflow-hidden"
+                tabIndex={0}
+                className="group relative aspect-[4/5] w-full cursor-pointer overflow-hidden bg-black outline-none transition-transform duration-300 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110"
               >
                 <Image
                   src={imageUrls[index]?.primary}
                   fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
+                  sizes="(min-width: 768px) 25vw, 50vw"
                   quality={70}
-                  className={`h-full w-full scale-[1.08] object-cover transition-transform duration-500 ease-out group-hover:scale-100 ${
-                    index === 3 ? "" : index < 4 ? "rotate-90" : ""
+                  className={`h-full w-full object-cover opacity-65 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0 ${
+                    index < 3
+                      ? "rotate-90 scale-[1.55] group-hover:scale-[1.45] group-focus-visible:scale-[1.45]"
+                      : "scale-110 group-hover:scale-100 group-focus-visible:scale-100"
                   }`}
                   alt={fixedHoverLabels[index] ?? `Imagen ${index + 1}`}
                 />
-                <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/35" />
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />
+                <div className="absolute inset-x-0 bottom-0 translate-y-4 p-5 text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
                   <p
                     className={cn(
                       previewMode
-                        ? "text-center text-white -translate-y-3"
-                        : "landing-curtain-rtl text-center text-white -translate-y-3",
+                        ? "text-white"
+                        : "landing-curtain-rtl text-white",
                       selectableClass(selectedFieldId === card.key, previewMode),
                     )}
                     onClick={() => onSelectField?.(card.key)}
@@ -244,7 +243,7 @@ export function ImageGridSection({
 
         {remainingCards.length > 0 ? (
           <div
-            className="mt-4 hidden gap-3 md:grid md:gap-4"
+            className="hidden md:grid"
             style={{
               gridTemplateColumns: `repeat(${imageGridColumns}, ${imageGridImageSize}px)`,
               justifyContent: "center",
@@ -255,7 +254,8 @@ export function ImageGridSection({
               return (
                 <article
                   key={card.key}
-                  className="group relative cursor-pointer overflow-hidden"
+                  tabIndex={0}
+                  className="group relative cursor-pointer overflow-hidden bg-black outline-none transition-transform duration-300 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110"
                   style={{
                     width: `${imageGridImageSize}px`,
                     height: `${imageGridImageSize}px`,
@@ -266,18 +266,20 @@ export function ImageGridSection({
                     fill
                     sizes={`${imageGridImageSize}px`}
                     quality={70}
-                    className={`h-full w-full scale-[1.08] object-cover transition-transform duration-500 ease-out group-hover:scale-100 ${
-                      imageIndex === 3 ? "" : imageIndex < 4 ? "rotate-90" : ""
+                    className={`h-full w-full object-cover opacity-65 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0 ${
+                      imageIndex < 3
+                        ? "rotate-90 scale-[1.55] group-hover:scale-[1.45] group-focus-visible:scale-[1.45]"
+                        : "scale-110 group-hover:scale-100 group-focus-visible:scale-100"
                     }`}
                     alt={`Imagen ${imageIndex + 1}`}
                   />
-                  <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/35" />
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />
+                  <div className="absolute inset-x-0 bottom-0 translate-y-4 p-5 text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
                     <p
                       className={cn(
                         previewMode
-                          ? "text-center text-white -translate-y-3"
-                          : "landing-curtain-rtl text-center text-white -translate-y-3",
+                          ? "text-white"
+                          : "landing-curtain-rtl text-white",
                         selectableClass(selectedFieldId === card.key, previewMode),
                       )}
                       onClick={() => onSelectField?.(card.key)}

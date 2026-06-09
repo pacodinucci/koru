@@ -5,28 +5,90 @@ const whoWeAreCopy = {
   titleLine1: "Creado por",
   titleLine2: "familias que cuidan",
   paragraphOne:
-    "Koru es un Organismo Social de Aprendizaje: una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.",
+    "Koru es un Organismo Social de Aprendizaje (OSA), una comunidad viva donde aprendices, acompañantes, y familias crecemos y aprendemos junt@s.",
   paragraphTwo:
-    "Nuestra propuesta no parte de la transmisión de contenidos, sino de la creación de experiencias significativas, donde el aprendizaje surge en relación, en movimiento y en conexión con la vida.",
+    "Creemos que la educación necesita transformarse. Vivimos en un mundo en constante cambio, marcado por desafíos sociales, ecológicos y tecnológicos cada vez más complejos.",
   paragraphThree:
-    "Creemos que aprender es un proceso profundamente humano que ocurre cuando hay vínculo, sentido y presencia.",
+    "En este contexto, las niñas y los niños necesitan desarrollar capacidades que les permitan comprender su realidad, adaptarse, colaborar con otros y participar activamente en la construcción de un futuro más humano y sostenible.",
+  paragraphFour:
+    "Por ello, cultivamos el desarrollo integral de las personas y las habilidades necesarias para comprender, cuidar y regenerar el tejido social y ecológico que habitamos.",
   featured:
-    "Formamos personas que se conocen, piensan por sí mismas y actúan con congruencia para transformar su entorno.",
+    "Acompañamos a niñas y niños a desarrollar las habilidades que sabemos son esenciales en el mundo de hoy como: colaborar, comunicar, pensar crítica y creativamente, adaptarse al cambio y convertirse en agentes de transformación positiva en el mundo del que forman parte.",
 };
 
 const missionVisionCopy = {
   missionTitle: "Misión",
   missionParagraphs: [
-    "Somos una comunidad educativa donde niñas, niños, familias y colaboradores co-creamos un espacio de aprendizaje vivo.",
-    "Acompañamos de manera personalizada el desarrollo integral de cada niñ@, respetando sus etapas evolutivas y reconociendo sus dones únicos. A través de un enfoque antroposófico, herramientas de inteligencia socioemocional, como la Comunicación NoViolenta y experiencias vivenciales en conexión con la naturaleza y la comunidad, fomentamos el autoconocimiento, el vínculo auténtico y la responsabilidad compartida.",
-    "Queremos formar seres humanos que estén conectados consigo mismos, y con su entorno; capaces de poner sus talentos al servicio de la vida.",
+    "Acompañar a niñas, niños y familias en el desarrollo de seres humanos críticos y libres, que se conocen profundamente, desarrollan sus dones, toman decisiones informadas y actúan con congruencia, cuidándose a sí mism@s, a l@s demás y a su entorno.",
   ],
   visionTitle: "Visión",
   visionParagraphs: [
-    "Co-crear una cultura donde niñas, niños, familias y colaboradores asumen un rol activo y corresponsable en los procesos de aprendizaje y desarrollo.",
-    "Aspiramos a una comunidad donde cada persona fortalezca la conexión con su brújula interna, desarrolle sus dones y participe conscientemente en la regeneración social y ecológica, construyendo formas de vida más humanas, colaborativas y sostenibles.",
+    "Contribuir a una transformación profunda de la educación y de la forma en que habitamos el mundo, para que las personas vivan conectadas con su brújula interna y con la naturaleza, construyan vidas con sentido y pongan sus dones al servicio de una sociedad más humana, colaborativa, pacífica y en armonía con la vida.",
   ],
 };
+
+const teamMembers = [
+  {
+    name: "Equipo Koru",
+    role: "Acompañante pedagógica",
+    imageSrc: "/assets/images/equipo11.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Coordinación de comunidad",
+    imageSrc: "/assets/images/equipo10.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Acompañante de aprendizaje",
+    imageSrc: "/assets/images/equipo1.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Acompañante socioemocional",
+    imageSrc: "/assets/images/equipo2.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Tallerista",
+    imageSrc: "/assets/images/equipo3.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Acompañante de naturaleza",
+    imageSrc: "/assets/images/equipo8.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Acompañante de arte",
+    imageSrc: "/assets/images/equipo12.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Gestión y familias",
+    imageSrc: "/assets/images/equipo9.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Acompañante pedagógica",
+    imageSrc: "/assets/images/equipo4.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Coordinación de comunidad",
+    imageSrc: "/assets/images/equipo5.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Acompañante de aprendizaje",
+    imageSrc: "/assets/images/equipo7.png",
+  },
+  {
+    name: "Equipo Koru",
+    role: "Acompañante socioemocional",
+    imageSrc: "/assets/images/equipo6.png",
+  },
+];
 
 type MissionVisionSectionProps = {
   title: string;
@@ -75,6 +137,50 @@ function MissionVisionSection({
   );
 }
 
+function TeamSection() {
+  return (
+    <section className="bg-[#caa27d] px-6 py-16 md:px-10 lg:px-14 lg:py-24">
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="mb-10 max-w-3xl">
+          <p className="mb-4 text-sm font-medium tracking-[0.18em] text-white/75">
+            NUESTRO EQUIPO
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4">
+          {teamMembers.map((member, index) => (
+            <article
+              key={`${member.name}-${member.role}-${index}`}
+              tabIndex={0}
+              className="group relative aspect-[4/5] overflow-hidden bg-black outline-none transition-transform duration-300 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110"
+            >
+              <Image
+                src={member.imageSrc}
+                alt={`${member.name}, ${member.role}`}
+                fill
+                sizes="(min-width: 768px) 25vw, 50vw"
+                className="object-cover opacity-65 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />
+              <div className="absolute inset-x-0 bottom-0 translate-y-4 p-5 text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                <h3
+                  className="text-3xl leading-none"
+                  style={{ fontFamily: "var(--font-roboto-condensed)" }}
+                >
+                  {member.name}
+                </h3>
+                <p className="mt-2 text-sm font-medium uppercase tracking-[0.14em] text-white/80">
+                  {member.role}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function QuienesSomosPage() {
   return (
     <main className="bg-white" style={{ fontFamily: "var(--font-montserrat)" }}>
@@ -103,6 +209,7 @@ export default function QuienesSomosPage() {
             <p>{whoWeAreCopy.paragraphOne}</p>
             <p>{whoWeAreCopy.paragraphTwo}</p>
             <p>{whoWeAreCopy.paragraphThree}</p>
+            <p>{whoWeAreCopy.paragraphFour}</p>
           </div>
         </div>
 
@@ -144,6 +251,8 @@ export default function QuienesSomosPage() {
         imageAlt="Comunidad educativa compartiendo actividades"
         reverse
       />
+
+      <TeamSection />
     </main>
   );
 }

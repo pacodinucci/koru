@@ -25,6 +25,11 @@ type AccompanyPillar = TextBlock & {
   imageAlt: string;
 };
 
+type IllustratedTextBlock = TextBlock & {
+  imageSrc: string;
+  imageAlt: string;
+};
+
 const accompanyCopy = {
   eyebrow: "COMO ACOMPAÑAMOS",
   title: "Cómo acompañamos",
@@ -253,6 +258,64 @@ const ecoCycleStages = [
   "Fuego: El potencial entra en una fase de transformación, donde necesita renovarse para seguir evolucionando.",
 ];
 
+const evaluationBlocks: IllustratedTextBlock[] = [
+  {
+    title: "Evaluación a aprendices",
+    imageSrc: "/assets/images/DSC01386.png",
+    imageAlt: "Acompañante registrando procesos de aprendizaje",
+    paragraphs: [
+      "Entendemos la evaluación como un proceso continuo de crecimiento, y auto-observación, no como un momento aislado, ni como una definición.",
+      "Observamos, registramos y compartimos el proceso de cada niñ@, haciendo visible su desarrollo en distintas dimensiones: corporal, emocional, social, cognitiva y de autogestión.",
+      "Este seguimiento se construye en el día a día, a través de la interacción, la observación y el vínculo del acompañante y l@s niñ@s.",
+      "Más que emitir juicios, buscamos comprender el proceso y generar acciones que apoyen el crecimiento de cada niñ@.",
+      "El proceso de cada niñ@ es acompañado de manera cercana también con su familia.",
+    ],
+    bullets: [
+      "Reconocer avances y fortalezas",
+      "Identificar áreas de oportunidad",
+      "Ajustar el acompañamiento",
+      "Trazar nuevas rutas de desarrollo",
+      "Espacios de seguimiento",
+      "Comunicación continua",
+      "Acuerdos compartidos",
+      "Cada niñ@ cuenta con un registro donde se documentan avances, procesos y acuerdos, permitiendo que las familias estén informadas y puedan dar continuidad desde casa.",
+    ],
+  },
+  {
+    title: "Nuestra herramienta de evaluación",
+    imageSrc: "/assets/images/DSC01379.png",
+    imageAlt: "Niñez trabajando con herramientas de seguimiento",
+    paragraphs: [
+      "Utilizamos el Ecociclo como una herramienta para comprender y comunicar el desarrollo de cada niñ@ de forma integral.",
+      "A diferencia de los sistemas tradicionales, el Ecociclo no mide desde la comparación, sino que reconoce el desarrollo como un proceso continuo, dinámico y en constante transformación.",
+      "Este modelo permite ubicar los distintos potenciales del niñ@ dentro de un proceso evolutivo, entendiendo que cada aspecto del desarrollo tiene su propio ritmo.",
+      "Las etapas del Ecociclo. El desarrollo se observa como un ciclo vivo:",
+    ],
+    bullets: ecoCycleStages,
+    cta: { label: "Conocer más", href: "#ecociclo" },
+  },
+  {
+    title: "Evaluación del equipo",
+    imageSrc: "/assets/images/DSC01352.png",
+    imageAlt: "Equipo acompañando procesos pedagógicos",
+    paragraphs: [
+      "El acompañamiento que ofrecemos a las niñas y niños parte de un principio fundamental: quienes acompañamos también estamos en constante aprendizaje.",
+      "Por ello, sostenemos prácticas de evaluación y reflexión continua que nos permiten revisar, ajustar y enriquecer nuestra labor pedagógica y comunitaria.",
+    ],
+  },
+  {
+    title: "Evaluación entre colaboradores y familias",
+    imageSrc: "/assets/images/DSC01384.png",
+    imageAlt: "Comunidad educativa compartiendo acompañamiento",
+    paragraphs: [
+      "Fomentamos una cultura de retroalimentación basada en los principios de la Comunicación NoViolenta.",
+      "A través de espacios de observación entre pares y acompañamiento pedagógico, el equipo comparte miradas, se escucha y se nutre, fortaleciendo la coherencia y la calidad del acompañamiento.",
+      "Entendemos la comunidad como un sistema vivo en constante evolución.",
+      "Así como acompañamos el desarrollo de cada niñ@, también observamos y ajustamos el funcionamiento del equipo, la relación con las familias y la dinámica comunitaria en su conjunto.",
+    ],
+  },
+];
+
 function SectionHeading({
   eyebrow,
   title,
@@ -318,6 +381,43 @@ function ContentCard({
           {block.cta.label}
         </a>
       ) : null}
+    </article>
+  );
+}
+
+function IllustratedContentCard({ block }: { block: IllustratedTextBlock }) {
+  return (
+    <article className="grid overflow-hidden rounded-[2rem] border border-complement-600 bg-white/70 shadow-sm md:grid-cols-[1.35fr_0.85fr]">
+      <div className="p-6">
+        <h3
+          className="mb-3 text-2xl leading-none text-black"
+          style={{ fontFamily: "var(--font-roboto-condensed)" }}
+        >
+          {block.title}
+        </h3>
+        <div className="space-y-3 text-sm leading-relaxed text-black/80 md:text-base">
+          {block.paragraphs?.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+          {block.bullets ? <BulletList items={block.bullets} /> : null}
+        </div>
+        {block.cta ? (
+          <a
+            href={block.cta.href}
+            className="mt-5 inline-flex rounded-full border border-complement-700 px-4 py-2 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]"
+          >
+            {block.cta.label}
+          </a>
+        ) : null}
+      </div>
+      <div className="relative min-h-[13rem] border-t border-complement-600 md:min-h-full md:border-t-0 md:border-l">
+        <Image
+          src={block.imageSrc}
+          alt={block.imageAlt}
+          fill
+          className="object-cover"
+        />
+      </div>
     </article>
   );
 }
@@ -456,7 +556,7 @@ export default function ComoAcompanamosPage() {
 
       <section id="evaluacion" className="scroll-mt-28 bg-[#f7f6f1]">
         <div className="mx-auto grid w-full max-w-7xl items-start gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-14 lg:py-14">
-          <div className="space-y-8">
+          <div>
             <SectionHeading title="Evaluación">
               <p className="text-2xl font-semibold text-black">
                 Evaluamos para acompañar, no para clasificar.
@@ -477,64 +577,6 @@ export default function ComoAcompanamosPage() {
                 Conocer más
               </a>
             </SectionHeading>
-
-            <div id="evaluacion-detallada" className="scroll-mt-28 grid gap-4">
-              <ContentCard
-                block={{
-                  title: "Evaluación a aprendices",
-                  paragraphs: [
-                    "Entendemos la evaluación como un proceso continuo de crecimiento, y auto-observación, no como un momento aislado, ni como una definición.",
-                    "Observamos, registramos y compartimos el proceso de cada niñ@, haciendo visible su desarrollo en distintas dimensiones: corporal, emocional, social, cognitiva y de autogestión.",
-                    "Este seguimiento se construye en el día a día, a través de la interacción, la observación y el vínculo del acompañante y l@s niñ@s.",
-                    "Más que emitir juicios, buscamos comprender el proceso y generar acciones que apoyen el crecimiento de cada niñ@.",
-                    "El proceso de cada niñ@ es acompañado de manera cercana también con su familia.",
-                  ],
-                  bullets: [
-                    "Reconocer avances y fortalezas",
-                    "Identificar áreas de oportunidad",
-                    "Ajustar el acompañamiento",
-                    "Trazar nuevas rutas de desarrollo",
-                    "Espacios de seguimiento",
-                    "Comunicación continua",
-                    "Acuerdos compartidos",
-                    "Cada niñ@ cuenta con un registro donde se documentan avances, procesos y acuerdos, permitiendo que las familias estén informadas y puedan dar continuidad desde casa.",
-                  ],
-                }}
-              />
-              <ContentCard
-                block={{
-                  title: "Nuestra herramienta de evaluación",
-                  paragraphs: [
-                    "Utilizamos el Ecociclo como una herramienta para comprender y comunicar el desarrollo de cada niñ@ de forma integral.",
-                    "A diferencia de los sistemas tradicionales, el Ecociclo no mide desde la comparación, sino que reconoce el desarrollo como un proceso continuo, dinámico y en constante transformación.",
-                    "Este modelo permite ubicar los distintos potenciales del niñ@ dentro de un proceso evolutivo, entendiendo que cada aspecto del desarrollo tiene su propio ritmo.",
-                    "Las etapas del Ecociclo. El desarrollo se observa como un ciclo vivo:",
-                  ],
-                  bullets: ecoCycleStages,
-                  cta: { label: "Conocer más", href: "#ecociclo" },
-                }}
-              />
-              <ContentCard
-                block={{
-                  title: "Evaluación del equipo",
-                  paragraphs: [
-                    "El acompañamiento que ofrecemos a las niñas y niños parte de un principio fundamental: quienes acompañamos también estamos en constante aprendizaje.",
-                    "Por ello, sostenemos prácticas de evaluación y reflexión continua que nos permiten revisar, ajustar y enriquecer nuestra labor pedagógica y comunitaria.",
-                  ],
-                }}
-              />
-              <ContentCard
-                block={{
-                  title: "Evaluación entre colaboradores y familias",
-                  paragraphs: [
-                    "Fomentamos una cultura de retroalimentación basada en los principios de la Comunicación NoViolenta.",
-                    "A través de espacios de observación entre pares y acompañamiento pedagógico, el equipo comparte miradas, se escucha y se nutre, fortaleciendo la coherencia y la calidad del acompañamiento.",
-                    "Entendemos la comunidad como un sistema vivo en constante evolución.",
-                    "Así como acompañamos el desarrollo de cada niñ@, también observamos y ajustamos el funcionamiento del equipo, la relación con las familias y la dinámica comunitaria en su conjunto.",
-                  ],
-                }}
-              />
-            </div>
           </div>
           <div className="relative mx-auto w-full max-w-[22rem]">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
@@ -545,6 +587,15 @@ export default function ComoAcompanamosPage() {
                 className="object-cover"
               />
             </div>
+          </div>
+
+          <div
+            id="evaluacion-detallada"
+            className="mx-auto grid w-full max-w-5xl scroll-mt-28 gap-6 lg:col-span-2"
+          >
+            {evaluationBlocks.map((block) => (
+              <IllustratedContentCard key={block.title} block={block} />
+            ))}
           </div>
         </div>
       </section>
