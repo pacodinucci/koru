@@ -31,6 +31,8 @@ import {
 } from "@/modules/landing/types/landing-text";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
 import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
+import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
+import { hardcodedLandingContentSlots, landingContentSlotIds } from "@/modules/landing/content-slots";
 import { CardsSection } from "@/modules/landing/views/sections/cards-section";
 import { FooterSection } from "@/modules/landing/views/sections/footer-section";
 import { GallerySection } from "@/modules/landing/views/sections/gallery-section";
@@ -55,7 +57,33 @@ type ScopedSectionGroup = {
   sections: LandingSectionInstance[];
 };
 
-function LandingVisionBridgeSection() {
+const hardcodedSlotMap = new Map(
+  hardcodedLandingContentSlots.map((slot) => [slot.id, slot]),
+);
+
+function getHardcodedSlot(slotId: string) {
+  const slot = hardcodedSlotMap.get(slotId);
+  if (!slot) {
+    throw new Error(`Missing landing content slot: ${slotId}`);
+  }
+  return slot;
+}
+
+type HardcodedContentBindings = {
+  textMap: LandingTextMap;
+  previewMode?: boolean;
+  selectedContentSlotId?: string | null;
+  onSelectContentSlot?: (slotId: string) => void;
+  responsiveMode?: LandingResponsiveMode;
+};
+
+function LandingVisionBridgeSection({
+  textMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
+  responsiveMode,
+}: HardcodedContentBindings) {
   const imageUrl = cloudinaryImageUrl(
     "koru/landing/DSC01443",
     "/assets/images/DSC01443.png",
@@ -73,23 +101,39 @@ function LandingVisionBridgeSection() {
       />
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 md:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16 lg:px-14 lg:py-24">
         <ScrollReveal direction="right" className="lg:order-2">
-          <h2
+          <EditableContentSlot
+            as="h2"
+            slot={getHardcodedSlot(landingContentSlotIds.visionTitle)}
+            textMap={textMap}
+            previewMode={previewMode}
+            selected={selectedContentSlotId === landingContentSlotIds.visionTitle}
+            onSelect={onSelectContentSlot}
+            responsiveMode={responsiveMode}
             className="mb-8 text-5xl leading-[0.95] tracking-tight text-black md:text-6xl"
-            style={{ fontFamily: "var(--font-roboto-condensed)" }}
-          >
-            Bienvenidos a Koru
-          </h2>
+          />
           <div className="max-w-3xl space-y-6 text-xl leading-relaxed text-black/85">
-            <p>
-              Co-creamos una cultura viva donde niñas, niños, familias y
-              acompañantes asumen un rol activo y corresponsable en los procesos
-              de aprendizaje y desarrollo.
-            </p>
-            <p>
-              Queremos una comunidad donde cada persona fortalezca su brújula
-              interna, despliegue sus dones y participe conscientemente en la
-              regeneración social y ecológica.
-            </p>
+            <EditableContentSlot
+              as="p"
+              slot={getHardcodedSlot(landingContentSlotIds.visionBodyOne)}
+              textMap={textMap}
+              previewMode={previewMode}
+              selected={
+                selectedContentSlotId === landingContentSlotIds.visionBodyOne
+              }
+              onSelect={onSelectContentSlot}
+              responsiveMode={responsiveMode}
+            />
+            <EditableContentSlot
+              as="p"
+              slot={getHardcodedSlot(landingContentSlotIds.visionBodyTwo)}
+              textMap={textMap}
+              previewMode={previewMode}
+              selected={
+                selectedContentSlotId === landingContentSlotIds.visionBodyTwo
+              }
+              onSelect={onSelectContentSlot}
+              responsiveMode={responsiveMode}
+            />
           </div>
         </ScrollReveal>
 
@@ -113,7 +157,13 @@ function LandingVisionBridgeSection() {
   );
 }
 
-function LandingQuoteSection() {
+function LandingQuoteSection({
+  textMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
+  responsiveMode,
+}: HardcodedContentBindings) {
   return (
     <section className="bg-white">
       <ScrollReveal
@@ -138,13 +188,28 @@ function LandingQuoteSection() {
             className="h-[10px] w-[180px]"
           />
         </div>
-        <p className="mt-5 text-center text-xl text-black">Tutor de Koru</p>
+        <EditableContentSlot
+          as="p"
+          slot={getHardcodedSlot(landingContentSlotIds.quoteAuthor)}
+          textMap={textMap}
+          previewMode={previewMode}
+          selected={selectedContentSlotId === landingContentSlotIds.quoteAuthor}
+          onSelect={onSelectContentSlot}
+          responsiveMode={responsiveMode}
+          className="mt-5 text-center text-xl text-black"
+        />
       </ScrollReveal>
     </section>
   );
 }
 
-function LandingAdmissionsCtaSection() {
+function LandingAdmissionsCtaSection({
+  textMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
+  responsiveMode,
+}: HardcodedContentBindings) {
   return (
     <section className="bg-white px-6 pt-16 pb-32 md:px-10 md:pb-40 lg:px-14 lg:pt-20 lg:pb-52">
       <ScrollReveal
@@ -183,7 +248,16 @@ function LandingAdmissionsCtaSection() {
           className="relative z-10 mt-8 inline-flex rounded-md bg-white px-8 py-4 text-base font-semibold uppercase tracking-[0.18em] text-[var(--brand-800)] hover:bg-[var(--complement-500)]"
           style={{ fontFamily: "var(--font-montserrat)" }}
         >
-          Ir a admisiones
+          <EditableContentSlot
+            slot={getHardcodedSlot(landingContentSlotIds.admissionsButton)}
+            textMap={textMap}
+            previewMode={previewMode}
+            selected={
+              selectedContentSlotId === landingContentSlotIds.admissionsButton
+            }
+            onSelect={onSelectContentSlot}
+            responsiveMode={responsiveMode}
+          />
         </Link>
       </ScrollReveal>
     </section>
@@ -276,6 +350,8 @@ function SectionRenderer({
   onSelectField,
   responsiveMode,
   onMoveSectionExtraPosition,
+  selectedContentSlotId,
+  onSelectContentSlot,
 }: SectionRendererProps) {
   switch (section.type) {
     case "hero":
@@ -331,8 +407,17 @@ function SectionRenderer({
         <NonCmsEditorialSection
           bannerTitle={
             section.id.includes("-copy")
-              ? "Breve explicación del enfoque"
-              : "Qué nos hace diferentes"
+              ? textMap[landingContentSlotIds.editorialTwoTitle] ??
+                getHardcodedSlot(landingContentSlotIds.editorialTwoTitle)
+                  .defaultValue
+              : textMap[landingContentSlotIds.editorialOneTitle] ??
+                getHardcodedSlot(landingContentSlotIds.editorialOneTitle)
+                  .defaultValue
+          }
+          bannerTitleSlotId={
+            section.id.includes("-copy")
+              ? landingContentSlotIds.editorialTwoTitle
+              : landingContentSlotIds.editorialOneTitle
           }
           bannerClassName={
             section.id.includes("-copy")
@@ -341,19 +426,51 @@ function SectionRenderer({
           }
           bodyText={
             section.id.includes("-copy")
-              ? "Koru propone un enfoque pedagógico integral que combina mirada antroposófica, inteligencia socioemocional, aprendizaje transdisciplinario por proyectos y habilidades del siglo XXI."
-              : undefined
+              ? textMap[landingContentSlotIds.editorialTwoBody] ??
+                getHardcodedSlot(landingContentSlotIds.editorialTwoBody)
+                  .defaultValue
+              : textMap[landingContentSlotIds.editorialOneBody] ??
+                getHardcodedSlot(landingContentSlotIds.editorialOneBody)
+                  .defaultValue
+          }
+          bodyTextSlotId={
+            section.id.includes("-copy")
+              ? landingContentSlotIds.editorialTwoBody
+              : landingContentSlotIds.editorialOneBody
           }
           highlightText={
             section.id.includes("-copy")
-              ? "Las niñas y los niños aprenden a partir de experiencias significativas conectadas con sus intereses."
-              : undefined
+              ? textMap[landingContentSlotIds.editorialTwoHighlight] ??
+                getHardcodedSlot(landingContentSlotIds.editorialTwoHighlight)
+                  .defaultValue
+              : textMap[landingContentSlotIds.editorialOneHighlight] ??
+                getHardcodedSlot(landingContentSlotIds.editorialOneHighlight)
+                  .defaultValue
+          }
+          highlightTextSlotId={
+            section.id.includes("-copy")
+              ? landingContentSlotIds.editorialTwoHighlight
+              : landingContentSlotIds.editorialOneHighlight
           }
           closingText={
             section.id.includes("-copy")
-              ? "Acompañamos cada proceso de forma personalizada, cultivando capacidades cognitivas, emocionales, sociales y prácticas en comunidad y en vínculo con la naturaleza."
-              : undefined
+              ? textMap[landingContentSlotIds.editorialTwoClosing] ??
+                getHardcodedSlot(landingContentSlotIds.editorialTwoClosing)
+                  .defaultValue
+              : textMap[landingContentSlotIds.editorialOneClosing] ??
+                getHardcodedSlot(landingContentSlotIds.editorialOneClosing)
+                  .defaultValue
           }
+          closingTextSlotId={
+            section.id.includes("-copy")
+              ? landingContentSlotIds.editorialTwoClosing
+              : landingContentSlotIds.editorialOneClosing
+          }
+          textMap={textMap}
+          previewMode={previewMode}
+          selectedContentSlotId={selectedContentSlotId}
+          onSelectContentSlot={onSelectContentSlot}
+          responsiveMode={responsiveMode}
           imageSrc={
             section.id.includes("-copy")
               ? cloudinaryImageUrl(
@@ -428,6 +545,8 @@ export function LandingView({
   onSelectField,
   responsiveMode,
   onMoveSectionExtraPosition,
+  selectedContentSlotId,
+  onSelectContentSlot,
 }: LandingViewProps) {
   const isCodeFirst = isCodeFirstLandingMode();
   const completeMap = ensureLandingDefaults(textMap);
@@ -535,13 +654,27 @@ export function LandingView({
                               onMoveSectionExtraPosition={
                                 onMoveSectionExtraPosition
                               }
+                              selectedContentSlotId={selectedContentSlotId}
+                              onSelectContentSlot={onSelectContentSlot}
                             />
                           </div>
                         </div>
                       </div>
                       <div className="landing-overlap-content">
-                        <LandingVisionBridgeSection />
-                        <LandingQuoteSection />
+                        <LandingVisionBridgeSection
+                          textMap={responsiveMap}
+                          previewMode={previewMode}
+                          selectedContentSlotId={selectedContentSlotId}
+                          onSelectContentSlot={onSelectContentSlot}
+                          responsiveMode={effectiveResponsiveMode}
+                        />
+                        <LandingQuoteSection
+                          textMap={responsiveMap}
+                          previewMode={previewMode}
+                          selectedContentSlotId={selectedContentSlotId}
+                          onSelectContentSlot={onSelectContentSlot}
+                          responsiveMode={effectiveResponsiveMode}
+                        />
                       </div>
                     </div>
                   ) : (
@@ -559,6 +692,8 @@ export function LandingView({
                         onSelectField={onSelectField}
                         responsiveMode={effectiveResponsiveMode}
                         onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+                        selectedContentSlotId={selectedContentSlotId}
+                        onSelectContentSlot={onSelectContentSlot}
                       />
                     </div>
                   )}
@@ -568,7 +703,13 @@ export function LandingView({
           </ScopeBackground>
         );
       })}
-      <LandingAdmissionsCtaSection />
+      <LandingAdmissionsCtaSection
+        textMap={responsiveMap}
+        previewMode={previewMode}
+        selectedContentSlotId={selectedContentSlotId}
+        onSelectContentSlot={onSelectContentSlot}
+        responsiveMode={effectiveResponsiveMode}
+      />
     </div>
   );
 }

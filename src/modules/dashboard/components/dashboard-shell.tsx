@@ -112,6 +112,7 @@ export function DashboardShell({
   const isTeachersActive = pathname.startsWith("/dashboard/teachers");
   const isExamsActive = pathname.startsWith("/dashboard/exams");
   const isLayoutActive = pathname.startsWith("/dashboard/layout");
+  const isContentActive = pathname.startsWith("/dashboard/content");
   const isPageEditorActive =
     pathname.startsWith("/dashboard/pages/edit") ||
     /^\/dashboard\/pages\/[^/]+$/.test(pathname);
@@ -123,9 +124,11 @@ export function DashboardShell({
       ? `/${decodeURIComponent(pathnamePageSegment)}`
       : null;
   const isLandingActive = pathname.startsWith("/dashboard/pages/landing");
-  const isCmsActive = isLayoutActive || isLandingActive || isPageEditorActive;
+  const isCmsActive =
+    isLayoutActive || isLandingActive || isPageEditorActive || isContentActive;
   const [cmsOpen, setCmsOpen] = useState(isCmsActive);
   const [pagesOpen, setPagesOpen] = useState(isLandingActive);
+  const [contentOpen, setContentOpen] = useState(isContentActive);
   const isAdmin = userRole === "ADMIN";
   const sidebarMenuButtonClass = "h-10 rounded-xl px-3 text-slate-600 hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
 
@@ -227,6 +230,31 @@ export function DashboardShell({
                               </SidebarMenuSubItem>
                             );
                           })}
+                        </SidebarMenuSub>
+                      ) : null}
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          isActive={isContentActive}
+                          onClick={() => setContentOpen((previous) => !previous)}
+                        >
+                          <FileText />
+                          <span>Contenido</span>
+                          <ChevronDown
+                            className={`ml-auto transition-transform ${contentOpen ? "rotate-180" : ""}`}
+                          />
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      {contentOpen ? (
+                        <SidebarMenuSub className="mx-6">
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              isActive={pathname === "/dashboard/content/landing"}
+                              render={<Link href="/dashboard/content/landing" />}
+                            >
+                              <FileText />
+                              <span>Landing</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
                         </SidebarMenuSub>
                       ) : null}
                       </SidebarMenuSub>

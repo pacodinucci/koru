@@ -29,6 +29,8 @@ export type LandingPreviewBindings = {
     positionY: number,
     mode: LandingResponsiveMode,
   ) => void;
+  selectedContentSlotId?: string | null;
+  onSelectContentSlot?: (slotId: string) => void;
 };
 
 const RESPONSIVE_MODE_SUFFIX_REGEX = /__(large|medium|tablet|mobile)$/;
