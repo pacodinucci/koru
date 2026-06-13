@@ -1,6 +1,6 @@
 "use client";
 
-import type { ElementType, MouseEvent, ReactNode } from "react";
+import type { CSSProperties, ElementType, MouseEvent, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -23,6 +23,7 @@ export function EditableContentSlot({
   responsiveMode,
   className,
   children,
+  style,
 }: {
   as?: ElementType;
   slot: LandingContentSlot;
@@ -33,10 +34,11 @@ export function EditableContentSlot({
   responsiveMode?: LandingResponsiveMode;
   className?: string;
   children?: ReactNode;
+  style?: CSSProperties;
 }) {
   const Component = as ?? "span";
   const value = getLandingContentSlotValue(textMap, slot);
-  const style = getLandingContentSlotStyle(textMap, slot, responsiveMode);
+  const slotStyle = getLandingContentSlotStyle(textMap, slot, responsiveMode);
 
   return (
     <Component
@@ -48,7 +50,7 @@ export function EditableContentSlot({
           "outline outline-2 outline-[#2563eb] shadow-[0_0_0_5px_rgba(37,99,235,0.20)]",
         className,
       )}
-      style={style}
+      style={{ ...style, ...slotStyle }}
       onClick={(event: MouseEvent) => {
         if (!previewMode) {
           return;

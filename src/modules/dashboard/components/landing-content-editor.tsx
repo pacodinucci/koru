@@ -14,6 +14,7 @@ import {
   getLandingContentSlotStyleKeys,
   getLandingContentSlotValue,
   getLandingContentSlots,
+  repairLandingContentText,
   type LandingContentSlot,
 } from "@/modules/landing/content-slots";
 import type { LandingTextMap } from "@/modules/landing/types/landing-text";
@@ -44,7 +45,13 @@ const PREVIEW_CANVAS_DISPLAY_WIDTH =
   PREVIEW_CANVAS_WIDTH * PREVIEW_ZOOM_BASE_SCALE;
 
 function normalizeTextMap(textMap: LandingTextMap, slots: LandingContentSlot[]) {
-  const next = { ...textMap };
+  const next = Object.fromEntries(
+    Object.entries(textMap).map(([key, value]) => [
+      key,
+      repairLandingContentText(value),
+    ]),
+  ) as LandingTextMap;
+
   for (const slot of slots) {
     if (next[slot.id] == null) {
       next[slot.id] = slot.defaultValue;
@@ -58,18 +65,25 @@ export function LandingContentEditor({
 }: {
   initialTextMap: LandingTextMap;
 }) {
-  const baseSlots = useMemo(
-    () => getLandingContentSlots(initialTextMap),
-    [initialTextMap],
-  );
+  const baseSlots = useMemo(() => getLandingContentSlots(), []);
   const [textMap, setTextMap] = useState(() =>
     normalizeTextMap(initialTextMap, baseSlots),
   );
-  const slots = useMemo(() => getLandingContentSlots(textMap), [textMap]);
+  const slots = useMemo(() => getLandingContentSlots(), []);
   const [selectedSlotId, setSelectedSlotId] = useState(slots[0]?.id ?? "");
   const [statusMessage, setStatusMessage] = useState("");
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const { portalTarget } = useDashboardEditorPanel();
+
+  const validSlotIds = useMemo(() => new Set(slots.map((slot) => slot.id)), [slots]);
+
+  function selectSlot(slotId: string) {
+    if (!validSlotIds.has(slotId)) {
+      return;
+    }
+
+    setSelectedSlotId(slotId);
+  }
 
   const selectedIndex = Math.max(
     0,
@@ -106,7 +120,14 @@ export function LandingContentEditor({
   }
 
   async function handlePublish() {
-    const result = await publishCmsAction(textMap);
+    const repairedTextMap = Object.fromEntries(
+      Object.entries(textMap).map(([key, value]) => [
+        key,
+        repairLandingContentText(value),
+      ]),
+    ) as LandingTextMap;
+    setTextMap(repairedTextMap);
+    const result = await publishCmsAction(repairedTextMap);
     setStatusMessage(
       result.ok
         ? "Contenido publicado."
@@ -214,9 +235,9 @@ export function LandingContentEditor({
                   textMap={textMap}
                   previewMode
                   selectedFieldId={selectedSlotId}
-                  onSelectField={setSelectedSlotId}
+                  onSelectField={selectSlot}
                   selectedContentSlotId={selectedSlotId}
-                  onSelectContentSlot={setSelectedSlotId}
+                  onSelectContentSlot={selectSlot}
                 />
               </LandingPageLayout>
             </div>
@@ -307,7 +328,7 @@ export function LandingContentSidePanel({
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-slate-600">Tama?o</label>
+          <label className="text-xs font-semibold text-slate-600">Tamaño</label>
           <div className="flex items-center gap-3">
             <input
               type="range"
@@ -344,7 +365,7 @@ export function LandingContentSidePanel({
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-600">
-              Alineaci?n
+              Alineación
             </label>
             <select
               className="h-9 w-full rounded-lg border border-input bg-white px-3 text-sm"

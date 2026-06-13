@@ -1,12 +1,6 @@
 import type { CSSProperties } from "react";
 
 import {
-  getSectionFieldKey,
-  landingSectionCatalog,
-  parseLandingStructure,
-  type LandingSectionField,
-} from "@/modules/landing/config/landing-sections";
-import {
   getLandingFieldColor,
   getLandingFieldFontFamily,
   getLandingFieldFontSize,
@@ -43,10 +37,59 @@ export type LandingContentSlot = {
   styleControls: LandingContentSlotStyleControl[];
 };
 
+
+const landingContentTextRepairs: Array<[string, string]> = [
+  ["\u00c3\u00b1", "\u00f1"],
+  ["\u00c3\u00a1", "\u00e1"],
+  ["\u00c3\u00a9", "\u00e9"],
+  ["\u00c3\u00ad", "\u00ed"],
+  ["\u00c3\u00b3", "\u00f3"],
+  ["\u00c3\u00ba", "\u00fa"],
+  ["\u00c2\u00bf", "\u00bf"],
+  ["T?tulo", "T\u00edtulo"],
+  ["P?rrafo", "P\u00e1rrafo"],
+  ["Bot?n", "Bot\u00f3n"],
+  ["Tama?o", "Tama\u00f1o"],
+  ["Alineaci?n", "Alineaci\u00f3n"],
+  ["ni?as", "ni\u00f1as"],
+  ["Ni?as", "Ni\u00f1as"],
+  ["ni?os", "ni\u00f1os"],
+  ["Ni?os", "Ni\u00f1os"],
+  ["acompa?antes", "acompa\u00f1antes"],
+  ["acompa?amiento", "acompa\u00f1amiento"],
+  ["Acompa?amos", "Acompa\u00f1amos"],
+  ["educaci?n", "educaci\u00f3n"],
+  ["relaci?n", "relaci\u00f3n"],
+  ["participaci?n", "participaci\u00f3n"],
+  ["explicaci?n", "explicaci\u00f3n"],
+  ["pedag?gico", "pedag\u00f3gico"],
+  ["antrop?sica", "antropos\u00f3fica"],
+  ["antropos?fica", "antropos\u00f3fica"],
+  ["ecol?gica", "ecol\u00f3gica"],
+  ["versi?n", "versi\u00f3n"],
+  ["d?a", "d\u00eda"],
+  ["Qu?", "Qu\u00e9"],
+  ["br?jula", "br\u00fajula"],
+  ["s?lo", "s\u00f3lo"],
+  ["tambi?n", "tambi\u00e9n"],
+  ["pr?cticas", "pr\u00e1cticas"],
+  ["v?nculo", "v\u00ednculo"],
+  ["m?gico", "m\u00e1gico"],
+  ["?Te interesa aplicar a Koru?", "\u00bfTe interesa aplicar a Koru?"],
+];
+
+export function repairLandingContentText(value: string) {
+  return landingContentTextRepairs.reduce(
+    (nextValue, [broken, repaired]) => nextValue.replaceAll(broken, repaired),
+    value,
+  );
+}
+
 export const landingContentTextAlignKey = (slotId: string) =>
   `${slotId}__text_align`;
 
 export const landingContentSlotIds = {
+  heroVideoText: "content.landing.hero.video.text",
   visionTitle: "content.landing.vision.title",
   visionBodyOne: "content.landing.vision.body.one",
   visionBodyTwo: "content.landing.vision.body.two",
@@ -66,47 +109,57 @@ export const landingContentSlotIds = {
 
 export const hardcodedLandingContentSlots: LandingContentSlot[] = [
   {
+    id: landingContentSlotIds.heroVideoText,
+    label: "Hero / Frase principal",
+    selectorLabel: "Hero / Frase",
+    defaultValue:
+      "Una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.",
+    defaultSize: 56,
+    multiline: true,
+    styleControls: ["font", "size", "color", "align", "weight", "lineHeight"],
+  },
+  {
     id: landingContentSlotIds.visionTitle,
-    label: "Bienvenida / Titulo",
-    selectorLabel: "Bienvenida / Titulo",
+    label: "Bienvenida / Título",
+    selectorLabel: "Bienvenida / Título",
     defaultValue: "Bienvenidos a Koru",
     defaultSize: 64,
     styleControls: ["font", "size", "color", "align", "weight"],
   },
   {
     id: landingContentSlotIds.visionBodyOne,
-    label: "Bienvenida / Parrafo 1",
+    label: "Bienvenida / Párrafo 1",
     selectorLabel: "Bienvenida / P1",
     defaultValue:
-      "Co-creamos una cultura viva donde ni?as, ni?os, familias y acompa?antes asumen un rol activo y corresponsable en los procesos de aprendizaje y desarrollo.",
+      "Co-creamos una cultura viva donde niñas, niños, familias y acompañantes asumen un rol activo y corresponsable en los procesos de aprendizaje y desarrollo.",
     defaultSize: 20,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
   {
     id: landingContentSlotIds.visionBodyTwo,
-    label: "Bienvenida / Parrafo 2",
+    label: "Bienvenida / Párrafo 2",
     selectorLabel: "Bienvenida / P2",
     defaultValue:
-      "Queremos una comunidad donde cada persona fortalezca su br?jula interna, despliegue sus dones y participe conscientemente en la regeneraci?n social y ecol?gica.",
+      "Queremos una comunidad donde cada persona fortalezca su brújula interna, despliegue sus dones y participe conscientemente en la regeneración social y ecológica.",
     defaultSize: 20,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
   {
     id: landingContentSlotIds.editorialOneTitle,
-    label: "Diferentes / Titulo superior",
-    selectorLabel: "Diferentes / Titulo",
-    defaultValue: "Qu? nos hace diferentes",
+    label: "Diferentes / Título superior",
+    selectorLabel: "Diferentes / Título",
+    defaultValue: "Qué nos hace diferentes",
     defaultSize: 42,
     styleControls: ["font", "size", "color", "align", "weight"],
   },
   {
     id: landingContentSlotIds.editorialOneBody,
-    label: "Diferentes / Parrafo",
-    selectorLabel: "Diferentes / Parrafo",
+    label: "Diferentes / Párrafo",
+    selectorLabel: "Diferentes / Párrafo",
     defaultValue:
-      "Creemos que la educaci?n es un proceso compartido. Ni?as, ni?os, familias y colaboradores formamos un mismo organismo, donde cada parte influye en el desarrollo individual y colectivo.",
+      "Creemos que la educación es un proceso compartido. Niñas, niños, familias y colaboradores formamos un mismo organismo, donde cada parte influye en el desarrollo individual y colectivo.",
     defaultSize: 20,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
@@ -116,7 +169,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     label: "Diferentes / Destacado",
     selectorLabel: "Diferentes / Destacado",
     defaultValue:
-      "Por eso, el acompa?amiento no ocurre s?lo dentro del espacio educativo, sino tambi?n en casa y en la relaci?n cotidiana.",
+      "Por eso, el acompañamiento no ocurre sólo dentro del espacio educativo, sino también en casa y en la relación cotidiana.",
     defaultSize: 28,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "weight", "lineHeight"],
@@ -126,25 +179,25 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     label: "Diferentes / Cierre",
     selectorLabel: "Diferentes / Cierre",
     defaultValue:
-      "Ser parte de esta comunidad implica una participaci?n activa y comprometida. Ser parte de este espacio implica formar parte de una comunidad que aprende, se cuestiona y evoluciona.",
+      "Ser parte de esta comunidad implica una participación activa y comprometida. Ser parte de este espacio implica formar parte de una comunidad que aprende, se cuestiona y evoluciona.",
     defaultSize: 18,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
   {
     id: landingContentSlotIds.editorialTwoTitle,
-    label: "Enfoque / Titulo superior",
-    selectorLabel: "Enfoque / Titulo",
-    defaultValue: "Breve explicaci?n del enfoque",
+    label: "Enfoque / Título superior",
+    selectorLabel: "Enfoque / Título",
+    defaultValue: "Breve explicación del enfoque",
     defaultSize: 42,
     styleControls: ["font", "size", "color", "align", "weight"],
   },
   {
     id: landingContentSlotIds.editorialTwoBody,
-    label: "Enfoque / Parrafo",
-    selectorLabel: "Enfoque / Parrafo",
+    label: "Enfoque / Párrafo",
+    selectorLabel: "Enfoque / Párrafo",
     defaultValue:
-      "Koru propone un enfoque pedag?gico integral que combina mirada antropos?fica, inteligencia socioemocional, aprendizaje transdisciplinario por proyectos y habilidades del siglo XXI.",
+      "Koru propone un enfoque pedagógico integral que combina mirada antroposófica, inteligencia socioemocional, aprendizaje transdisciplinario por proyectos y habilidades del siglo XXI.",
     defaultSize: 20,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
@@ -154,7 +207,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     label: "Enfoque / Destacado",
     selectorLabel: "Enfoque / Destacado",
     defaultValue:
-      "Las ni?as y los ni?os aprenden a partir de experiencias significativas conectadas con sus intereses.",
+      "Las niñas y los niños aprenden a partir de experiencias significativas conectadas con sus intereses.",
     defaultSize: 28,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "weight", "lineHeight"],
@@ -164,7 +217,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     label: "Enfoque / Cierre",
     selectorLabel: "Enfoque / Cierre",
     defaultValue:
-      "Acompa?amos cada proceso de forma personalizada, cultivando capacidades cognitivas, emocionales, sociales y pr?cticas en comunidad y en v?nculo con la naturaleza.",
+      "Acompañamos cada proceso de forma personalizada, cultivando capacidades cognitivas, emocionales, sociales y prácticas en comunidad y en vínculo con la naturaleza.",
     defaultSize: 18,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
@@ -174,7 +227,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     label: "Testimonio / Frase",
     selectorLabel: "Testimonio / Frase",
     defaultValue:
-      "Koru ha sido m?gico para nuestra hija. Su creatividad, su bondad y su curiosidad por el mundo florecen cada d?a. La vemos crecer en su mejor versi?n.",
+      "Koru ha sido mágico para nuestra hija. Su creatividad, su bondad y su curiosidad por el mundo florecen cada día. La vemos crecer en su mejor versión.",
     defaultSize: 44,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
@@ -189,73 +242,36 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
   },
   {
     id: landingContentSlotIds.admissionsTitle,
-    label: "CTA admisiones / Titulo",
-    selectorLabel: "CTA / Titulo",
-    defaultValue: "?Te interesa aplicar a Koru?",
+    label: "CTA admisiones / Título",
+    selectorLabel: "CTA / Título",
+    defaultValue: "¿Te interesa aplicar a Koru?",
     defaultSize: 64,
     styleControls: ["font", "size", "color", "align", "weight"],
   },
   {
     id: landingContentSlotIds.admissionsButton,
-    label: "CTA admisiones / Boton",
-    selectorLabel: "CTA / Boton",
+    label: "CTA admisiones / Botón",
+    selectorLabel: "CTA / Botón",
     defaultValue: "Ir a admisiones",
     defaultSize: 16,
     styleControls: ["font", "size", "color", "align", "weight"],
   },
 ];
 
-function isContentField(field: LandingSectionField) {
-  if (field.defaultValue.trim() === "") {
-    return false;
-  }
-
-  if (
-    field.key.includes("image") ||
-    field.key.includes("url") ||
-    field.key.includes("spore") ||
-    field.key.includes("position") ||
-    field.key.includes("opacity") ||
-    field.key.includes("rotate") ||
-    field.key.includes("flip") ||
-    field.key.includes("size") ||
-    field.key.includes("color")
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-export function getLandingContentSlots(textMap: LandingTextMap) {
-  const structureSlots = parseLandingStructure(textMap).flatMap((section) => {
-    const definition = landingSectionCatalog[section.type];
-    return definition.fields.filter(isContentField).map((field) => ({
-      id: getSectionFieldKey(section.id, field.key),
-      label: `${section.name} / ${field.label}`,
-      selectorLabel: `${section.name} / ${field.label}`,
-      defaultValue: field.defaultValue,
-      defaultSize: field.defaultSize,
-      multiline: field.multiline,
-      styleControls: [
-        "font",
-        "size",
-        "color",
-        "align",
-        "weight",
-        "lineHeight",
-      ] as LandingContentSlotStyleControl[],
-    }));
-  });
-
-  return [...structureSlots, ...hardcodedLandingContentSlots];
+export function getLandingContentSlots() {
+  return hardcodedLandingContentSlots.map((slot) => ({
+    ...slot,
+    label: repairLandingContentText(slot.label),
+    selectorLabel: repairLandingContentText(slot.selectorLabel),
+    defaultValue: repairLandingContentText(slot.defaultValue),
+  }));
 }
 
 export function getLandingContentSlotValue(
   textMap: LandingTextMap,
   slot: LandingContentSlot,
 ) {
-  return textMap[slot.id] ?? slot.defaultValue;
+  return repairLandingContentText(textMap[slot.id] ?? slot.defaultValue);
 }
 
 function getFontFamilyStyleValue(fontFamily: LandingFontFamily) {

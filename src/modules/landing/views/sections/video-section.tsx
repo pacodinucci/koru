@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { SectionExtras } from "@/modules/landing/views/components/section-extras";
+import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
 import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
 import { getSectionFieldKey } from "@/modules/landing/config/landing-sections";
 import {
@@ -9,7 +10,20 @@ import {
   getLandingFieldPaddingStyle,
 } from "@/modules/landing/types/landing-text";
 import { getSectionBackgroundStyle } from "@/modules/landing/views/utils/section-style";
+import { hardcodedLandingContentSlots, landingContentSlotIds } from "@/modules/landing/content-slots";
 import type { LandingSectionComponentProps } from "@/modules/landing/views/sections/types";
+
+const hardcodedSlotMap = new Map(
+  hardcodedLandingContentSlots.map((slot) => [slot.id, slot]),
+);
+
+function getHardcodedSlot(slotId: string) {
+  const slot = hardcodedSlotMap.get(slotId);
+  if (!slot) {
+    throw new Error(`Missing landing content slot: ${slotId}`);
+  }
+  return slot;
+}
 
 function getVideoTextItemsKey(sectionId: string) {
   return getSectionFieldKey(sectionId, "__video_text_items");
@@ -57,6 +71,8 @@ export function VideoSection({
   textMap,
   previewMode,
   responsiveMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
 }: LandingSectionComponentProps) {
   const isCodeFirst = isCodeFirstLandingMode();
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -136,9 +152,6 @@ export function VideoSection({
   const effectiveSectionHeight = `calc(${sectionHeight} + ${navHeight})`;
   const videoTextItems = parseVideoTextItems(textMap, section.id);
   const hasVideoText = videoTextItems.length > 0;
-  const fallbackText =
-    textMap[getSectionFieldKey(section.id, "__video_text_fallback")] ||
-    "Una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.";
   const textParallaxOffset = textParallaxY;
 
   useEffect(() => {
@@ -338,24 +351,32 @@ export function VideoSection({
         })}
         {!hasVideoText ? (
           <div
-            className="pointer-events-none absolute inset-0 z-10 grid place-items-center px-4"
+            className={`absolute inset-0 z-10 grid place-items-center px-4 ${
+              previewMode ? "" : "pointer-events-none"
+            }`}
             style={{ transform: `translate3d(0, ${textParallaxOffset}px, 0)` }}
           >
-            <p
+            <EditableContentSlot
+              as="p"
+              slot={getHardcodedSlot(landingContentSlotIds.heroVideoText)}
+              textMap={textMap}
+              previewMode={previewMode}
+              selected={
+                selectedContentSlotId === landingContentSlotIds.heroVideoText
+              }
+              onSelect={onSelectContentSlot}
+              responsiveMode={responsiveMode}
               className="text-center"
               style={{
                 margin: 0,
                 color: "#ffffff",
-                fontSize: "clamp(28px, 5vw, 56px)",
                 fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
                 fontWeight: 100,
                 lineHeight: 1.1,
                 textShadow: "0 2px 14px rgba(0,0,0,0.45)",
                 opacity: textOpacity,
               }}
-            >
-              {fallbackText}
-            </p>
+            />
           </div>
         ) : null}
       </div>

@@ -170,14 +170,17 @@ function LandingQuoteSection({
         direction="up"
         className="mx-auto w-full max-w-6xl px-6 py-16 text-center md:px-10 lg:px-14 lg:py-20"
       >
-        <blockquote
-          className="mx-auto max-w-5xl text-[clamp(1.5rem,3.4vw,2.9rem)] leading-[1.16] text-[var(--complement-800)]"
+        <EditableContentSlot
+          as="blockquote"
+          slot={getHardcodedSlot(landingContentSlotIds.quoteText)}
+          textMap={textMap}
+          previewMode={previewMode}
+          selected={selectedContentSlotId === landingContentSlotIds.quoteText}
+          onSelect={onSelectContentSlot}
+          responsiveMode={responsiveMode}
+          className="mx-auto max-w-5xl leading-[1.16] text-[var(--complement-800)]"
           style={{ fontFamily: "var(--font-indie-flower)" }}
-        >
-          “Koru ha sido mágico para nuestra hija. Su creatividad, su bondad y su
-          curiosidad por el mundo florecen cada día. La vemos crecer en su mejor
-          versión.”
-        </blockquote>
+        />
         <div className="mt-7 flex justify-center">
           <Image
             src="/assets/quote-underline.svg"
@@ -237,12 +240,17 @@ function LandingAdmissionsCtaSection({
           style={{ right: "-54px", bottom: "24px", left: "auto", top: "auto" }}
         />
         <div className="absolute inset-0 bg-white/35" aria-hidden="true" />
-        <h2
-          className="relative z-10 text-[clamp(2rem,4.6vw,4.25rem)] leading-[0.95] tracking-tight text-white"
+        <EditableContentSlot
+          as="h2"
+          slot={getHardcodedSlot(landingContentSlotIds.admissionsTitle)}
+          textMap={textMap}
+          previewMode={previewMode}
+          selected={selectedContentSlotId === landingContentSlotIds.admissionsTitle}
+          onSelect={onSelectContentSlot}
+          responsiveMode={responsiveMode}
+          className="relative z-10 leading-[0.95] tracking-tight text-white"
           style={{ fontFamily: "var(--font-roboto-condensed)" }}
-        >
-          ¿Te interesa aplicar a Koru?
-        </h2>
+        />
         <Link
           href="/admisiones"
           className="relative z-10 mt-8 inline-flex rounded-md bg-white px-8 py-4 text-base font-semibold uppercase tracking-[0.18em] text-[var(--brand-800)] hover:bg-[var(--complement-500)]"
@@ -519,6 +527,8 @@ function SectionRenderer({
           onSelectField={onSelectField}
           responsiveMode={responsiveMode}
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+          selectedContentSlotId={selectedContentSlotId}
+          onSelectContentSlot={onSelectContentSlot}
         />
       );
     case "footer":
