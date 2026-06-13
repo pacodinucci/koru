@@ -150,7 +150,7 @@ export function VideoSection({
   const sectionHeight = `calc(var(--landing-vh, 100dvh) * ${heightVh} / 100)`;
   const navHeight = "var(--landing-nav-height, 96px)";
   const effectiveSectionHeight = `calc(${sectionHeight} + ${navHeight})`;
-  const videoTextItems = parseVideoTextItems(textMap, section.id);
+  const videoTextItems = isCodeFirst ? [] : parseVideoTextItems(textMap, section.id);
   const hasVideoText = videoTextItems.length > 0;
   const textParallaxOffset = textParallaxY;
 
@@ -249,7 +249,9 @@ export function VideoSection({
         <video
           ref={videoRef}
           key={videoSrc}
-          className="absolute left-0 w-full object-cover"
+          className={`absolute left-0 w-full object-cover ${
+            isCodeFirst ? "pointer-events-none" : ""
+          }`}
           src={videoSrc}
           style={{
             top: "-22%",
@@ -264,7 +266,7 @@ export function VideoSection({
           loop
           playsInline
           preload="auto"
-          controls={previewMode}
+          controls={!isCodeFirst && previewMode}
           controlsList={
             previewMode ? undefined : "nodownload nofullscreen noplaybackrate"
           }
@@ -351,10 +353,18 @@ export function VideoSection({
         })}
         {!hasVideoText ? (
           <div
-            className={`absolute inset-0 z-10 grid place-items-center px-4 ${
-              previewMode ? "" : "pointer-events-none"
+            className={`absolute inset-0 z-20 grid place-items-center px-4 ${
+              previewMode ? "cursor-pointer" : "pointer-events-none"
             }`}
             style={{ transform: `translate3d(0, ${textParallaxOffset}px, 0)` }}
+            onClick={(event) => {
+              if (!previewMode) {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              onSelectContentSlot?.(landingContentSlotIds.heroVideoText);
+            }}
           >
             <EditableContentSlot
               as="p"

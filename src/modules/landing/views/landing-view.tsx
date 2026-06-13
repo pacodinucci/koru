@@ -653,7 +653,11 @@ export function LandingView({
                     <div>
                       <div data-preview-section-id={section.id}>
                         <div className="landing-video-pin">
-                          <div className="landing-video-static">
+                          <div
+                            className={`landing-video-static ${
+                              previewMode ? "landing-video-static--interactive" : ""
+                            }`}
+                          >
                             <SectionRenderer
                               section={section}
                               textMap={responsiveMap}
