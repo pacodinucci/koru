@@ -572,6 +572,10 @@
   pointer-events: none;
 }
 
+.landing-video-static--interactive {
+  pointer-events: auto;
+}
+
 .landing-video-static > section {
   height: var(--landing-vh, 100dvh);
 }
