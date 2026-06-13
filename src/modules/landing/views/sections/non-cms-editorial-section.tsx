@@ -4,6 +4,9 @@ import Image from "next/image";
 import { FernShape } from "@/components/fern-shape";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
 import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
+import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
+import { hardcodedLandingContentSlots } from "@/modules/landing/content-slots";
+import type { LandingResponsiveMode, LandingTextMap } from "@/modules/landing/types/landing-text";
 
 type NonCmsEditorialSectionProps = {
   bannerTitle?: string;
@@ -15,7 +18,28 @@ type NonCmsEditorialSectionProps = {
   imageFrameWidth?: string;
   imageFrameHeight?: string;
   imageScale?: number;
+  bannerTitleSlotId?: string;
+  bodyTextSlotId?: string;
+  highlightTextSlotId?: string;
+  closingTextSlotId?: string;
+  textMap?: LandingTextMap;
+  previewMode?: boolean;
+  selectedContentSlotId?: string | null;
+  onSelectContentSlot?: (slotId: string) => void;
+  responsiveMode?: LandingResponsiveMode;
 };
+
+const hardcodedSlotMap = new Map(
+  hardcodedLandingContentSlots.map((slot) => [slot.id, slot]),
+);
+
+function getSlot(slotId: string | undefined) {
+  if (!slotId) {
+    return null;
+  }
+
+  return hardcodedSlotMap.get(slotId) ?? null;
+}
 
 export function NonCmsEditorialSection({
   bannerTitle,
@@ -30,7 +54,20 @@ export function NonCmsEditorialSection({
   imageFrameWidth = "320px",
   imageFrameHeight,
   imageScale = 1,
+  bannerTitleSlotId,
+  bodyTextSlotId,
+  highlightTextSlotId,
+  closingTextSlotId,
+  textMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
+  responsiveMode,
 }: NonCmsEditorialSectionProps) {
+  const bannerTitleSlot = getSlot(bannerTitleSlotId);
+  const bodyTextSlot = getSlot(bodyTextSlotId);
+  const highlightTextSlot = getSlot(highlightTextSlotId);
+  const closingTextSlot = getSlot(closingTextSlotId);
   const frameStyle = {
     width: `calc(${imageFrameWidth} * ${imageScale})`,
     height: imageFrameHeight
@@ -60,12 +97,25 @@ export function NonCmsEditorialSection({
         {bannerTitle ? (
           <div className={`${bannerClassName} py-6`}>
             <div className="mx-auto w-full max-w-7xl px-6 md:px-10 lg:px-14">
-              <h2
-                className="text-4xl leading-tight italic text-white md:text-6xl"
-                style={{ fontFamily: "var(--font-roboto-condensed)" }}
-              >
-                {bannerTitle}
-              </h2>
+              {bannerTitleSlot && textMap ? (
+                <EditableContentSlot
+                  as="h2"
+                  slot={bannerTitleSlot}
+                  textMap={textMap}
+                  previewMode={previewMode}
+                  selected={selectedContentSlotId === bannerTitleSlot.id}
+                  onSelect={onSelectContentSlot}
+                  responsiveMode={responsiveMode}
+                  className="text-4xl leading-tight italic text-white md:text-6xl"
+                />
+              ) : (
+                <h2
+                  className="text-4xl leading-tight italic text-white md:text-6xl"
+                  style={{ fontFamily: "var(--font-roboto-condensed)" }}
+                >
+                  {bannerTitle}
+                </h2>
+              )}
             </div>
           </div>
         ) : null}
@@ -74,17 +124,56 @@ export function NonCmsEditorialSection({
           style={{ fontFamily: "var(--font-montserrat)" }}
         >
           <div>
-            <p className="mt-6 max-w-3xl text-base leading-relaxed text-black/85 md:text-xl">
-              {bodyText}
-            </p>
+            {bodyTextSlot && textMap ? (
+              <EditableContentSlot
+                as="p"
+                slot={bodyTextSlot}
+                textMap={textMap}
+                previewMode={previewMode}
+                selected={selectedContentSlotId === bodyTextSlot.id}
+                onSelect={onSelectContentSlot}
+                responsiveMode={responsiveMode}
+                className="mt-6 max-w-3xl text-base leading-relaxed text-black/85 md:text-xl"
+              />
+            ) : (
+              <p className="mt-6 max-w-3xl text-base leading-relaxed text-black/85 md:text-xl">
+                {bodyText}
+              </p>
+            )}
 
-            <p className="mt-6 max-w-3xl text-2xl leading-tight text-black/90 md:text-4xl">
-              {highlightText}
-            </p>
+            {highlightTextSlot && textMap ? (
+              <EditableContentSlot
+                as="p"
+                slot={highlightTextSlot}
+                textMap={textMap}
+                previewMode={previewMode}
+                selected={selectedContentSlotId === highlightTextSlot.id}
+                onSelect={onSelectContentSlot}
+                responsiveMode={responsiveMode}
+                className="mt-6 max-w-3xl text-2xl leading-tight text-black/90 md:text-4xl"
+              />
+            ) : (
+              <p className="mt-6 max-w-3xl text-2xl leading-tight text-black/90 md:text-4xl">
+                {highlightText}
+              </p>
+            )}
 
-            <p className="mt-6 max-w-3xl text-base leading-relaxed text-black/85 md:text-xl">
-              {closingText}
-            </p>
+            {closingTextSlot && textMap ? (
+              <EditableContentSlot
+                as="p"
+                slot={closingTextSlot}
+                textMap={textMap}
+                previewMode={previewMode}
+                selected={selectedContentSlotId === closingTextSlot.id}
+                onSelect={onSelectContentSlot}
+                responsiveMode={responsiveMode}
+                className="mt-6 max-w-3xl text-base leading-relaxed text-black/85 md:text-xl"
+              />
+            ) : (
+              <p className="mt-6 max-w-3xl text-base leading-relaxed text-black/85 md:text-xl">
+                {closingText}
+              </p>
+            )}
           </div>
 
           <div className="relative mx-auto overflow-hidden" style={frameStyle}>
