@@ -341,7 +341,7 @@ export function VideoSection({
                   fontSize: `${size}px`,
                   fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
                   fontWeight: 100,
-                  lineHeight: 1.1,
+                  lineHeight: responsiveMode === "mobile" ? 1.18 : 1.1,
                   textShadow: "0 2px 14px rgba(0,0,0,0.45)",
                   opacity: textOpacity,
                 }}
@@ -382,7 +382,7 @@ export function VideoSection({
                 color: "#ffffff",
                 fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
                 fontWeight: 100,
-                lineHeight: 1.1,
+                lineHeight: responsiveMode === "mobile" ? 1.18 : 1.1,
                 textShadow: "0 2px 14px rgba(0,0,0,0.45)",
                 opacity: textOpacity,
               }}
