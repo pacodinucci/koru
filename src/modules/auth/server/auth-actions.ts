@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -18,11 +18,17 @@ const signInSchema = z.object({
   password: z.string().min(8),
 });
 
-const signUpSchema = z.object({
-  name: z.string().min(2).max(80),
-  email: z.string().email(),
-  password: z.string().min(8),
-});
+const signUpSchema = z
+  .object({
+    name: z.string().min(2).max(80),
+    email: z.string().email(),
+    password: z.string().min(8),
+    confirmPassword: z.string().min(8),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden.",
+    path: ["confirmPassword"],
+  });
 
 function getErrorPath(basePath: string, message: string) {
   const params = new URLSearchParams({ error: message });
@@ -70,10 +76,22 @@ export async function signUpAction(formData: FormData) {
     name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
   });
 
   if (!parsed.success) {
-    redirect(getErrorPath("/sign-up", "Revisa los datos del formulario."));
+    const hasPasswordMismatch = parsed.error.issues.some((issue) =>
+      issue.path.includes("confirmPassword"),
+    );
+
+    redirect(
+      getErrorPath(
+        "/sign-up",
+        hasPasswordMismatch
+          ? "Las contraseñas no coinciden."
+          : "Revisa los datos del formulario.",
+      ),
+    );
   }
 
   const normalizedEmail = normalizeInvitationEmail(parsed.data.email);
@@ -92,8 +110,9 @@ export async function signUpAction(formData: FormData) {
     await auth.api.signUpEmail({
       headers: await headers(),
       body: {
-        ...parsed.data,
+        name: parsed.data.name,
         email: normalizedEmail,
+        password: parsed.data.password,
       },
     });
   } catch {
