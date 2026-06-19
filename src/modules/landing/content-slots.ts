@@ -13,6 +13,7 @@ import {
   getLandingFieldFontWeightKey,
   getLandingFieldLineHeightKey,
   getLandingFieldLetterSpacingKey,
+  getLandingFieldResponsiveSizeKey,
   type LandingFontFamily,
   type LandingResponsiveMode,
   type LandingTextMap,
@@ -33,10 +34,10 @@ export type LandingContentSlot = {
   selectorLabel: string;
   defaultValue: string;
   defaultSize: number;
+  responsiveDefaultSizes?: Partial<Record<LandingResponsiveMode, number>>;
   multiline?: boolean;
   styleControls: LandingContentSlotStyleControl[];
 };
-
 
 const landingContentTextRepairs: Array<[string, string]> = [
   ["\u00c3\u00b1", "\u00f1"],
@@ -115,6 +116,10 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     defaultValue:
       "Una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.",
     defaultSize: 56,
+    responsiveDefaultSizes: {
+      tablet: 48,
+      mobile: 36,
+    },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "weight", "lineHeight"],
   },
@@ -284,6 +289,29 @@ function getFontFamilyStyleValue(fontFamily: LandingFontFamily) {
   return '"Fira Sans", "Segoe UI", sans-serif';
 }
 
+function getLandingContentSlotFontSize(
+  textMap: LandingTextMap,
+  slot: LandingContentSlot,
+  responsiveMode?: LandingResponsiveMode,
+) {
+  const mode = responsiveMode ?? "large";
+  const explicitResponsiveSize =
+    textMap[getLandingFieldResponsiveSizeKey(slot.id, mode)]?.trim();
+
+  if (explicitResponsiveSize) {
+    return getLandingFieldFontSize(textMap, slot.id, slot.defaultSize, mode);
+  }
+
+  const baseSize = getLandingFieldFontSize(textMap, slot.id, slot.defaultSize);
+  const responsiveDefaultSize = slot.responsiveDefaultSizes?.[mode];
+
+  if (responsiveDefaultSize == null) {
+    return baseSize;
+  }
+
+  return Math.min(baseSize, responsiveDefaultSize);
+}
+
 export function getLandingContentSlotStyle(
   textMap: LandingTextMap,
   slot: LandingContentSlot,
@@ -297,13 +325,14 @@ export function getLandingContentSlotStyle(
   const align = textMap[landingContentTextAlignKey(slot.id)];
 
   return {
-    fontSize: `${getLandingFieldFontSize(
+    fontSize: `${getLandingContentSlotFontSize(
       textMap,
-      slot.id,
-      slot.defaultSize,
+      slot,
       responsiveMode,
     )}px`,
-    ...(fontFamily ? { fontFamily: getFontFamilyStyleValue(fontFamily) } : null),
+    ...(fontFamily
+      ? { fontFamily: getFontFamilyStyleValue(fontFamily) }
+      : null),
     ...(fontWeight ? { fontWeight } : null),
     ...(lineHeight ? { lineHeight } : null),
     ...(letterSpacing != null ? { letterSpacing: `${letterSpacing}px` } : null),
