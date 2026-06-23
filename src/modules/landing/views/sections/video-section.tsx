@@ -10,7 +10,12 @@ import {
   getLandingFieldPaddingStyle,
 } from "@/modules/landing/types/landing-text";
 import { getSectionBackgroundStyle } from "@/modules/landing/views/utils/section-style";
-import { hardcodedLandingContentSlots, landingContentSlotIds } from "@/modules/landing/content-slots";
+import {
+  hardcodedLandingContentSlots,
+  landingContentSlotIds,
+  landingHeroVideoTextResponsiveDefaultSizes,
+} from "@/modules/landing/content-slots";
+import type { LandingResponsiveMode } from "@/modules/landing/types/landing-text";
 import type { LandingSectionComponentProps } from "@/modules/landing/views/sections/types";
 
 const hardcodedSlotMap = new Map(
@@ -23,6 +28,30 @@ function getHardcodedSlot(slotId: string) {
     throw new Error(`Missing landing content slot: ${slotId}`);
   }
   return slot;
+}
+
+function getVideoOverlayTextFontSize(
+  size: number,
+  responsiveMode?: LandingResponsiveMode,
+) {
+  const responsiveMax = responsiveMode
+    ? landingHeroVideoTextResponsiveDefaultSizes[responsiveMode]
+    : undefined;
+
+  if (responsiveMax == null) {
+    return size;
+  }
+
+  return Math.min(size, responsiveMax);
+}
+
+function getVideoOverlayTextFontSizeStyle(
+  size: number,
+  responsiveMode?: LandingResponsiveMode,
+) {
+  const maxSize = getVideoOverlayTextFontSize(size, responsiveMode);
+
+  return `clamp(12px, 9vw, ${maxSize}px)`;
 }
 
 function getVideoTextItemsKey(sectionId: string) {
@@ -122,7 +151,6 @@ export function VideoSection({
     "__video_position_y",
   );
   const videoZoomKey = getSectionFieldKey(section.id, "__video_zoom");
-  const sectionHeightKey = getSectionFieldKey(section.id, "__section_height");
   const configuredVideo = textMap[videoUrlKey]?.trim() ?? "";
   const videoSrc = /\.mp4$/i.test(configuredVideo)
     ? configuredVideo
@@ -338,7 +366,10 @@ export function VideoSection({
                 style={{
                   margin: 0,
                   color,
-                  fontSize: `${size}px`,
+                  fontSize: getVideoOverlayTextFontSizeStyle(
+                    size,
+                    responsiveMode,
+                  ),
                   fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
                   fontWeight: 100,
                   lineHeight: responsiveMode === "mobile" ? 1.18 : 1.1,
@@ -377,9 +408,15 @@ export function VideoSection({
               onSelect={onSelectContentSlot}
               responsiveMode={responsiveMode}
               className="text-center"
+              stylePriority="override"
               style={{
                 margin: 0,
                 color: "#ffffff",
+                fontSize: getVideoOverlayTextFontSizeStyle(
+                  getHardcodedSlot(landingContentSlotIds.heroVideoText)
+                    .defaultSize,
+                  responsiveMode,
+                ),
                 fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
                 fontWeight: 100,
                 lineHeight: responsiveMode === "mobile" ? 1.18 : 1.1,

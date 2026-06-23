@@ -24,6 +24,7 @@ export function EditableContentSlot({
   className,
   children,
   style,
+  stylePriority = "base",
 }: {
   as?: ElementType;
   slot: LandingContentSlot;
@@ -35,6 +36,7 @@ export function EditableContentSlot({
   className?: string;
   children?: ReactNode;
   style?: CSSProperties;
+  stylePriority?: "base" | "override";
 }) {
   const Component = as ?? "span";
   const value = getLandingContentSlotValue(textMap, slot);
@@ -50,7 +52,11 @@ export function EditableContentSlot({
           "outline outline-2 outline-[#2563eb] shadow-[0_0_0_5px_rgba(37,99,235,0.20)]",
         className,
       )}
-      style={{ ...style, ...slotStyle }}
+      style={
+        stylePriority === "override"
+          ? { ...slotStyle, ...style }
+          : { ...style, ...slotStyle }
+      }
       onClick={(event: MouseEvent) => {
         if (!previewMode) {
           return;
