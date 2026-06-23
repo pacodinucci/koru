@@ -15,6 +15,11 @@ export type UpdateUserRoleInput = {
   role: UserRole;
 };
 
+export type DeleteUserForAdminInput = {
+  userId: string;
+  adminId: string;
+};
+
 export function normalizeInvitationEmail(email: string) {
   return email.trim().toLowerCase();
 }
@@ -33,6 +38,16 @@ export async function getPendingUserInvitationByEmail(email: string) {
       role: true,
     },
   });
+}
+
+export async function requirePendingUserInvitationByEmail(email: string) {
+  const invitation = await getPendingUserInvitationByEmail(email);
+
+  if (!invitation) {
+    throw new Error("sign_up_invitation_required");
+  }
+
+  return invitation;
 }
 
 export async function reconcileUserInvitationAfterSignup(email: string) {
@@ -190,10 +205,6 @@ export async function createUserInvitation({
     select: { id: true, status: true },
   });
 
-  if (existingInvitation?.status === InvitationStatus.ACCEPTED) {
-    throw new Error("invitation_already_accepted");
-  }
-
   if (existingInvitation) {
     return prisma.userInvitation.update({
       where: { id: existingInvitation.id },
@@ -288,5 +299,46 @@ export async function updateUserRole({ userId, role }: UpdateUserRoleInput) {
     }
 
     return updatedUser;
+  });
+}
+
+export async function deleteUserForAdmin({
+  userId,
+  adminId,
+}: DeleteUserForAdminInput) {
+  if (userId === adminId) {
+    throw new Error("self_delete_forbidden");
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true },
+  });
+
+  if (!existingUser) {
+    throw new Error("user_not_found");
+  }
+
+  if (existingUser.role === UserRole.ADMIN) {
+    const adminCount = await prisma.user.count({
+      where: { role: UserRole.ADMIN },
+    });
+
+    if (adminCount <= 1) {
+      throw new Error("last_admin_delete_forbidden");
+    }
+  }
+
+  const createdCalendarEventsCount = await prisma.calendarEvent.count({
+    where: { createdById: userId },
+  });
+
+  if (createdCalendarEventsCount > 0) {
+    throw new Error("user_has_created_calendar_events");
+  }
+
+  return prisma.user.delete({
+    where: { id: userId },
+    select: { id: true },
   });
 }

@@ -1,7 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { AuthSplitShell } from "@/modules/auth/components/auth-split-shell";
-import { signUpAction } from "@/modules/auth/server/auth-actions";
+import {
+  signInGoogleAction,
+  signUpAction,
+} from "@/modules/auth/server/auth-actions";
 
 type SignUpViewProps = {
   searchParams: Promise<{
@@ -34,6 +38,31 @@ export async function SignUpView({ searchParams }: SignUpViewProps) {
           {params.error}
         </div>
       ) : null}
+
+      <form action={signInGoogleAction}>
+        <button
+          type="submit"
+          className="mb-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#dce4b8] bg-white px-4 text-sm font-semibold text-[#2f3716] transition hover:bg-[#f7f9ef]"
+        >
+          <span className="inline-flex items-center gap-2 leading-none">
+            <span>Continuar con</span>
+            <Image
+              src="/assets/google.svg"
+              alt=""
+              width={16}
+              height={16}
+              aria-hidden="true"
+              className="block h-4 w-4"
+            />
+          </span>
+        </button>
+      </form>
+
+      <div className="mb-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#8b9472]">
+        <span className="h-px flex-1 bg-[#dce4b8]" />
+        o
+        <span className="h-px flex-1 bg-[#dce4b8]" />
+      </div>
 
       <form action={signUpAction} className="space-y-5">
         <div className="space-y-2">
