@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
@@ -46,6 +47,10 @@ export function ImageGridSection({
   onSelectField,
   responsiveMode,
 }: LandingSectionComponentProps) {
+  const topCardRefs = useRef<Array<HTMLElement | null>>([]);
+  const [visibleTopCardIndexes, setVisibleTopCardIndexes] = useState<
+    Set<number>
+  >(new Set());
   const isCodeFirst = isCodeFirstLandingMode();
   const sharedTextStyleKey = getSectionFieldKey(
     section.id,
@@ -176,6 +181,48 @@ export function ImageGridSection({
     ? {}
     : getSectionBorderStyle(textMap, section.id);
   const hasImageLayer = hasBackgroundImageLayer(sectionBackgroundStyle);
+  const isMobile = responsiveMode === "mobile";
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 767px)");
+
+    if (!mobileQuery.matches) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setVisibleTopCardIndexes((current) => {
+          const next = new Set(current);
+
+          for (const entry of entries) {
+            const rawIndex = (entry.target as HTMLElement).dataset.cardIndex;
+            const index = Number.parseInt(rawIndex ?? "", 10);
+
+            if (!Number.isFinite(index)) continue;
+
+            if (entry.isIntersecting) {
+              next.add(index);
+            } else {
+              next.delete(index);
+            }
+          }
+
+          return next;
+        });
+      },
+      {
+        rootMargin: "-25% 0px -25% 0px",
+        threshold: 0.35,
+      },
+    );
+
+    const nodes = topCardRefs.current.filter(Boolean);
+    nodes.forEach((node) => observer.observe(node));
+
+    return () => observer.disconnect();
+  }, [topCards.length, responsiveMode]);
+
   const sectionStyle: CSSProperties = hasImageLayer
     ? sectionBorderStyle
     : {
@@ -186,10 +233,10 @@ export function ImageGridSection({
       };
   const bodyPaddingStyle = {
     ...sectionPaddingStyle,
-    paddingLeft: imageGridUseBodyPadding
+    paddingLeft: imageGridUseBodyPadding && !isMobile
       ? "var(--landing-body-padding-x, 24px)"
       : "0px",
-    paddingRight: imageGridUseBodyPadding
+    paddingRight: imageGridUseBodyPadding && !isMobile
       ? "var(--landing-body-padding-x, 24px)"
       : "0px",
   };
@@ -211,66 +258,87 @@ export function ImageGridSection({
       ) : null}
       <ScrollReveal
         direction="none"
-        className="mx-auto w-full max-w-[110rem] py-20"
+        className="mx-auto w-full max-w-[110rem] py-0 md:py-20"
         style={bodyPaddingStyle}
       >
         <div className="flex justify-center">
           <div
-            className="grid w-full grid-cols-2 md:grid-cols-4"
+            className="grid w-full grid-cols-1 md:grid-cols-4"
             style={{
               order: getOrder(orderMap, "base:grid", 0),
               maxWidth: "80rem",
               gap: "0px",
             }}
           >
-            {topCards.map((card, index) => (
-              <article
-                key={card.key}
-                tabIndex={0}
-                className="group relative aspect-[4/5] w-full cursor-pointer overflow-hidden bg-black outline-none transition-transform duration-300 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110"
-              >
-                <Image
-                  src={imageUrls[index]?.primary}
-                  fill
-                  sizes="(min-width: 768px) 25vw, 50vw"
-                  quality={70}
-                  className={`h-full w-full object-cover opacity-65 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0 ${
-                    index < 3 && index !== 0 && index !== 2
-                      ? "rotate-90 scale-[1.55] group-hover:scale-[1.45] group-focus-visible:scale-[1.45]"
-                      : "scale-110 group-hover:scale-100 group-focus-visible:scale-100"
-                  }`}
-                  alt={fixedHoverLabels[index] ?? `Imagen ${index + 1}`}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />
-                <div className="absolute inset-x-0 bottom-0 translate-y-4 p-5 text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
-                  <p
+            {topCards.map((card, index) => {
+              const isVisibleOnMobile =
+                isMobile && visibleTopCardIndexes.has(index);
+
+              return (
+                <article
+                  key={card.key}
+                  ref={(node) => {
+                    topCardRefs.current[index] = node;
+                  }}
+                  data-card-index={index}
+                  tabIndex={0}
+                  className="group relative aspect-[4/5] w-full cursor-pointer overflow-hidden bg-black outline-none transition-transform duration-300 ease-out focus:z-10 focus:scale-[1.03] active:z-10 active:scale-[1.03] md:hover:z-10 md:hover:scale-110 md:focus-visible:z-10 md:focus-visible:scale-110"
+                >
+                  <Image
+                    src={imageUrls[index]?.primary}
+                    fill
+                    sizes="(min-width: 768px) 25vw, 100vw"
+                    quality={70}
                     className={cn(
-                      previewMode
+                      "h-full w-full object-cover opacity-65 grayscale transition duration-300 md:group-hover:opacity-100 md:group-hover:grayscale-0 md:group-focus-visible:opacity-100 md:group-focus-visible:grayscale-0",
+                      isVisibleOnMobile && "opacity-100 grayscale-0",
+                      index < 3 && index !== 0 && index !== 2
+                        ? "rotate-90 scale-[1.55] group-hover:scale-[1.45] group-focus-visible:scale-[1.45]"
+                        : "scale-110 group-hover:scale-100 group-focus-visible:scale-100",
+                    )}
+                    alt={fixedHoverLabels[index] ?? `Imagen ${index + 1}`}
+                  />
+                  <div
+                    className={cn(
+                      "absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 md:group-focus-visible:opacity-100",
+                      isVisibleOnMobile && "opacity-100",
+                    )}
+                  />
+                  <div
+                    className={cn(
+                      "absolute inset-x-0 bottom-0 translate-y-4 p-5 text-white opacity-0 transition-all duration-300 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-visible:translate-y-0 md:group-focus-visible:opacity-100",
+                      isVisibleOnMobile && "translate-y-0 opacity-100",
+                    )}
+                  >
+                    <p
+                      className={cn(
+                      previewMode || isVisibleOnMobile
                         ? "text-white"
                         : "landing-curtain-rtl text-white",
-                      selectableClass(
-                        selectedFieldId === card.key,
-                        previewMode,
-                      ),
-                    )}
-                    onClick={() => onSelectField?.(card.key)}
-                    style={getFieldStyle({
-                      ...card,
-                      fontSize: sharedTextStyleField.fontSize,
-                      color: sharedTextStyleField.color,
-                      fontFamily: sharedTextStyleField.fontFamily,
-                      fontWeight: sharedTextStyleField.fontWeight,
-                      lineHeight: sharedTextStyleField.lineHeight,
-                      letterSpacing: sharedTextStyleField.letterSpacing,
-                      marginStyle: sharedTextStyleField.marginStyle,
-                      paddingStyle: sharedTextStyleField.paddingStyle,
-                    })}
-                  >
-                    {fixedHoverLabels[index] ?? card.value}
-                  </p>
-                </div>
-              </article>
-            ))}
+                        selectableClass(
+                          selectedFieldId === card.key,
+                          previewMode,
+                        ),
+                      )}
+                      onClick={() => onSelectField?.(card.key)}
+                      style={getFieldStyle({
+                        ...card,
+                        fontSize: sharedTextStyleField.fontSize,
+                        color: sharedTextStyleField.color,
+                        fontFamily: sharedTextStyleField.fontFamily,
+                        fontWeight: sharedTextStyleField.fontWeight,
+                        lineHeight: sharedTextStyleField.lineHeight,
+                        letterSpacing: sharedTextStyleField.letterSpacing,
+                        marginStyle: sharedTextStyleField.marginStyle,
+                        paddingStyle: sharedTextStyleField.paddingStyle,
+                      })}
+                    >
+                      {fixedHoverLabels[index] ?? card.value}
+                    </p>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </div>
 
