@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -217,7 +217,9 @@ export function ImageGridSection({
       },
     );
 
-    const nodes = topCardRefs.current.filter(Boolean);
+    const nodes = topCardRefs.current.filter(
+      (node): node is HTMLElement => node !== null,
+    );
     nodes.forEach((node) => observer.observe(node));
 
     return () => observer.disconnect();
