@@ -15,7 +15,7 @@ export default async function DashboardUsersPage() {
       cmsPages={cmsPages}
       breadcrumbPage="Usuarios"
     >
-      <DashboardUsersView />
+      <DashboardUsersView currentAdminId={user.id} />
     </DashboardShell>
   );
 }

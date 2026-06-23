@@ -1,4 +1,5 @@
 import { InvitationStatus, UserRole } from "@prisma/client";
+import { SaveIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   revokeUserInvitationAction,
   updateUserRoleAction,
 } from "@/modules/users/server/user-invitations.actions";
+import { UserDeleteButton } from "@/modules/users/components/user-delete-button";
 
 function formatDate(date: Date | null) {
   if (!date) {
@@ -63,7 +65,13 @@ function invitationStatusVariant(status: InvitationStatus) {
   return "outline" as const;
 }
 
-export async function DashboardUsersView() {
+type DashboardUsersViewProps = {
+  currentAdminId: string;
+};
+
+export async function DashboardUsersView({
+  currentAdminId,
+}: DashboardUsersViewProps) {
   const [users, invitations] = await Promise.all([
     listUsersForAdmin(),
     listUserInvitationsForAdmin(),
@@ -118,12 +126,13 @@ export async function DashboardUsersView() {
                 <TableHead>Rol</TableHead>
                 <TableHead>Creado</TableHead>
                 <TableHead>Actualizar rol</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-muted-foreground">
+                  <TableCell colSpan={6} className="text-muted-foreground">
                     Todavia no hay usuarios creados.
                   </TableCell>
                 </TableRow>
@@ -155,10 +164,22 @@ export async function DashboardUsersView() {
                             </option>
                           ))}
                         </select>
-                        <Button type="submit" variant="outline" className="h-8 px-3 text-xs">
-                          Guardar
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          size="icon-sm"
+                          aria-label={`Guardar rol de ${user.email}`}
+                        >
+                          <SaveIcon className="h-4 w-4" />
                         </Button>
                       </form>
+                    </TableCell>
+                    <TableCell>
+                      <UserDeleteButton
+                        userId={user.id}
+                        userEmail={user.email}
+                        disabled={user.id === currentAdminId}
+                      />
                     </TableCell>
                   </TableRow>
                 ))

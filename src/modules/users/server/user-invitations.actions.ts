@@ -8,6 +8,7 @@ import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { sendUserInvitationEmail } from "@/modules/mailing/server/mailing.service";
 import {
   createUserInvitation,
+  deleteUserForAdmin,
   listUserInvitations,
   listUsers,
   revokeUserInvitation,
@@ -26,6 +27,10 @@ const revokeInvitationSchema = z.object({
 const updateUserRoleSchema = z.object({
   userId: z.string().min(1),
   role: z.nativeEnum(UserRole),
+});
+
+const deleteUserSchema = z.object({
+  userId: z.string().min(1),
 });
 
 function getString(formData: FormData, key: string) {
@@ -110,6 +115,30 @@ export async function updateUserRoleAction(formData: FormData): Promise<void> {
     revalidatePath("/dashboard/users");
     revalidatePath("/dashboard/teachers");
     revalidatePath("/dashboard/students");
+  } catch {
+    return;
+  }
+}
+
+export async function deleteUserAction(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  const parsed = deleteUserSchema.safeParse({
+    userId: getString(formData, "userId"),
+  });
+
+  if (!parsed.success) {
+    return;
+  }
+
+  try {
+    await deleteUserForAdmin({
+      userId: parsed.data.userId,
+      adminId: admin.id,
+    });
+    revalidatePath("/dashboard/users");
+    revalidatePath("/dashboard/teachers");
+    revalidatePath("/dashboard/students");
+    revalidatePath("/dashboard/calendar");
   } catch {
     return;
   }

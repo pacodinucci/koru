@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
+import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import {
   getPendingUserInvitationByEmail,
@@ -69,6 +70,36 @@ export async function signInAction(formData: FormData) {
   }
 
   redirect(await getPostAuthRedirect(parsed.data.email));
+}
+
+export async function signInGoogleAction() {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+    redirect(getErrorPath("/sign-in", "Google no esta configurado."));
+  }
+
+  const callbackURL = `${env.BETTER_AUTH_URL}/auth/redirect`;
+
+  let result: { url?: string };
+
+  try {
+    result = await auth.api.signInSocial({
+      headers: await headers(),
+      body: {
+        provider: "google",
+        callbackURL,
+        newUserCallbackURL: callbackURL,
+        errorCallbackURL: `${env.BETTER_AUTH_URL}/sign-in`,
+      },
+    });
+  } catch {
+    redirect(getErrorPath("/sign-in", "No pudimos iniciar sesion con Google."));
+  }
+
+  if (!result.url) {
+    redirect(getErrorPath("/sign-in", "No pudimos iniciar sesion con Google."));
+  }
+
+  redirect(result.url);
 }
 
 export async function signUpAction(formData: FormData) {
