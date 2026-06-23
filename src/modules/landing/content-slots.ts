@@ -108,6 +108,13 @@ export const landingContentSlotIds = {
   admissionsButton: "content.landing.admissions.button",
 } as const;
 
+export const landingHeroVideoTextResponsiveDefaultSizes: Partial<
+  Record<LandingResponsiveMode, number>
+> = {
+  tablet: 48,
+  mobile: 36,
+};
+
 export const hardcodedLandingContentSlots: LandingContentSlot[] = [
   {
     id: landingContentSlotIds.heroVideoText,
@@ -116,10 +123,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     defaultValue:
       "Una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.",
     defaultSize: 56,
-    responsiveDefaultSizes: {
-      tablet: 48,
-      mobile: 36,
-    },
+    responsiveDefaultSizes: landingHeroVideoTextResponsiveDefaultSizes,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "weight", "lineHeight"],
   },

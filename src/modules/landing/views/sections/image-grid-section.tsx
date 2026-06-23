@@ -24,7 +24,11 @@ import {
   getLandingFieldPaddingStyle,
 } from "@/modules/landing/types/landing-text";
 import { SectionExtras } from "@/modules/landing/views/components/section-extras";
-import { getFieldStyle, renderField, selectableClass } from "@/modules/landing/views/utils/field";
+import {
+  getFieldStyle,
+  renderField,
+  selectableClass,
+} from "@/modules/landing/views/utils/field";
 import {
   getOrder,
   getSectionBackgroundStyle,
@@ -43,7 +47,10 @@ export function ImageGridSection({
   responsiveMode,
 }: LandingSectionComponentProps) {
   const isCodeFirst = isCodeFirstLandingMode();
-  const sharedTextStyleKey = getSectionFieldKey(section.id, "__cards_text_style");
+  const sharedTextStyleKey = getSectionFieldKey(
+    section.id,
+    "__cards_text_style",
+  );
   const sharedTextStyleField = {
     key: sharedTextStyleKey,
     value: "",
@@ -103,24 +110,41 @@ export function ImageGridSection({
       responsiveMode,
     ),
   );
-  const fixedHoverLabels = ["Aprendizaje", "Cultura", "Instalaciones", "Equipo"];
+  const fixedHoverLabels = [
+    "Aprendizaje",
+    "Cultura",
+    "Instalaciones",
+    "Equipo",
+  ];
   const topCards = cards.slice(0, Math.min(4, cards.length));
   const remainingCards = cards.slice(Math.min(4, cards.length));
   const imageUrls = [
     {
-      primary: cloudinaryImageUrl("koru/landing/DSC01345", "/assets/images/DSC01345.png"),
-      fallback: "/assets/images/DSC01345.png",
+      primary: cloudinaryImageUrl(
+        "koru/landing/DSC01345",
+        "/assets/images/DSC01363.png",
+      ),
+      fallback: "/assets/images/DSC01363.png",
     },
     {
-      primary: cloudinaryImageUrl("koru/landing/DSC01338", "/assets/images/DSC01338.png"),
+      primary: cloudinaryImageUrl(
+        "koru/landing/DSC01338",
+        "/assets/images/DSC01338.png",
+      ),
       fallback: "/assets/images/DSC01338.png",
     },
     {
-      primary: cloudinaryImageUrl("koru/landing/DSC01402", "/assets/images/DSC01402.png"),
-      fallback: "/assets/images/DSC01402.png",
+      primary: cloudinaryImageUrl(
+        "koru/landing/DSC01402",
+        "/assets/images/insta8.png",
+      ),
+      fallback: "/assets/images/insta1.png",
     },
     {
-      primary: cloudinaryImageUrl("koru/landing/DSC02336", "/assets/images/DSC02336.png"),
+      primary: cloudinaryImageUrl(
+        "koru/landing/DSC02336",
+        "/assets/images/DSC02336.png",
+      ),
       fallback: "/assets/images/DSC02336.png",
     },
     { primary: "/assets/img5.jpg", fallback: "/assets/img5.jpg" },
@@ -172,7 +196,11 @@ export function ImageGridSection({
   return (
     <section
       className="relative isolate overflow-hidden border-y border-black/10"
-      style={hasImageLayer ? { ...sectionBorderStyle, ...sectionMarginStyle } : sectionStyle}
+      style={
+        hasImageLayer
+          ? { ...sectionBorderStyle, ...sectionMarginStyle }
+          : sectionStyle
+      }
     >
       {hasImageLayer ? (
         <div
@@ -207,7 +235,7 @@ export function ImageGridSection({
                   sizes="(min-width: 768px) 25vw, 50vw"
                   quality={70}
                   className={`h-full w-full object-cover opacity-65 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0 ${
-                    index < 3
+                    index < 3 && index !== 0 && index !== 2
                       ? "rotate-90 scale-[1.55] group-hover:scale-[1.45] group-focus-visible:scale-[1.45]"
                       : "scale-110 group-hover:scale-100 group-focus-visible:scale-100"
                   }`}
@@ -220,7 +248,10 @@ export function ImageGridSection({
                       previewMode
                         ? "text-white"
                         : "landing-curtain-rtl text-white",
-                      selectableClass(selectedFieldId === card.key, previewMode),
+                      selectableClass(
+                        selectedFieldId === card.key,
+                        previewMode,
+                      ),
                     )}
                     onClick={() => onSelectField?.(card.key)}
                     style={getFieldStyle({
@@ -269,7 +300,7 @@ export function ImageGridSection({
                     sizes={`${imageGridImageSize}px`}
                     quality={70}
                     className={`h-full w-full object-cover opacity-65 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0 ${
-                      imageIndex < 3
+                      imageIndex < 3 && imageIndex !== 0 && imageIndex !== 2
                         ? "rotate-90 scale-[1.55] group-hover:scale-[1.45] group-focus-visible:scale-[1.45]"
                         : "scale-110 group-hover:scale-100 group-focus-visible:scale-100"
                     }`}
@@ -282,7 +313,10 @@ export function ImageGridSection({
                         previewMode
                           ? "text-white"
                           : "landing-curtain-rtl text-white",
-                        selectableClass(selectedFieldId === card.key, previewMode),
+                        selectableClass(
+                          selectedFieldId === card.key,
+                          previewMode,
+                        ),
                       )}
                       onClick={() => onSelectField?.(card.key)}
                       style={getFieldStyle({
@@ -319,4 +353,3 @@ export function ImageGridSection({
     </section>
   );
 }
-
