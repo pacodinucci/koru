@@ -63,10 +63,10 @@ function getFontFamilyStyleValue(fontFamily: LandingFontFamily) {
   if (fontFamily === "montserrat") {
     return 'var(--font-montserrat), "Segoe UI", sans-serif';
   }
-  if (fontFamily === "nunito") {
-    return 'var(--font-nunito), "Segoe UI", sans-serif';
+  if (fontFamily === "indie-flower") {
+    return 'var(--font-indie-flower), "Segoe UI", cursive';
   }
-  return '"Fira Sans", "Segoe UI", sans-serif';
+  return 'var(--font-roboto-condensed), "Arial Narrow", sans-serif';
 }
 
 export function getFieldStyle(field: LandingRenderableField): CSSProperties {

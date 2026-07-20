@@ -102,8 +102,9 @@ export const landingContentSlotIds = {
   editorialTwoBody: "content.landing.editorial.two.body",
   editorialTwoHighlight: "content.landing.editorial.two.highlight",
   editorialTwoClosing: "content.landing.editorial.two.closing",
+  editorialOneImageCaption: "content.landing.editorial.one.image.caption",
+  editorialTwoImageCaption: "content.landing.editorial.two.image.caption",
   quoteText: "content.landing.quote.text",
-  quoteAuthor: "content.landing.quote.author",
   admissionsTitle: "content.landing.admissions.title",
   admissionsButton: "content.landing.admissions.button",
 } as const;
@@ -121,7 +122,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     label: "Hero / Frase principal",
     selectorLabel: "Hero / Frase",
     defaultValue:
-      "Una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.",
+      "Imaginamos un mundo donde cada persona pueda descubrir su don y utilizarlo para generar un impacto positivo.",
     defaultSize: 56,
     responsiveDefaultSizes: landingHeroVideoTextResponsiveDefaultSizes,
     multiline: true,
@@ -232,22 +233,32 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
   {
+    id: landingContentSlotIds.editorialOneImageCaption,
+    label: "Diferentes / Texto bajo imagen",
+    selectorLabel: "Diferentes / Imagen texto",
+    defaultValue: "Una comunidad que aprende unida, crece unida.",
+    defaultSize: 18,
+    multiline: true,
+    styleControls: ["font", "size", "color", "align", "lineHeight"],
+  },
+  {
+    id: landingContentSlotIds.editorialTwoImageCaption,
+    label: "Enfoque / Texto bajo imagen",
+    selectorLabel: "Enfoque / Imagen texto",
+    defaultValue: "Cada experiencia abre una nueva forma de aprender.",
+    defaultSize: 18,
+    multiline: true,
+    styleControls: ["font", "size", "color", "align", "lineHeight"],
+  },
+  {
     id: landingContentSlotIds.quoteText,
-    label: "Testimonio / Frase",
-    selectorLabel: "Testimonio / Frase",
+    label: "Frase destacada",
+    selectorLabel: "Frase destacada",
     defaultValue:
       "Koru ha sido mágico para nuestra hija. Su creatividad, su bondad y su curiosidad por el mundo florecen cada día. La vemos crecer en su mejor versión.",
     defaultSize: 44,
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
-  },
-  {
-    id: landingContentSlotIds.quoteAuthor,
-    label: "Testimonio / Autor",
-    selectorLabel: "Testimonio / Autor",
-    defaultValue: "Tutor de Koru",
-    defaultSize: 20,
-    styleControls: ["font", "size", "color", "align", "weight"],
   },
   {
     id: landingContentSlotIds.admissionsTitle,
@@ -287,10 +298,10 @@ function getFontFamilyStyleValue(fontFamily: LandingFontFamily) {
   if (fontFamily === "montserrat") {
     return 'var(--font-montserrat), "Segoe UI", sans-serif';
   }
-  if (fontFamily === "nunito") {
-    return 'var(--font-nunito), "Segoe UI", sans-serif';
+  if (fontFamily === "indie-flower") {
+    return 'var(--font-indie-flower), "Segoe UI", cursive';
   }
-  return '"Fira Sans", "Segoe UI", sans-serif';
+  return 'var(--font-roboto-condensed), "Arial Narrow", sans-serif';
 }
 
 function getLandingContentSlotFontSize(
@@ -341,7 +352,7 @@ export function getLandingContentSlotStyle(
     ...(lineHeight ? { lineHeight } : null),
     ...(letterSpacing != null ? { letterSpacing: `${letterSpacing}px` } : null),
     ...(color ? { color } : null),
-    ...(align === "left" || align === "center" || align === "right"
+    ...(align === "left" || align === "center" || align === "right" || align === "justify"
       ? { textAlign: align }
       : null),
   };

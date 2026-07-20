@@ -33,11 +33,22 @@ const colorOptions = [
 ];
 
 const fontOptions = [
-  { value: "", label: "Default" },
   { value: "montserrat", label: "Montserrat" },
-  { value: "nunito", label: "Nunito" },
-  { value: "fira-sans", label: "Fira Sans" },
+  { value: "indie-flower", label: "Indie Flower" },
+  { value: "roboto-condensed", label: "Roboto Condensed" },
 ];
+
+function getLandingEditorFontFamilyValue(value: string | undefined) {
+  if (
+    value === "montserrat" ||
+    value === "indie-flower" ||
+    value === "roboto-condensed"
+  ) {
+    return value;
+  }
+
+  return "montserrat";
+}
 
 const PREVIEW_ZOOM_BASE_SCALE = 0.62;
 const PREVIEW_CANVAS_WIDTH = 1440;
@@ -293,7 +304,7 @@ export function LandingContentSidePanel({
           <label className="text-xs font-semibold text-slate-600">Fuente</label>
           <select
             className="h-9 w-full rounded-lg border border-input bg-white px-3 text-sm"
-            value={textMap[styleKeys.fontFamily] ?? ""}
+            value={getLandingEditorFontFamilyValue(textMap[styleKeys.fontFamily])}
             onChange={(event) => onChange(styleKeys.fontFamily, event.target.value)}
           >
             {fontOptions.map((option) => (
@@ -376,6 +387,7 @@ export function LandingContentSidePanel({
               <option value="left">Izquierda</option>
               <option value="center">Centro</option>
               <option value="right">Derecha</option>
+              <option value="justify">Justificado</option>
             </select>
           </div>
         </div>

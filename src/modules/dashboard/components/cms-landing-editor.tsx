@@ -175,6 +175,18 @@ type SectionItem = {
 
 type LayoutSectionId = "layout-navbar" | "layout-body" | "layout-footer";
 
+function getLandingEditorFontFamilyValue(value: string | undefined) {
+  if (
+    value === "montserrat" ||
+    value === "indie-flower" ||
+    value === "roboto-condensed"
+  ) {
+    return value;
+  }
+
+  return "montserrat";
+}
+
 function createSectionId(type: LandingSectionType) {
   return `${type}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }
@@ -5098,11 +5110,13 @@ export function CmsLandingEditor({
                                       <select
                                         className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                                         value={
-                                          textMap[
-                                            getLandingFieldFontFamilyKey(
-                                              item.textKey,
-                                            )
-                                          ] ?? "fira-sans"
+                                          getLandingEditorFontFamilyValue(
+                                            textMap[
+                                              getLandingFieldFontFamilyKey(
+                                                item.textKey,
+                                              )
+                                            ],
+                                          )
                                         }
                                         onChange={(event) =>
                                           updateField(
@@ -5113,13 +5127,15 @@ export function CmsLandingEditor({
                                           )
                                         }
                                       >
-                                        <option value="fira-sans">
-                                          Fira Sans
-                                        </option>
                                         <option value="montserrat">
                                           Montserrat
                                         </option>
-                                        <option value="nunito">Nunito</option>
+                                        <option value="indie-flower">
+                                          Indie Flower
+                                        </option>
+                                        <option value="roboto-condensed">
+                                          Roboto Condensed
+                                        </option>
                                       </select>
                                     </div>
                                     <div className="space-y-1.5">
@@ -5640,11 +5656,13 @@ export function CmsLandingEditor({
                                               <select
                                                 className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                                                 value={
+                                                  getLandingEditorFontFamilyValue(
                                                   textMap[
                                                     getLandingFieldFontFamilyKey(
                                                       item.textKey,
                                                     )
-                                                  ] ?? "fira-sans"
+                                                  ],
+                                                )
                                                 }
                                                 onChange={(event) =>
                                                   updateField(
@@ -5655,14 +5673,14 @@ export function CmsLandingEditor({
                                                   )
                                                 }
                                               >
-                                                <option value="fira-sans">
-                                                  Fira Sans
-                                                </option>
                                                 <option value="montserrat">
                                                   Montserrat
                                                 </option>
-                                                <option value="nunito">
-                                                  Nunito
+                                                <option value="indie-flower">
+                                                  Indie Flower
+                                                </option>
+                                                <option value="roboto-condensed">
+                                                  Roboto Condensed
                                                 </option>
                                               </select>
                                             </div>
@@ -5862,11 +5880,13 @@ export function CmsLandingEditor({
                                       <select
                                         className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                                         value={
-                                          textMap[
-                                            getLandingFieldFontFamilyKey(
-                                              item.textKey,
-                                            )
-                                          ] ?? "fira-sans"
+                                          getLandingEditorFontFamilyValue(
+                                            textMap[
+                                              getLandingFieldFontFamilyKey(
+                                                item.textKey,
+                                              )
+                                            ],
+                                          )
                                         }
                                         onChange={(event) =>
                                           updateField(
@@ -5877,13 +5897,15 @@ export function CmsLandingEditor({
                                           )
                                         }
                                       >
-                                        <option value="fira-sans">
-                                          Fira Sans
-                                        </option>
                                         <option value="montserrat">
                                           Montserrat
                                         </option>
-                                        <option value="nunito">Nunito</option>
+                                        <option value="indie-flower">
+                                          Indie Flower
+                                        </option>
+                                        <option value="roboto-condensed">
+                                          Roboto Condensed
+                                        </option>
                                       </select>
                                     </div>
                                     <div className="space-y-1.5">

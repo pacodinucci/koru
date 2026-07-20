@@ -201,7 +201,7 @@ function MissionVisionSection({
 
 function TeamSection() {
   return (
-    <section className="bg-[#caa27d] px-6 py-16 md:px-10 lg:px-14 lg:py-24">
+    <section id="equipo" className="bg-[#caa27d] px-6 py-16 md:px-10 lg:px-14 lg:py-24">
       <div className="mx-auto w-full max-w-7xl">
         <div className="mb-10 max-w-3xl">
           <p className="mb-4 text-sm font-medium tracking-[0.18em] text-white/75">
@@ -251,7 +251,7 @@ function TeamSection() {
 
 function FacilitiesSection() {
   return (
-    <section className="overflow-hidden bg-white py-16 md:py-20 lg:py-24">
+    <section id="instalaciones" className="overflow-hidden bg-white py-16 md:py-20 lg:py-24">
       <div className="mx-auto mb-10 w-full max-w-7xl px-6 md:px-10 lg:px-14">
         <p className="mb-4 text-sm font-medium tracking-[0.18em] text-[#6d7e96]">
           INSTALACIONES

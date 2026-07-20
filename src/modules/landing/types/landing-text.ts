@@ -1,5 +1,5 @@
 export type LandingTextMap = Record<string, string>;
-export type LandingFontFamily = "montserrat" | "nunito" | "fira-sans";
+export type LandingFontFamily = "montserrat" | "indie-flower" | "roboto-condensed";
 export type LandingResponsiveMode = "large" | "medium" | "tablet" | "mobile";
 export type LandingButtonVariant =
   | "default"
@@ -332,7 +332,7 @@ export function getLandingFieldFontFamily(
   fieldId: string,
 ): LandingFontFamily | null {
   const raw = textMap[getLandingFieldFontFamilyKey(fieldId)]?.trim();
-  if (raw === "montserrat" || raw === "nunito" || raw === "fira-sans") {
+  if (raw === "montserrat" || raw === "indie-flower" || raw === "roboto-condensed") {
     return raw;
   }
 

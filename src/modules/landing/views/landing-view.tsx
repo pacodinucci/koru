@@ -10,6 +10,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { FernShape } from "@/components/fern-shape";
+import { KoruShape1 } from "@/components/koru-shape-1";
 import { SporeShape } from "@/components/spore-shape";
 import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
 import {
@@ -91,13 +92,29 @@ function LandingVisionBridgeSection({
 
   return (
     <section className="relative overflow-hidden bg-white">
-      <FernShape x="-56px" y="40px" size={220} color="#4d7b53" opacity={0.25} />
-      <FernShape
+      <KoruShape1
+        x="-44px"
+        y="70px"
+        size={240}
+        color="var(--complement-800)"
+        opacity={0.16}
+        rotate={-8}
+      />
+      <KoruShape1
+        size={260}
+        color="var(--brand-600)"
+        opacity={0.12}
+        rotate={178}
+        flipX
+        style={{ right: "-48px", top: "120px", left: "auto" }}
+      />
+      <KoruShape1
         size={280}
-        color="#4d7b53"
-        opacity={0.2}
-        rotate={180}
-        style={{ right: "-64px", bottom: "32px", left: "auto", top: "auto" }}
+        color="var(--orange-600)"
+        opacity={0.12}
+        rotate={158}
+        flipX
+        style={{ right: "-54px", bottom: "10px", left: "auto", top: "auto" }}
       />
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 md:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16 lg:px-14 lg:py-24">
         <ScrollReveal direction="right" className="lg:order-2">
@@ -180,26 +197,6 @@ function LandingQuoteSection({
           responsiveMode={responsiveMode}
           className="mx-auto max-w-5xl leading-[1.16] text-[var(--complement-800)]"
           style={{ fontFamily: "var(--font-indie-flower)" }}
-        />
-        <div className="mt-7 flex justify-center">
-          <Image
-            src="/assets/quote-underline.svg"
-            alt=""
-            aria-hidden="true"
-            width={180}
-            height={10}
-            className="h-[10px] w-[180px]"
-          />
-        </div>
-        <EditableContentSlot
-          as="p"
-          slot={getHardcodedSlot(landingContentSlotIds.quoteAuthor)}
-          textMap={textMap}
-          previewMode={previewMode}
-          selected={selectedContentSlotId === landingContentSlotIds.quoteAuthor}
-          onSelect={onSelectContentSlot}
-          responsiveMode={responsiveMode}
-          className="mt-5 text-center text-xl text-black"
         />
       </ScrollReveal>
     </section>
@@ -473,6 +470,11 @@ function SectionRenderer({
             section.id.includes("-copy")
               ? landingContentSlotIds.editorialTwoClosing
               : landingContentSlotIds.editorialOneClosing
+          }
+          imageCaptionTextSlotId={
+            section.id.includes("-copy")
+              ? landingContentSlotIds.editorialTwoImageCaption
+              : landingContentSlotIds.editorialOneImageCaption
           }
           textMap={textMap}
           previewMode={previewMode}
