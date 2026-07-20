@@ -19,7 +19,7 @@ export const DashboardNavItems: DashboardNavItem[] = [
   { title: "Pages", href: "#", icon: BlocksIcon, badge: "12" },
   { title: "Donaciones", href: "#", icon: WalletIcon, badge: "4" },
   { title: "Seguridad", href: "#", icon: ShieldCheckIcon },
-  { title: "ConfiguraciÃ³n", href: "#", icon: Settings2Icon },
+  { title: "Configuración", href: "#", icon: Settings2Icon },
 ];
 
 export const DashboardStats: DashboardStat[] = [

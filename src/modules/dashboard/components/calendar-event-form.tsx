@@ -88,7 +88,7 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
 
       <input
         name="title"
-        placeholder="T\u00edtulo del evento"
+        placeholder="Título del evento"
         defaultValue={event?.title ?? ""}
         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
         required
@@ -113,7 +113,7 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
         min="15"
         step="15"
         defaultValue={durationDefault}
-        placeholder="Duraci\u00f3n en minutos"
+        placeholder="Duración en minutos"
         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
         required
       />
@@ -159,7 +159,7 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
       )}
       <select name="kind" defaultValue={event?.kind ?? "EVENT"} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
         <option value="EVENT">Evento</option>
-        <option value="MEETING">Reuni\u00f3n</option>
+        <option value="MEETING">Reunión</option>
       </select>
 
       {visibility !== "PUBLIC" && audienceType === "PRIVATE" ? (

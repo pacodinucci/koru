@@ -3019,7 +3019,7 @@ export function CmsLandingEditor({
                       <span className="max-w-[120px] truncate text-center text-sm font-medium">
                         {activeSectionId
                           ? sectionsInRenderOrder[activeSectionIndex]?.name
-                          : "SecciÃ³n actual"}
+                          : "Sección actual"}
                       </span>
                       <Button
                         type="button"
@@ -4904,7 +4904,7 @@ export function CmsLandingEditor({
                                                 </div>
                                                 <div className="space-y-1.5">
                                                   <label className="text-xs font-medium text-muted-foreground">
-                                                    TamaÃ±o ({textSize}px)
+                                                    Tamaño ({textSize}px)
                                                   </label>
                                                   <PanelRangeInput
                                                     min={12}
