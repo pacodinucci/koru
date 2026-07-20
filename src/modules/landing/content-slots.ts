@@ -39,44 +39,47 @@ export type LandingContentSlot = {
   styleControls: LandingContentSlotStyleControl[];
 };
 
+const latin1Sequence = (...codes: number[]) => String.fromCharCode(...codes);
+const unknownAccent = (left: string, right: string) => `${left}?${right}`;
+
 const landingContentTextRepairs: Array<[string, string]> = [
-  ["\u00c3\u00b1", "\u00f1"],
-  ["\u00c3\u00a1", "\u00e1"],
-  ["\u00c3\u00a9", "\u00e9"],
-  ["\u00c3\u00ad", "\u00ed"],
-  ["\u00c3\u00b3", "\u00f3"],
-  ["\u00c3\u00ba", "\u00fa"],
-  ["\u00c2\u00bf", "\u00bf"],
-  ["T?tulo", "T\u00edtulo"],
-  ["P?rrafo", "P\u00e1rrafo"],
-  ["Bot?n", "Bot\u00f3n"],
-  ["Tama?o", "Tama\u00f1o"],
-  ["Alineaci?n", "Alineaci\u00f3n"],
-  ["ni?as", "ni\u00f1as"],
-  ["Ni?as", "Ni\u00f1as"],
-  ["ni?os", "ni\u00f1os"],
-  ["Ni?os", "Ni\u00f1os"],
-  ["acompa?antes", "acompa\u00f1antes"],
-  ["acompa?amiento", "acompa\u00f1amiento"],
-  ["Acompa?amos", "Acompa\u00f1amos"],
-  ["educaci?n", "educaci\u00f3n"],
-  ["relaci?n", "relaci\u00f3n"],
-  ["participaci?n", "participaci\u00f3n"],
-  ["explicaci?n", "explicaci\u00f3n"],
-  ["pedag?gico", "pedag\u00f3gico"],
-  ["antrop?sica", "antropos\u00f3fica"],
-  ["antropos?fica", "antropos\u00f3fica"],
-  ["ecol?gica", "ecol\u00f3gica"],
-  ["versi?n", "versi\u00f3n"],
-  ["d?a", "d\u00eda"],
-  ["Qu?", "Qu\u00e9"],
-  ["br?jula", "br\u00fajula"],
-  ["s?lo", "s\u00f3lo"],
-  ["tambi?n", "tambi\u00e9n"],
-  ["pr?cticas", "pr\u00e1cticas"],
-  ["v?nculo", "v\u00ednculo"],
-  ["m?gico", "m\u00e1gico"],
-  ["?Te interesa aplicar a Koru?", "\u00bfTe interesa aplicar a Koru?"],
+  [latin1Sequence(195, 177), "ñ"],
+  [latin1Sequence(195, 161), "á"],
+  [latin1Sequence(195, 169), "é"],
+  [latin1Sequence(195, 173), "í"],
+  [latin1Sequence(195, 179), "ó"],
+  [latin1Sequence(195, 186), "ú"],
+  [latin1Sequence(194, 191), "¿"],
+  [unknownAccent("T", "tulo"), "Título"],
+  [unknownAccent("P", "rrafo"), "Párrafo"],
+  [unknownAccent("Bot", "n"), "Botón"],
+  [unknownAccent("Tama", "o"), "Tamaño"],
+  [unknownAccent("Alineaci", "n"), "Alineación"],
+  [unknownAccent("ni", "as"), "niñas"],
+  [unknownAccent("Ni", "as"), "Niñas"],
+  [unknownAccent("ni", "os"), "niños"],
+  [unknownAccent("Ni", "os"), "Niños"],
+  [unknownAccent("acompa", "antes"), "acompañantes"],
+  [unknownAccent("acompa", "amiento"), "acompañamiento"],
+  [unknownAccent("Acompa", "amos"), "Acompañamos"],
+  [unknownAccent("educaci", "n"), "educación"],
+  [unknownAccent("relaci", "n"), "relación"],
+  [unknownAccent("participaci", "n"), "participación"],
+  [unknownAccent("explicaci", "n"), "explicación"],
+  [unknownAccent("pedag", "gico"), "pedagógico"],
+  [unknownAccent("antrop", "sica"), "antroposófica"],
+  [unknownAccent("antropos", "fica"), "antroposófica"],
+  [unknownAccent("ecol", "gica"), "ecológica"],
+  [unknownAccent("versi", "n"), "versión"],
+  [unknownAccent("d", "a"), "día"],
+  [unknownAccent("Qu", ""), "Qué"],
+  [unknownAccent("br", "jula"), "brújula"],
+  [unknownAccent("s", "lo"), "sólo"],
+  [unknownAccent("tambi", "n"), "también"],
+  [unknownAccent("pr", "cticas"), "prácticas"],
+  [unknownAccent("v", "nculo"), "vínculo"],
+  [unknownAccent("m", "gico"), "mágico"],
+  [unknownAccent("", "Te interesa aplicar a Koru?"), "¿Te interesa aplicar a Koru?"],
 ];
 
 export function repairLandingContentText(value: string) {
@@ -102,10 +105,19 @@ export const landingContentSlotIds = {
   editorialTwoBody: "content.landing.editorial.two.body",
   editorialTwoHighlight: "content.landing.editorial.two.highlight",
   editorialTwoClosing: "content.landing.editorial.two.closing",
+  editorialOneImageCaption: "content.landing.editorial.one.image.caption",
+  editorialTwoImageCaption: "content.landing.editorial.two.image.caption",
   quoteText: "content.landing.quote.text",
-  quoteAuthor: "content.landing.quote.author",
-  admissionsTitle: "content.landing.admissions.title",
-  admissionsButton: "content.landing.admissions.button",
+  testimonialOneText: "content.landing.testimonials.one.text",
+  testimonialOneName: "content.landing.testimonials.one.name",
+  testimonialTwoText: "content.landing.testimonials.two.text",
+  testimonialTwoName: "content.landing.testimonials.two.name",
+  testimonialThreeText: "content.landing.testimonials.three.text",
+  testimonialThreeName: "content.landing.testimonials.three.name",
+  testimonialFourText: "content.landing.testimonials.four.text",
+  testimonialFourName: "content.landing.testimonials.four.name",
+  testimonialFiveText: "content.landing.testimonials.five.text",
+  testimonialFiveName: "content.landing.testimonials.five.name",
 } as const;
 
 export const landingHeroVideoTextResponsiveDefaultSizes: Partial<
@@ -121,7 +133,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     label: "Hero / Frase principal",
     selectorLabel: "Hero / Frase",
     defaultValue:
-      "Una comunidad viva donde niñas, niños, familias y acompañantes co-creamos una nueva forma de educar.",
+      "Imaginamos un mundo donde cada persona pueda descubrir su don y utilizarlo para generar un impacto positivo.",
     defaultSize: 56,
     responsiveDefaultSizes: landingHeroVideoTextResponsiveDefaultSizes,
     multiline: true,
@@ -232,9 +244,27 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
   {
+    id: landingContentSlotIds.editorialOneImageCaption,
+    label: "Diferentes / Texto bajo imagen",
+    selectorLabel: "Diferentes / Imagen texto",
+    defaultValue: "Una comunidad que aprende unida, crece unida.",
+    defaultSize: 18,
+    multiline: true,
+    styleControls: ["font", "size", "color", "align", "lineHeight"],
+  },
+  {
+    id: landingContentSlotIds.editorialTwoImageCaption,
+    label: "Enfoque / Texto bajo imagen",
+    selectorLabel: "Enfoque / Imagen texto",
+    defaultValue: "Cada experiencia abre una nueva forma de aprender.",
+    defaultSize: 18,
+    multiline: true,
+    styleControls: ["font", "size", "color", "align", "lineHeight"],
+  },
+  {
     id: landingContentSlotIds.quoteText,
-    label: "Testimonio / Frase",
-    selectorLabel: "Testimonio / Frase",
+    label: "Frase destacada",
+    selectorLabel: "Frase destacada",
     defaultValue:
       "Koru ha sido mágico para nuestra hija. Su creatividad, su bondad y su curiosidad por el mundo florecen cada día. La vemos crecer en su mejor versión.",
     defaultSize: 44,
@@ -242,26 +272,92 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
   {
-    id: landingContentSlotIds.quoteAuthor,
-    label: "Testimonio / Autor",
-    selectorLabel: "Testimonio / Autor",
-    defaultValue: "Tutor de Koru",
-    defaultSize: 20,
+    id: landingContentSlotIds.testimonialOneText,
+    label: "Testimonio 1 / Texto",
+    selectorLabel: "Testimonio 1 / Texto",
+    defaultValue:
+      "En Koru encontramos un espacio donde nuestra hija se siente mirada, escuchada y acompañada en su propio ritmo.",
+    defaultSize: 22,
+    multiline: true,
+    styleControls: ["font", "size", "color", "align", "lineHeight"],
+  },
+  {
+    id: landingContentSlotIds.testimonialOneName,
+    label: "Testimonio 1 / Nombre",
+    selectorLabel: "Testimonio 1 / Nombre",
+    defaultValue: "Familia Koru",
+    defaultSize: 16,
     styleControls: ["font", "size", "color", "align", "weight"],
   },
   {
-    id: landingContentSlotIds.admissionsTitle,
-    label: "CTA admisiones / Título",
-    selectorLabel: "CTA / Título",
-    defaultValue: "¿Te interesa aplicar a Koru?",
-    defaultSize: 64,
+    id: landingContentSlotIds.testimonialTwoText,
+    label: "Testimonio 2 / Texto",
+    selectorLabel: "Testimonio 2 / Texto",
+    defaultValue:
+      "Valoramos profundamente la forma en que el equipo acompaña cada proceso con sensibilidad, presencia y respeto.",
+    defaultSize: 22,
+    multiline: true,
+    styleControls: ["font", "size", "color", "align", "lineHeight"],
+  },
+  {
+    id: landingContentSlotIds.testimonialTwoName,
+    label: "Testimonio 2 / Nombre",
+    selectorLabel: "Testimonio 2 / Nombre",
+    defaultValue: "Familia Koru",
+    defaultSize: 16,
     styleControls: ["font", "size", "color", "align", "weight"],
   },
   {
-    id: landingContentSlotIds.admissionsButton,
-    label: "CTA admisiones / Botón",
-    selectorLabel: "CTA / Botón",
-    defaultValue: "Ir a admisiones",
+    id: landingContentSlotIds.testimonialThreeText,
+    label: "Testimonio 3 / Texto",
+    selectorLabel: "Testimonio 3 / Texto",
+    defaultValue:
+      "Sentimos que Koru no sólo acompaña a los chicos: también nos invita a crecer como familia y como comunidad.",
+    defaultSize: 22,
+    multiline: true,
+    styleControls: ["font", "size", "color", "align", "lineHeight"],
+  },
+  {
+    id: landingContentSlotIds.testimonialThreeName,
+    label: "Testimonio 3 / Nombre",
+    selectorLabel: "Testimonio 3 / Nombre",
+    defaultValue: "Familia Koru",
+    defaultSize: 16,
+    styleControls: ["font", "size", "color", "align", "weight"],
+  },
+  {
+    id: landingContentSlotIds.testimonialFourText,
+    label: "Testimonio 4 / Texto",
+    selectorLabel: "Testimonio 4 / Texto",
+    defaultValue:
+      "Cada día vemos cómo nuestros hijos se animan a explorar, preguntar y compartir desde un lugar más auténtico.",
+    defaultSize: 22,
+    multiline: true,
+    styleControls: ["font", "size", "color", "align", "lineHeight"],
+  },
+  {
+    id: landingContentSlotIds.testimonialFourName,
+    label: "Testimonio 4 / Nombre",
+    selectorLabel: "Testimonio 4 / Nombre",
+    defaultValue: "Familia Koru",
+    defaultSize: 16,
+    styleControls: ["font", "size", "color", "align", "weight"],
+  },
+  {
+    id: landingContentSlotIds.testimonialFiveText,
+    label: "Testimonio 5 / Texto",
+    selectorLabel: "Testimonio 5 / Texto",
+    defaultValue:
+      "Nos emociona ser parte de una comunidad que cuida los vínculos y acompaña el aprendizaje con tanto compromiso.",
+    defaultSize: 22,
+    multiline: true,
+    styleControls: ["font", "size", "color", "align", "lineHeight"],
+  },
+  {
+    id: landingContentSlotIds.testimonialFiveName,
+    label: "Testimonio 5 / Nombre",
+    selectorLabel: "Testimonio 5 / Nombre",
+    defaultValue: "Familia Koru",
     defaultSize: 16,
     styleControls: ["font", "size", "color", "align", "weight"],
   },
@@ -287,10 +383,10 @@ function getFontFamilyStyleValue(fontFamily: LandingFontFamily) {
   if (fontFamily === "montserrat") {
     return 'var(--font-montserrat), "Segoe UI", sans-serif';
   }
-  if (fontFamily === "nunito") {
-    return 'var(--font-nunito), "Segoe UI", sans-serif';
+  if (fontFamily === "indie-flower") {
+    return 'var(--font-indie-flower), "Segoe UI", cursive';
   }
-  return '"Fira Sans", "Segoe UI", sans-serif';
+  return 'var(--font-roboto-condensed), "Arial Narrow", sans-serif';
 }
 
 function getLandingContentSlotFontSize(
@@ -341,7 +437,7 @@ export function getLandingContentSlotStyle(
     ...(lineHeight ? { lineHeight } : null),
     ...(letterSpacing != null ? { letterSpacing: `${letterSpacing}px` } : null),
     ...(color ? { color } : null),
-    ...(align === "left" || align === "center" || align === "right"
+    ...(align === "left" || align === "center" || align === "right" || align === "justify"
       ? { textAlign: align }
       : null),
   };

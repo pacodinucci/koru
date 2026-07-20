@@ -175,6 +175,18 @@ type SectionItem = {
 
 type LayoutSectionId = "layout-navbar" | "layout-body" | "layout-footer";
 
+function getLandingEditorFontFamilyValue(value: string | undefined) {
+  if (
+    value === "montserrat" ||
+    value === "indie-flower" ||
+    value === "roboto-condensed"
+  ) {
+    return value;
+  }
+
+  return "montserrat";
+}
+
 function createSectionId(type: LandingSectionType) {
   return `${type}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }
@@ -3007,7 +3019,7 @@ export function CmsLandingEditor({
                       <span className="max-w-[120px] truncate text-center text-sm font-medium">
                         {activeSectionId
                           ? sectionsInRenderOrder[activeSectionIndex]?.name
-                          : "SecciÃ³n actual"}
+                          : "Sección actual"}
                       </span>
                       <Button
                         type="button"
@@ -4892,7 +4904,7 @@ export function CmsLandingEditor({
                                                 </div>
                                                 <div className="space-y-1.5">
                                                   <label className="text-xs font-medium text-muted-foreground">
-                                                    TamaÃ±o ({textSize}px)
+                                                    Tamaño ({textSize}px)
                                                   </label>
                                                   <PanelRangeInput
                                                     min={12}
@@ -5098,11 +5110,13 @@ export function CmsLandingEditor({
                                       <select
                                         className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                                         value={
-                                          textMap[
-                                            getLandingFieldFontFamilyKey(
-                                              item.textKey,
-                                            )
-                                          ] ?? "fira-sans"
+                                          getLandingEditorFontFamilyValue(
+                                            textMap[
+                                              getLandingFieldFontFamilyKey(
+                                                item.textKey,
+                                              )
+                                            ],
+                                          )
                                         }
                                         onChange={(event) =>
                                           updateField(
@@ -5113,13 +5127,15 @@ export function CmsLandingEditor({
                                           )
                                         }
                                       >
-                                        <option value="fira-sans">
-                                          Fira Sans
-                                        </option>
                                         <option value="montserrat">
                                           Montserrat
                                         </option>
-                                        <option value="nunito">Nunito</option>
+                                        <option value="indie-flower">
+                                          Indie Flower
+                                        </option>
+                                        <option value="roboto-condensed">
+                                          Roboto Condensed
+                                        </option>
                                       </select>
                                     </div>
                                     <div className="space-y-1.5">
@@ -5640,11 +5656,13 @@ export function CmsLandingEditor({
                                               <select
                                                 className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                                                 value={
+                                                  getLandingEditorFontFamilyValue(
                                                   textMap[
                                                     getLandingFieldFontFamilyKey(
                                                       item.textKey,
                                                     )
-                                                  ] ?? "fira-sans"
+                                                  ],
+                                                )
                                                 }
                                                 onChange={(event) =>
                                                   updateField(
@@ -5655,14 +5673,14 @@ export function CmsLandingEditor({
                                                   )
                                                 }
                                               >
-                                                <option value="fira-sans">
-                                                  Fira Sans
-                                                </option>
                                                 <option value="montserrat">
                                                   Montserrat
                                                 </option>
-                                                <option value="nunito">
-                                                  Nunito
+                                                <option value="indie-flower">
+                                                  Indie Flower
+                                                </option>
+                                                <option value="roboto-condensed">
+                                                  Roboto Condensed
                                                 </option>
                                               </select>
                                             </div>
@@ -5862,11 +5880,13 @@ export function CmsLandingEditor({
                                       <select
                                         className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                                         value={
-                                          textMap[
-                                            getLandingFieldFontFamilyKey(
-                                              item.textKey,
-                                            )
-                                          ] ?? "fira-sans"
+                                          getLandingEditorFontFamilyValue(
+                                            textMap[
+                                              getLandingFieldFontFamilyKey(
+                                                item.textKey,
+                                              )
+                                            ],
+                                          )
                                         }
                                         onChange={(event) =>
                                           updateField(
@@ -5877,13 +5897,15 @@ export function CmsLandingEditor({
                                           )
                                         }
                                       >
-                                        <option value="fira-sans">
-                                          Fira Sans
-                                        </option>
                                         <option value="montserrat">
                                           Montserrat
                                         </option>
-                                        <option value="nunito">Nunito</option>
+                                        <option value="indie-flower">
+                                          Indie Flower
+                                        </option>
+                                        <option value="roboto-condensed">
+                                          Roboto Condensed
+                                        </option>
                                       </select>
                                     </div>
                                     <div className="space-y-1.5">

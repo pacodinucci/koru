@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
 import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
@@ -47,6 +48,7 @@ export function ImageGridSection({
   onSelectField,
   responsiveMode,
 }: LandingSectionComponentProps) {
+  const router = useRouter();
   const topCardRefs = useRef<Array<HTMLElement | null>>([]);
   const [visibleTopCardIndexes, setVisibleTopCardIndexes] = useState<
     Set<number>
@@ -116,10 +118,16 @@ export function ImageGridSection({
     ),
   );
   const fixedHoverLabels = [
-    "Aprendizaje",
-    "Cultura",
+    "Grupo de acompañamiento",
+    "Metodologías de acompañamiento",
     "Instalaciones",
     "Equipo",
+  ];
+  const fixedHoverHrefs = [
+    "/como-acompanamos#grupos-de-acompanamiento",
+    "/como-acompanamos#metodologias-y-experiencias",
+    "/quienes-somos#instalaciones",
+    "/quienes-somos#equipo",
   ];
   const topCards = cards.slice(0, Math.min(4, cards.length));
   const remainingCards = cards.slice(Math.min(4, cards.length));
@@ -275,6 +283,7 @@ export function ImageGridSection({
             {topCards.map((card, index) => {
               const isVisibleOnMobile =
                 isMobile && visibleTopCardIndexes.has(index);
+              const fixedHref = fixedHoverHrefs[index];
 
               return (
                 <article
@@ -284,7 +293,24 @@ export function ImageGridSection({
                   }}
                   data-card-index={index}
                   tabIndex={0}
+                  role={fixedHref && !previewMode ? "link" : undefined}
+                  aria-label={fixedHoverLabels[index] ?? card.value}
                   className="group relative aspect-[4/5] w-full cursor-pointer overflow-hidden bg-black outline-none transition-transform duration-300 ease-out focus:z-10 focus:scale-[1.03] active:z-10 active:scale-[1.03] md:hover:z-10 md:hover:scale-110 md:focus-visible:z-10 md:focus-visible:scale-110"
+                  onClick={() => {
+                    if (fixedHref && !previewMode) {
+                      router.push(fixedHref);
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (
+                      fixedHref &&
+                      !previewMode &&
+                      (event.key === "Enter" || event.key === " ")
+                    ) {
+                      event.preventDefault();
+                      router.push(fixedHref);
+                    }
+                  }}
                 >
                   <Image
                     src={imageUrls[index]?.primary}

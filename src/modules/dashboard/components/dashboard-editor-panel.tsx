@@ -163,7 +163,7 @@ export function DashboardEditorPanelToggleButton({
       onClick={() => setOpen(!open)}
     >
       <SlidersHorizontal className="h-4 w-4" />
-      {open ? "Cerrar panel de ediciÃ³n" : "Abrir panel de ediciÃ³n"}
+      {open ? "Cerrar panel de edición" : "Abrir panel de edición"}
     </Button>
   );
 }

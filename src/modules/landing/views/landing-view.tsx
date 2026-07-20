@@ -8,8 +8,7 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { FernShape } from "@/components/fern-shape";
+import { KoruShape1 } from "@/components/koru-shape-1";
 import { SporeShape } from "@/components/spore-shape";
 import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
 import {
@@ -32,7 +31,11 @@ import {
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
 import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
-import { hardcodedLandingContentSlots, landingContentSlotIds } from "@/modules/landing/content-slots";
+import {
+  getLandingContentSlotValue,
+  hardcodedLandingContentSlots,
+  landingContentSlotIds,
+} from "@/modules/landing/content-slots";
 import { CardsSection } from "@/modules/landing/views/sections/cards-section";
 import { FooterSection } from "@/modules/landing/views/sections/footer-section";
 import { GallerySection } from "@/modules/landing/views/sections/gallery-section";
@@ -91,13 +94,29 @@ function LandingVisionBridgeSection({
 
   return (
     <section className="relative overflow-hidden bg-white">
-      <FernShape x="-56px" y="40px" size={220} color="#4d7b53" opacity={0.25} />
-      <FernShape
+      <KoruShape1
+        x="-44px"
+        y="70px"
+        size={240}
+        color="var(--complement-800)"
+        opacity={0.16}
+        rotate={-8}
+      />
+      <KoruShape1
+        size={260}
+        color="var(--brand-600)"
+        opacity={0.12}
+        rotate={178}
+        flipX
+        style={{ right: "-48px", top: "120px", left: "auto" }}
+      />
+      <KoruShape1
         size={280}
-        color="#4d7b53"
-        opacity={0.2}
-        rotate={180}
-        style={{ right: "-64px", bottom: "32px", left: "auto", top: "auto" }}
+        color="var(--orange-600)"
+        opacity={0.12}
+        rotate={158}
+        flipX
+        style={{ right: "-54px", bottom: "10px", left: "auto", top: "auto" }}
       />
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 md:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16 lg:px-14 lg:py-24">
         <ScrollReveal direction="right" className="lg:order-2">
@@ -181,32 +200,40 @@ function LandingQuoteSection({
           className="mx-auto max-w-5xl leading-[1.16] text-[var(--complement-800)]"
           style={{ fontFamily: "var(--font-indie-flower)" }}
         />
-        <div className="mt-7 flex justify-center">
-          <Image
-            src="/assets/quote-underline.svg"
-            alt=""
-            aria-hidden="true"
-            width={180}
-            height={10}
-            className="h-[10px] w-[180px]"
-          />
-        </div>
-        <EditableContentSlot
-          as="p"
-          slot={getHardcodedSlot(landingContentSlotIds.quoteAuthor)}
-          textMap={textMap}
-          previewMode={previewMode}
-          selected={selectedContentSlotId === landingContentSlotIds.quoteAuthor}
-          onSelect={onSelectContentSlot}
-          responsiveMode={responsiveMode}
-          className="mt-5 text-center text-xl text-black"
-        />
       </ScrollReveal>
     </section>
   );
 }
 
-function LandingAdmissionsCtaSection({
+const testimonialCards = [
+  {
+    textSlotId: landingContentSlotIds.testimonialOneText,
+    nameSlotId: landingContentSlotIds.testimonialOneName,
+  },
+  {
+    textSlotId: landingContentSlotIds.testimonialTwoText,
+    nameSlotId: landingContentSlotIds.testimonialTwoName,
+  },
+  {
+    textSlotId: landingContentSlotIds.testimonialThreeText,
+    nameSlotId: landingContentSlotIds.testimonialThreeName,
+  },
+  {
+    textSlotId: landingContentSlotIds.testimonialFourText,
+    nameSlotId: landingContentSlotIds.testimonialFourName,
+  },
+  {
+    textSlotId: landingContentSlotIds.testimonialFiveText,
+    nameSlotId: landingContentSlotIds.testimonialFiveName,
+  },
+] as const;
+
+const marqueeTestimonialCards = [
+  ...testimonialCards,
+  ...testimonialCards,
+] as const;
+
+function LandingTestimonialsSection({
   textMap,
   previewMode,
   selectedContentSlotId,
@@ -214,59 +241,85 @@ function LandingAdmissionsCtaSection({
   responsiveMode,
 }: HardcodedContentBindings) {
   return (
-    <section className="bg-white px-6 pt-16 pb-32 md:px-10 md:pb-40 lg:px-14 lg:pt-20 lg:pb-52">
+    <section className="overflow-hidden bg-white px-6 pt-16 pb-32 md:px-10 md:pb-40 lg:px-14 lg:pt-20 lg:pb-52">
       <ScrollReveal
         direction="up"
-        className="relative mx-auto flex min-h-[24rem] max-w-6xl flex-col items-center justify-center overflow-hidden rounded-none px-6 py-20 text-center shadow-sm shadow-[var(--brand-900)]/10 md:min-h-[28rem] md:px-10 lg:py-24"
-        style={{
-          background:
-            "radial-gradient(circle at 18% 18%, var(--orange-300) 0%, transparent 28%), radial-gradient(circle at 82% 24%, var(--brand-500) 0%, transparent 30%), linear-gradient(135deg, var(--brand-800) 0%, var(--brand-600) 42%, var(--complement-700) 100%)",
-        }}
+        className="mx-[calc(50%-50vw)] overflow-hidden"
       >
-        <FernShape
-          x="-42px"
-          y="28px"
-          size={190}
-          color="var(--complement-800)"
-          opacity={0.22}
-          rotate={-8}
-        />
-        <FernShape
-          size={230}
-          color="var(--brand-800)"
-          opacity={0.16}
-          rotate={178}
-          flipX
-          style={{ right: "-54px", bottom: "24px", left: "auto", top: "auto" }}
-        />
-        <div className="absolute inset-0 bg-white/35" aria-hidden="true" />
-        <EditableContentSlot
-          as="h2"
-          slot={getHardcodedSlot(landingContentSlotIds.admissionsTitle)}
-          textMap={textMap}
-          previewMode={previewMode}
-          selected={selectedContentSlotId === landingContentSlotIds.admissionsTitle}
-          onSelect={onSelectContentSlot}
-          responsiveMode={responsiveMode}
-          className="relative z-10 leading-[0.95] tracking-tight text-white"
-          style={{ fontFamily: "var(--font-roboto-condensed)" }}
-        />
-        <Link
-          href="/admisiones"
-          className="relative z-10 mt-8 inline-flex rounded-md bg-white px-8 py-4 text-base font-semibold uppercase tracking-[0.18em] text-[var(--brand-800)] hover:bg-[var(--complement-500)]"
-          style={{ fontFamily: "var(--font-montserrat)" }}
-        >
-          <EditableContentSlot
-            slot={getHardcodedSlot(landingContentSlotIds.admissionsButton)}
-            textMap={textMap}
-            previewMode={previewMode}
-            selected={
-              selectedContentSlotId === landingContentSlotIds.admissionsButton
+        <style>{`
+          @keyframes koru-testimonials-marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+          }
+
+          .koru-testimonials-marquee {
+            animation: koru-testimonials-marquee 46s linear infinite;
+          }
+
+          .koru-testimonials-marquee:hover {
+            animation-play-state: paused;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .koru-testimonials-marquee {
+              animation: none;
+              transform: none;
             }
-            onSelect={onSelectContentSlot}
-            responsiveMode={responsiveMode}
-          />
-        </Link>
+          }
+        `}</style>
+        <div className="overflow-hidden px-[max(1.5rem,calc((100vw-80rem)/2))] pb-4">
+          <div className="koru-testimonials-marquee flex w-max items-center gap-8">
+            {marqueeTestimonialCards.map((card, index) => {
+              const textSlot = getHardcodedSlot(card.textSlotId);
+
+              return (
+                <div
+                  key={`${card.textSlotId}-${index}`}
+                  className="flex shrink-0 items-center gap-8"
+                >
+                  {index > 0 ? (
+                    <Image
+                      src="/assets/quote-divider-vertical.svg"
+                      alt=""
+                      width={10}
+                      height={180}
+                      aria-hidden="true"
+                      className="h-36 w-2 shrink-0 opacity-90"
+                    />
+                  ) : null}
+                  <article className="flex min-h-[12rem] w-[min(82vw,28rem)] shrink-0 flex-col justify-between bg-white p-7 text-left md:w-[30rem] lg:w-[31rem]">
+                    <EditableContentSlot
+                      as="blockquote"
+                      slot={textSlot}
+                      textMap={textMap}
+                      previewMode={previewMode}
+                      selected={selectedContentSlotId === card.textSlotId}
+                      onSelect={onSelectContentSlot}
+                      responsiveMode={responsiveMode}
+                      className="text-[var(--complement-800)]"
+                      style={{ fontFamily: "var(--font-indie-flower)" }}
+                    >
+                      &quot;{getLandingContentSlotValue(textMap, textSlot)}&quot;
+                    </EditableContentSlot>
+                    <div className="mt-8 pt-4">
+                      <EditableContentSlot
+                        as="p"
+                        slot={getHardcodedSlot(card.nameSlotId)}
+                        textMap={textMap}
+                        previewMode={previewMode}
+                        selected={selectedContentSlotId === card.nameSlotId}
+                        onSelect={onSelectContentSlot}
+                        responsiveMode={responsiveMode}
+                        className="font-semibold text-black"
+                        style={{ fontFamily: "var(--font-montserrat)" }}
+                      />
+                    </div>
+                  </article>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </ScrollReveal>
     </section>
   );
@@ -473,6 +526,11 @@ function SectionRenderer({
             section.id.includes("-copy")
               ? landingContentSlotIds.editorialTwoClosing
               : landingContentSlotIds.editorialOneClosing
+          }
+          imageCaptionTextSlotId={
+            section.id.includes("-copy")
+              ? landingContentSlotIds.editorialTwoImageCaption
+              : landingContentSlotIds.editorialOneImageCaption
           }
           textMap={textMap}
           previewMode={previewMode}
@@ -717,7 +775,7 @@ export function LandingView({
           </ScopeBackground>
         );
       })}
-      <LandingAdmissionsCtaSection
+      <LandingTestimonialsSection
         textMap={responsiveMap}
         previewMode={previewMode}
         selectedContentSlotId={selectedContentSlotId}

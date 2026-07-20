@@ -22,6 +22,7 @@ type NonCmsEditorialSectionProps = {
   bodyTextSlotId?: string;
   highlightTextSlotId?: string;
   closingTextSlotId?: string;
+  imageCaptionTextSlotId?: string;
   textMap?: LandingTextMap;
   previewMode?: boolean;
   selectedContentSlotId?: string | null;
@@ -58,6 +59,7 @@ export function NonCmsEditorialSection({
   bodyTextSlotId,
   highlightTextSlotId,
   closingTextSlotId,
+  imageCaptionTextSlotId,
   textMap,
   previewMode,
   selectedContentSlotId,
@@ -68,6 +70,7 @@ export function NonCmsEditorialSection({
   const bodyTextSlot = getSlot(bodyTextSlotId);
   const highlightTextSlot = getSlot(highlightTextSlotId);
   const closingTextSlot = getSlot(closingTextSlotId);
+  const imageCaptionTextSlot = getSlot(imageCaptionTextSlotId);
   const frameStyle = {
     width: `calc(${imageFrameWidth} * ${imageScale})`,
     height: imageFrameHeight
@@ -176,16 +179,31 @@ export function NonCmsEditorialSection({
             )}
           </div>
 
-          <div className="relative mx-auto overflow-hidden" style={frameStyle}>
-            {imageSrc ? (
-              <Image
-                src={imageSrc}
-                alt="Niñas y niños en actividad comunitaria"
-                width={1200}
-                height={1200}
-                sizes="(max-width: 1024px) 100vw, 40vw"
-                className="h-auto w-full object-contain"
-                unoptimized={imageSrc.startsWith("http")}
+          <div className="mx-auto" style={frameStyle}>
+            <div className="relative overflow-hidden">
+              {imageSrc ? (
+                <Image
+                  src={imageSrc}
+                  alt="Niñas y niños en actividad comunitaria"
+                  width={1200}
+                  height={1200}
+                  sizes="(max-width: 1024px) 100vw, 40vw"
+                  className="h-auto w-full object-contain"
+                  unoptimized={imageSrc.startsWith("http")}
+                />
+              ) : null}
+            </div>
+
+            {imageCaptionTextSlot && textMap ? (
+              <EditableContentSlot
+                as="p"
+                slot={imageCaptionTextSlot}
+                textMap={textMap}
+                previewMode={previewMode}
+                selected={selectedContentSlotId === imageCaptionTextSlot.id}
+                onSelect={onSelectContentSlot}
+                responsiveMode={responsiveMode}
+                className="mt-4 text-center text-base leading-relaxed text-black/85 md:text-lg"
               />
             ) : null}
           </div>

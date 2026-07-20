@@ -40,7 +40,7 @@ type Props = {
   isUpcomingListOpen?: boolean;
 };
 
-const WEEK_DAYS = ["Lun", "Mar", "Mi\u00e9", "Jue", "Vie", "S\u00e1b", "Dom"];
+const WEEK_DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 function toDateOnly(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
