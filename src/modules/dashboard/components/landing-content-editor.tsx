@@ -1,13 +1,17 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Monitor, Save } from "lucide-react";
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { publishCmsAction } from "@/modules/cms/server/cms-text.actions";
+import {
+  publishCmsAction,
+  publishCmsPageAction,
+} from "@/modules/cms/server/cms-text.actions";
 import { CmsPreviewFrame } from "@/modules/dashboard/components/cms-preview-frame";
 import { useDashboardEditorPanel } from "@/modules/dashboard/components/dashboard-editor-panel";
 import {
@@ -20,6 +24,8 @@ import {
 import type { LandingTextMap } from "@/modules/landing/types/landing-text";
 import { LandingPageLayout } from "@/modules/landing/views/landing-page-layout";
 import { LandingView } from "@/modules/landing/views/landing-view";
+import { getQuienesSomosContentSlots } from "@/modules/quienes-somos/content-slots";
+import { QuienesSomosView } from "@/modules/quienes-somos/views/quienes-somos-view";
 
 const colorOptions = [
   "#111827",
@@ -71,16 +77,29 @@ function normalizeTextMap(textMap: LandingTextMap, slots: LandingContentSlot[]) 
   return next;
 }
 
-export function LandingContentEditor({
-  initialTextMap,
-}: {
+type PageContentEditorProps = {
   initialTextMap: LandingTextMap;
-}) {
-  const baseSlots = useMemo(() => getLandingContentSlots(), []);
+  slots: LandingContentSlot[];
+  pageSlug?: string;
+  previewLabel: string;
+  renderPreview: (props: {
+    textMap: LandingTextMap;
+    selectedSlotId: string;
+    onSelectSlot: (slotId: string) => void;
+  }) => ReactNode;
+};
+
+function PageContentEditor({
+  initialTextMap,
+  slots: baseSlots,
+  pageSlug = "/",
+  previewLabel,
+  renderPreview,
+}: PageContentEditorProps) {
   const [textMap, setTextMap] = useState(() =>
     normalizeTextMap(initialTextMap, baseSlots),
   );
-  const slots = useMemo(() => getLandingContentSlots(), []);
+  const slots = baseSlots;
   const [selectedSlotId, setSelectedSlotId] = useState(slots[0]?.id ?? "");
   const [statusMessage, setStatusMessage] = useState("");
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
@@ -138,7 +157,10 @@ export function LandingContentEditor({
       ]),
     ) as LandingTextMap;
     setTextMap(repairedTextMap);
-    const result = await publishCmsAction(repairedTextMap);
+    const result =
+      pageSlug === "/"
+        ? await publishCmsAction(repairedTextMap)
+        : await publishCmsPageAction(pageSlug, repairedTextMap);
     setStatusMessage(
       result.ok
         ? "Contenido publicado."
@@ -218,7 +240,7 @@ export function LandingContentEditor({
           <>
             <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-xs text-slate-600">
               <Monitor className="h-4 w-4" />
-              Preview de landing
+              {previewLabel}
             </div>
             {panelPortal}
           </>
@@ -241,16 +263,11 @@ export function LandingContentEditor({
                 width: `${PREVIEW_CANVAS_WIDTH}px`,
               }}
             >
-              <LandingPageLayout textMap={textMap} previewMode>
-                <LandingView
-                  textMap={textMap}
-                  previewMode
-                  selectedFieldId={selectedSlotId}
-                  onSelectField={selectSlot}
-                  selectedContentSlotId={selectedSlotId}
-                  onSelectContentSlot={selectSlot}
-                />
-              </LandingPageLayout>
+              {renderPreview({
+                textMap,
+                selectedSlotId,
+                onSelectSlot: selectSlot,
+              })}
             </div>
           </div>
         </div>
@@ -259,6 +276,60 @@ export function LandingContentEditor({
   );
 }
 
+export function LandingContentEditor({
+  initialTextMap,
+}: {
+  initialTextMap: LandingTextMap;
+}) {
+  const slots = useMemo(() => getLandingContentSlots(), []);
+
+  return (
+    <PageContentEditor
+      initialTextMap={initialTextMap}
+      slots={slots}
+      previewLabel="Preview de landing"
+      renderPreview={({ textMap, selectedSlotId, onSelectSlot }) => (
+        <LandingPageLayout textMap={textMap} previewMode>
+          <LandingView
+            textMap={textMap}
+            previewMode
+            selectedFieldId={selectedSlotId}
+            onSelectField={onSelectSlot}
+            selectedContentSlotId={selectedSlotId}
+            onSelectContentSlot={onSelectSlot}
+          />
+        </LandingPageLayout>
+      )}
+    />
+  );
+}
+
+export function QuienesSomosContentEditor({
+  initialTextMap,
+}: {
+  initialTextMap: LandingTextMap;
+}) {
+  const slots = useMemo(() => getQuienesSomosContentSlots(), []);
+
+  return (
+    <PageContentEditor
+      initialTextMap={initialTextMap}
+      slots={slots}
+      pageSlug="/quienes-somos"
+      previewLabel="Preview de Quienes Somos"
+      renderPreview={({ textMap, selectedSlotId, onSelectSlot }) => (
+        <LandingPageLayout textMap={textMap} previewMode>
+          <QuienesSomosView
+            textMap={textMap}
+            previewMode
+            selectedContentSlotId={selectedSlotId}
+            onSelectContentSlot={onSelectSlot}
+          />
+        </LandingPageLayout>
+      )}
+    />
+  );
+}
 export function LandingContentSidePanel({
   textMap,
   selectedSlot,
