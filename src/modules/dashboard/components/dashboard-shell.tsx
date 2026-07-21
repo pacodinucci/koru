@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -253,6 +253,15 @@ export function DashboardShell({
                             >
                               <FileText />
                               <span>Landing</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              isActive={pathname === "/dashboard/content/quienes-somos"}
+                              render={<Link href="/dashboard/content/quienes-somos" />}
+                            >
+                              <FileText />
+                              <span>Quienes Somos</span>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         </SidebarMenuSub>
