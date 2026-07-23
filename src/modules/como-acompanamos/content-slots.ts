@@ -31,6 +31,39 @@ export type IllustratedTextBlock = TextBlock & {
   imageAlt: string;
 };
 
+export type LearningPrinciple = {
+  title: string;
+  description: string;
+};
+
+export const learningPrinciples: LearningPrinciple[] = [
+  {
+    title: "Asombro",
+    description:
+      "Aprendemos jugando, explorando y maravillándonos del mundo.",
+  },
+  {
+    title: "Interconexión",
+    description:
+      "Aprendemos mejor conectando ideas, experiencias y el mundo que nos rodea.",
+  },
+  {
+    title: "Propósito",
+    description:
+      "Nos involucramos más cuando entendemos el “para qué” de lo que aprendemos.",
+  },
+  {
+    title: "Agencia",
+    description:
+      "Cada quien aprende a su manera y tiene derecho a construir su propio camino.",
+  },
+  {
+    title: "Social",
+    description: "Aprender es un acto profundamente humano y relacional.",
+  },
+];
+
+
 export const accompanyCopy = {
   eyebrow: "COMO ACOMPAÑAMOS",
   title: "Cómo acompañamos",
@@ -373,6 +406,14 @@ export function pillarSlotId(index: number, field: "title" | "paragraph") {
   return `content.como-acompanamos.pillars.${index}.${field}`;
 }
 
+export function learningPrincipleSlotId(
+  index: number,
+  field: "title" | "description",
+) {
+  return `content.como-acompanamos.learning-principles.${index}.${field}`;
+}
+
+
 export function groupSlotId(
   index: number,
   field:
@@ -415,6 +456,23 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
     label: "Hero / Introducción",
     defaultValue: accompanyCopy.intro,
   }),
+  ...learningPrinciples.flatMap((principle, index) => [
+    textSlot({
+      id: learningPrincipleSlotId(index, "title"),
+      label: `Principios de aprendizaje / ${principle.title} / Titulo`,
+      selectorLabel: `Principio ${index + 1} / Titulo`,
+      defaultValue: principle.title,
+      defaultSize: 24,
+      multiline: false,
+      styleControls: ["font", "size", "color", "align", "weight"],
+    }),
+    textSlot({
+      id: learningPrincipleSlotId(index, "description"),
+      label: `Principios de aprendizaje / ${principle.title} / Texto`,
+      selectorLabel: `Principio ${index + 1} / Texto`,
+      defaultValue: principle.description,
+    }),
+  ]),
   ...accompanyPillars.flatMap((pillar, index) => [
     textSlot({
       id: pillarSlotId(index, "title"),
@@ -644,6 +702,36 @@ export function resolveComoAcompanamosCopy(textMap: LandingTextMap) {
     eyebrow: getComoAcompanamosContentSlotValue(textMap, comoAcompanamosContentSlotIds.heroEyebrow),
     intro: getComoAcompanamosContentSlotValue(textMap, comoAcompanamosContentSlotIds.heroIntro),
   };
+}
+
+function repairLearningPrincipleText(value: string) {
+  return value
+    .replaceAll("Interconexi?n", "Interconexión")
+    .replaceAll("Prop?sito", "Propósito")
+    .replaceAll("maravill?ndonos", "maravillándonos")
+    .replaceAll("m?s", "más")
+    .replaceAll("?para qu??", "“para qué”")
+    .replaceAll("para qu?", "para qué");
+}
+
+export function resolveLearningPrinciples(
+  textMap: LandingTextMap,
+): LearningPrinciple[] {
+  return learningPrinciples.map((principle, index) => ({
+    ...principle,
+    title: repairLearningPrincipleText(
+      getComoAcompanamosContentSlotValue(
+        textMap,
+        learningPrincipleSlotId(index, "title"),
+      ),
+    ),
+    description: repairLearningPrincipleText(
+      getComoAcompanamosContentSlotValue(
+        textMap,
+        learningPrincipleSlotId(index, "description"),
+      ),
+    ),
+  }));
 }
 
 export function resolveAccompanyPillars(textMap: LandingTextMap): AccompanyPillar[] {

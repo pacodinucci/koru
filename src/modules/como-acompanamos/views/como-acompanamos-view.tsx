@@ -2,6 +2,7 @@ import Image from "next/image";
 
 import { AccompanimentGroupsTabs } from "@/app/(pages)/como-acompanamos/accompaniment-groups-tabs";
 import { ScrollFloatingFerns } from "@/app/(pages)/como-acompanamos/scroll-floating-ferns";
+import { AccompanyPrinciplesWheel } from "@/modules/como-acompanamos/views/accompany-principles-wheel";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
 import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
 import {
@@ -9,13 +10,11 @@ import {
   evaluationBlockSlotId,
   getComoAcompanamosContentSlots,
   methodologySlotId,
-  pillarSlotId,
   methodologyCardBackgrounds,
-  resolveAccompanyPillars,
+  resolveLearningPrinciples,
   resolveAccompanimentGroups,
   resolveEvaluationBlocks,
   resolveMethodologies,
-  type AccompanyPillar,
   type IllustratedTextBlock,
   type TextBlock,
 } from "@/modules/como-acompanamos/content-slots";
@@ -245,62 +244,6 @@ function IllustratedContentCard({
   );
 }
 
-function AccompanyPillarCard({
-  pillar,
-  index,
-  textMap,
-  previewMode,
-  selectedContentSlotId,
-  onSelectContentSlot,
-}: {
-  pillar: AccompanyPillar;
-  index: number;
-  textMap: LandingTextMap;
-} & Pick<
-  LandingPreviewBindings,
-  "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
->) {
-  return (
-    <article className="grid overflow-hidden rounded-[2rem] border border-complement-600 bg-[color-mix(in_srgb,var(--complement-700)_22%,transparent)] shadow-sm md:grid-cols-[1.35fr_0.9fr]">
-      <div className="p-6 md:p-8">
-        <h3
-          className="mb-3 text-3xl leading-none text-[var(--complement-900)]"
-          style={{ fontFamily: "var(--font-indie-flower)" }}
-        >
-          <EditableCopy
-            slotId={pillarSlotId(index, "title")}
-            textMap={textMap}
-            previewMode={previewMode}
-            selectedContentSlotId={selectedContentSlotId}
-            onSelectContentSlot={onSelectContentSlot}
-          />
-        </h3>
-        <div className="max-w-2xl space-y-3 text-base leading-relaxed text-[var(--complement-900)] md:text-lg">
-          {pillar.paragraphs?.map((paragraph, paragraphIndex) => (
-            <EditableCopy
-              key={paragraphIndex}
-              as="p"
-              slotId={pillarSlotId(index, "paragraph")}
-              textMap={textMap}
-              previewMode={previewMode}
-              selectedContentSlotId={selectedContentSlotId}
-              onSelectContentSlot={onSelectContentSlot}
-            />
-          ))}
-        </div>
-      </div>
-      <div className="relative min-h-[13rem] border-t border-complement-600 md:min-h-full md:border-t-0 md:border-l">
-        <Image
-          src={pillar.imageSrc}
-          alt={pillar.imageAlt}
-          fill
-          className="object-cover"
-        />
-      </div>
-    </article>
-  );
-}
-
 function BulletList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-2 pl-5 text-black/80">
@@ -331,18 +274,16 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
     onSelectContentSlot,
   };
 
-  const resolvedAccompanyPillars = resolveAccompanyPillars(textMap);
+  const resolvedLearningPrinciples = resolveLearningPrinciples(textMap);
   const resolvedAccompanimentGroups = resolveAccompanimentGroups(textMap);
   const resolvedMethodologies = resolveMethodologies(textMap);
   const resolvedEvaluationBlocks = resolveEvaluationBlocks(textMap);
   return (
     <main className="bg-white" style={{ fontFamily: "var(--font-montserrat)" }}>
-      <section
-        id="como-acompanamos"
-        className="scroll-mt-28 mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14"
-      >
-        <div className="grid items-start gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
-          <SectionHeading
+      <section id="como-acompanamos" className="scroll-mt-28 bg-white">
+        <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
+          <div className="grid items-start gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
+            <SectionHeading
             eyebrow={
               <EditableCopy
                 slotId={comoAcompanamosContentSlotIds.heroEyebrow}
@@ -355,8 +296,8 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
               slotId={comoAcompanamosContentSlotIds.heroIntro}
               {...slotBindingProps}
             />
-          </SectionHeading>
-          <div className="relative mx-auto w-full max-w-[22rem] lg:pt-20">
+            </SectionHeading>
+            <div className="relative mx-auto w-full max-w-[22rem] lg:pt-20">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
               <Image
                 src="/assets/images/DSC01280.png"
@@ -366,19 +307,14 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
                 priority
               />
             </div>
+            </div>
           </div>
         </div>
 
-        <div className="mt-20 space-y-6 md:mt-24">
-          {resolvedAccompanyPillars.map((pillar, index) => (
-            <AccompanyPillarCard
-              key={`${pillar.title}-${index}`}
-              pillar={pillar}
-              index={index}
-              {...slotBindingProps}
-            />
-          ))}
-        </div>
+        <AccompanyPrinciplesWheel
+          principles={resolvedLearningPrinciples}
+          {...slotBindingProps}
+        />
 
         {/* <FloatingSkills skills={cultivatedSkills} /> */}
       </section>
