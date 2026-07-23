@@ -24,6 +24,8 @@ import {
 import type { LandingTextMap } from "@/modules/landing/types/landing-text";
 import { LandingPageLayout } from "@/modules/landing/views/landing-page-layout";
 import { LandingView } from "@/modules/landing/views/landing-view";
+import { getComoAcompanamosContentSlots } from "@/modules/como-acompanamos/content-slots";
+import { ComoAcompanamosView } from "@/modules/como-acompanamos/views/como-acompanamos-view";
 import { getQuienesSomosContentSlots } from "@/modules/quienes-somos/content-slots";
 import { QuienesSomosView } from "@/modules/quienes-somos/views/quienes-somos-view";
 
@@ -320,6 +322,33 @@ export function QuienesSomosContentEditor({
       renderPreview={({ textMap, selectedSlotId, onSelectSlot }) => (
         <LandingPageLayout textMap={textMap} previewMode>
           <QuienesSomosView
+            textMap={textMap}
+            previewMode
+            selectedContentSlotId={selectedSlotId}
+            onSelectContentSlot={onSelectSlot}
+          />
+        </LandingPageLayout>
+      )}
+    />
+  );
+}
+
+export function ComoAcompanamosContentEditor({
+  initialTextMap,
+}: {
+  initialTextMap: LandingTextMap;
+}) {
+  const slots = useMemo(() => getComoAcompanamosContentSlots(), []);
+
+  return (
+    <PageContentEditor
+      initialTextMap={initialTextMap}
+      slots={slots}
+      pageSlug="/como-acompanamos"
+      previewLabel="Preview de Cómo acompañamos"
+      renderPreview={({ textMap, selectedSlotId, onSelectSlot }) => (
+        <LandingPageLayout textMap={textMap} previewMode>
+          <ComoAcompanamosView
             textMap={textMap}
             previewMode
             selectedContentSlotId={selectedSlotId}

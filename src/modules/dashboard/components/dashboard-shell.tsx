@@ -264,6 +264,15 @@ export function DashboardShell({
                               <span>Quienes Somos</span>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              isActive={pathname === "/dashboard/content/como-acompanamos"}
+                              render={<Link href="/dashboard/content/como-acompanamos" />}
+                            >
+                              <FileText />
+                              <span>Cómo acompañamos</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
                         </SidebarMenuSub>
                       ) : null}
                       </SidebarMenuSub>
