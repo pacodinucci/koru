@@ -272,7 +272,7 @@ export function AccompanimentGroupsTabs({
         >
           <div className="grid min-w-0 gap-8 p-4 md:p-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
             <div className="min-w-0">
-              <h3 className="mb-2 max-w-full break-words text-4xl leading-none text-black [overflow-wrap:anywhere] md:text-4xl" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
+              <h3 className="mb-2 max-w-full break-words text-3xl leading-none text-black [overflow-wrap:anywhere] md:text-4xl" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
                 <EditableGroupCopy
                   slotId={groupSlotId(index, "title")}
                   {...slotBindingProps}

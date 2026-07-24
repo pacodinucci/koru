@@ -98,7 +98,7 @@ function SectionHeading({
       ) : null}
       {title ? (
         <h2
-          className="max-w-full break-words text-4xl leading-[0.95] tracking-tight text-black [overflow-wrap:anywhere] md:text-5xl lg:text-6xl"
+          className="max-w-full break-words text-3xl leading-[0.98] tracking-tight text-black [overflow-wrap:anywhere] md:text-5xl lg:text-6xl"
           style={{ fontFamily: "var(--font-roboto-condensed)" }}
         >
           {title}
@@ -138,7 +138,7 @@ function ContentCard({
       style={background ? { background } : undefined}
     >
       <h3
-        className="mb-3 max-w-full break-words text-4xl leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
+        className="mb-3 max-w-full break-words text-3xl leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
         style={{ fontFamily: "var(--font-roboto-condensed)" }}
       >
         <EditableCopy
@@ -200,7 +200,7 @@ function IllustratedContentCard({
     <article className="grid min-w-0 overflow-hidden rounded-[2rem] border border-complement-600 bg-white/70 shadow-sm md:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)]">
       <div className="min-w-0 p-6">
         <h3
-          className="mb-3 max-w-full break-words text-4xl leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
+          className="mb-3 max-w-full break-words text-3xl leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
           style={{ fontFamily: "var(--font-roboto-condensed)" }}
         >
           {block.title}
@@ -326,7 +326,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
             <div className="max-w-4xl min-w-0">
               <h2
                 id="acompanamiento-conectado-title"
-                className="max-w-full break-words text-left text-4xl leading-[1.12] text-black [overflow-wrap:anywhere] md:text-5xl"
+                className="max-w-full break-words text-left text-3xl leading-[1.08] text-black [overflow-wrap:anywhere] md:text-5xl"
                 style={{ fontFamily: "var(--font-roboto-condensed)" }}
               >
                 <EditableCopy
@@ -353,7 +353,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
             <div className="max-w-4xl min-w-0">
               <h2
                 id="desarrollo-integral-title"
-                className="max-w-full break-words text-left text-4xl leading-[1.12] text-black [overflow-wrap:anywhere] md:text-5xl"
+                className="max-w-full break-words text-left text-3xl leading-[1.08] text-black [overflow-wrap:anywhere] md:text-5xl"
                 style={{ fontFamily: "var(--font-roboto-condensed)" }}
               >
                 <EditableCopy

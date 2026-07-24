@@ -202,7 +202,7 @@ export function AccompanyPrinciplesWheel({
     <div className="mt-16 bg-[#fdfbf6] py-10 md:mt-20 md:py-12">
       <div className="mx-auto w-full max-w-7xl px-6 md:px-10 lg:px-14">
         <h2
-          className="text-4xl leading-[0.95] tracking-tight text-black md:text-5xl lg:text-6xl"
+          className="text-3xl leading-[0.98] tracking-tight text-black md:text-5xl lg:text-6xl"
           style={{ fontFamily: "var(--font-roboto-condensed)" }}
         >
           Principios de aprendizaje
