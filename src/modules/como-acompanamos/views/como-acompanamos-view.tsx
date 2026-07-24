@@ -2,21 +2,18 @@ import Image from "next/image";
 
 import { AccompanimentGroupsTabs } from "@/app/(pages)/como-acompanamos/accompaniment-groups-tabs";
 import { ScrollFloatingFerns } from "@/app/(pages)/como-acompanamos/scroll-floating-ferns";
+import { SnapScrollHandoff } from "@/app/(pages)/como-acompanamos/snap-scroll-handoff";
 import { AccompanyPrinciplesWheel } from "@/modules/como-acompanamos/views/accompany-principles-wheel";
 import { IntegralDevelopmentMap } from "@/modules/como-acompanamos/views/integral-development-map";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
 import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
 import {
   comoAcompanamosContentSlotIds,
-  evaluationBlockSlotId,
   getComoAcompanamosContentSlots,
   methodologySlotId,
-  methodologyCardBackgrounds,
   resolveLearningPrinciples,
   resolveAccompanimentGroups,
-  resolveEvaluationBlocks,
   resolveMethodologies,
-  type IllustratedTextBlock,
   type TextBlock,
 } from "@/modules/como-acompanamos/content-slots";
 
@@ -32,6 +29,17 @@ const contentSlotMap = new Map(
 );
 
 const responsiveTextClass = "max-w-full break-words [overflow-wrap:anywhere]";
+
+const methodologySnapBackgrounds = [
+  "color-mix(in srgb, color-mix(in srgb, var(--complement-400) 28%, white) 78%, transparent)",
+  "color-mix(in srgb, color-mix(in srgb, var(--complement-400) 40%, white) 78%, transparent)",
+  "color-mix(in srgb, color-mix(in srgb, var(--complement-400) 55%, white) 78%, transparent)",
+  "color-mix(in srgb, color-mix(in srgb, var(--complement-400) 72%, white) 78%, transparent)",
+  "color-mix(in srgb, var(--complement-400) 78%, transparent)",
+  "color-mix(in srgb, color-mix(in srgb, var(--complement-400) 88%, black) 78%, transparent)",
+  "color-mix(in srgb, color-mix(in srgb, var(--complement-400) 76%, black) 78%, transparent)",
+  "color-mix(in srgb, color-mix(in srgb, var(--complement-400) 62%, black) 78%, transparent)",
+];
 
 function getContentSlot(slotId: string) {
   const slot = contentSlotMap.get(slotId);
@@ -117,7 +125,6 @@ function SectionHeading({
 function ContentCard({
   block,
   index,
-  background,
   className = "",
   textMap,
   previewMode,
@@ -126,7 +133,6 @@ function ContentCard({
 }: {
   block: TextBlock;
   index: number;
-  background?: string;
   className?: string;
   textMap: LandingTextMap;
 } & Pick<
@@ -135,11 +141,11 @@ function ContentCard({
 >) {
   return (
     <article
-      className={`min-w-0 rounded-[2rem] border border-complement-600 bg-white/70 p-6 shadow-sm ${className}`}
-      style={background ? { background } : undefined}
+      className={`w-full min-w-0 rounded-[2.5rem] p-8 md:p-12 lg:p-14 ${className}`}
+      style={{ backgroundColor: methodologySnapBackgrounds[index % methodologySnapBackgrounds.length] }}
     >
       <h3
-        className="mb-3 max-w-full break-words text-[clamp(1.35rem,5vw,1.6rem)] leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
+        className="mb-5 max-w-full break-words text-[clamp(1.7rem,4.4vw,3.25rem)] leading-[0.95] text-black [overflow-wrap:anywhere]"
         style={{ fontFamily: "var(--font-roboto-condensed)" }}
       >
         <EditableCopy
@@ -152,7 +158,7 @@ function ContentCard({
           onSelectContentSlot={onSelectContentSlot}
         />
       </h3>
-      <div className="min-w-0 space-y-3 text-sm leading-relaxed text-black/80 md:text-base">
+      <div className="min-w-0 space-y-5 text-lg leading-relaxed text-black/85 md:text-xl md:leading-9">
         {block.paragraphs?.map((paragraph, paragraphIndex) => (
           <EditableCopy
             key={paragraphIndex}
@@ -169,7 +175,7 @@ function ContentCard({
       {block.cta ? (
         <a
           href={block.cta.href}
-          className="mt-5 inline-flex rounded-full border border-complement-700 px-4 py-2 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]"
+          className="mt-8 inline-flex rounded-full border border-complement-700 px-5 py-2.5 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]"
         >
           <EditableCopy
             slotId={methodologySlotId(index, "cta")}
@@ -180,71 +186,6 @@ function ContentCard({
           />
         </a>
       ) : null}
-    </article>
-  );
-}
-
-function IllustratedContentCard({
-  block,
-  index,
-  textMap,
-  previewMode,
-  selectedContentSlotId,
-  onSelectContentSlot,
-}: {
-  block: IllustratedTextBlock;
-  index: number;
-  textMap: LandingTextMap;
-} & Pick<
-  LandingPreviewBindings,
-  "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
->) {
-  return (
-    <article className="grid min-w-0 overflow-hidden rounded-[2rem] border border-complement-600 bg-white/70 shadow-sm md:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)]">
-      <div className="min-w-0 p-6">
-        <h3
-          className="mb-3 max-w-full break-words text-[clamp(1.35rem,5vw,1.6rem)] leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
-          style={{ fontFamily: "var(--font-roboto-condensed)" }}
-        >
-          {block.title}
-        </h3>
-        <div className="min-w-0 space-y-3 text-sm leading-relaxed text-black/80 md:text-base">
-          {block.paragraphs?.map((paragraph, paragraphIndex) => (
-            <EditableCopy
-              key={paragraphIndex}
-              as="p"
-              slotId={evaluationBlockSlotId(index, `paragraph.${paragraphIndex}`)}
-              textMap={textMap}
-              previewMode={previewMode}
-              selectedContentSlotId={selectedContentSlotId}
-              onSelectContentSlot={onSelectContentSlot}
-            />
-          ))}
-          {block.bullets ? <BulletList items={block.bullets} /> : null}
-        </div>
-        {block.cta ? (
-          <a
-            href={block.cta.href}
-            className="mt-5 inline-flex rounded-full border border-complement-700 px-4 py-2 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]"
-          >
-            <EditableCopy
-              slotId={evaluationBlockSlotId(index, "cta")}
-              textMap={textMap}
-              previewMode={previewMode}
-              selectedContentSlotId={selectedContentSlotId}
-              onSelectContentSlot={onSelectContentSlot}
-            />
-          </a>
-        ) : null}
-      </div>
-      <div className="relative min-h-[13rem] border-t border-complement-600 md:min-h-full md:border-t-0 md:border-l">
-        <Image
-          src={block.imageSrc}
-          alt={block.imageAlt}
-          fill
-          className="object-cover"
-        />
-      </div>
     </article>
   );
 }
@@ -282,7 +223,6 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
   const resolvedLearningPrinciples = resolveLearningPrinciples(textMap);
   const resolvedAccompanimentGroups = resolveAccompanimentGroups(textMap);
   const resolvedMethodologies = resolveMethodologies(textMap);
-  const resolvedEvaluationBlocks = resolveEvaluationBlocks(textMap);
   return (
     <main className="bg-white" style={{ fontFamily: "var(--font-montserrat)" }}>
       <section id="como-acompanamos" className="scroll-mt-28 bg-white">
@@ -400,33 +340,42 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
         id="metodologias-y-experiencias"
         className="scroll-mt-28 bg-white"
       >
-        <div className="mx-auto grid w-full max-w-7xl gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10 lg:px-14 lg:py-14">
-          <div className="lg:order-2">
-            <SectionHeading
-              title={<EditableCopy slotId={comoAcompanamosContentSlotIds.methodologiesTitle} style={{ fontSize: "inherit", lineHeight: "inherit" }} stylePriority="override" {...slotBindingProps} />}
+        <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
+          <SectionHeading
+            title={<EditableCopy slotId={comoAcompanamosContentSlotIds.methodologiesTitle} style={{ fontSize: "inherit", lineHeight: "inherit" }} stylePriority="override" {...slotBindingProps} />}
+          >
+            <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.methodologiesIntro} {...slotBindingProps} />
+          </SectionHeading>
+
+          <div className="relative left-1/2 mt-12 h-dvh w-screen -translate-x-1/2 overflow-hidden bg-white">
+            <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
+              <ScrollFloatingFerns
+                sectionId="metodologias-y-experiencias"
+                scrollContainerId="metodologias-snap-scroll"
+                variant="sides"
+                className="top-0 min-h-dvh rounded-none bg-transparent"
+                canvasClassName="h-dvh min-h-dvh"
+              />
+            </div>
+            <SnapScrollHandoff containerId="metodologias-snap-scroll" />
+            <div
+              id="metodologias-snap-scroll"
+              className="scrollbar-none relative z-10 h-dvh w-screen snap-y snap-mandatory overflow-y-auto overscroll-auto scroll-smooth"
             >
-              <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.methodologiesIntro} {...slotBindingProps} />
-            </SectionHeading>
-            <div className="mt-10 space-y-8 pb-28">
               {resolvedMethodologies.map((methodology, index) => (
-                <div
+                <article
                   key={methodology.title}
-                  className="sticky top-28"
-                  style={{ zIndex: index + 1 }}
+                  className="flex h-dvh min-h-dvh w-screen snap-start snap-always scroll-mt-0 items-center justify-center bg-white px-6 py-20 md:px-10 lg:bg-transparent lg:px-28"
                 >
                   <ContentCard
                     block={methodology}
                     index={index}
-                    background={methodologyCardBackgrounds[index % methodologyCardBackgrounds.length]}
-                    className="h-[20.5rem] overflow-y-auto md:h-[22rem]"
+                    className="mx-auto max-w-5xl shadow-none"
                     {...slotBindingProps}
                   />
-                </div>
+                </article>
               ))}
             </div>
-          </div>
-          <div className="hidden lg:order-1 lg:block">
-            <ScrollFloatingFerns sectionId="metodologias-y-experiencias" />
           </div>
         </div>
       </section>
@@ -440,8 +389,9 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
               </p>
               <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.evaluationParagraphOne} {...slotBindingProps} />
               <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.evaluationParagraphTwo} {...slotBindingProps} />
+              <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.evaluationParagraphThree} {...slotBindingProps} />
               <a
-                href="#evaluacion-detallada"
+                href="/evaluaciones"
                 className="inline-flex rounded-full border border-complement-700 px-4 py-2 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]"
               >
                 <EditableCopy slotId={comoAcompanamosContentSlotIds.evaluationCta} {...slotBindingProps} />
@@ -457,20 +407,6 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
                 className="object-cover"
               />
             </div>
-          </div>
-
-          <div
-            id="evaluacion-detallada"
-            className="mx-auto grid w-full max-w-5xl scroll-mt-28 gap-6 lg:col-span-2"
-          >
-            {resolvedEvaluationBlocks.map((block, index) => (
-              <IllustratedContentCard
-                key={`${block.title}-${index}`}
-                block={block}
-                index={index}
-                {...slotBindingProps}
-              />
-            ))}
           </div>
         </div>
       </section>

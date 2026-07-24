@@ -648,6 +648,15 @@
   background: #6b7280;
 }
 
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 .panel-range-stepper {
   display: inline-flex;
   height: 20px;

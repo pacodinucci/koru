@@ -6,6 +6,10 @@ import { FernShape } from "@/components/fern-shape";
 
 type ScrollFloatingFernsProps = {
   sectionId: string;
+  scrollContainerId?: string;
+  variant?: "default" | "sides";
+  className?: string;
+  canvasClassName?: string;
 };
 
 type FloatingFern = {
@@ -37,6 +41,42 @@ const floatingFerns: FloatingFern[] = [
   { x: 86, y: 78, size: 74, color: "var(--brand-300)", opacity: 0.34, rotate: 72, driftX: -64, driftY: -116, spin: -24, flipX: true },
 ];
 
+const sideFloatingFerns: FloatingFern[] = [
+  { x: 3, y: 5, size: 82, color: "var(--complement-700)", opacity: 0.24, rotate: -18, driftX: 42, driftY: 92, spin: 28 },
+  { x: 14, y: 10, size: 42, color: "var(--brand-600)", opacity: 0.2, rotate: 32, driftX: -30, driftY: 84, spin: -36, flipX: true },
+  { x: 7, y: 19, size: 58, color: "var(--orange-500)", opacity: 0.22, rotate: 8, driftX: 28, driftY: -74, spin: 42 },
+  { x: 18, y: 28, size: 74, color: "var(--complement-600)", opacity: 0.21, rotate: 150, driftX: 34, driftY: -118, spin: -44 },
+  { x: 5, y: 38, size: 38, color: "var(--orange-300)", opacity: 0.28, rotate: -8, driftX: 46, driftY: -84, spin: 48 },
+  { x: 16, y: 48, size: 68, color: "var(--brand-300)", opacity: 0.22, rotate: 72, driftX: -34, driftY: 104, spin: -24, flipX: true },
+  { x: 4, y: 59, size: 50, color: "var(--complement-800)", opacity: 0.2, rotate: -96, driftX: 36, driftY: -68, spin: -18 },
+  { x: 19, y: 69, size: 86, color: "var(--complement-700)", opacity: 0.2, rotate: 150, driftX: 30, driftY: -130, spin: -44 },
+  { x: 8, y: 79, size: 44, color: "var(--orange-300)", opacity: 0.26, rotate: -8, driftX: 42, driftY: -84, spin: 48 },
+  { x: 17, y: 90, size: 62, color: "var(--brand-700)", opacity: 0.18, rotate: 54, driftX: 32, driftY: -70, spin: 30, flipY: true },
+  { x: 30, y: 14, size: 34, color: "var(--complement-900)", opacity: 0.14, rotate: 88, driftX: 38, driftY: -56, spin: -28, flipY: true },
+  { x: 28, y: 73, size: 36, color: "var(--brand-500)", opacity: 0.14, rotate: 120, driftX: -20, driftY: -82, spin: -52 },
+  { x: 91, y: 6, size: 54, color: "var(--orange-500)", opacity: 0.22, rotate: 8, driftX: -30, driftY: 96, spin: 42 },
+  { x: 80, y: 15, size: 78, color: "var(--complement-600)", opacity: 0.22, rotate: -42, driftX: -46, driftY: 76, spin: 18 },
+  { x: 94, y: 25, size: 40, color: "var(--brand-500)", opacity: 0.2, rotate: 120, driftX: -22, driftY: -88, spin: -52 },
+  { x: 82, y: 35, size: 68, color: "var(--brand-700)", opacity: 0.18, rotate: 54, driftX: 34, driftY: -70, spin: 30, flipY: true },
+  { x: 93, y: 47, size: 76, color: "var(--brand-300)", opacity: 0.26, rotate: 72, driftX: -58, driftY: -108, spin: -24, flipX: true },
+  { x: 79, y: 58, size: 46, color: "var(--complement-800)", opacity: 0.2, rotate: -96, driftX: -28, driftY: 76, spin: -18 },
+  { x: 92, y: 68, size: 88, color: "var(--complement-700)", opacity: 0.2, rotate: 150, driftX: -34, driftY: -130, spin: -44 },
+  { x: 81, y: 79, size: 48, color: "var(--orange-300)", opacity: 0.28, rotate: -8, driftX: -46, driftY: -88, spin: 48 },
+  { x: 94, y: 90, size: 72, color: "var(--brand-300)", opacity: 0.24, rotate: 72, driftX: -64, driftY: -116, spin: -24, flipX: true },
+  { x: 70, y: 22, size: 34, color: "var(--complement-900)", opacity: 0.14, rotate: 88, driftX: 30, driftY: -60, spin: -28, flipY: true },
+  { x: 72, y: 72, size: 38, color: "var(--brand-500)", opacity: 0.14, rotate: 120, driftX: -22, driftY: -92, spin: -52 },
+];
+
+function getElementScrollProgress(element: HTMLElement) {
+  const maxScroll = element.scrollHeight - element.clientHeight;
+
+  if (maxScroll <= 0) {
+    return 0;
+  }
+
+  return Math.min(1, Math.max(0, element.scrollTop / maxScroll));
+}
+
 function getScrollProgress(section: HTMLElement) {
   const rect = section.getBoundingClientRect();
   const viewportHeight = window.innerHeight || 1;
@@ -50,12 +90,23 @@ function getScrollProgress(section: HTMLElement) {
   return Math.min(1, Math.max(0, travelled / total));
 }
 
-export function ScrollFloatingFerns({ sectionId }: ScrollFloatingFernsProps) {
+export function ScrollFloatingFerns({
+  sectionId,
+  scrollContainerId,
+  variant = "default",
+  className = "",
+  canvasClassName = "",
+}: ScrollFloatingFernsProps) {
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
   const progressRef = useRef(0);
+  const ferns = variant === "sides" ? sideFloatingFerns : floatingFerns;
 
   useEffect(() => {
     const section = document.getElementById(sectionId);
+    const scrollContainer = scrollContainerId
+      ? document.getElementById(scrollContainerId)
+      : null;
+
     if (!section) {
       return;
     }
@@ -66,10 +117,12 @@ export function ScrollFloatingFerns({ sectionId }: ScrollFloatingFernsProps) {
     function animate(now: number, activeSection: HTMLElement) {
       startTime ??= now;
       const time = (now - startTime) / 1000;
-      progressRef.current = getScrollProgress(activeSection);
+      progressRef.current = scrollContainer
+        ? getElementScrollProgress(scrollContainer)
+        : getScrollProgress(activeSection);
       const scrollEase = progressRef.current * progressRef.current * (3 - 2 * progressRef.current);
 
-      floatingFerns.forEach((fern, index) => {
+      ferns.forEach((fern, index) => {
         const node = itemRefs.current[index];
         if (!node) {
           return;
@@ -77,9 +130,9 @@ export function ScrollFloatingFerns({ sectionId }: ScrollFloatingFernsProps) {
 
         const wave = Math.sin(time * 0.55 + index * 0.9);
         const counterWave = Math.cos(time * 0.42 + index * 0.7);
-        const x = fern.driftX * scrollEase * 0.55 + wave * 10;
-        const y = fern.driftY * scrollEase * 0.55 + counterWave * 12;
-        const rotation = fern.rotate + progressRef.current * fern.spin * 0.45 + wave * 7;
+        const x = fern.driftX * scrollEase * 0.85 + wave * 12;
+        const y = fern.driftY * scrollEase * 0.85 + counterWave * 14;
+        const rotation = fern.rotate + progressRef.current * fern.spin * 0.7 + wave * 8;
 
         node.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rotation}deg)`;
       });
@@ -98,12 +151,16 @@ export function ScrollFloatingFerns({ sectionId }: ScrollFloatingFernsProps) {
         window.cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [sectionId]);
+  }, [sectionId, scrollContainerId, ferns]);
 
   return (
-    <div className="sticky top-28 min-h-[calc(100dvh-8rem)] overflow-hidden rounded-[2rem] bg-white">
-      <div className="relative h-[calc(100dvh-8rem)] min-h-[36rem] w-full">
-        {floatingFerns.map((fern, index) => (
+    <div
+      className={`sticky top-28 min-h-[calc(100dvh-8rem)] overflow-hidden rounded-[2rem] bg-white ${className}`}
+    >
+      <div
+        className={`relative h-[calc(100dvh-8rem)] min-h-[36rem] w-full ${canvasClassName}`}
+      >
+        {ferns.map((fern, index) => (
           <div
             key={`${fern.x}-${fern.y}-${index}`}
             ref={(node) => {
