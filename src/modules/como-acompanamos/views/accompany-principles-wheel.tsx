@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type CSSProperties, type ElementType } from "react";
+import { useEffect, useState, type CSSProperties, type ElementType } from "react";
 
 import {
+  comoAcompanamosContentSlotIds,
   getComoAcompanamosContentSlots,
   learningPrincipleSlotId,
   type LearningPrinciple,
@@ -160,8 +161,42 @@ export function AccompanyPrinciplesWheel({
   onSelectContentSlot,
 }: AccompanyPrinciplesWheelProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [mobileModalIndex, setMobileModalIndex] = useState<number | null>(null);
   const activeArrow =
     activeIndex === null ? null : arrowPaths[activeIndex % arrowPaths.length];
+  const modalPrincipleStyle =
+    mobileModalIndex === null
+      ? null
+      : principleStyles[mobileModalIndex % principleStyles.length];
+
+  function closeMobileModal() {
+    setMobileModalIndex(null);
+    setActiveIndex(null);
+  }
+
+  useEffect(() => {
+    if (mobileModalIndex === null) return;
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        closeMobileModal();
+      }
+    }
+
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [mobileModalIndex]);
+
+  function handlePrincipleClick(index: number) {
+    if (window.matchMedia("(max-width: 1023px)").matches) {
+      setActiveIndex(index);
+      setMobileModalIndex(index);
+      return;
+    }
+
+    setActiveIndex(activeIndex === index ? null : index);
+  }
 
   return (
     <div className="mt-16 bg-[#fdfbf6] py-10 md:mt-20 md:py-12">
@@ -266,7 +301,7 @@ export function AccompanyPrinciplesWheel({
                 <button
                   type="button"
                   className={`relative flex min-h-[7.5rem] w-full flex-col items-center justify-center overflow-hidden border px-6 py-4 text-center shadow-sm outline-none transition duration-200 hover:scale-[1.03] hover:shadow-md focus-visible:ring-2 focus-visible:ring-[var(--complement-800)] md:w-[var(--principle-width)] ${style.color} ${style.border} ${style.shape}`}
-                  onClick={() => setActiveIndex(isActive ? null : index)}
+                  onClick={() => handlePrincipleClick(index)}
                   aria-expanded={isActive}
                 >
                   <span
@@ -290,7 +325,7 @@ export function AccompanyPrinciplesWheel({
         </div>
 
         <aside
-          className="relative z-10 min-h-[10rem] lg:pl-4"
+          className="relative z-10 hidden min-h-[10rem] lg:block lg:pl-4"
           aria-live="polite"
         >
           {activeIndex !== null ? (
@@ -314,6 +349,78 @@ export function AccompanyPrinciplesWheel({
             </div>
           ) : null}
         </aside>
+      </div>
+
+      {mobileModalIndex !== null && modalPrincipleStyle ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-3 py-8 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="learning-principle-modal-title"
+          onClick={closeMobileModal}
+        >
+          <div
+            className={`relative min-h-[27rem] w-full max-w-[25rem] overflow-visible border px-10 py-16 shadow-xl rounded-[45%_55%_47%_53%/34%_34%_66%_66%] ${modalPrincipleStyle.color} ${modalPrincipleStyle.border}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span
+              className="pointer-events-none absolute inset-[0.8rem] z-0 rounded-[42%_58%_50%_50%/38%_37%_63%_62%] border border-white/75"
+              aria-hidden="true"
+            />
+            <div className="relative z-10 flex min-h-[20rem] flex-col items-center justify-center space-y-5 text-center">
+              <h3
+                id="learning-principle-modal-title"
+                className="text-3xl leading-none text-[var(--complement-900)]"
+                style={{ fontFamily: "var(--font-roboto-condensed)" }}
+              >
+                <EditablePrincipleCopy
+                  slotId={learningPrincipleSlotId(mobileModalIndex, "title")}
+                  textMap={textMap}
+                  previewMode={previewMode}
+                  selectedContentSlotId={selectedContentSlotId}
+                  onSelectContentSlot={onSelectContentSlot}
+                  className="block max-w-full break-words [overflow-wrap:anywhere]"
+                  stylePriority="override"
+                />
+              </h3>
+              <EditablePrincipleCopy
+                as="p"
+                slotId={learningPrincipleSlotId(mobileModalIndex, "description")}
+                textMap={textMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
+                className="block max-w-full break-words text-[var(--complement-800)] [overflow-wrap:anywhere]"
+                style={{
+                  fontFamily: "var(--font-indie-flower)",
+                  color: "var(--complement-800)",
+                  fontSize: "clamp(1.85rem, 6.8vw, 2.5rem)",
+                  lineHeight: "1.08",
+                }}
+                stylePriority="override"
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+      <div className="mx-auto mt-8 w-full max-w-5xl px-6 pb-2 md:mt-10 md:px-10 lg:px-14">
+        <div className="relative overflow-hidden border border-[color-mix(in_srgb,var(--orange-500)_30%,white)] bg-[color-mix(in_srgb,var(--orange-500)_14%,white)] px-7 py-7 text-center shadow-sm rounded-[6rem_4.5rem_5.5rem_4rem/3.25rem_4.5rem_3.5rem_4.25rem] md:px-12 md:py-9">
+          <span
+            className="pointer-events-none absolute inset-[0.55rem] border border-white/70 rounded-[4.75rem_5.75rem_4.25rem_5.25rem/3.75rem_3rem_4.5rem_3.25rem]"
+            aria-hidden="true"
+          />
+          <EditablePrincipleCopy
+            as="p"
+            slotId={comoAcompanamosContentSlotIds.learningPrinciplesSummary}
+            textMap={textMap}
+            previewMode={previewMode}
+            selectedContentSlotId={selectedContentSlotId}
+            onSelectContentSlot={onSelectContentSlot}
+            className="relative z-10 block max-w-full break-words text-lg font-medium leading-relaxed text-[var(--complement-900)] [overflow-wrap:anywhere] md:text-xl"
+            style={{ fontFamily: "var(--font-montserrat)" }}
+            stylePriority="override"
+          />
+        </div>
       </div>
     </div>
   );

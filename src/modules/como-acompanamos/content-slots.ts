@@ -63,6 +63,9 @@ export const learningPrinciples: LearningPrinciple[] = [
   },
 ];
 
+export const learningPrinciplesSummary =
+  "El aprendizaje florece cuando existe asombro, propósito y conexión. En Koru cultivamos experiencias que invitan a explorar, preguntar, colaborar y construir significado. Nuestros principios de aprendizaje son la brújula que guía nuestra comunidad, ayudando a cada persona a convertirse en protagonista de su propio camino y a descubrir su lugar dentro de una red viva de relaciones, conocimientos y posibilidades.";
+
 
 export const accompanyCopy = {
   eyebrow: "COMO ACOMPAÑAMOS",
@@ -391,6 +394,16 @@ function textSlot({
 export const comoAcompanamosContentSlotIds = {
   heroEyebrow: "content.como-acompanamos.hero.eyebrow",
   heroIntro: "content.como-acompanamos.hero.intro",
+  learningPrinciplesSummary:
+    "content.como-acompanamos.learning-principles.summary",
+  connectedLearningTitle:
+    "content.como-acompanamos.connected-learning.title",
+  connectedLearningText:
+    "content.como-acompanamos.connected-learning.text",
+  integralDevelopmentTitle:
+    "content.como-acompanamos.integral-development.title",
+  integralDevelopmentText:
+    "content.como-acompanamos.integral-development.text",
   groupsTitle: "content.como-acompanamos.groups.title",
   groupsIntro: "content.como-acompanamos.groups.intro",
   methodologiesTitle: "content.como-acompanamos.methodologies.title",
@@ -473,6 +486,40 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
       defaultValue: principle.description,
     }),
   ]),
+  textSlot({
+    id: comoAcompanamosContentSlotIds.learningPrinciplesSummary,
+    label: "Principios de aprendizaje / Texto de cierre",
+    defaultValue: learningPrinciplesSummary,
+    defaultSize: 20,
+  }),
+  textSlot({
+    id: comoAcompanamosContentSlotIds.connectedLearningTitle,
+    label: "Acompañamiento conectado / Título",
+    defaultValue: "Acompañamiento conectado a su ritmo de aprendizaje",
+    defaultSize: 24,
+    multiline: false,
+    styleControls: ["font", "size", "color", "align", "weight"],
+  }),
+  textSlot({
+    id: comoAcompanamosContentSlotIds.connectedLearningText,
+    label: "Acompañamiento conectado / Texto",
+    defaultValue:
+      "Diseñamos experiencias de aprendizaje acordes a cada etapa del desarrollo. Observamos de cerca a cada niña y niño para brindar el acompañamiento y las estrategias que favorezcan su crecimiento integral, respetando su singularidad.",
+  }),
+  textSlot({
+    id: comoAcompanamosContentSlotIds.integralDevelopmentTitle,
+    label: "Desarrollo integral / Título",
+    defaultValue: "Buscamos un desarrollo integral.",
+    defaultSize: 60,
+    multiline: false,
+    styleControls: ["font", "size", "color", "align", "weight"],
+  }),
+  textSlot({
+    id: comoAcompanamosContentSlotIds.integralDevelopmentText,
+    label: "Desarrollo integral / Texto",
+    defaultValue:
+      "En Koru promovemos el desarrollo integral de cada niña y niño, cultivando sus capacidades físicas, emocionales, sociales, cognitivas, intuitivas y creativas. A través de experiencias significativas y prácticas respetuosas, favorecemos un ambiente de confianza, seguridad y pertenencia que les permite crecer de manera plena, fortaleciendo su bienestar y su relación consigo mismos, con los demás y con la naturaleza.",
+  }),
   ...accompanyPillars.flatMap((pillar, index) => [
     textSlot({
       id: pillarSlotId(index, "title"),

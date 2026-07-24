@@ -30,6 +30,8 @@ const contentSlotMap = new Map(
   getComoAcompanamosContentSlots().map((slot) => [slot.id, slot]),
 );
 
+const responsiveTextClass = "max-w-full break-words [overflow-wrap:anywhere]";
+
 function getContentSlot(slotId: string) {
   const slot = contentSlotMap.get(slotId);
 
@@ -71,7 +73,7 @@ function EditableCopy({
       previewMode={previewMode}
       selected={selectedContentSlotId === slotId}
       onSelect={onSelectContentSlot}
-      className={className}
+      className={`${responsiveTextClass} ${className ?? ""}`}
       style={style}
       stylePriority={stylePriority}
     />
@@ -88,7 +90,7 @@ function SectionHeading({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="max-w-4xl space-y-5">
+    <div className="max-w-4xl min-w-0 space-y-5">
       {eyebrow ? (
         <p className="text-sm font-medium tracking-[0.18em] text-[#6d7e96]">
           {eyebrow}
@@ -96,7 +98,7 @@ function SectionHeading({
       ) : null}
       {title ? (
         <h2
-          className="text-4xl leading-[0.95] tracking-tight text-black md:text-5xl lg:text-6xl"
+          className="max-w-full break-words text-4xl leading-[0.95] tracking-tight text-black [overflow-wrap:anywhere] md:text-5xl lg:text-6xl"
           style={{ fontFamily: "var(--font-roboto-condensed)" }}
         >
           {title}
@@ -132,11 +134,11 @@ function ContentCard({
 >) {
   return (
     <article
-      className={`rounded-[2rem] border border-complement-600 bg-white/70 p-6 shadow-sm ${className}`}
+      className={`min-w-0 rounded-[2rem] border border-complement-600 bg-white/70 p-6 shadow-sm ${className}`}
       style={background ? { background } : undefined}
     >
       <h3
-        className="mb-3 text-2xl leading-none text-black"
+        className="mb-3 max-w-full break-words text-4xl leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
         style={{ fontFamily: "var(--font-roboto-condensed)" }}
       >
         <EditableCopy
@@ -147,7 +149,7 @@ function ContentCard({
           onSelectContentSlot={onSelectContentSlot}
         />
       </h3>
-      <div className="space-y-3 text-sm leading-relaxed text-black/80 md:text-base">
+      <div className="min-w-0 space-y-3 text-sm leading-relaxed text-black/80 md:text-base">
         {block.paragraphs?.map((paragraph, paragraphIndex) => (
           <EditableCopy
             key={paragraphIndex}
@@ -195,15 +197,15 @@ function IllustratedContentCard({
   "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
 >) {
   return (
-    <article className="grid overflow-hidden rounded-[2rem] border border-complement-600 bg-white/70 shadow-sm md:grid-cols-[1.35fr_0.85fr]">
-      <div className="p-6">
+    <article className="grid min-w-0 overflow-hidden rounded-[2rem] border border-complement-600 bg-white/70 shadow-sm md:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)]">
+      <div className="min-w-0 p-6">
         <h3
-          className="mb-3 text-2xl leading-none text-black"
+          className="mb-3 max-w-full break-words text-4xl leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
           style={{ fontFamily: "var(--font-roboto-condensed)" }}
         >
           {block.title}
         </h3>
-        <div className="space-y-3 text-sm leading-relaxed text-black/80 md:text-base">
+        <div className="min-w-0 space-y-3 text-sm leading-relaxed text-black/80 md:text-base">
           {block.paragraphs?.map((paragraph, paragraphIndex) => (
             <EditableCopy
               key={paragraphIndex}
@@ -246,11 +248,11 @@ function IllustratedContentCard({
 
 function BulletList({ items }: { items: string[] }) {
   return (
-    <ul className="space-y-2 pl-5 text-black/80">
+    <ul className="min-w-0 space-y-2 pl-5 text-black/80">
       {items.map((item) => (
         <li
           key={item}
-          className="list-disc marker:text-[var(--complement-800)]"
+          className="list-disc break-words [overflow-wrap:anywhere] marker:text-[var(--complement-800)]"
         >
           {item}
         </li>
@@ -282,7 +284,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
     <main className="bg-white" style={{ fontFamily: "var(--font-montserrat)" }}>
       <section id="como-acompanamos" className="scroll-mt-28 bg-white">
         <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
-          <div className="grid items-start gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
+          <div className="grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10">
             <SectionHeading
             eyebrow={
               <EditableCopy
@@ -315,6 +317,59 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
           principles={resolvedLearningPrinciples}
           {...slotBindingProps}
         />
+        <section
+          id="acompanamiento-conectado"
+          className="bg-[#f3f2ef]"
+          aria-labelledby="acompanamiento-conectado-title"
+        >
+          <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 lg:px-14 lg:py-20">
+            <div className="max-w-4xl min-w-0">
+              <h2
+                id="acompanamiento-conectado-title"
+                className="max-w-full break-words text-left text-4xl leading-[1.12] text-black [overflow-wrap:anywhere] md:text-5xl"
+                style={{ fontFamily: "var(--font-roboto-condensed)" }}
+              >
+                <EditableCopy
+                  slotId={comoAcompanamosContentSlotIds.connectedLearningTitle}
+                  {...slotBindingProps}
+                />
+              </h2>
+              <EditableCopy
+                as="p"
+                slotId={comoAcompanamosContentSlotIds.connectedLearningText}
+                className="mt-6 max-w-4xl text-justify text-lg leading-relaxed text-black/85 md:text-xl"
+                {...slotBindingProps}
+              />
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="desarrollo-integral"
+          className="bg-white"
+          aria-labelledby="desarrollo-integral-title"
+        >
+          <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 lg:px-14 lg:py-20">
+            <div className="max-w-4xl min-w-0">
+              <h2
+                id="desarrollo-integral-title"
+                className="max-w-full break-words text-left text-4xl leading-[1.12] text-black [overflow-wrap:anywhere] md:text-5xl"
+                style={{ fontFamily: "var(--font-roboto-condensed)" }}
+              >
+                <EditableCopy
+                  slotId={comoAcompanamosContentSlotIds.integralDevelopmentTitle}
+                  {...slotBindingProps}
+                />
+              </h2>
+              <EditableCopy
+                as="p"
+                slotId={comoAcompanamosContentSlotIds.integralDevelopmentText}
+                className="mt-6 max-w-4xl text-justify text-lg leading-relaxed text-black/85 md:text-xl"
+                {...slotBindingProps}
+              />
+            </div>
+          </div>
+        </section>
 
         {/* <FloatingSkills skills={cultivatedSkills} /> */}
       </section>
@@ -337,7 +392,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
         id="metodologias-y-experiencias"
         className="scroll-mt-28 bg-white"
       >
-        <div className="mx-auto grid w-full max-w-7xl gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10 lg:px-14 lg:py-14">
+        <div className="mx-auto grid w-full max-w-7xl gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10 lg:px-14 lg:py-14">
           <div className="lg:order-2">
             <SectionHeading
               title={<EditableCopy slotId={comoAcompanamosContentSlotIds.methodologiesTitle} {...slotBindingProps} />}
@@ -369,10 +424,10 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
       </section>
 
       <section id="evaluacion" className="scroll-mt-28 bg-[#f7f6f1]">
-        <div className="mx-auto grid w-full max-w-7xl items-start gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-14 lg:py-14">
+        <div className="mx-auto grid w-full max-w-7xl min-w-0 items-start gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10 lg:px-14 lg:py-14">
           <div>
             <SectionHeading title={<EditableCopy slotId={comoAcompanamosContentSlotIds.evaluationTitle} {...slotBindingProps} />}>
-              <p className="text-2xl font-semibold text-black">
+              <p className="max-w-full break-words text-2xl font-semibold text-black [overflow-wrap:anywhere]">
                 <EditableCopy slotId={comoAcompanamosContentSlotIds.evaluationLead} {...slotBindingProps} />
               </p>
               <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.evaluationParagraphOne} {...slotBindingProps} />
