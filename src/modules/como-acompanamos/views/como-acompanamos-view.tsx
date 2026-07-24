@@ -98,7 +98,7 @@ function SectionHeading({
       ) : null}
       {title ? (
         <h2
-          className="max-w-full break-words text-3xl leading-[0.98] tracking-tight text-black [overflow-wrap:anywhere] md:text-5xl lg:text-6xl"
+          className="max-w-full break-words text-[clamp(1.75rem,7vw,2rem)] leading-[1.02] tracking-tight text-black [overflow-wrap:anywhere] md:text-5xl lg:text-6xl"
           style={{ fontFamily: "var(--font-roboto-condensed)" }}
         >
           {title}
@@ -138,11 +138,13 @@ function ContentCard({
       style={background ? { background } : undefined}
     >
       <h3
-        className="mb-3 max-w-full break-words text-3xl leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
+        className="mb-3 max-w-full break-words text-[clamp(1.35rem,5vw,1.6rem)] leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
         style={{ fontFamily: "var(--font-roboto-condensed)" }}
       >
         <EditableCopy
           slotId={methodologySlotId(index, "title")}
+          style={{ fontSize: "inherit", lineHeight: "inherit" }}
+          stylePriority="override"
           textMap={textMap}
           previewMode={previewMode}
           selectedContentSlotId={selectedContentSlotId}
@@ -200,7 +202,7 @@ function IllustratedContentCard({
     <article className="grid min-w-0 overflow-hidden rounded-[2rem] border border-complement-600 bg-white/70 shadow-sm md:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)]">
       <div className="min-w-0 p-6">
         <h3
-          className="mb-3 max-w-full break-words text-3xl leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
+          className="mb-3 max-w-full break-words text-[clamp(1.35rem,5vw,1.6rem)] leading-none text-black [overflow-wrap:anywhere] md:text-2xl"
           style={{ fontFamily: "var(--font-roboto-condensed)" }}
         >
           {block.title}
@@ -326,11 +328,13 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
             <div className="max-w-4xl min-w-0">
               <h2
                 id="acompanamiento-conectado-title"
-                className="max-w-full break-words text-left text-3xl leading-[1.08] text-black [overflow-wrap:anywhere] md:text-5xl"
+                className="max-w-full break-words text-left text-[clamp(1.75rem,7vw,2rem)] leading-[1.08] text-black [overflow-wrap:anywhere] md:text-5xl"
                 style={{ fontFamily: "var(--font-roboto-condensed)" }}
               >
                 <EditableCopy
                   slotId={comoAcompanamosContentSlotIds.connectedLearningTitle}
+                  style={{ fontSize: "inherit", lineHeight: "inherit" }}
+                  stylePriority="override"
                   {...slotBindingProps}
                 />
               </h2>
@@ -353,11 +357,13 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
             <div className="max-w-4xl min-w-0">
               <h2
                 id="desarrollo-integral-title"
-                className="max-w-full break-words text-left text-3xl leading-[1.08] text-black [overflow-wrap:anywhere] md:text-5xl"
+                className="max-w-full break-words text-left text-[clamp(1.75rem,7vw,2rem)] leading-[1.08] text-black [overflow-wrap:anywhere] md:text-5xl"
                 style={{ fontFamily: "var(--font-roboto-condensed)" }}
               >
                 <EditableCopy
                   slotId={comoAcompanamosContentSlotIds.integralDevelopmentTitle}
+                  style={{ fontSize: "inherit", lineHeight: "inherit" }}
+                  stylePriority="override"
                   {...slotBindingProps}
                 />
               </h2>
@@ -380,7 +386,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
       >
         <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
           <SectionHeading
-            title={<EditableCopy slotId={comoAcompanamosContentSlotIds.groupsTitle} {...slotBindingProps} />}
+            title={<EditableCopy slotId={comoAcompanamosContentSlotIds.groupsTitle} style={{ fontSize: "inherit", lineHeight: "inherit" }} stylePriority="override" {...slotBindingProps} />}
           >
             <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.groupsIntro} {...slotBindingProps} />
           </SectionHeading>
@@ -395,7 +401,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
         <div className="mx-auto grid w-full max-w-7xl gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10 lg:px-14 lg:py-14">
           <div className="lg:order-2">
             <SectionHeading
-              title={<EditableCopy slotId={comoAcompanamosContentSlotIds.methodologiesTitle} {...slotBindingProps} />}
+              title={<EditableCopy slotId={comoAcompanamosContentSlotIds.methodologiesTitle} style={{ fontSize: "inherit", lineHeight: "inherit" }} stylePriority="override" {...slotBindingProps} />}
             >
               <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.methodologiesIntro} {...slotBindingProps} />
             </SectionHeading>
@@ -426,7 +432,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
       <section id="evaluacion" className="scroll-mt-28 bg-[#f7f6f1]">
         <div className="mx-auto grid w-full max-w-7xl min-w-0 items-start gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10 lg:px-14 lg:py-14">
           <div>
-            <SectionHeading title={<EditableCopy slotId={comoAcompanamosContentSlotIds.evaluationTitle} {...slotBindingProps} />}>
+            <SectionHeading title={<EditableCopy slotId={comoAcompanamosContentSlotIds.evaluationTitle} style={{ fontSize: "inherit", lineHeight: "inherit" }} stylePriority="override" {...slotBindingProps} />}>
               <p className="max-w-full break-words text-2xl font-semibold text-black [overflow-wrap:anywhere]">
                 <EditableCopy slotId={comoAcompanamosContentSlotIds.evaluationLead} {...slotBindingProps} />
               </p>

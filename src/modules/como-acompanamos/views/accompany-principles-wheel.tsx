@@ -202,7 +202,7 @@ export function AccompanyPrinciplesWheel({
     <div className="mt-16 bg-[#fdfbf6] py-10 md:mt-20 md:py-12">
       <div className="mx-auto w-full max-w-7xl px-6 md:px-10 lg:px-14">
         <h2
-          className="text-3xl leading-[0.98] tracking-tight text-black md:text-5xl lg:text-6xl"
+          className="text-[clamp(1.75rem,7vw,2rem)] leading-[1.02] tracking-tight text-black md:text-5xl lg:text-6xl"
           style={{ fontFamily: "var(--font-roboto-condensed)" }}
         >
           Principios de aprendizaje
@@ -370,7 +370,7 @@ export function AccompanyPrinciplesWheel({
             <div className="relative z-10 flex min-h-[20rem] flex-col items-center justify-center space-y-5 text-center">
               <h3
                 id="learning-principle-modal-title"
-                className="text-3xl leading-none text-[var(--complement-900)]"
+                className="text-[clamp(1.35rem,5vw,1.6rem)] leading-none text-[var(--complement-900)]"
                 style={{ fontFamily: "var(--font-roboto-condensed)" }}
               >
                 <EditablePrincipleCopy
