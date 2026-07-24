@@ -4,6 +4,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
+import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
+import { getComoAcompanamosContentSlots, groupSlotId } from "@/modules/como-acompanamos/content-slots";
 
 type AccompanimentGroup = {
   title: string;
@@ -19,16 +22,92 @@ type AccompanimentGroup = {
 
 type AccompanimentGroupsTabsProps = {
   groups: AccompanimentGroup[];
-};
+  textMap?: LandingTextMap;
+} & Pick<
+  LandingPreviewBindings,
+  "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
+>;
 
-function BulletList({ items }: { items: string[] }) {
+const contentSlotMap = new Map(
+  getComoAcompanamosContentSlots().map((slot) => [slot.id, slot]),
+);
+
+function getContentSlot(slotId: string) {
+  const slot = contentSlotMap.get(slotId);
+
+  if (!slot) {
+    throw new Error(`Unknown Cómo acompañamos group content slot: ${slotId}`);
+  }
+
+  return slot;
+}
+
+function EditableGroupCopy({
+  slotId,
+  as,
+  className,
+  textMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
+}: {
+  slotId: string;
+  as?: React.ElementType;
+  className?: string;
+  textMap: LandingTextMap;
+} & Pick<
+  LandingPreviewBindings,
+  "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
+>) {
+  return (
+    <EditableContentSlot
+      as={as}
+      slot={getContentSlot(slotId)}
+      textMap={textMap}
+      previewMode={previewMode}
+      selected={selectedContentSlotId === slotId}
+      onSelect={onSelectContentSlot}
+      className={className}
+    />
+  );
+}
+
+function BulletList({
+  items,
+  slotIdForIndex,
+  textMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
+}: {
+  items: string[];
+  slotIdForIndex?: (index: number) => string;
+  textMap?: LandingTextMap;
+} & Pick<
+  LandingPreviewBindings,
+  "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
+>) {
   return (
     <ul className="space-y-2 pl-5 text-black/80">
-      {items.map((item) => (
-        <li key={item} className="list-disc marker:text-[var(--complement-800)]">
-          {item}
-        </li>
-      ))}
+      {items.map((item, index) => {
+        const slotId = slotIdForIndex?.(index);
+
+        return (
+          <li key={`${item}-${index}`} className="list-disc marker:text-[var(--complement-800)]">
+            {slotId && textMap ? (
+              <EditableGroupCopy
+                slotId={slotId}
+                textMap={textMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
+              />
+            ) : (
+              item
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -48,7 +127,13 @@ function groupSlug(title: string) {
     .replace(/^-|-$/g, "");
 }
 
-export function AccompanimentGroupsTabs({ groups }: AccompanimentGroupsTabsProps) {
+export function AccompanimentGroupsTabs({
+  groups,
+  textMap = {},
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
+}: AccompanimentGroupsTabsProps) {
   const slugsByTitle = useMemo(
     () => new Map(groups.map((group) => [groupSlug(group.title), group.title])),
     [groups],
@@ -72,6 +157,13 @@ export function AccompanimentGroupsTabs({ groups }: AccompanimentGroupsTabsProps
     return () => window.removeEventListener("hashchange", syncFromHash);
   }, [slugsByTitle]);
 
+  const slotBindingProps = {
+    textMap,
+    previewMode,
+    selectedContentSlotId,
+    onSelectContentSlot,
+  };
+
   return (
     <Tabs
       value={activeGroup}
@@ -90,10 +182,16 @@ export function AccompanimentGroupsTabs({ groups }: AccompanimentGroupsTabsProps
             className="relative h-full w-full flex-col items-start justify-center rounded-none border-0 bg-transparent px-3 py-4 text-left font-normal whitespace-normal text-black/85 data-[active]:bg-transparent data-[active]:!text-[var(--complement-800)] data-[selected]:!text-[var(--complement-800)] aria-selected:!text-[var(--complement-800)]"
           >
             <span className="block text-[1.45rem] leading-[0.95]" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
-              {group.title}
+              <EditableGroupCopy
+                slotId={groupSlotId(index, "title")}
+                {...slotBindingProps}
+              />
             </span>
             <span className="mt-2 block text-[1.3rem] leading-none" style={{ fontFamily: "var(--font-indie-flower)" }}>
-              {group.ageRange}
+              <EditableGroupCopy
+                slotId={groupSlotId(index, "ageRange")}
+                {...slotBindingProps}
+              />
             </span>
             {index < groups.length - 1 ? (
               <span
@@ -109,7 +207,7 @@ export function AccompanimentGroupsTabs({ groups }: AccompanimentGroupsTabsProps
         ))}
       </TabsList>
 
-      {groups.map((group) => (
+      {groups.map((group, index) => (
         <TabsContent
           id={groupSlug(group.title)}
           key={group.title}
@@ -119,17 +217,54 @@ export function AccompanimentGroupsTabs({ groups }: AccompanimentGroupsTabsProps
           <div className="grid gap-8 p-4 md:p-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
             <div>
               <h3 className="mb-2 text-3xl leading-none text-black md:text-4xl" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
-                {group.title}
+                <EditableGroupCopy
+                  slotId={groupSlotId(index, "title")}
+                  {...slotBindingProps}
+                />
               </h3>
               <p className="mb-5 text-3xl leading-none text-black/75" style={{ fontFamily: "var(--font-indie-flower)" }}>
-                {group.ageRange}
+                <EditableGroupCopy
+                  slotId={groupSlotId(index, "ageRange")}
+                  {...slotBindingProps}
+                />
               </p>
               <div className="space-y-4 text-base leading-relaxed text-black/85 md:text-lg">
-                {group.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-                {group.bullets ? <BulletList items={group.bullets} /> : null}
-                {group.closing ? <p>{group.closing}</p> : null}
-                {group.rhythmIntro ? <p>{group.rhythmIntro}</p> : null}
-                {group.rhythmBullets ? <BulletList items={group.rhythmBullets} /> : null}
+                {group.paragraphs.map((paragraph, paragraphIndex) => (
+                  <EditableGroupCopy
+                    key={`${paragraph}-${paragraphIndex}`}
+                    as="p"
+                    slotId={groupSlotId(index, `paragraph.${paragraphIndex}`)}
+                    {...slotBindingProps}
+                  />
+                ))}
+                {group.bullets ? (
+                  <BulletList
+                    items={group.bullets}
+                    slotIdForIndex={(bulletIndex) => groupSlotId(index, `bullet.${bulletIndex}`)}
+                    {...slotBindingProps}
+                  />
+                ) : null}
+                {group.closing ? (
+                  <EditableGroupCopy
+                    as="p"
+                    slotId={groupSlotId(index, "closing")}
+                    {...slotBindingProps}
+                  />
+                ) : null}
+                {group.rhythmIntro ? (
+                  <EditableGroupCopy
+                    as="p"
+                    slotId={groupSlotId(index, "rhythmIntro")}
+                    {...slotBindingProps}
+                  />
+                ) : null}
+                {group.rhythmBullets ? (
+                  <BulletList
+                    items={group.rhythmBullets}
+                    slotIdForIndex={(bulletIndex) => groupSlotId(index, `rhythmBullet.${bulletIndex}`)}
+                    {...slotBindingProps}
+                  />
+                ) : null}
               </div>
             </div>
             <div className="relative mx-auto w-full max-w-[22rem]">
