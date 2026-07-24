@@ -3,6 +3,7 @@ import Image from "next/image";
 import { AccompanimentGroupsTabs } from "@/app/(pages)/como-acompanamos/accompaniment-groups-tabs";
 import { ScrollFloatingFerns } from "@/app/(pages)/como-acompanamos/scroll-floating-ferns";
 import { AccompanyPrinciplesWheel } from "@/modules/como-acompanamos/views/accompany-principles-wheel";
+import { IntegralDevelopmentMap } from "@/modules/como-acompanamos/views/integral-development-map";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
 import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
 import {
@@ -374,6 +375,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
                 {...slotBindingProps}
               />
             </div>
+            <IntegralDevelopmentMap />
           </div>
         </section>
 
