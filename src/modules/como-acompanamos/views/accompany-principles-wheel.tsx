@@ -7,7 +7,10 @@ import {
   learningPrincipleSlotId,
   type LearningPrinciple,
 } from "@/modules/como-acompanamos/content-slots";
-import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
+import type {
+  LandingPreviewBindings,
+  LandingTextMap,
+} from "@/modules/landing/types/landing-text";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
 
 type AccompanyPrinciplesWheelProps = {
@@ -162,7 +165,16 @@ export function AccompanyPrinciplesWheel({
 
   return (
     <div className="mt-16 bg-[#fdfbf6] py-10 md:mt-20 md:py-12">
-      <div className="relative mx-auto grid w-full max-w-7xl gap-8 px-6 md:px-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(17rem,0.38fr)] lg:items-center lg:px-14">
+      <div className="mx-auto w-full max-w-7xl px-6 md:px-10 lg:px-14">
+        <h2
+          className="text-4xl leading-[0.95] tracking-tight text-black md:text-5xl lg:text-6xl"
+          style={{ fontFamily: "var(--font-roboto-condensed)" }}
+        >
+          Principios de aprendizaje
+        </h2>
+      </div>
+
+      <div className="relative mx-auto mt-10 grid w-full max-w-7xl gap-8 px-6 md:mt-12 md:px-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(17rem,0.38fr)] lg:items-center lg:px-14">
         <style>{`
           @keyframes koruDrawLearningArrow {
             to {
@@ -208,7 +220,9 @@ export function AccompanyPrinciplesWheel({
               strokeLinejoin="round"
               strokeDasharray="1"
               strokeDashoffset="1"
-              style={{ animation: "koruDrawLearningArrow 760ms ease-out forwards" }}
+              style={{
+                animation: "koruDrawLearningArrow 760ms ease-out forwards",
+              }}
             />
             <path
               className="koru-learning-arrow-head"
@@ -220,7 +234,8 @@ export function AccompanyPrinciplesWheel({
               strokeLinejoin="round"
               opacity={0}
               style={{
-                animation: "koruRevealLearningArrowHead 160ms ease-out 720ms forwards",
+                animation:
+                  "koruRevealLearningArrowHead 160ms ease-out 720ms forwards",
               }}
             />
           </svg>
@@ -274,17 +289,12 @@ export function AccompanyPrinciplesWheel({
           })}
         </div>
 
-        <aside className="relative z-10 min-h-[10rem] lg:pl-4" aria-live="polite">
-          <div
-            className={`rounded-[1.75rem] border border-[#e7dfcf] bg-white/80 px-5 py-5 text-sm leading-relaxed text-black/75 shadow-sm transition duration-200 md:text-base ${
-              activeIndex === null ? "opacity-70" : "opacity-100"
-            }`}
-          >
-            {activeIndex === null ? (
-              <p className="text-[var(--complement-900)]/70">
-                Acercate a cada principio para conocer más.
-              </p>
-            ) : (
+        <aside
+          className="relative z-10 min-h-[10rem] lg:pl-4"
+          aria-live="polite"
+        >
+          {activeIndex !== null ? (
+            <div className="px-5 py-5 text-5xl leading-[1.05] text-[var(--complement-800)] opacity-100 transition duration-200 [font-family:var(--font-indie-flower)] md:text-5xl">
               <EditablePrincipleCopy
                 as="p"
                 slotId={learningPrincipleSlotId(activeIndex, "description")}
@@ -292,9 +302,17 @@ export function AccompanyPrinciplesWheel({
                 previewMode={previewMode}
                 selectedContentSlotId={selectedContentSlotId}
                 onSelectContentSlot={onSelectContentSlot}
+                className="block text-[var(--complement-800)]"
+                style={{
+                  fontFamily: "var(--font-indie-flower)",
+                  color: "var(--complement-800)",
+                  fontSize: "clamp(1.85rem, 2.55vw, 2.75rem)",
+                  lineHeight: "1.08",
+                }}
+                stylePriority="override"
               />
-            )}
-          </div>
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>
