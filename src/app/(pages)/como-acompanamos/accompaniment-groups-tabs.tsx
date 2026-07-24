@@ -212,7 +212,7 @@ export function AccompanimentGroupsTabs({
             &lsaquo;
           </button>
           <div className="min-w-0 flex-1 text-center">
-            <span className="block max-w-full break-words text-[clamp(1.45rem,5.8vw,1.75rem)] leading-none text-[var(--complement-800)] [overflow-wrap:anywhere]" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
+            <span className="block max-w-full break-words text-[clamp(1.25rem,5vw,1.45rem)] leading-none text-[var(--complement-800)] [overflow-wrap:anywhere]" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
               <EditableGroupCopy
                 slotId={groupSlotId(activeGroupIndex, "title")}
                 style={{ fontSize: "inherit", lineHeight: "inherit" }}
@@ -282,7 +282,7 @@ export function AccompanimentGroupsTabs({
         >
           <div className="grid min-w-0 gap-8 p-4 md:p-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
             <div className="min-w-0">
-              <h3 className="mb-2 max-w-full break-words text-[clamp(1.5rem,6vw,1.85rem)] leading-none text-black [overflow-wrap:anywhere] md:text-4xl" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
+              <h3 className="mb-2 max-w-full break-words text-[clamp(1.25rem,5vw,1.45rem)] leading-none text-black [overflow-wrap:anywhere] md:text-4xl" style={{ fontFamily: "var(--font-roboto-condensed)" }}>
                 <EditableGroupCopy
                   slotId={groupSlotId(index, "title")}
                   style={{ fontSize: "inherit", lineHeight: "inherit" }}
@@ -290,7 +290,7 @@ export function AccompanimentGroupsTabs({
                   {...slotBindingProps}
                 />
               </h3>
-              <p className="mb-5 max-w-full break-words text-[clamp(1.45rem,5.8vw,1.75rem)] leading-none text-black/75 [overflow-wrap:anywhere]" style={{ fontFamily: "var(--font-indie-flower)" }}>
+              <p className="mb-5 max-w-full break-words text-[clamp(1.25rem,5vw,1.45rem)] leading-none text-black/75 [overflow-wrap:anywhere]" style={{ fontFamily: "var(--font-indie-flower)" }}>
                 <EditableGroupCopy
                   slotId={groupSlotId(index, "ageRange")}
                   {...slotBindingProps}

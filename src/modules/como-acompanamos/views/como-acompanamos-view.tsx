@@ -98,7 +98,7 @@ function SectionHeading({
       ) : null}
       {title ? (
         <h2
-          className="max-w-full break-words text-[clamp(1.75rem,7vw,2rem)] leading-[1.02] tracking-tight text-black [overflow-wrap:anywhere] md:text-5xl lg:text-6xl"
+          className="max-w-full break-words text-[clamp(1.35rem,5.5vw,1.55rem)] leading-[1.02] tracking-tight text-black [overflow-wrap:anywhere] md:text-5xl lg:text-6xl"
           style={{ fontFamily: "var(--font-roboto-condensed)" }}
         >
           {title}
@@ -328,7 +328,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
             <div className="max-w-4xl min-w-0">
               <h2
                 id="acompanamiento-conectado-title"
-                className="max-w-full break-words text-left text-[clamp(1.75rem,7vw,2rem)] leading-[1.08] text-black [overflow-wrap:anywhere] md:text-5xl"
+                className="max-w-full break-words text-left text-[clamp(1.35rem,5.5vw,1.55rem)] leading-[1.08] text-black [overflow-wrap:anywhere] md:text-5xl"
                 style={{ fontFamily: "var(--font-roboto-condensed)" }}
               >
                 <EditableCopy
@@ -357,7 +357,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
             <div className="max-w-4xl min-w-0">
               <h2
                 id="desarrollo-integral-title"
-                className="max-w-full break-words text-left text-[clamp(1.75rem,7vw,2rem)] leading-[1.08] text-black [overflow-wrap:anywhere] md:text-5xl"
+                className="max-w-full break-words text-left text-[clamp(1.35rem,5.5vw,1.55rem)] leading-[1.08] text-black [overflow-wrap:anywhere] md:text-5xl"
                 style={{ fontFamily: "var(--font-roboto-condensed)" }}
               >
                 <EditableCopy
