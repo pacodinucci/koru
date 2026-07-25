@@ -144,7 +144,7 @@ export function DashboardShell({
                 alt="Koru"
                 width={120}
                 height={34}
-                className="h-8 w-auto object-contain group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7"
+                className="h-10 w-auto object-contain group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8"
                 priority
               />
             </Link>

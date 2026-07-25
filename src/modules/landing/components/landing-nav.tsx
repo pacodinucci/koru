@@ -536,7 +536,7 @@ export function LandingNav({
               alt={logoAlt}
               width={1536}
               height={1024}
-              className="h-16 w-auto"
+              className="h-20 w-auto"
               priority
             />
           </Link>
