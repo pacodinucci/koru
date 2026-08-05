@@ -59,6 +59,44 @@ const integralDimensions = [
       "left-[calc(100%+1.2rem)] top-1/2 -translate-y-1/2 text-left",
     size: "h-[5.1rem] w-[5.1rem]",
   },
+ ];
+
+const dimensionContainerStyles = [
+  {
+    color: "bg-[color-mix(in_srgb,var(--complement-700)_34%,white)]",
+    border: "border-[color-mix(in_srgb,var(--complement-800)_42%,white)]",
+    shape: "rounded-[44%_56%_48%_52%/58%_42%_58%_42%]",
+    innerShape: "rounded-[58%_42%_52%_48%/45%_55%_44%_56%]",
+    innerInset: "inset-[0.45rem]",
+  },
+  {
+    color: "bg-[color-mix(in_srgb,var(--orange-500)_14%,white)]",
+    border: "border-[color-mix(in_srgb,var(--orange-500)_30%,white)]",
+    shape: "rounded-[56%_44%_61%_39%/42%_58%_42%_58%]",
+    innerShape: "rounded-[46%_54%_45%_55%/58%_42%_56%_44%]",
+    innerInset: "inset-[0.55rem]",
+  },
+  {
+    color: "bg-[color-mix(in_srgb,var(--orange-500)_20%,white)]",
+    border: "border-[color-mix(in_srgb,var(--brand-700)_24%,white)]",
+    shape: "rounded-[52%_48%_43%_57%/47%_55%_45%_53%]",
+    innerShape: "rounded-[61%_39%_54%_46%/48%_58%_42%_52%]",
+    innerInset: "inset-[0.5rem]",
+  },
+  {
+    color: "bg-[color-mix(in_srgb,var(--orange-500)_58%,white)]",
+    border: "border-[color-mix(in_srgb,var(--orange-500)_70%,white)]",
+    shape: "rounded-[56%_44%_61%_39%/42%_58%_42%_58%]",
+    innerShape: "rounded-[48%_52%_39%_61%/42%_58%_53%_47%]",
+    innerInset: "inset-[0.42rem]",
+  },
+  {
+    color: "bg-[color-mix(in_srgb,var(--complement-900)_16%,white)]",
+    border: "border-[color-mix(in_srgb,var(--complement-900)_34%,white)]",
+    shape: "rounded-[47%_53%_56%_44%/57%_43%_52%_48%]",
+    innerShape: "rounded-[53%_47%_59%_41%/56%_44%_48%_52%]",
+    innerInset: "inset-[0.48rem]",
+  },
 ];
 
 const goldenSpiralPath =
@@ -66,73 +104,59 @@ const goldenSpiralPath =
 
 function IntegralDimensionNode({
   dimension,
+  index,
   isActive,
   onActivate,
   onDeactivate,
 }: {
   dimension: (typeof integralDimensions)[number];
+  index: number;
   isActive: boolean;
   onActivate: () => void;
   onDeactivate: () => void;
 }) {
+  const style = dimensionContainerStyles[index % dimensionContainerStyles.length];
+
   return (
-    <div
+    <article
       className="absolute -translate-x-1/2 -translate-y-1/2"
       style={{ left: dimension.x, top: dimension.y } as CSSProperties}
+      onMouseEnter={onActivate}
+      onMouseLeave={onDeactivate}
+      onFocus={onActivate}
+      onBlur={onDeactivate}
     >
       <button
         type="button"
-        className={`group relative flex ${dimension.size} items-center justify-center rounded-full ${dimension.color} shadow-sm ring-1 ring-black/5 outline-none transition duration-300 hover:-translate-y-1 hover:scale-[1.06] hover:shadow-lg focus-visible:-translate-y-1 focus-visible:scale-[1.06] focus-visible:ring-2 focus-visible:ring-[var(--complement-800)] ${
-          isActive
-            ? "-translate-y-1 scale-[1.06] shadow-lg ring-2 ring-[var(--complement-800)]"
-            : ""
+        className={`group relative flex min-h-[7.75rem] w-[clamp(10.75rem,13vw,12.9rem)] flex-col items-center justify-center overflow-hidden border px-5 py-4 text-center shadow-sm outline-none transition duration-200 hover:scale-[1.03] hover:shadow-md focus-visible:ring-2 focus-visible:ring-[var(--complement-800)] ${style.color} ${style.border} ${style.shape} ${
+          isActive ? "scale-[1.03] shadow-md" : ""
         }`}
         aria-label={`${dimension.label}: ${dimension.description}`}
         aria-pressed={isActive}
-        onMouseEnter={onActivate}
-        onMouseLeave={onDeactivate}
-        onFocus={onActivate}
-        onBlur={onDeactivate}
         onClick={onActivate}
       >
         <span
-          className={`pointer-events-none absolute -inset-2 rounded-full border border-[var(--complement-700)] transition duration-300 ${
-            isActive ? "scale-100 opacity-70" : "scale-90 opacity-0"
-          }`}
+          className={`pointer-events-none absolute z-0 border border-white/70 ${style.innerInset} ${style.innerShape}`}
           aria-hidden="true"
         />
         <Image
           src={dimension.icon}
           alt=""
-          width={48}
-          height={48}
-          className={`h-[58%] w-[58%] object-contain transition duration-300 [filter:sepia(1)_saturate(1.8)_hue-rotate(145deg)_brightness(0.75)] ${
-            isActive
-              ? "scale-110 opacity-100"
-              : "opacity-70 group-hover:opacity-95"
+          width={40}
+          height={40}
+          className={`relative z-10 mb-2 h-9 w-9 object-contain transition duration-200 [filter:sepia(1)_saturate(1.8)_hue-rotate(145deg)_brightness(0.75)] ${
+            isActive ? "scale-110 opacity-100" : "opacity-75 group-hover:opacity-95"
           }`}
           aria-hidden="true"
         />
-        <span
-          className={`pointer-events-none absolute w-[11.5rem] transition duration-300 ${dimension.labelPosition} ${
-            isActive ? "scale-[1.04]" : ""
-          }`}
-        >
-          <span
-            className={`block text-[clamp(1.05rem,1.8vw,1.35rem)] font-medium leading-[1.1] ${
-              isActive
-                ? "text-[var(--complement-800)]"
-                : "text-black group-hover:text-[var(--complement-800)]"
-            }`}
-          >
-            {dimension.label}
-          </span>
-          <span className="mt-1 block text-sm leading-tight text-black/55">
-            {dimension.description}
-          </span>
+        <span className="relative z-10 block text-[clamp(1.05rem,1.3vw,1.22rem)] font-medium leading-[1.05] text-[var(--complement-900)]">
+          {dimension.label}
+        </span>
+        <span className="relative z-10 mt-1 block max-w-[9.5rem] text-sm leading-tight text-black/55">
+          {dimension.description}
         </span>
       </button>
-    </div>
+    </article>
   );
 }
 
@@ -199,6 +223,7 @@ export function IntegralDevelopmentMap() {
             <IntegralDimensionNode
               key={dimension.label}
               dimension={dimension}
+              index={index}
               isActive={activeIndex === index}
               onActivate={() => setActiveIndex(index)}
               onDeactivate={() => setActiveIndex(null)}

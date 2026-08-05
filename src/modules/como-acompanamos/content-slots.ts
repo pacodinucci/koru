@@ -40,17 +40,17 @@ export const learningPrinciples: LearningPrinciple[] = [
   {
     title: "Asombro",
     description:
-      "Aprendemos jugando, explorando y maravillÃ¡ndonos del mundo.",
+      "Aprendemos jugando, explorando y maravillándonos del mundo.",
   },
   {
-    title: "InterconexiÃ³n",
+    title: "Interconexión",
     description:
       "Aprendemos mejor conectando ideas, experiencias y el mundo que nos rodea.",
   },
   {
-    title: "PropÃ³sito",
+    title: "Propósito",
     description:
-      "Nos involucramos mÃ¡s cuando entendemos el â€œpara quÃ©â€ de lo que aprendemos.",
+      "Nos involucramos más cuando entendemos el “para qué” de lo que aprendemos.",
   },
   {
     title: "Agencia",
@@ -64,58 +64,58 @@ export const learningPrinciples: LearningPrinciple[] = [
 ];
 
 export const learningPrinciplesSummary =
-  "El aprendizaje florece cuando existe asombro, propÃ³sito y conexiÃ³n. En Koru cultivamos experiencias que invitan a explorar, preguntar, colaborar y construir significado. Nuestros principios de aprendizaje son la brÃºjula que guÃ­a nuestra comunidad, ayudando a cada persona a convertirse en protagonista de su propio camino y a descubrir su lugar dentro de una red viva de relaciones, conocimientos y posibilidades.";
+  "El aprendizaje florece cuando existe asombro, propósito y conexión. En Koru cultivamos experiencias que invitan a explorar, preguntar, colaborar y construir significado. Nuestros principios de aprendizaje son la brújula que guía nuestra comunidad, ayudando a cada persona a convertirse en protagonista de su propio camino y a descubrir su lugar dentro de una red viva de relaciones, conocimientos y posibilidades.";
 
 
 export const accompanyCopy = {
-  eyebrow: "COMO ACOMPAÃ‘AMOS",
-  title: "CÃ³mo acompaÃ±amos",
+  eyebrow: "COMO ACOMPAÑAMOS",
+  title: "Cómo acompañamos",
   intro:
-    "Nuestro enfoque pedagÃ³gico integra la mirada antroposÃ³fica, la inteligencia socioemocional, el aprendizaje transdisciplinario basado en proyectos, y las habilidades basadas en diversas investigaciones que se definen como habilidades del siglo 21, promoviendo experiencias de aprendizaje que responden al desarrollo integral de cada niÃ±a y niÃ±o.",
+    "Nuestro enfoque pedagógico integra la mirada antroposófica, la inteligencia socioemocional, el aprendizaje transdisciplinario basado en proyectos, y las habilidades basadas en diversas investigaciones que se definen como habilidades del siglo 21, promoviendo experiencias de aprendizaje que responden al desarrollo integral de cada niña y niño.",
 };
 
 export const accompanyPillars: AccompanyPillar[] = [
   {
-    title: "Aprendizaje con propÃ³sito",
+    title: "Aprendizaje con propósito",
     imageSrc: "/assets/images/DSC01367.png",
-    imageAlt: "NiÃ±as y niÃ±os explorando aprendizajes con propÃ³sito",
+    imageAlt: "Niñas y niños explorando aprendizajes con propósito",
     paragraphs: [
-      "Las niÃ±as y los niÃ±os aprenden a travÃ©s de proyectos transdisciplinarios y experiencias significativas conectadas con sus intereses, preguntas y motivaciones.",
+      "Las niñas y los niños aprenden a través de proyectos transdisciplinarios y experiencias significativas conectadas con sus intereses, preguntas y motivaciones.",
     ],
   },
   {
-    title: "AcompaÃ±amiento personalizado",
+    title: "Acompañamiento personalizado",
     imageSrc: "/assets/images/DSC01352.png",
-    imageAlt: "AcompaÃ±amiento personalizado en comunidad",
+    imageAlt: "Acompañamiento personalizado en comunidad",
     paragraphs: [
-      "Reconocemos que cada niÃ±a y niÃ±o es Ãºnico. Por ello, adaptamos la propuesta educativa a sus intereses, necesidades y etapas evolutivas, respetando la singularidad de cada proceso de aprendizaje.",
+      "Reconocemos que cada niña y niño es único. Por ello, adaptamos la propuesta educativa a sus intereses, necesidades y etapas evolutivas, respetando la singularidad de cada proceso de aprendizaje.",
     ],
   },
   {
     title: "Desarrollo integral",
     imageSrc: "/assets/images/DSC01378.png",
-    imageAlt: "NiÃ±ez desarrollando capacidades integrales",
+    imageAlt: "Niñez desarrollando capacidades integrales",
     paragraphs: [
-      "Cultivamos capacidades cognitivas, emocionales, sociales y prÃ¡cticas que permiten a niÃ±as y niÃ±os desenvolverse con confianza, creatividad y sentido de propÃ³sito en un mundo cambiante.",
+      "Cultivamos capacidades cognitivas, emocionales, sociales y prácticas que permiten a niñas y niños desenvolverse con confianza, creatividad y sentido de propósito en un mundo cambiante.",
     ],
   },
   {
     title: "Comunidad y naturaleza",
     imageSrc: "/assets/images/DSC01384.png",
-    imageAlt: "Comunidad educativa en conexiÃ³n con la naturaleza",
+    imageAlt: "Comunidad educativa en conexión con la naturaleza",
     paragraphs: [
-      "Entendemos el aprendizaje como un proceso relacional. Aprendemos en comunidad y en conexiÃ³n con la naturaleza, reconociendo que formamos parte de sistemas vivos interdependientes.",
+      "Entendemos el aprendizaje como un proceso relacional. Aprendemos en comunidad y en conexión con la naturaleza, reconociendo que formamos parte de sistemas vivos interdependientes.",
     ],
   },
 ];
 
 // const cultivatedSkills = [
-//   "Pensamiento crÃ­tico",
-//   "ColaboraciÃ³n",
-//   "ComunicaciÃ³n",
+//   "Pensamiento crítico",
+//   "Colaboración",
+//   "Comunicación",
 //   "Creatividad",
 //   "Inteligencia socioemocional",
-//   "ConexiÃ³n con la naturaleza",
+//   "Conexión con la naturaleza",
 //   "Autoconocimiento",
 // ];
 
@@ -226,129 +226,129 @@ export const accompanimentGroups = [
 
 export const methodologies: TextBlock[] = [
   {
-    title: "1. Fundamentos AntroposÃ³ficos",
+    title: "1. Fundamentos Antroposóficos",
     paragraphs: [
-      "En Koru, hemos escogido ciertos fundamentos antroposÃ³ficos a travÃ©s de: generar un ritmo de inhalaciÃ³n y exhalaciÃ³n claro y predecible, ritos y rituales del dÃ­a a dÃ­a, contacto con la naturaleza, expresiÃ³n artÃ­stica y juego libre. De esta mirada nacen los hitos de madurez que nos guÃ­an en la creaciÃ³n de las planeaciones transdisciplinarias.",
+      "En Koru, hemos escogido ciertos fundamentos antroposóficos a través de: generar un ritmo de inhalación y exhalación claro y predecible, ritos y rituales del día a día, contacto con la naturaleza, expresión artística y juego libre. De esta mirada nacen los hitos de madurez que nos guían en la creación de las planeaciones transdisciplinarias.",
     ],
   },
   {
     title: "2. Aprendizaje Transdisciplinario",
     paragraphs: [
-      "Desarrollamos proyectos que integran distintas Ã¡reas del conocimiento, permitiendo que las niÃ±as y niÃ±os comprendan la realidad de manera conectada y significativa. A travÃ©s de estos procesos, investigan, crean, colaboran y encuentran sentido en lo que aprenden.",
-      "En Koru adoptamos el aprendizaje transdisciplinario porque el mundo actual exige pensar y actuar mÃ¡s allÃ¡ de las fronteras disciplinarias. La realidad es compleja, interconectada y en constante cambio, por lo que guiamos el aprendizaje social hacia la integraciÃ³n del conocimiento, la creatividad y la resoluciÃ³n de problemas reales.",
-      "La transdisciplinariedad fomenta el pensamiento crÃ­tico, la colaboraciÃ³n y el aprendizaje basado en la experiencia, permitiendo que los aprendices construyan significado de manera profunda.",
-      "Al cruzar y conectar saberes, promovemos una educaciÃ³n viva, flexible y en evoluciÃ³n, donde cada persona desarrolla herramientas para comprender y transformar su entorno con sensibilidad y propÃ³sito.",
+      "Desarrollamos proyectos que integran distintas áreas del conocimiento, permitiendo que las niñas y niños comprendan la realidad de manera conectada y significativa. A través de estos procesos, investigan, crean, colaboran y encuentran sentido en lo que aprenden.",
+      "En Koru adoptamos el aprendizaje transdisciplinario porque el mundo actual exige pensar y actuar más allá de las fronteras disciplinarias. La realidad es compleja, interconectada y en constante cambio, por lo que guiamos el aprendizaje social hacia la integración del conocimiento, la creatividad y la resolución de problemas reales.",
+      "La transdisciplinariedad fomenta el pensamiento crítico, la colaboración y el aprendizaje basado en la experiencia, permitiendo que los aprendices construyan significado de manera profunda.",
+      "Al cruzar y conectar saberes, promovemos una educación viva, flexible y en evolución, donde cada persona desarrolla herramientas para comprender y transformar su entorno con sensibilidad y propósito.",
     ],
   },
   {
     title: "3. Desarrollo Socio-Emocional",
     paragraphs: [
-      "AcompaÃ±amos los procesos socioemocionales desde la escucha, la empatÃ­a y el respeto.",
-      "Integramos herramientas como la ComunicaciÃ³n NoViolenta para gestionar conflictos, fortalecer la colaboraciÃ³n y desarrollar la capacidad de expresar necesidades y sentimientos de manera clara y cuidadosa.",
-      "Exploramos lenguajes y mapas de las emociones para poder ser mÃ¡s precisos a la hora de entender lo que nos sucede y poder tomar mejores decisiones y desarrollar la conexiÃ³n con los demÃ¡s y una comunicaciÃ³n asertiva.",
-      "AsÃ­, se fortalece la cultura de paz, sostenida por el diÃ¡logo, respeto y responsabilidad compartida, que nos permite crecer juntos como seres humanos y en el desarrollo socio emocional de Koru OSA.",
+      "Acompañamos los procesos socioemocionales desde la escucha, la empatía y el respeto.",
+      "Integramos herramientas como la Comunicación NoViolenta para gestionar conflictos, fortalecer la colaboración y desarrollar la capacidad de expresar necesidades y sentimientos de manera clara y cuidadosa.",
+      "Exploramos lenguajes y mapas de las emociones para poder ser más precisos a la hora de entender lo que nos sucede y poder tomar mejores decisiones y desarrollar la conexión con los demás y una comunicación asertiva.",
+      "Así, se fortalece la cultura de paz, sostenida por el diálogo, respeto y responsabilidad compartida, que nos permite crecer juntos como seres humanos y en el desarrollo socio emocional de Koru OSA.",
     ],
   },
   {
     title:
-      "4. Desarrollo de habilidades fundamentales (lectura, escritura y matemÃ¡ticas)",
+      "4. Desarrollo de habilidades fundamentales (lectura, escritura y matemáticas)",
     paragraphs: [
-      "AcompaÃ±amos el desarrollo de la lectoescritura y el pensamiento matemÃ¡tico a travÃ©s de metodologÃ­as estructuradas, respetuosas de los procesos individuales y reconocidas por su efectividad, integrando el aprendizaje de forma significativa y no mecÃ¡nica.",
-      "Basada en una metodologÃ­a premiada con mÃ¡s de 40 aÃ±os de experiencia.",
+      "Acompañamos el desarrollo de la lectoescritura y el pensamiento matemático a través de metodologías estructuradas, respetuosas de los procesos individuales y reconocidas por su efectividad, integrando el aprendizaje de forma significativa y no mecánica.",
+      "Basada en una metodología premiada con más de 40 años de experiencia.",
     ],
-    cta: { label: "Conocer mÃ¡s", href: "#lectura-escritura-y-matematicas" },
+    cta: { label: "Conocer más", href: "#lectura-escritura-y-matematicas" },
   },
   {
-    title: "5. Conciencia ecolÃ³gica",
+    title: "5. Conciencia ecológica",
     paragraphs: [
-      "Fomentamos una relaciÃ³n cercana y de reciprocidad con el entorno.",
-      "A travÃ©s del huerto, habilidades de supervivencia, caminatas en el bosque, separaciÃ³n de residuos y prÃ¡cticas como el uso de baÃ±os secos, entre otros, las niÃ±as y niÃ±os desarrollan conciencia ecolÃ³gica desde la experiencia, comprendiendo su papel dentro de un sistema vivo.",
+      "Fomentamos una relación cercana y de reciprocidad con el entorno.",
+      "A través del huerto, habilidades de supervivencia, caminatas en el bosque, separación de residuos y prácticas como el uso de baños secos, entre otros, las niñas y niños desarrollan conciencia ecológica desde la experiencia, comprendiendo su papel dentro de un sistema vivo.",
     ],
-    cta: { label: "Quiero saber mÃ¡s", href: "#conciencia-ecologica" },
+    cta: { label: "Quiero saber más", href: "#conciencia-ecologica" },
   },
   {
-    title: "6. Pensamiento crÃ­tico y diÃ¡logo",
+    title: "6. Pensamiento crítico y diálogo",
     paragraphs: [
-      "Generamos espacios como cÃ­rculos socrÃ¡ticos y asambleas, donde las niÃ±as y niÃ±os desarrollan la escucha, el pensamiento reflexivo y la capacidad de expresar ideas, cuestionar y construir conocimiento en comunidad.",
+      "Generamos espacios como círculos socráticos y asambleas, donde las niñas y niños desarrollan la escucha, el pensamiento reflexivo y la capacidad de expresar ideas, cuestionar y construir conocimiento en comunidad.",
     ],
   },
   {
-    title: "7. ExpresiÃ³n artÃ­stica",
+    title: "7. Expresión artística",
     paragraphs: [
-      "El arte es un medio fundamental para el desarrollo emocional, creativo y expresivo. A travÃ©s de talleres, integramos disciplinas como las artes plÃ¡sticas y escÃ©nicas como parte del proceso de aprendizaje, permitiendo que las niÃ±as y niÃ±os elaboren su mundo interno y se expresen con libertad.",
+      "El arte es un medio fundamental para el desarrollo emocional, creativo y expresivo. A través de talleres, integramos disciplinas como las artes plásticas y escénicas como parte del proceso de aprendizaje, permitiendo que las niñas y niños elaboren su mundo interno y se expresen con libertad.",
     ],
-    cta: { label: "Conocer mÃ¡s", href: "#expresion-artistica" },
+    cta: { label: "Conocer más", href: "#expresion-artistica" },
   },
   {
     title: "8. Movimiento y desarrollo corporal",
     paragraphs: [
       "El cuerpo es parte esencial del aprendizaje.",
-      "Generamos experiencias de movimiento que responden a las necesidades e intereses del grupo, ofreciendo talleres como circo, fÃºtbol, danza y otras actividades corporales que permiten canalizar energÃ­a, favorecer la autorregulaciÃ³n y fortalecer la conexiÃ³n con el propio cuerpo.",
+      "Generamos experiencias de movimiento que responden a las necesidades e intereses del grupo, ofreciendo talleres como circo, fútbol, danza y otras actividades corporales que permiten canalizar energía, favorecer la autorregulación y fortalecer la conexión con el propio cuerpo.",
     ],
   },
 ];
 
 export const ecoCycleStages = [
-  "Semilla: El potencial comienza a emerger. EstÃ¡ presente, aunque aÃºn de forma incipiente.",
-  "Brote: El potencial se expresa de manera mÃ¡s constante y en distintos contextos.",
-  "Ãrbol: El potencial ha madurado y se manifiesta de forma integrada en diferentes Ã¡reas de la vida.",
-  "Fuego: El potencial entra en una fase de transformaciÃ³n, donde necesita renovarse para seguir evolucionando.",
+  "Semilla: El potencial comienza a emerger. Está presente, aunque aún de forma incipiente.",
+  "Brote: El potencial se expresa de manera más constante y en distintos contextos.",
+  "Árbol: El potencial ha madurado y se manifiesta de forma integrada en diferentes áreas de la vida.",
+  "Fuego: El potencial entra en una fase de transformación, donde necesita renovarse para seguir evolucionando.",
 ];
 
 export const evaluationBlocks: IllustratedTextBlock[] = [
   {
-    title: "EvaluaciÃ³n a aprendices",
+    title: "Evaluación a aprendices",
     imageSrc: "/assets/images/DSC01386.png",
-    imageAlt: "AcompaÃ±ante registrando procesos de aprendizaje",
+    imageAlt: "Acompañante registrando procesos de aprendizaje",
     paragraphs: [
-      "Entendemos la evaluaciÃ³n como un proceso continuo de crecimiento, y auto-observaciÃ³n, no como un momento aislado, ni como una definiciÃ³n.",
-      "Observamos, registramos y compartimos el proceso de cada niÃ±@, haciendo visible su desarrollo en distintas dimensiones: corporal, emocional, social, cognitiva y de autogestiÃ³n.",
-      "Este seguimiento se construye en el dÃ­a a dÃ­a, a travÃ©s de la interacciÃ³n, la observaciÃ³n y el vÃ­nculo del acompaÃ±ante y l@s niÃ±@s.",
-      "MÃ¡s que emitir juicios, buscamos comprender el proceso y generar acciones que apoyen el crecimiento de cada niÃ±@.",
-      "El proceso de cada niÃ±@ es acompaÃ±ado de manera cercana tambiÃ©n con su familia.",
+      "Entendemos la evaluación como un proceso continuo de crecimiento, y auto-observación, no como un momento aislado, ni como una definición.",
+      "Observamos, registramos y compartimos el proceso de cada niñ@, haciendo visible su desarrollo en distintas dimensiones: corporal, emocional, social, cognitiva y de autogestión.",
+      "Este seguimiento se construye en el día a día, a través de la interacción, la observación y el vínculo del acompañante y l@s niñ@s.",
+      "Más que emitir juicios, buscamos comprender el proceso y generar acciones que apoyen el crecimiento de cada niñ@.",
+      "El proceso de cada niñ@ es acompañado de manera cercana también con su familia.",
     ],
     bullets: [
       "Reconocer avances y fortalezas",
-      "Identificar Ã¡reas de oportunidad",
-      "Ajustar el acompaÃ±amiento",
+      "Identificar áreas de oportunidad",
+      "Ajustar el acompañamiento",
       "Trazar nuevas rutas de desarrollo",
       "Espacios de seguimiento",
-      "ComunicaciÃ³n continua",
+      "Comunicación continua",
       "Acuerdos compartidos",
-      "Cada niÃ±@ cuenta con un registro donde se documentan avances, procesos y acuerdos, permitiendo que las familias estÃ©n informadas y puedan dar continuidad desde casa.",
+      "Cada niñ@ cuenta con un registro donde se documentan avances, procesos y acuerdos, permitiendo que las familias estén informadas y puedan dar continuidad desde casa.",
     ],
   },
   {
-    title: "Nuestra herramienta de evaluaciÃ³n",
+    title: "Nuestra herramienta de evaluación",
     imageSrc: "/assets/images/DSC01379.png",
-    imageAlt: "NiÃ±ez trabajando con herramientas de seguimiento",
+    imageAlt: "Niñez trabajando con herramientas de seguimiento",
     paragraphs: [
-      "Utilizamos el Ecociclo como una herramienta para comprender y comunicar el desarrollo de cada niÃ±@ de forma integral.",
-      "A diferencia de los sistemas tradicionales, el Ecociclo no mide desde la comparaciÃ³n, sino que reconoce el desarrollo como un proceso continuo, dinÃ¡mico y en constante transformaciÃ³n.",
-      "Este modelo permite ubicar los distintos potenciales del niÃ±@ dentro de un proceso evolutivo, entendiendo que cada aspecto del desarrollo tiene su propio ritmo.",
+      "Utilizamos el Ecociclo como una herramienta para comprender y comunicar el desarrollo de cada niñ@ de forma integral.",
+      "A diferencia de los sistemas tradicionales, el Ecociclo no mide desde la comparación, sino que reconoce el desarrollo como un proceso continuo, dinámico y en constante transformación.",
+      "Este modelo permite ubicar los distintos potenciales del niñ@ dentro de un proceso evolutivo, entendiendo que cada aspecto del desarrollo tiene su propio ritmo.",
       "Las etapas del Ecociclo. El desarrollo se observa como un ciclo vivo:",
     ],
     bullets: ecoCycleStages,
-    cta: { label: "Conocer mÃ¡s", href: "#ecociclo" },
+    cta: { label: "Conocer más", href: "#ecociclo" },
   },
   {
-    title: "EvaluaciÃ³n del equipo",
+    title: "Evaluación del equipo",
     imageSrc: "/assets/images/DSC01352.png",
-    imageAlt: "Equipo acompaÃ±ando procesos pedagÃ³gicos",
+    imageAlt: "Equipo acompañando procesos pedagógicos",
     paragraphs: [
-      "El acompaÃ±amiento que ofrecemos a las niÃ±as y niÃ±os parte de un principio fundamental: quienes acompaÃ±amos tambiÃ©n estamos en constante aprendizaje.",
-      "Por ello, sostenemos prÃ¡cticas de evaluaciÃ³n y reflexiÃ³n continua que nos permiten revisar, ajustar y enriquecer nuestra labor pedagÃ³gica y comunitaria.",
+      "El acompañamiento que ofrecemos a las niñas y niños parte de un principio fundamental: quienes acompañamos también estamos en constante aprendizaje.",
+      "Por ello, sostenemos prácticas de evaluación y reflexión continua que nos permiten revisar, ajustar y enriquecer nuestra labor pedagógica y comunitaria.",
     ],
   },
   {
-    title: "EvaluaciÃ³n entre colaboradores y familias",
+    title: "Evaluación entre colaboradores y familias",
     imageSrc: "/assets/images/DSC01384.png",
-    imageAlt: "Comunidad educativa compartiendo acompaÃ±amiento",
+    imageAlt: "Comunidad educativa compartiendo acompañamiento",
     paragraphs: [
-      "Fomentamos una cultura de retroalimentaciÃ³n basada en los principios de la ComunicaciÃ³n NoViolenta.",
-      "A travÃ©s de espacios de observaciÃ³n entre pares y acompaÃ±amiento pedagÃ³gico, el equipo comparte miradas, se escucha y se nutre, fortaleciendo la coherencia y la calidad del acompaÃ±amiento.",
-      "Entendemos la comunidad como un sistema vivo en constante evoluciÃ³n.",
-      "AsÃ­ como acompaÃ±amos el desarrollo de cada niÃ±@, tambiÃ©n observamos y ajustamos el funcionamiento del equipo, la relaciÃ³n con las familias y la dinÃ¡mica comunitaria en su conjunto.",
+      "Fomentamos una cultura de retroalimentación basada en los principios de la Comunicación NoViolenta.",
+      "A través de espacios de observación entre pares y acompañamiento pedagógico, el equipo comparte miradas, se escucha y se nutre, fortaleciendo la coherencia y la calidad del acompañamiento.",
+      "Entendemos la comunidad como un sistema vivo en constante evolución.",
+      "Así como acompañamos el desarrollo de cada niñ@, también observamos y ajustamos el funcionamiento del equipo, la relación con las familias y la dinámica comunitaria en su conjunto.",
     ],
   },
 ];
@@ -467,7 +467,7 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.heroIntro,
-    label: "Hero / IntroducciÃ³n",
+    label: "Hero / Introducción",
     defaultValue: accompanyCopy.intro,
   }),
   ...learningPrinciples.flatMap((principle, index) => [
@@ -495,21 +495,21 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.connectedLearningTitle,
-    label: "AcompaÃ±amiento conectado / TÃ­tulo",
-    defaultValue: "AcompaÃ±amiento conectado a su ritmo de aprendizaje",
+    label: "Acompañamiento conectado / Título",
+    defaultValue: "Acompañamiento conectado a su ritmo de aprendizaje",
     defaultSize: 24,
     multiline: false,
     styleControls: ["font", "size", "color", "align", "weight"],
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.connectedLearningText,
-    label: "AcompaÃ±amiento conectado / Texto",
+    label: "Acompañamiento conectado / Texto",
     defaultValue:
-      "DiseÃ±amos experiencias de aprendizaje acordes a cada etapa del desarrollo. Observamos de cerca a cada niÃ±a y niÃ±o para brindar el acompaÃ±amiento y las estrategias que favorezcan su crecimiento integral, respetando su singularidad.",
+      "Diseñamos experiencias de aprendizaje acordes a cada etapa del desarrollo. Observamos de cerca a cada niña y niño para brindar el acompañamiento y las estrategias que favorezcan su crecimiento integral, respetando su singularidad.",
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.integralDevelopmentTitle,
-    label: "Desarrollo integral / TÃ­tulo",
+    label: "Desarrollo integral / Título",
     defaultValue: "Buscamos un desarrollo integral.",
     defaultSize: 60,
     multiline: false,
@@ -519,13 +519,13 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
     id: comoAcompanamosContentSlotIds.integralDevelopmentText,
     label: "Desarrollo integral / Texto",
     defaultValue:
-      "En Koru promovemos el desarrollo integral de cada niÃ±a y niÃ±o, cultivando sus capacidades fÃ­sicas, emocionales, sociales, cognitivas, intuitivas y creativas. A travÃ©s de experiencias significativas y prÃ¡cticas respetuosas, favorecemos un ambiente de confianza, seguridad y pertenencia que les permite crecer de manera plena, fortaleciendo su bienestar y su relaciÃ³n consigo mismos, con los demÃ¡s y con la naturaleza.",
+      "En Koru promovemos el desarrollo integral de cada niña y niño, cultivando sus capacidades físicas, emocionales, sociales, cognitivas, intuitivas y creativas. A través de experiencias significativas y prácticas respetuosas, favorecemos un ambiente de confianza, seguridad y pertenencia que les permite crecer de manera plena, fortaleciendo su bienestar y su relación consigo mismos, con los demás y con la naturaleza.",
   }),
   ...accompanyPillars.flatMap((pillar, index) => [
     textSlot({
       id: pillarSlotId(index, "title"),
-      label: `Pilares / ${pillar.title} / TÃ­tulo`,
-      selectorLabel: `Pilar ${index + 1} / TÃ­tulo`,
+      label: `Pilares / ${pillar.title} / Título`,
+      selectorLabel: `Pilar ${index + 1} / Título`,
       defaultValue: pillar.title,
       defaultSize: 30,
       multiline: false,
@@ -540,22 +540,22 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
   ]),
   textSlot({
     id: comoAcompanamosContentSlotIds.groupsTitle,
-    label: "Grupos / TÃ­tulo de secciÃ³n",
-    defaultValue: "Grupos de acompaÃ±amiento",
+    label: "Grupos / Título de sección",
+    defaultValue: "Grupos de acompañamiento",
     defaultSize: 60,
     multiline: false,
     styleControls: ["font", "size", "color", "align", "weight"],
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.groupsIntro,
-    label: "Grupos / IntroducciÃ³n",
+    label: "Grupos / Introducción",
     defaultValue:
-      "Nuestros grupos se organizan a partir de las etapas evolutivas, respondiendo a las necesidades fÃ­sicas, emocionales, sociales y cognitivas de cada momento del desarrollo.",
+      "Nuestros grupos se organizan a partir de las etapas evolutivas, respondiendo a las necesidades físicas, emocionales, sociales y cognitivas de cada momento del desarrollo.",
   }),
   ...accompanimentGroups.flatMap((group, index) => [
     textSlot({
       id: groupSlotId(index, "title"),
-      label: `Grupo ${index + 1} / TÃ­tulo`,
+      label: `Grupo ${index + 1} / Título`,
       defaultValue: group.title,
       defaultSize: 34,
       multiline: false,
@@ -572,7 +572,7 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
     ...group.paragraphs.map((paragraph, paragraphIndex) =>
       textSlot({
         id: groupSlotId(index, `paragraph.${paragraphIndex}`),
-        label: `Grupo ${index + 1} / PÃ¡rrafo ${paragraphIndex + 1}`,
+        label: `Grupo ${index + 1} / Párrafo ${paragraphIndex + 1}`,
         defaultValue: paragraph,
       }),
     ),
@@ -613,22 +613,22 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
   ]),
   textSlot({
     id: comoAcompanamosContentSlotIds.methodologiesTitle,
-    label: "MetodologÃ­as / TÃ­tulo de secciÃ³n",
-    defaultValue: "MetodologÃ­as y experiencias de aprendizaje",
+    label: "Metodologías / Título de sección",
+    defaultValue: "Metodologías y experiencias de aprendizaje",
     defaultSize: 60,
     multiline: false,
     styleControls: ["font", "size", "color", "align", "weight"],
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.methodologiesIntro,
-    label: "MetodologÃ­as / IntroducciÃ³n",
+    label: "Metodologías / Introducción",
     defaultValue:
-      "Nuestro enfoque pedagÃ³gico se vive a travÃ©s de metodologÃ­as activas, vivenciales y transdisciplinarias que integran el pensamiento, la emociÃ³n, el cuerpo y la acciÃ³n. No enseÃ±amos contenidos aislados, sino experiencias que conectan a las niÃ±as y niÃ±os con el mundo y consigo mism@s.",
+      "Nuestro enfoque pedagógico se vive a través de metodologías activas, vivenciales y transdisciplinarias que integran el pensamiento, la emoción, el cuerpo y la acción. No enseñamos contenidos aislados, sino experiencias que conectan a las niñas y niños con el mundo y consigo mism@s.",
   }),
   ...methodologies.flatMap((methodology, index) => [
     textSlot({
       id: methodologySlotId(index, "title"),
-      label: `MetodologÃ­a ${index + 1} / TÃ­tulo`,
+      label: `Metodología ${index + 1} / Título`,
       defaultValue: methodology.title,
       defaultSize: 24,
       multiline: false,
@@ -637,7 +637,7 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
     ...((methodology.paragraphs ?? []).map((paragraph, paragraphIndex) =>
       textSlot({
         id: methodologySlotId(index, `paragraph.${paragraphIndex}`),
-        label: `MetodologÃ­a ${index + 1} / PÃ¡rrafo ${paragraphIndex + 1}`,
+        label: `Metodología ${index + 1} / Párrafo ${paragraphIndex + 1}`,
         defaultValue: paragraph,
       }),
     )),
@@ -645,7 +645,7 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
       ? [
           textSlot({
             id: methodologySlotId(index, "cta"),
-            label: `MetodologÃ­a ${index + 1} / CTA`,
+            label: `Metodología ${index + 1} / CTA`,
             defaultValue: methodology.cta.label,
             multiline: false,
           }),
@@ -654,29 +654,29 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
   ]),
   textSlot({
     id: comoAcompanamosContentSlotIds.evaluationTitle,
-    label: "EvaluaciÃ³n / TÃ­tulo de secciÃ³n",
-    defaultValue: "EvaluaciÃ³n",
+    label: "Evaluación / Título de sección",
+    defaultValue: "Evaluación",
     defaultSize: 60,
     multiline: false,
     styleControls: ["font", "size", "color", "align", "weight"],
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.evaluationLead,
-    label: "EvaluaciÃ³n / Bajada destacada",
-    defaultValue: "Evaluamos para acompaÃ±ar, no para clasificar.",
+    label: "Evaluación / Bajada destacada",
+    defaultValue: "Evaluamos para acompañar, no para clasificar.",
     defaultSize: 24,
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.evaluationParagraphOne,
-    label: "EvaluaciÃ³n / PÃ¡rrafo 1",
+    label: "Evaluación / Párrafo 1",
     defaultValue:
-      "A travÃ©s de la observaciÃ³n continua, el Ecociclo y el diÃ¡logo con las familias, hacemos visible el desarrollo integral de cada niÃ±@.",
+      "A través de la observación continua, el Ecociclo y el diálogo con las familias, hacemos visible el desarrollo integral de cada niñ@.",
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.evaluationParagraphTwo,
-    label: "EvaluaciÃ³n / PÃ¡rrafo 2",
+    label: "Evaluación / Párrafo 2",
     defaultValue:
-      "Nuestro enfoque reconoce el aprendizaje como un proceso vivo, Ãºnico y en constante evoluciÃ³n para toda la comunidad.",
+      "Nuestro enfoque reconoce el aprendizaje como un proceso vivo, único y en constante evolución para toda la comunidad.",
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.evaluationParagraphThree,
@@ -686,14 +686,14 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.evaluationCta,
-    label: "EvaluaciÃ³n / CTA",
-    defaultValue: "Conocer mÃ¡s",
+    label: "Evaluación / CTA",
+    defaultValue: "Conocer más",
     multiline: false,
   }),
   ...evaluationBlocks.flatMap((block, index) => [
     textSlot({
       id: evaluationBlockSlotId(index, "title"),
-      label: `EvaluaciÃ³n bloque ${index + 1} / TÃ­tulo`,
+      label: `Evaluación bloque ${index + 1} / Título`,
       defaultValue: block.title,
       defaultSize: 24,
       multiline: false,
@@ -702,14 +702,14 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
     ...((block.paragraphs ?? []).map((paragraph, paragraphIndex) =>
       textSlot({
         id: evaluationBlockSlotId(index, `paragraph.${paragraphIndex}`),
-        label: `EvaluaciÃ³n bloque ${index + 1} / PÃ¡rrafo ${paragraphIndex + 1}`,
+        label: `Evaluación bloque ${index + 1} / Párrafo ${paragraphIndex + 1}`,
         defaultValue: paragraph,
       }),
     )),
     ...((block.bullets ?? []).map((bullet, bulletIndex) =>
       textSlot({
         id: evaluationBlockSlotId(index, `bullet.${bulletIndex}`),
-        label: `EvaluaciÃ³n bloque ${index + 1} / Lista ${bulletIndex + 1}`,
+        label: `Evaluación bloque ${index + 1} / Lista ${bulletIndex + 1}`,
         defaultValue: bullet,
         multiline: false,
       }),
@@ -718,7 +718,7 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
       ? [
           textSlot({
             id: evaluationBlockSlotId(index, "cta"),
-            label: `EvaluaciÃ³n bloque ${index + 1} / CTA`,
+            label: `Evaluación bloque ${index + 1} / CTA`,
             defaultValue: block.cta.label,
             multiline: false,
           }),
@@ -760,12 +760,12 @@ export function resolveComoAcompanamosCopy(textMap: LandingTextMap) {
 
 function repairLearningPrincipleText(value: string) {
   return value
-    .replaceAll("Interconexi?n", "InterconexiÃ³n")
-    .replaceAll("Prop?sito", "PropÃ³sito")
-    .replaceAll("maravill?ndonos", "maravillÃ¡ndonos")
-    .replaceAll("m?s", "mÃ¡s")
-    .replaceAll("?para qu??", "â€œpara quÃ©â€")
-    .replaceAll("para qu?", "para quÃ©");
+    .replaceAll("Interconexi?n", "Interconexión")
+    .replaceAll("Prop?sito", "Propósito")
+    .replaceAll("maravill?ndonos", "maravillándonos")
+    .replaceAll("m?s", "más")
+    .replaceAll("?para qu??", "“para qué”")
+    .replaceAll("para qu?", "para qué");
 }
 
 export function resolveLearningPrinciples(
