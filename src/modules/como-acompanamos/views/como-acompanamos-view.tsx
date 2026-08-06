@@ -1,12 +1,16 @@
+"use client";
+
 import Image from "next/image";
+import { useRef, useState } from "react";
 
 import { AccompanimentGroupsTabs } from "@/app/(pages)/como-acompanamos/accompaniment-groups-tabs";
-import { ScrollFloatingFerns } from "@/app/(pages)/como-acompanamos/scroll-floating-ferns";
-import { SnapScrollHandoff } from "@/app/(pages)/como-acompanamos/snap-scroll-handoff";
 import { AccompanyPrinciplesWheel } from "@/modules/como-acompanamos/views/accompany-principles-wheel";
 import { IntegralDevelopmentMap } from "@/modules/como-acompanamos/views/integral-development-map";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
-import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
+import type {
+  LandingPreviewBindings,
+  LandingTextMap,
+} from "@/modules/landing/types/landing-text";
 import {
   comoAcompanamosContentSlotIds,
   getComoAcompanamosContentSlots,
@@ -141,8 +145,11 @@ function ContentCard({
 >) {
   return (
     <article
-      className={`w-full min-w-0 rounded-[2.5rem] p-8 md:p-12 lg:p-14 ${className}`}
-      style={{ backgroundColor: methodologySnapBackgrounds[index % methodologySnapBackgrounds.length] }}
+      className={`flex h-full w-full min-w-0 flex-col rounded-[2.5rem] p-8 md:p-12 lg:p-14 ${className}`}
+      style={{
+        backgroundColor:
+          methodologySnapBackgrounds[index % methodologySnapBackgrounds.length],
+      }}
     >
       <h3
         className="mb-5 max-w-full break-words text-[clamp(1.7rem,4.4vw,3.25rem)] leading-[0.95] text-black [overflow-wrap:anywhere]"
@@ -158,7 +165,7 @@ function ContentCard({
           onSelectContentSlot={onSelectContentSlot}
         />
       </h3>
-      <div className="min-w-0 space-y-5 text-lg leading-relaxed text-black/85 md:text-xl md:leading-9">
+      <div className="min-w-0 flex-1 space-y-5 overflow-y-auto pr-2 text-lg leading-relaxed text-black/85 [scrollbar-color:var(--complement-900)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-button]:hidden [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--complement-700)] md:text-xl md:leading-9">
         {block.paragraphs?.map((paragraph, paragraphIndex) => (
           <EditableCopy
             key={paragraphIndex}
@@ -175,7 +182,7 @@ function ContentCard({
       {block.cta ? (
         <a
           href={block.cta.href}
-          className="mt-8 inline-flex rounded-full border border-complement-700 px-5 py-2.5 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]"
+          className="mt-8 inline-flex w-fit self-end items-center justify-center rounded-full border border-white bg-transparent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--complement-700)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
         >
           <EditableCopy
             slotId={methodologySlotId(index, "cta")}
@@ -187,6 +194,116 @@ function ContentCard({
         </a>
       ) : null}
     </article>
+  );
+}
+
+function MethodologiesCarousel({
+  methodologies,
+  textMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
+}: {
+  methodologies: TextBlock[];
+  textMap: LandingTextMap;
+} & Pick<
+  LandingPreviewBindings,
+  "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
+>) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const syncActiveCard = () => {
+    const scroller = scrollerRef.current;
+
+    if (!scroller) return;
+
+    const nextIndex = Array.from(scroller.children).reduce(
+      (closestIndex, card, index) => {
+        const closestCard = scroller.children[closestIndex] as HTMLElement;
+        const currentCard = card as HTMLElement;
+
+        return Math.abs(currentCard.offsetLeft - scroller.scrollLeft) <
+          Math.abs(closestCard.offsetLeft - scroller.scrollLeft)
+          ? index
+          : closestIndex;
+      },
+      0,
+    );
+
+    setActiveIndex(nextIndex);
+  };
+
+  const move = (direction: "previous" | "next") => {
+    const scroller = scrollerRef.current;
+
+    if (!scroller) return;
+
+    const nextIndex =
+      direction === "next"
+        ? Math.min(activeIndex + 1, methodologies.length - 1)
+        : Math.max(activeIndex - 1, 0);
+    const nextCard = scroller.children[nextIndex] as HTMLElement | undefined;
+
+    if (!nextCard) return;
+
+    scroller.scrollTo({ left: nextCard.offsetLeft, behavior: "smooth" });
+  };
+
+  return (
+    <div className="relative mt-12">
+      <div
+        ref={scrollerRef}
+        onScroll={syncActiveCard}
+        className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label="Carrusel de metodologias y experiencias"
+      >
+        {methodologies.map((methodology, index) => {
+          const isActive = activeIndex === index;
+
+          return (
+            <div
+              key={methodology.title}
+              className="w-full shrink-0 snap-center"
+              aria-current={isActive ? "true" : undefined}
+            >
+              <ContentCard
+                block={methodology}
+                index={index}
+                className={`h-[32rem] shadow-md transition duration-300 md:h-[35rem] ${
+                  isActive ? "blur-0" : "blur-sm"
+                }`}
+                textMap={textMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mx-auto mt-5 flex w-full justify-center gap-5 md:justify-end">
+        <button
+          type="button"
+          onClick={() => move("previous")}
+          disabled={activeIndex === 0}
+          className="text-3xl font-bold leading-none text-black transition hover:text-[var(--orange-500)] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+          aria-label="Ver metodologia anterior"
+        >
+          &larr;
+        </button>
+        <button
+          type="button"
+          onClick={() => move("next")}
+          disabled={activeIndex === methodologies.length - 1}
+          className="text-3xl font-bold leading-none text-black transition hover:text-[var(--orange-500)] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+          aria-label="Ver siguiente metodologia"
+        >
+          &rarr;
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -206,11 +323,7 @@ function BulletList({ items }: { items: string[] }) {
 }
 
 export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
-  const {
-    previewMode,
-    selectedContentSlotId,
-    onSelectContentSlot,
-  } = props;
+  const { previewMode, selectedContentSlotId, onSelectContentSlot } = props;
   const textMap = props.textMap ?? {};
 
   const slotBindingProps = {
@@ -229,29 +342,29 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
         <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
           <div className="grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10">
             <SectionHeading
-            eyebrow={
+              eyebrow={
+                <EditableCopy
+                  slotId={comoAcompanamosContentSlotIds.heroEyebrow}
+                  {...slotBindingProps}
+                />
+              }
+            >
               <EditableCopy
-                slotId={comoAcompanamosContentSlotIds.heroEyebrow}
+                as="p"
+                slotId={comoAcompanamosContentSlotIds.heroIntro}
                 {...slotBindingProps}
               />
-            }
-          >
-            <EditableCopy
-              as="p"
-              slotId={comoAcompanamosContentSlotIds.heroIntro}
-              {...slotBindingProps}
-            />
             </SectionHeading>
             <div className="relative mx-auto w-full max-w-[22rem] lg:pt-20">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <Image
-                src="/assets/images/DSC01280.png"
-                alt="Acompañantes y niñez compartiendo un espacio de aprendizaje"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
+                <Image
+                  src="/assets/images/DSC01280.png"
+                  alt="Acompañantes y niñez compartiendo un espacio de aprendizaje"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -302,7 +415,9 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
                 style={{ fontFamily: "var(--font-roboto-condensed)" }}
               >
                 <EditableCopy
-                  slotId={comoAcompanamosContentSlotIds.integralDevelopmentTitle}
+                  slotId={
+                    comoAcompanamosContentSlotIds.integralDevelopmentTitle
+                  }
                   style={{ fontSize: "inherit", lineHeight: "inherit" }}
                   stylePriority="override"
                   {...slotBindingProps}
@@ -328,11 +443,25 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
       >
         <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
           <SectionHeading
-            title={<EditableCopy slotId={comoAcompanamosContentSlotIds.groupsTitle} style={{ fontSize: "inherit", lineHeight: "inherit" }} stylePriority="override" {...slotBindingProps} />}
+            title={
+              <EditableCopy
+                slotId={comoAcompanamosContentSlotIds.groupsTitle}
+                style={{ fontSize: "inherit", lineHeight: "inherit" }}
+                stylePriority="override"
+                {...slotBindingProps}
+              />
+            }
           >
-            <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.groupsIntro} {...slotBindingProps} />
+            <EditableCopy
+              as="p"
+              slotId={comoAcompanamosContentSlotIds.groupsIntro}
+              {...slotBindingProps}
+            />
           </SectionHeading>
-          <AccompanimentGroupsTabs groups={resolvedAccompanimentGroups} {...slotBindingProps} />
+          <AccompanimentGroupsTabs
+            groups={resolvedAccompanimentGroups}
+            {...slotBindingProps}
+          />
         </div>
       </section>
 
@@ -342,59 +471,71 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
       >
         <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
           <SectionHeading
-            title={<EditableCopy slotId={comoAcompanamosContentSlotIds.methodologiesTitle} style={{ fontSize: "inherit", lineHeight: "inherit" }} stylePriority="override" {...slotBindingProps} />}
+            title={
+              <EditableCopy
+                slotId={comoAcompanamosContentSlotIds.methodologiesTitle}
+                style={{ fontSize: "inherit", lineHeight: "inherit" }}
+                stylePriority="override"
+                {...slotBindingProps}
+              />
+            }
           >
-            <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.methodologiesIntro} {...slotBindingProps} />
+            <EditableCopy
+              as="p"
+              slotId={comoAcompanamosContentSlotIds.methodologiesIntro}
+              {...slotBindingProps}
+            />
           </SectionHeading>
 
-          <div className="relative left-1/2 mt-12 h-dvh w-screen -translate-x-1/2 overflow-hidden bg-white">
-            <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
-              <ScrollFloatingFerns
-                sectionId="metodologias-y-experiencias"
-                scrollContainerId="metodologias-snap-scroll"
-                variant="sides"
-                className="top-0 min-h-dvh rounded-none bg-transparent"
-                canvasClassName="h-dvh min-h-dvh"
-              />
-            </div>
-            <SnapScrollHandoff containerId="metodologias-snap-scroll" />
-            <div
-              id="metodologias-snap-scroll"
-              className="scrollbar-none relative z-10 h-dvh w-screen snap-y snap-mandatory overflow-y-auto overscroll-auto scroll-smooth"
-            >
-              {resolvedMethodologies.map((methodology, index) => (
-                <article
-                  key={methodology.title}
-                  className="flex h-dvh min-h-dvh w-screen snap-start snap-always scroll-mt-0 items-center justify-center bg-white px-6 py-20 md:px-10 lg:bg-transparent lg:px-28"
-                >
-                  <ContentCard
-                    block={methodology}
-                    index={index}
-                    className="mx-auto max-w-5xl shadow-none"
-                    {...slotBindingProps}
-                  />
-                </article>
-              ))}
-            </div>
-          </div>
+          <MethodologiesCarousel
+            methodologies={resolvedMethodologies}
+            {...slotBindingProps}
+          />
         </div>
       </section>
 
       <section id="evaluacion" className="scroll-mt-28 bg-[#f7f6f1]">
         <div className="mx-auto grid w-full max-w-7xl min-w-0 items-start gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10 lg:px-14 lg:py-14">
           <div>
-            <SectionHeading title={<EditableCopy slotId={comoAcompanamosContentSlotIds.evaluationTitle} style={{ fontSize: "inherit", lineHeight: "inherit" }} stylePriority="override" {...slotBindingProps} />}>
+            <SectionHeading
+              title={
+                <EditableCopy
+                  slotId={comoAcompanamosContentSlotIds.evaluationTitle}
+                  style={{ fontSize: "inherit", lineHeight: "inherit" }}
+                  stylePriority="override"
+                  {...slotBindingProps}
+                />
+              }
+            >
               <p className="max-w-full break-words text-2xl font-semibold text-black [overflow-wrap:anywhere]">
-                <EditableCopy slotId={comoAcompanamosContentSlotIds.evaluationLead} {...slotBindingProps} />
+                <EditableCopy
+                  slotId={comoAcompanamosContentSlotIds.evaluationLead}
+                  {...slotBindingProps}
+                />
               </p>
-              <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.evaluationParagraphOne} {...slotBindingProps} />
-              <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.evaluationParagraphTwo} {...slotBindingProps} />
-              <EditableCopy as="p" slotId={comoAcompanamosContentSlotIds.evaluationParagraphThree} {...slotBindingProps} />
+              <EditableCopy
+                as="p"
+                slotId={comoAcompanamosContentSlotIds.evaluationParagraphOne}
+                {...slotBindingProps}
+              />
+              <EditableCopy
+                as="p"
+                slotId={comoAcompanamosContentSlotIds.evaluationParagraphTwo}
+                {...slotBindingProps}
+              />
+              <EditableCopy
+                as="p"
+                slotId={comoAcompanamosContentSlotIds.evaluationParagraphThree}
+                {...slotBindingProps}
+              />
               <a
                 href="/evaluaciones"
                 className="inline-flex rounded-full border border-complement-700 px-4 py-2 text-sm font-semibold text-[var(--complement-800)] transition hover:bg-[var(--complement-100)]"
               >
-                <EditableCopy slotId={comoAcompanamosContentSlotIds.evaluationCta} {...slotBindingProps} />
+                <EditableCopy
+                  slotId={comoAcompanamosContentSlotIds.evaluationCta}
+                  {...slotBindingProps}
+                />
               </a>
             </SectionHeading>
           </div>

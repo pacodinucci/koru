@@ -231,46 +231,53 @@ export function IntegralDevelopmentMap() {
           ))}
         </div>
 
-        <div className="mt-6 grid gap-4 md:hidden">
-          <div className="grid gap-3 sm:grid-cols-2">
+        <div className="relative mx-auto mt-6 max-w-sm md:hidden">
+          <div
+            className="absolute bottom-8 left-1/2 top-8 -translate-x-1/2 border-l-[3px] border-dotted border-[var(--orange-500)] opacity-85"
+            aria-hidden="true"
+          />
+
+          <div className="relative z-10 grid gap-5">
             {integralDimensions.map((dimension, index) => {
               const isActive = activeIndex === index;
+              const style =
+                dimensionContainerStyles[index % dimensionContainerStyles.length];
 
               return (
-                <button
-                  key={dimension.label}
-                  type="button"
-                  className={`flex items-center gap-3 rounded-[2rem] bg-white/75 px-4 py-3 text-left shadow-sm ring-1 ring-black/[0.04] transition duration-200 ${
-                    isActive
-                      ? "scale-[1.02] text-[var(--complement-800)] shadow-md ring-[var(--complement-700)]"
-                      : "text-black"
-                  }`}
-                  aria-pressed={isActive}
-                  onClick={() => setActiveIndex(isActive ? null : index)}
-                >
-                  <span
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${dimension.color}`}
+                <article key={dimension.label} className="flex justify-center">
+                  <button
+                    type="button"
+                    className={`group relative flex min-h-[7.25rem] w-full max-w-[18rem] flex-col items-center justify-center overflow-hidden border px-5 py-4 text-center shadow-sm outline-none transition duration-200 hover:scale-[1.03] hover:shadow-md focus-visible:ring-2 focus-visible:ring-[var(--complement-800)] ${style.color} ${style.border} ${style.shape} ${
+                      isActive ? "scale-[1.03] shadow-md" : ""
+                    }`}
+                    aria-label={`${dimension.label}: ${dimension.description}`}
+                    aria-pressed={isActive}
+                    onClick={() => setActiveIndex(isActive ? null : index)}
                   >
+                    <span
+                      className={`pointer-events-none absolute z-0 border border-white/70 ${style.innerInset} ${style.innerShape}`}
+                      aria-hidden="true"
+                    />
                     <Image
                       src={dimension.icon}
                       alt=""
-                      width={30}
-                      height={30}
-                      className={`h-7 w-7 object-contain transition duration-200 [filter:sepia(1)_saturate(1.8)_hue-rotate(145deg)_brightness(0.75)] ${
-                        isActive ? "scale-110 opacity-95" : "opacity-70"
+                      width={40}
+                      height={40}
+                      className={`relative z-10 mb-2 h-9 w-9 object-contain transition duration-200 [filter:sepia(1)_saturate(1.8)_hue-rotate(145deg)_brightness(0.75)] ${
+                        isActive
+                          ? "scale-110 opacity-100"
+                          : "opacity-75 group-hover:opacity-95"
                       }`}
                       aria-hidden="true"
                     />
-                  </span>
-                  <span>
-                    <span className="block text-base font-medium leading-tight">
+                    <span className="relative z-10 block text-[1.15rem] font-medium leading-[1.05] text-[var(--complement-900)]">
                       {dimension.label}
                     </span>
-                    <span className="mt-0.5 block text-sm leading-tight text-black/55">
+                    <span className="relative z-10 mt-1 block max-w-[12rem] text-sm leading-tight text-black/55">
                       {dimension.description}
                     </span>
-                  </span>
-                </button>
+                  </button>
+                </article>
               );
             })}
           </div>

@@ -227,6 +227,35 @@ function getVisibleEventsWhere(userId: string, role: UserRole) {
   };
 }
 
+export async function listPublicCalendarEventsByRange({
+  userId,
+  start,
+  end,
+}: {
+  userId?: string;
+  start: Date;
+  end: Date;
+}) {
+  return prisma.calendarEvent.findMany({
+    where: {
+      status: CalendarEventStatus.PUBLISHED,
+      startsAt: { lt: end },
+      endsAt: { gte: start },
+      visibility: userId
+        ? { in: [CalendarEventVisibility.PUBLIC, CalendarEventVisibility.MEMBERS] }
+        : CalendarEventVisibility.PUBLIC,
+    },
+    orderBy: [{ startsAt: "asc" }],
+    select: {
+      id: true,
+      title: true,
+      startsAt: true,
+      endsAt: true,
+      location: true,
+      visibility: true,
+    },
+  });
+}
 export async function listUpcomingPublicCalendarEvents({
   userId,
   limit = 4,

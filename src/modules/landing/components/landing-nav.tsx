@@ -282,7 +282,7 @@ export function LandingNav({
     const normalizedLabel = item.label.trim().toLowerCase();
     const normalizedHref = (item.href ?? "").trim().toLowerCase();
     return normalizedLabel === "log in" || normalizedHref === "/sign-in";
-  }) ?? { label: "Log In", href: "/sign-in" };
+  }) ?? { label: "Iniciar Sesión", href: "/sign-in" };
 
   const navLinks = links.filter((item) => {
     if (item.label.trim() === "") {

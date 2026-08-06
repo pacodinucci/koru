@@ -115,6 +115,13 @@ function BlogEventsSidebar({ events }: { events: BlogCalendarEvent[] }) {
           </p>
         )}
       </div>
+
+      <Link
+        href="/calendario"
+        className="text-sm font-medium text-[var(--complement-800)] underline underline-offset-4 transition hover:text-[var(--complement-900)]"
+      >
+        Ir al calendario
+      </Link>
     </aside>
   );
 }

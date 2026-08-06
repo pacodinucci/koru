@@ -325,7 +325,7 @@ export function AccompanyPrinciplesWheel({
         </div>
 
         <aside
-          className="relative z-10 hidden min-h-[10rem] lg:block lg:pl-4"
+          className="relative z-10 hidden h-[28rem] lg:flex lg:items-center lg:pl-4"
           aria-live="polite"
         >
           {activeIndex !== null ? (
