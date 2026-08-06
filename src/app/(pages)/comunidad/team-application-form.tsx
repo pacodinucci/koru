@@ -42,7 +42,8 @@ async function uploadCv(file: File) {
   const result = (await response.json().catch(() => null)) as CvUploadResult | null;
 
   if (!response.ok || !result?.ok) {
-    throw new Error(result?.error ?? "No pudimos subir el CV.");
+    const message = result && !result.ok ? result.error : undefined;
+    throw new Error(message ?? "No pudimos subir el CV.");
   }
 
   return result.url;
