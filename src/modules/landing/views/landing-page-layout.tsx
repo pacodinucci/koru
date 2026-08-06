@@ -787,7 +787,7 @@ export function LandingPageLayout({
           data-preview-layout-section-id="layout-footer"
           className=""
           style={{
-            backgroundColor: "var(--complement-400)",
+            backgroundColor: "var(--complement-900)",
             minHeight: `${footerHeight}px`,
             padding: "12px",
           }}
@@ -818,20 +818,19 @@ export function LandingPageLayout({
             </div>
           ) : (
             <div
-              className="w-full px-2 py-2"
+              className="w-full px-2 py-10"
               style={{ fontFamily: "var(--font-montserrat)" }}
             >
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.15fr] lg:gap-10">
                 <section>
                   <Image
-                    src={navLogoSrc}
+                    src="/branding/koru-logo-white.png"
                     alt={navLogoAlt}
-                    width={180}
-                    height={44}
-                    unoptimized={navLogoSrc.startsWith("http")}
-                    className="h-11 w-auto object-contain"
+                    width={1536}
+                    height={1024}
+                    className="h-20 w-[120px] object-contain"
                   />
-                  <p className="mt-5 max-w-[36ch] text-base leading-relaxed text-black/85">
+                  <p className="mt-5 max-w-[36ch] text-base leading-relaxed text-white/85">
                     Koru es una comunidad viva de aprendizaje donde acompañamos
                     procesos con presencia, cuidado y vínculo auténtico.
                   </p>
@@ -840,7 +839,7 @@ export function LandingPageLayout({
                       <a
                         key={item}
                         href="#"
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-[#38a000] text-lg font-semibold text-white"
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-white text-lg font-semibold text-white"
                       >
                         {item}
                       </a>
@@ -850,12 +849,12 @@ export function LandingPageLayout({
 
                 <section>
                   <h4
-                    className="text-lg font-semibold uppercase tracking-tight text-black"
+                    className="text-lg font-semibold uppercase tracking-tight text-white"
                     style={{ fontFamily: "var(--font-roboto-condensed)" }}
                   >
                     Links
                   </h4>
-                  <nav className="mt-4 space-y-2.5 text-lg text-black/95">
+                  <nav className="mt-4 space-y-2.5 text-lg text-white/90">
                     <Link href="/" className="block">
                       Home
                     </Link>
@@ -876,12 +875,12 @@ export function LandingPageLayout({
 
                 <section>
                   <h4
-                    className="text-lg font-semibold uppercase tracking-tight text-black"
+                    className="text-lg font-semibold uppercase tracking-tight text-white"
                     style={{ fontFamily: "var(--font-roboto-condensed)" }}
                   >
                     Comunidad
                   </h4>
-                  <ul className="mt-4 space-y-2.5 text-lg text-black/95">
+                  <ul className="mt-4 space-y-2.5 text-lg text-white/90">
                     <li>Acompañamiento integral</li>
                     <li>Comunidad de familias</li>
                     <li>Programas por etapas</li>
@@ -892,12 +891,12 @@ export function LandingPageLayout({
 
                 <section>
                   <h4
-                    className="text-lg font-semibold uppercase tracking-tight text-black"
+                    className="text-lg font-semibold uppercase tracking-tight text-white"
                     style={{ fontFamily: "var(--font-roboto-condensed)" }}
                   >
                     Contacto
                   </h4>
-                  <ul className="mt-4 space-y-3 text-lg text-black/95">
+                  <ul className="mt-4 space-y-3 text-lg text-white/90">
                     <li className="flex items-start gap-3">
                       <span className="mt-0.5">✉</span>
                       <span>contacto@koruosa.com</span>
@@ -914,15 +913,13 @@ export function LandingPageLayout({
                 </section>
               </div>
 
-              <div className="mt-8 border-t border-black/15 pt-5">
-                <div className="flex flex-col gap-3 text-base text-black/90 md:flex-row md:items-center md:justify-between">
+              <div className="mt-8 border-t border-white/30 pt-5">
+                <div className="flex flex-col gap-3 text-base text-white/90 md:flex-row md:items-center md:justify-between">
                   <p>Copyright © 2026 Koru OSA. All Rights Reserved.</p>
                   <nav className="flex items-center gap-4">
-                    <a href="#">Terms & Condition</a>
+                    <a href="#">Terminos y condiciones</a>
                     <span>|</span>
-                    <a href="#">Privacy</a>
-                    <span>|</span>
-                    <a href="#">Support</a>
+                    <a href="#">Privacidad</a>
                   </nav>
                 </div>
               </div>

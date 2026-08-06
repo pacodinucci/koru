@@ -95,8 +95,8 @@ export function PublicCalendarView({
         </h1>
       </header>
 
-      <section className="mx-auto mt-10 grid max-w-6xl overflow-hidden rounded-[0.5rem] bg-[#fafdea] lg:grid-cols-[13rem_minmax(0,1fr)_18rem]">
-        <aside className="border-b-[2.5px] border-[var(--complement-800)] bg-[#fafdea] lg:border-r-[2.5px] lg:border-b-0">
+      <section className="mx-auto mt-10 grid max-w-6xl overflow-hidden rounded-[0.5rem] bg-[#fbfaf4] lg:grid-cols-[13rem_minmax(0,1fr)_18rem]">
+        <aside className="border-b-[2.5px] border-[var(--complement-800)] bg-[#fbfaf4] lg:border-r-[2.5px] lg:border-b-0">
           <div className="flex min-h-[76px] items-center justify-between border-b-[2.5px] border-white/80 bg-[var(--complement-800)] px-5 text-white">
             <Link
               href={calendarHref(
@@ -228,7 +228,7 @@ export function PublicCalendarView({
           </div>
         </div>
 
-        <aside className="min-w-0 bg-[#fafdea]">
+        <aside className="min-w-0 bg-[#fbfaf4]">
           <div className="min-h-[76px] border-b-[2.5px] border-white/80 bg-[var(--complement-800)]" />
           <div className="p-5">
             <p className="text-sm font-semibold capitalize text-[var(--complement-800)]">

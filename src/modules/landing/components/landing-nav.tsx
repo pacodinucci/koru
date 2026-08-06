@@ -627,7 +627,7 @@ export function LandingNav({
               ) : (
                 <a
                   href={authLink.href || "#"}
-                  className="text-[.8rem] font-semibold tracking-wider transition-colors duration-300 hover:text-[var(--complement-800)]"
+                  className="inline-flex items-center rounded-full border border-[var(--complement-800)] px-4 py-2 [font-family:var(--font-roboto-condensed)] text-[1rem] font-semibold tracking-wider transition-colors duration-300 hover:bg-[var(--complement-800)] hover:text-white"
                 >
                   {authLink.label}
                 </a>

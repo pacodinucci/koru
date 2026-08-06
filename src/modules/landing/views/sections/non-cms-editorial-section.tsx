@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { FernShape } from "@/components/fern-shape";
+import { KoruShape1 } from "@/components/koru-shape-1";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
 import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
@@ -80,21 +80,21 @@ export function NonCmsEditorialSection({
 
   return (
     <section className="relative overflow-hidden bg-white">
-      <FernShape
-        x="-48px"
-        y="112px"
-        size={210}
+      <KoruShape1
+        x="-44px"
+        y="70px"
+        size={240}
         color="var(--complement-800)"
-        opacity={0.13}
-        rotate={-10}
+        opacity={0.16}
+        rotate={-8}
       />
-      <FernShape
-        size={250}
-        color="var(--brand-700)"
-        opacity={0.1}
-        rotate={174}
+      <KoruShape1
+        size={260}
+        color="var(--brand-600)"
+        opacity={0.12}
+        rotate={178}
         flipX
-        style={{ right: "-66px", top: "34%", left: "auto" }}
+        style={{ right: "-48px", top: "120px", left: "auto" }}
       />
       <ScrollReveal direction="up">
         {bannerTitle ? (

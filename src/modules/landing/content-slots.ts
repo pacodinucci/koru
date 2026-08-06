@@ -78,6 +78,12 @@ const landingContentTextRepairs: Array<[string, string]> = [
   [unknownAccent("tambi", "n"), "también"],
   [unknownAccent("pr", "cticas"), "prácticas"],
   [unknownAccent("v", "nculo"), "vínculo"],
+  [unknownAccent("acompa", "ada"), "acompañada"],
+  [unknownAccent("acompa", "a"), "acompaña"],
+  [unknownAccent("c", "mo"), "cómo"],
+  [unknownAccent("m", "s"), "más"],
+  [unknownAccent("aut", "ntico"), "auténtico"],
+  [unknownAccent("v", "nculos"), "vínculos"],
   [unknownAccent("m", "gico"), "mágico"],
   [unknownAccent("", "Te interesa aplicar a Koru?"), "¿Te interesa aplicar a Koru?"],
 ];
