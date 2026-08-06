@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SmoothHashScroll } from "./smooth-hash-scroll";
 import { accompanimentGroups } from "@/modules/como-acompanamos/content-slots";
 
 type GroupPageProps = {
@@ -41,12 +42,14 @@ export async function generateMetadata({ params }: GroupPageProps) {
 function DetailSection({
   eyebrow,
   children,
+  id,
 }: {
   eyebrow: string;
   children: React.ReactNode;
+  id?: string;
 }) {
   return (
-    <section className="bg-white">
+    <section id={id} className="scroll-mt-36 bg-white">
       <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 md:py-20 lg:px-14">
         <p className="mb-7 max-w-5xl text-sm font-semibold uppercase tracking-[0.28em] text-[#6d7e96]">
           {eyebrow}
@@ -69,6 +72,7 @@ export default async function GrupoAcompanamientoPage({ params }: GroupPageProps
 
   return (
     <main className="bg-[#f7f6f1]" style={{ fontFamily: "var(--font-montserrat)" }}>
+      <SmoothHashScroll />
       <section className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.95fr)] lg:px-14 lg:py-20">
         <div className="space-y-7">
           <Link
@@ -128,7 +132,7 @@ export default async function GrupoAcompanamientoPage({ params }: GroupPageProps
         </DetailSection>
       ) : null}
 
-      <DetailSection eyebrow="Ritmo y experiencias">
+      <DetailSection id="ritmo-y-experiencias" eyebrow="Ritmo y experiencias">
         {group.rhythmIntro ? <p>{group.rhythmIntro}</p> : null}
         {group.rhythmBullets ? (
           <ul className="space-y-4 pl-6">

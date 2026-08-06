@@ -53,21 +53,29 @@ const protocolBlobStyles = [
 export function ProtocolBlobList({ protocols }: ProtocolBlobListProps) {
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [overlay, setOverlay] = useState<OverlayState | null>(null);
+  const [mobileProtocolIndex, setMobileProtocolIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!overlay) return;
+    if (!overlay && mobileProtocolIndex === null) return;
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setOverlay(null);
+        setMobileProtocolIndex(null);
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [overlay]);
+  }, [overlay, mobileProtocolIndex]);
 
   function openProtocol(protocol: Protocol, index: number) {
+    if (window.matchMedia("(max-width: 1023px)").matches) {
+      setOverlay(null);
+      setMobileProtocolIndex(index);
+      return;
+    }
+
     const button = buttonRefs.current[protocol.id];
     if (!button) return;
 
@@ -98,6 +106,10 @@ export function ProtocolBlobList({ protocols }: ProtocolBlobListProps) {
               }}
               type="button"
               aria-haspopup="dialog"
+              aria-expanded={
+                overlay?.protocol.id === protocol.id ||
+                mobileProtocolIndex === index
+              }
               onClick={() => openProtocol(protocol, index)}
               className={`group relative flex min-h-[7.75rem] w-full flex-col items-center justify-center overflow-hidden border px-6 py-5 text-center text-[var(--complement-900)] shadow-sm outline-none transition duration-200 hover:scale-[1.03] hover:shadow-md focus-visible:ring-2 focus-visible:ring-[var(--complement-800)] ${style.color} ${style.border} ${style.shape} cursor-pointer`}
             >
@@ -115,6 +127,55 @@ export function ProtocolBlobList({ protocols }: ProtocolBlobListProps) {
           );
         })}
       </div>
+
+
+      {mobileProtocolIndex !== null ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-3 py-8 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="protocol-mobile-modal-title"
+          onClick={() => setMobileProtocolIndex(null)}
+        >
+          {(() => {
+            const protocol = protocols[mobileProtocolIndex];
+            const style =
+              protocolBlobStyles[mobileProtocolIndex % protocolBlobStyles.length];
+
+            return (
+              <div
+                className={`relative flex min-h-[27rem] w-full max-w-[26rem] overflow-hidden border px-8 py-14 text-center shadow-xl rounded-[45%_55%_47%_53%/34%_34%_66%_66%] ${style.color} ${style.border}`}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <span
+                  className="pointer-events-none absolute inset-[0.8rem] z-0 rounded-[42%_58%_50%_50%/38%_37%_63%_62%] border border-white/75"
+                  aria-hidden="true"
+                />
+                <button
+                  type="button"
+                  className="absolute right-7 top-7 z-20 text-2xl leading-none text-[var(--complement-900)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--complement-800)]"
+                  onClick={() => setMobileProtocolIndex(null)}
+                  aria-label="Cerrar protocolo"
+                >
+                  &times;
+                </button>
+                <div className="relative z-10 flex min-h-[19rem] w-full flex-1 flex-col items-center justify-center gap-5 overflow-hidden text-center">
+                  <h3
+                    id="protocol-mobile-modal-title"
+                    className="max-w-[15rem] break-words text-[clamp(1.28rem,5.3vw,1.65rem)] leading-[1.02] text-[var(--complement-900)] [overflow-wrap:anywhere]"
+                    style={{ fontFamily: "var(--font-roboto-condensed)" }}
+                  >
+                    {protocol.title}
+                  </h3>
+                  <p className="max-w-[18.5rem] break-words text-base leading-relaxed text-black/75 [overflow-wrap:anywhere] sm:text-lg">
+                    {protocol.text}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      ) : null}
 
       {overlay ? (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">

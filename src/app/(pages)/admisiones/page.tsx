@@ -157,6 +157,16 @@ export default function AdmisionesPage() {
             </ol>
           </div>
         </div>
+
+        <div className="mt-8 text-center md:mt-10">
+          <a
+            href="/assets/docs/contrato-de-colaboracion.pdf"
+            download
+            className="text-base font-medium text-[#55764d] underline decoration-[#55764d]/70 underline-offset-4 transition hover:text-[#3f5d38] hover:decoration-[#3f5d38] md:text-lg"
+          >
+            Descargar el contrato de colaboración
+          </a>
+        </div>
       </section>
     </main>
   );

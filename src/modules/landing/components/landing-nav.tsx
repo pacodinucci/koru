@@ -271,6 +271,9 @@ export function LandingNav({
     ? !(isTransparentNav && !effectiveIsScrolled)
     : !isTransparentNav;
   const resolvedHeaderBackgroundColor = effectiveBackgroundColor;
+  const shouldUseTransparentLogo =
+    !isMobileMenuOpen &&
+    resolvedHeaderBackgroundColor.trim().toLowerCase() === "transparent";
 
   const [activeSubmenuId, setActiveSubmenuId] = useState<string | null>(null);
   const hasActiveSubmenu = activeSubmenuId !== null;
@@ -530,13 +533,29 @@ export function LandingNav({
             marginBottom: `${containerStyles["navbar-logo"]?.marginY ?? 0}px`,
           }}
         >
-          <Link href="/" className="inline-flex items-center">
+          <Link
+            href="/"
+            className="relative inline-flex h-20 w-[120px] items-center"
+          >
             <Image
               src={logoSrc}
               alt={logoAlt}
               width={1536}
               height={1024}
-              className="h-20 w-auto"
+              className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
+                shouldUseTransparentLogo ? "opacity-0" : "opacity-100"
+              }`}
+              priority
+            />
+            <Image
+              src="/branding/koru-logo-white.png"
+              alt=""
+              aria-hidden="true"
+              width={1536}
+              height={1024}
+              className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
+                shouldUseTransparentLogo ? "opacity-100" : "opacity-0"
+              }`}
               priority
             />
           </Link>

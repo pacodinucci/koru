@@ -5,6 +5,49 @@ import type { FormEvent } from "react";
 
 type SubmitState = "idle" | "sending" | "sent" | "error";
 
+type CvUploadResult =
+  | { ok: true; url: string }
+  | { ok: false; error?: string };
+
+const MAX_CV_SIZE = 10 * 1024 * 1024;
+const ALLOWED_CV_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]);
+
+function validateCv(file: File | null) {
+  if (!file) return "Adjuntá tu CV en PDF, DOC o DOCX.";
+
+  if (!ALLOWED_CV_TYPES.has(file.type)) {
+    return "El CV debe ser un archivo PDF, DOC o DOCX.";
+  }
+
+  if (file.size > MAX_CV_SIZE) {
+    return "El CV no puede superar los 10MB.";
+  }
+
+  return null;
+}
+
+async function uploadCv(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/uploads/team-cv", {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = (await response.json().catch(() => null)) as CvUploadResult | null;
+
+  if (!response.ok || !result?.ok) {
+    throw new Error(result?.error ?? "No pudimos subir el CV.");
+  }
+
+  return result.url;
+}
+
 export function TeamApplicationForm() {
   const [state, setState] = useState<SubmitState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -14,12 +57,32 @@ export function TeamApplicationForm() {
     setState("sending");
     setError(null);
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const nombre = String(formData.get("nombre") ?? "");
     const email = String(formData.get("email") ?? "");
     const telefono = String(formData.get("telefono") ?? "");
     const area = String(formData.get("area") ?? "");
     const mensaje = String(formData.get("mensaje") ?? "");
+    const cv = formData.get("cv");
+    const cvFile = cv instanceof File && cv.size > 0 ? cv : null;
+    const cvError = validateCv(cvFile);
+
+    if (cvError || !cvFile) {
+      setState("error");
+      setError(cvError);
+      return;
+    }
+
+    let cvUrl: string;
+
+    try {
+      cvUrl = await uploadCv(cvFile);
+    } catch (uploadError) {
+      setState("error");
+      setError(uploadError instanceof Error ? uploadError.message : "No pudimos subir el CV.");
+      return;
+    }
 
     const response = await fetch("/api/contact", {
       method: "POST",
@@ -28,7 +91,12 @@ export function TeamApplicationForm() {
         nombre,
         email,
         telefono,
-        mensaje: `Postulación para unirse al equipo KORU.\n\nÁrea de interés: ${area || "No especificada"}\n\n${mensaje}`,
+        mensaje: `Postulación para unirse al equipo KORU.
+
+Área de interés: ${area || "No especificada"}
+CV: ${cvUrl}
+
+${mensaje}`,
       }),
     });
 
@@ -40,7 +108,7 @@ export function TeamApplicationForm() {
       return;
     }
 
-    event.currentTarget.reset();
+    form.reset();
     setState("sent");
   }
 
@@ -73,6 +141,17 @@ export function TeamApplicationForm() {
           className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm outline-none transition focus:border-black/40"
         />
       </div>
+      <label className="grid gap-2 text-sm text-black/70">
+        <span className="font-medium text-black">CV</span>
+        <input
+          name="cv"
+          type="file"
+          required
+          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm outline-none transition file:mr-3 file:rounded-md file:border-0 file:bg-black/5 file:px-3 file:py-1.5 file:text-sm file:font-medium focus:border-black/40"
+        />
+        <span>Adjuntá tu CV en PDF, DOC o DOCX. Máximo 10MB.</span>
+      </label>
       <textarea
         name="mensaje"
         required

@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { ProtocolBlobList } from "./protocol-blob-list";
-import { TeamApplicationForm } from "./team-application-form";
 
 type TextImageSectionProps = {
   id?: string;
@@ -16,9 +15,6 @@ type TextImageSectionProps = {
   sectionClassName?: string;
   children?: ReactNode;
 };
-
-const buttonClassName =
-  "inline-flex items-center rounded-md border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black/5";
 
 const communityActionStyles = [
   {
@@ -132,7 +128,7 @@ function TextImageSection({
 
 function CommunityActionRow({ items }: { items: string[] }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 pt-1 lg:flex-nowrap">
+    <div className="grid w-full max-w-[18.5rem] grid-cols-2 items-center gap-3 pt-1 sm:max-w-none sm:flex sm:flex-wrap sm:justify-center lg:flex-nowrap">
       {items.map((item, index) => {
         const style =
           communityActionStyles[index % communityActionStyles.length];
@@ -140,7 +136,7 @@ function CommunityActionRow({ items }: { items: string[] }) {
         return (
           <div
             key={item}
-            className={`relative flex min-h-[4.6rem] min-w-[8.75rem] items-center justify-center overflow-hidden border px-5 py-3 text-center text-sm font-medium leading-tight text-[var(--complement-900)] shadow-sm ${style.color} ${style.border} ${style.shape}`}
+            className={`relative flex min-h-[3.75rem] w-full min-w-0 items-center justify-center overflow-hidden border px-3 py-2 text-center text-xs font-medium leading-tight text-[var(--complement-900)] shadow-sm sm:min-h-[4.6rem] sm:w-auto sm:min-w-[8.75rem] sm:px-5 sm:py-3 sm:text-sm ${style.color} ${style.border} ${style.shape}`}
           >
             <span
               className={`pointer-events-none absolute z-0 border border-white/70 ${style.innerInset} ${style.innerShape}`}
@@ -150,33 +146,6 @@ function CommunityActionRow({ items }: { items: string[] }) {
           </div>
         );
       })}
-    </div>
-  );
-}
-
-function BulletList({ items }: { items: string[] }) {
-  return (
-    <ul className="grid gap-2 pl-5 text-base leading-relaxed text-black/75 md:text-lg">
-      {items.map((item) => (
-        <li
-          key={item}
-          className="list-disc marker:text-[var(--complement-800)]"
-        >
-          {item}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function LinkGrid({ links }: { links: { label: string; href: string }[] }) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {links.map((link) => (
-        <Link key={link.label} href={link.href} className={buttonClassName}>
-          {link.label}
-        </Link>
-      ))}
     </div>
   );
 }
@@ -204,10 +173,49 @@ const protocols = [
   },
 ];
 
+const dailyRhythms = [
+  {
+    label: "Esporas",
+    href: "/como-acompanamos/grupo-esporas#ritmo-y-experiencias",
+  },
+  {
+    label: "Grupo Koru",
+    href: "/como-acompanamos/grupo-koru#ritmo-y-experiencias",
+  },
+  {
+    label: "Helechos 1",
+    href: "/como-acompanamos/grupo-helechos-1#ritmo-y-experiencias",
+  },
+  {
+    label: "Helechos 2",
+    href: "/como-acompanamos/grupo-helechos-2#ritmo-y-experiencias",
+  },
+  { label: "Ritmo anual", href: "#celebraciones-comunitarias" },
+];
+
+const communityCelebrations = [
+  {
+    title: "Celebración del Maíz",
+    imageSrc: "/assets/images/DSC01273.png",
+  },
+  {
+    title: "Celebración día de muertos",
+    imageSrc: "/assets/images/DSC01338.png",
+  },
+  {
+    title: "Bazar navideño",
+    imageSrc: "/assets/images/DSC01638.png",
+  },
+  {
+    title: "Kermés de primavera",
+    imageSrc: "/assets/images/DSC02336.png",
+  },
+];
+
 export default function ComunidadPage() {
   return (
     <main
-      className="bg-white pb-16"
+      className="bg-white"
       style={{ fontFamily: "var(--font-montserrat)" }}
     >
       <section
@@ -265,9 +273,9 @@ export default function ComunidadPage() {
       </section>
 
       <section className="mt-8 bg-[#f3f2ef] md:mt-10 lg:mt-12">
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-6 px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-5 px-5 py-8 sm:px-6 md:gap-6 md:px-10 md:py-12 lg:px-14 lg:py-14">
           <p
-            className="mx-auto max-w-5xl text-center text-2xl leading-[1.25] text-black md:text-3xl"
+            className="mx-auto max-w-[19rem] text-center text-2xl leading-[1.15] text-black sm:max-w-3xl md:text-3xl"
             style={{ fontFamily: "var(--font-roboto-condensed)" }}
           >
             No buscamos familias perfectas, sino disponibles a:
@@ -373,10 +381,7 @@ export default function ComunidadPage() {
         </Link>
       </TextImageSection>
 
-      <section
-        id="protocolos-y-cuidado"
-        className="scroll-mt-36 bg-[#f7f0e5]"
-      >
+      <section id="protocolos-y-cuidado" className="scroll-mt-36 bg-[#f7f0e5]">
         <div className="mx-auto grid w-full max-w-7xl gap-8 px-6 py-16 md:px-10 md:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-10 lg:px-14 lg:py-24">
           <div className="space-y-6 lg:pt-2">
             <div className="max-w-3xl space-y-5">
@@ -416,66 +421,102 @@ export default function ComunidadPage() {
         </div>
       </section>
 
-      <TextImageSection
-        id="dia-a-dia-en-koru"
-        title="El día a día en KORU"
-        imageSrc="/assets/images/comu6.png"
-        imageAlt="Vida cotidiana en la comunidad Koru"
-        paragraphs={[
-          "Conoce cómo se vive cada día en KORU a través del ritmo de cada grupo y de nuestras celebraciones comunitarias.",
-          "Cada etapa tiene necesidades, experiencias y formas de acompañamiento distintas; por eso organizamos la vida cotidiana con ritmos claros y acordes al momento evolutivo.",
-        ]}
-      >
-        <div className="space-y-5">
-          <LinkGrid
-            links={[
-              {
-                label: "Ritmo en Esporas",
-                href: "/como-acompanamos#grupo-esporas",
-              },
-              {
-                label: "Ritmo en Grupo Koru",
-                href: "/como-acompanamos#grupo-koru",
-              },
-              {
-                label: "Ritmo en Helechos 1",
-                href: "/como-acompanamos#grupo-helechos-1",
-              },
-              {
-                label: "Ritmo en Helechos 2",
-                href: "/como-acompanamos#grupo-helechos-2",
-              },
-            ]}
-          />
-          <div>
-            <p className="mb-3 text-sm font-semibold tracking-[0.16em] text-black/55">
-              NUESTRAS CELEBRACIONES COMUNITARIAS
-            </p>
-            <BulletList
-              items={[
-                "Celebración del Maíz",
-                "Celebración día de muertos",
-                "Bazar navideño",
-                "Kermés de primavera",
-              ]}
-            />
+      <section id="dia-a-dia-en-koru" className="scroll-mt-36 bg-white">
+        <div className="mx-auto grid w-full max-w-7xl items-center gap-8 px-6 py-16 md:px-10 md:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-14 lg:py-24">
+          <div className="space-y-6">
+            <div className="max-w-3xl space-y-5">
+              <h2
+                className="text-3xl leading-[1] tracking-tight text-black md:text-4xl lg:text-5xl"
+                style={{ fontFamily: "var(--font-roboto-condensed)" }}
+              >
+                El día a día en KORU
+              </h2>
+              <p
+                className="text-lg leading-relaxed text-black/85 md:text-2xl"
+                style={{ fontFamily: "var(--font-indie-flower)" }}
+              >
+                Conoce cómo se vive cada día en KORU.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm font-semibold tracking-[0.16em] text-black/55">
+                RITMOS POR GRUPO Y RITMO ANUAL
+              </p>
+              <div className="flex max-w-4xl flex-wrap gap-3">
+                {dailyRhythms.map((rhythm, index) => (
+                  <Link
+                    key={rhythm.label}
+                    href={rhythm.href}
+                    className={workshopChipClassName(index)}
+                  >
+                    {rhythm.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-[22rem] lg:mx-0 lg:justify-self-end">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
+              <Image
+                src="/assets/images/comu6.png"
+                alt="Vida cotidiana en la comunidad Koru"
+                fill
+                className="object-cover"
+              />
+            </div>
           </div>
         </div>
-      </TextImageSection>
+      </section>
 
-      <TextImageSection
-        id="unete-al-equipo"
-        title="Únete al equipo"
-        imageSrc="/assets/images/comu4.png"
-        imageAlt="Equipo educativo en comunidad"
-        reverse
-        sectionClassName="bg-[#f7f6f1]"
-        paragraphs={[
-          "Si querés sumarte a KORU, completá el formulario y contanos sobre tu experiencia, tu área de interés y tu motivación para formar parte de la comunidad.",
-        ]}
+      <section
+        id="celebraciones-comunitarias"
+        className="scroll-mt-36 bg-[#f7f6f1]"
       >
-        <TeamApplicationForm />
-      </TextImageSection>
+        <div className="mx-auto w-full max-w-7xl px-6 py-16 md:px-10 md:py-20 lg:px-14 lg:py-24">
+          <div className="mb-8 max-w-4xl space-y-4">
+            <h2
+              className="text-3xl leading-[1] tracking-tight text-black md:text-4xl lg:text-5xl"
+              style={{ fontFamily: "var(--font-roboto-condensed)" }}
+            >
+              Nuestras celebraciones comunitarias
+            </h2>
+            <p className="text-base leading-relaxed text-black/75 md:text-lg">
+              El ritmo anual también nos reúne como comunidad: celebramos,
+              compartimos y hacemos visible lo que cada etapa trae al proceso.
+            </p>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {communityCelebrations.map((celebration) => (
+              <article
+                key={celebration.title}
+                className="group overflow-hidden rounded-[1.75rem] border border-black/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <Image
+                    src={celebration.imageSrc}
+                    alt={celebration.title}
+                    fill
+                    className="object-cover transition duration-500 group-hover:scale-105"
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  />
+                </div>
+                <div className="p-5">
+                  <h3
+                    className="text-2xl leading-tight text-black"
+                    style={{ fontFamily: "var(--font-roboto-condensed)" }}
+                  >
+                    {celebration.title}
+                  </h3>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
     </main>
   );
 }
