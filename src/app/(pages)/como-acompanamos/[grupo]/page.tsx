@@ -41,28 +41,6 @@ export async function generateMetadata({ params }: GroupPageProps) {
   };
 }
 
-function DetailSection({
-  eyebrow,
-  children,
-  id,
-}: {
-  eyebrow: string;
-  children: React.ReactNode;
-  id?: string;
-}) {
-  return (
-    <section id={id} className="scroll-mt-36 bg-white">
-      <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 md:py-20 lg:px-14">
-        <p className="mb-7 max-w-5xl text-sm font-semibold uppercase tracking-[0.28em] text-[#6d7e96]">
-          {eyebrow}
-        </p>
-        <div className="max-w-5xl space-y-5 text-2xl leading-relaxed text-black/90 md:text-[1.7rem] md:leading-[1.55]">
-          {children}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 export default async function GrupoAcompanamientoPage({
   params,
@@ -122,7 +100,6 @@ export default async function GrupoAcompanamientoPage({
         </div>
       </section>
 
-      {"experienceCards" in group && group.experienceCards ? (
         <section className="bg-white">
           <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 md:py-20 lg:px-14">
             <div className="mx-auto max-w-5xl pb-[45vh]">
@@ -156,58 +133,8 @@ export default async function GrupoAcompanamientoPage({
             </div>
           </div>
         </section>
-      ) : null}
+      
 
-      {group.closing ? (
-        <section className="bg-[#f3f2ef]">
-          <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 lg:px-14 lg:py-20">
-            <p
-              className="mx-auto max-w-5xl text-center text-3xl leading-[1.25] text-black md:text-4xl"
-              style={{ fontFamily: "var(--font-roboto-condensed)" }}
-            >
-              {group.closing}
-            </p>
-          </div>
-        </section>
-      ) : null}
-
-      {group.bullets ? (
-        <DetailSection eyebrow="En este grupo acompañamos">
-          <ul className="space-y-4 pl-6">
-            {group.bullets.map((item) => (
-              <li
-                key={item}
-                className="list-disc marker:text-[var(--complement-800)]"
-              >
-                {item}
-              </li>
-            ))}
-          </ul>
-        </DetailSection>
-      ) : null}
-
-      {!("hideRhythmSection" in group && group.hideRhythmSection) ? (
-        <DetailSection id="ritmo-y-experiencias" eyebrow="Ritmo y experiencias">
-          {group.rhythmIntro ? <p>{group.rhythmIntro}</p> : null}
-          {group.rhythmBullets ? (
-            <ul className="space-y-4 pl-6">
-              {group.rhythmBullets.map((item) => (
-                <li
-                  key={item}
-                  className="list-disc marker:text-[var(--complement-800)]"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>
-              Cada propuesta se adapta al momento evolutivo del grupo,
-              integrando aprendizaje, vínculo, naturaleza y comunidad.
-            </p>
-          )}
-        </DetailSection>
-      ) : null}
     </main>
   );
 }

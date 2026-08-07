@@ -119,7 +119,28 @@ export const accompanyPillars: AccompanyPillar[] = [
 //   "Autoconocimiento",
 // ];
 
-export const accompanimentGroups = [
+export type AccompanimentExperienceCard = {
+  title: string;
+  imageSrc: string;
+  imageAlt: string;
+  description: string;
+};
+
+export type AccompanimentGroup = {
+  title: string;
+  ageRange: string;
+  imageSrc: string;
+  imageAlt: string;
+  paragraphs: string[];
+  hideRhythmSection: boolean;
+  experienceCards: AccompanimentExperienceCard[];
+  bullets?: string[];
+  closing?: string;
+  rhythmIntro?: string;
+  rhythmBullets?: string[];
+};
+
+export const accompanimentGroups: AccompanimentGroup[] = [
   {
     title: "Grupo Esporas",
     ageRange: "3 a 6 años",
