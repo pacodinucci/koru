@@ -126,22 +126,70 @@ export const accompanimentGroups = [
     imageSrc: "/assets/images/DSC01338.png",
     imageAlt: "Niñas y niños pequeños explorando en la naturaleza",
     paragraphs: [
-      "El primer septenio en KORU, sigue un enfoque con influencia antroposófica por lo que para el grupo esporas llevamos un ritmo basado en la pedagogía Waldorf.",
-      "El juego libre, la exploración sensorial y el vínculo cercano con el acompañante son la base de su desarrollo. El contacto con la naturaleza, el ritmo cotidiano y la repetición les brindan contención y estructura, permitiéndoles habitar su infancia con plenitud.",
-      "En este momento de vida, se siembran aspectos fundamentales como:",
+      "Los primeros años de vida constituyen una etapa fundamental para el desarrollo humano. Niñas y niños aprenden principalmente a través del juego, la imitación, el movimiento, la exploración sensorial y el vínculo con las personas y el entorno.",
+      "En KORU, Grupo Esporas se inspira profundamente en la pedagogía Waldorf y en los fundamentos antroposóficos para ofrecer un ambiente cálido, seguro y predecible, donde los ritmos, los rituales y el contacto cotidiano con la naturaleza favorecen un desarrollo armónico del cuerpo, el pensamiento, el sentimiento y la voluntad.",
+      "En esta etapa cultivamos las capacidades que hacen posible aprender: la atención, el lenguaje, la motricidad, la coordinación, la imaginación, la creatividad, la convivencia y la autorregulación. A través del juego libre, el arte, el movimiento, la música, los cuentos, la exploración del entorno y la vida en la naturaleza, niñas y niños construyen las bases que sostendrán los aprendizajes de las siguientes etapas.",
+      "Como parte de la experiencia cotidiana, también ofrecemos una inmersión natural al idioma inglés mediante canciones, juegos, cuentos, rutinas y experiencias significativas, favoreciendo un aprendizaje espontáneo y vivencial desde edades tempranas.",
+      "El propósito de esta etapa es construir una base sólida de seguridad, autonomía, curiosidad y confianza, desde la cual cada niña y niño pueda continuar su desarrollo con alegría y el deseo de seguir descubriendo el mundo.",
     ],
-    bullets: [
-      "La seguridad emocional",
-      "La autonomía",
-      "El lenguaje",
-      "La capacidad de imaginar y crear",
-    ],
-    rhythmIntro: "Esto se logra en un ritmo donde observaremos:",
-    rhythmBullets: [
-      "Tareas de hogar: hacer pan, cocinar, limpiar, lavar platos, ordenar espacios, cuidar el entorno.",
-      "Actividades estacionales: vinculadas al ritmo de la naturaleza y las festividades del año.",
-      "Trabajo manual: tejido, modelado con cera, huerto.",
-      "Arte y movimiento: canto, rondas, danzas, juegos rítmicos.",
+    hideRhythmSection: true,
+    experienceCards: [
+      {
+        title: "Vida práctica:",
+        imageSrc: "/assets/images/DSC01338.png",
+        imageAlt: "Niñas y niños preparando actividades de vida práctica",
+        description:
+          "Las actividades cotidianas —como preparar pan, cocinar, lavar platos, ordenar los espacios y cuidar el entorno— fortalecen la autonomía, la coordinación, la concentración, el sentido de responsabilidad y la satisfacción de contribuir al bienestar de la comunidad.",
+      },
+      {
+        title: "Ritmo estacional",
+        imageSrc: "/assets/images/DSC01339.png",
+        imageAlt: "Niñas y niños conectando con el ritmo estacional",
+        description:
+          "Las estaciones del año y sus festividades marcan el ritmo de la vida en el grupo. A través de celebraciones, cuentos, canciones y actividades vinculadas con la naturaleza, niñas y niños desarrollan un profundo sentido de pertenencia, gratitud y conexión con los ciclos de la vida.",
+      },
+      {
+        title: "Trabajo manual",
+        imageSrc: "/assets/images/DSC01340.png",
+        imageAlt: "Actividad manual en el grupo Esporas",
+        description:
+          "El tejido, el modelado con cera de abeja, el huerto y otras actividades manuales fortalecen la motricidad fina, la creatividad, la paciencia y la voluntad, permitiendo aprender a través del hacer.",
+      },
+      {
+        title: "Arte y movimiento",
+        imageSrc: "/assets/images/DSC01342.png",
+        imageAlt: "Niñas y niños en experiencias de arte y movimiento",
+        description:
+          "El canto, las rondas, las danzas, los juegos rítmicos y las experiencias artísticas favorecen la coordinación, la expresión, la imaginación y el desarrollo corporal, integrando el aprendizaje de manera vivencial y alegre.",
+      },
+      {
+        title: "Inglés",
+        imageSrc: "/assets/images/DSC01344.png",
+        imageAlt: "Aprendizaje vivencial de inglés en Koru",
+        description:
+          "El idioma inglés se incorpora de forma natural mediante canciones, versos, cuentos, juegos y rutinas cotidianas, favoreciendo una inmersión respetuosa y significativa desde edades tempranas.",
+      },
+      {
+        title: "Naturaleza y compostaje",
+        imageSrc: "/assets/images/DSC01345.png",
+        imageAlt: "Niñez explorando naturaleza, huerto y compostaje",
+        description:
+          "El jardín, el huerto, el compostaje y el cuidado cotidiano del entorno acercan a niñas y niños a los procesos naturales, despertando una conciencia ecológica que nace del vínculo, la observación y la experiencia directa.",
+      },
+      {
+        title: "Juego libre",
+        imageSrc: "/assets/images/DSC01350.png",
+        imageAlt: "Niñas y niños en juego libre",
+        description:
+          "El juego es el lenguaje natural de la infancia y el principal medio de aprendizaje durante esta etapa. A través de él desarrollan la imaginación, la creatividad, las habilidades sociales, la resolución de problemas y la capacidad de dar sentido a sus experiencias.",
+      },
+      {
+        title: "Cuento y narración",
+        imageSrc: "/assets/images/DSC01352.png",
+        imageAlt: "Momento de cuento y narración en comunidad",
+        description:
+          "Cada día reservamos un momento para escuchar cuentos, relatos y narraciones que nutren la imaginación, enriquecen el lenguaje, fortalecen la atención y ofrecen imágenes significativas que acompañan el desarrollo emocional y cognitivo.",
+      },
     ],
   },
   {
@@ -150,28 +198,79 @@ export const accompanimentGroups = [
     imageSrc: "/assets/images/DSC01384.png",
     imageAlt: "Niñas y niños en una etapa de transición de aprendizaje",
     paragraphs: [
-      "Grupo Koru continúa con la influencia antroposófica, sin embargo se enfoca en crear el espacio y los recursos para una transición hacia el siguiente septenio.",
-      "Esta es una etapa de transición profunda. Pueden transitar rápidamente entre distintas emociones mientras empiezan a construir su mundo interior, su autoestima y su identidad.",
-      "En este grupo acompañamos:",
+      "Esta etapa representa un puente entre la primera infancia y el siguiente momento del desarrollo. Niñas y niños comienzan a ampliar su mirada sobre el mundo, formulando preguntas, estableciendo relaciones y construyendo una comprensión cada vez más consciente de aquello que los rodea.",
+      "En KORU, los proyectos, las experiencias sensoriales, las narraciones, el juego y la exploración continúan siendo el punto de partida para aprender. A partir de ellos comenzamos a integrar el enfoque transdisciplinario, permitiendo que el conocimiento cobre sentido al relacionarse con la vida cotidiana.",
+      "Es también una etapa clave para el desarrollo de la lectoescritura y el pensamiento matemático. Primero fortalecemos las capacidades que hacen posibles estos aprendizajes desde una mirada inspirada en la pedagogía antroposófica y, conforme cada niña y niño muestra las señales de madurez necesarias, realizamos una transición gradual hacia una metodología especializada con más de 40 años de experiencia. Creemos que aprender en el momento adecuado no significa aprender más tarde, sino aprender con mayor profundidad, confianza y sentido.",
+      "El propósito de esta etapa es acompañar el paso de una infancia que aprende principalmente desde la experiencia hacia una que comienza a comprender, relacionar y construir conocimiento de manera cada vez más consciente.",
     ],
-    bullets: [
-      "El desarrollo de la iniciativa y la curiosidad",
-      "El paso del juego libre al aprendizaje con propósito",
-      "El inicio del pensamiento más estructurado",
-    ],
-    closing:
-      "Creamos experiencias concretas, significativas y vivenciales que les permitan comprender el mundo desde la experiencia.",
-    rhythmIntro: "Esto se logra en un ritmo donde observaremos:",
-    rhythmBullets: [
-      "Tareas de hogar: hacer pan, cocinar, limpiar, lavar platos, ordenar espacios, cuidar el entorno.",
-      "Actividades estacionales: vinculadas al ritmo de la naturaleza y las festividades del año.",
-      "Trabajo manual: tejido, modelado con barro y plastilina, huerto, creación de mundos posibles.",
-      "Proyectos.",
-      "Arte y movimiento: clases de circo.",
-      "Introducción a los números y letras: empiezan a trabajar la lectoescritura y matemáticas de acuerdo a su ritmo y desarrollo.",
-      "Inglés: se trabaja a través de canciones.",
-      "Exploración sensorial.",
-      "Música: metodología basada en la neurociencia.",
+    hideRhythmSection: true,
+    experienceCards: [
+      {
+        title: "Trabajo manual",
+        imageSrc: "/assets/images/DSC01363.png",
+        imageAlt: "Niñas y niños realizando trabajo manual",
+        description: "El tejido, el modelado con barro y plastilina, el huerto y otras experiencias manuales fortalecen la motricidad fina, la creatividad, la concentración y la perseverancia, integrando el pensamiento, la emoción y la voluntad a través del hacer.",
+      },
+      {
+        title: "Arte y movimiento",
+        imageSrc: "/assets/images/DSC01365.png",
+        imageAlt: "Experiencia de arte y movimiento en Grupo Koru",
+        description: "Las artes plásticas y las clases de circo favorecen la creatividad, la coordinación, el equilibrio, la conciencia corporal y la confianza, acompañando el desarrollo integral mediante experiencias de expresión y movimiento.",
+      },
+      {
+        title: "Inglés",
+        imageSrc: "/assets/images/DSC01367.png",
+        imageAlt: "Aprendizaje vivencial de inglés en Grupo Koru",
+        description: "El idioma inglés continúa desarrollándose de manera vivencial a través de canciones, cuentos, versos, juegos y actividades cotidianas, ampliando progresivamente la comprensión y la comunicación en un segundo idioma.",
+      },
+      {
+        title: "Exploración sensorial",
+        imageSrc: "/assets/images/DSC01378.png",
+        imageAlt: "Niñas y niños explorando la naturaleza",
+        description: "La cocina, las caminatas en la naturaleza y otras experiencias sensoriales permiten observar, experimentar y comprender el mundo desde el hacer, despertando la curiosidad, la atención y el pensamiento científico.",
+      },
+      {
+        title: "Música",
+        imageSrc: "/assets/images/DSC01379.png",
+        imageAlt: "Experiencia musical en Grupo Koru",
+        description: "Las rítmicas, el canto y el repertorio de canciones tradicionales fortalecen la escucha, la memoria, el ritmo, la coordinación y la sensibilidad musical, acompañando el desarrollo del lenguaje y la expresión.",
+      },
+      {
+        title: "Lectoescritura",
+        imageSrc: "/assets/images/DSC01384.png",
+        imageAlt: "Aprendizaje de lectoescritura en Grupo Koru",
+        description: "El acercamiento a la lectoescritura inicia desde una mirada inspirada en la pedagogía antroposófica. Las vocales se presentan mediante el dibujo de formas, el movimiento, la narración y la experiencia artística, permitiendo que el lenguaje se construya desde la vivencia antes que desde la abstracción. Conforme cada niña y niño muestra las señales de madurez necesarias, realizamos una transición gradual hacia una metodología especializada con más de 40 años de experiencia, fortaleciendo la comprensión lectora, la escritura y las primeras habilidades de redacción.",
+      },
+      {
+        title: "Pensamiento matemático",
+        imageSrc: "/assets/images/DSC01385.png",
+        imageAlt: "Experiencia de pensamiento matemático en Grupo Koru",
+        description: "Las matemáticas se presentan como un lenguaje para comprender el mundo. A través de materiales concretos, juegos, desafíos y experiencias significativas, niñas y niños desarrollan el razonamiento lógico-matemático, el sentido numérico y la capacidad para descubrir relaciones y resolver problemas.",
+      },
+      {
+        title: "Ritmo estacional",
+        imageSrc: "/assets/images/DSC01386.png",
+        imageAlt: "Niñas y niños conectando con el ritmo estacional",
+        description: "Las estaciones del año y sus festividades continúan marcando el ritmo de la vida del grupo, fortaleciendo el vínculo con la naturaleza, la comunidad y los ciclos que nos rodean.",
+      },
+      {
+        title: "Huerto y compostaje",
+        imageSrc: "/assets/images/DSC01392.png",
+        imageAlt: "Huerto y compostaje en Grupo Koru",
+        description: "El huerto, el compostaje y el cuidado cotidiano del entorno permiten comprender los procesos de la naturaleza desde la experiencia directa, despertando una conciencia ecológica basada en el vínculo, la observación y el cuidado.",
+      },
+      {
+        title: "Juego",
+        imageSrc: "/assets/images/DSC01400.png",
+        imageAlt: "Niñas y niños jugando en Grupo Koru",
+        description: "El juego continúa siendo una herramienta esencial de aprendizaje. A través de él, niñas y niños exploran ideas, ponen a prueba hipótesis, desarrollan habilidades sociales y construyen conocimiento de manera activa y significativa.",
+      },
+      {
+        title: "Calma y narración",
+        imageSrc: "/assets/images/DSC01443.png",
+        imageAlt: "Momento de calma y narración en Grupo Koru",
+        description: "Cada día reservamos un momento para la calma, los cuentos y la narración, favoreciendo la imaginación, la atención, la comprensión del lenguaje y la integración de las experiencias vividas durante la jornada.",
+      },
     ],
   },
   {
@@ -179,28 +278,75 @@ export const accompanimentGroups = [
     ageRange: "8 a 10 años",
     imageSrc: "/assets/images/DSC01379.png",
     imageAlt: "Grupo escolar en actividades colaborativas",
-    paragraphs: ["En este momento acompañamos:"],
-    bullets: [
-      "Se refuerza el desarrollo de la autorregulación emocional",
-      "Se prioriza la construcción de vínculos de cuidado mutuo",
-      "Se profundiza en la comprensión de límites y consecuencias",
-      "El sentido de pertenencia y colaboración",
+    paragraphs: [
+      "Durante esta etapa comienza a emerger un pensamiento cada vez más abstracto. Niñas y niños desarrollan una mayor capacidad para analizar, establecer relaciones, formular hipótesis y comprender la realidad desde múltiples perspectivas, participando de manera cada vez más activa en su propio proceso de aprendizaje.",
+      "En KORU, el enfoque transdisciplinario, inspirado en los fundamentos antroposóficos, se convierte en la principal forma de aprender. Los proyectos integran las ciencias, el lenguaje, las matemáticas, el arte y otras áreas del conocimiento alrededor de preguntas, desafíos y experiencias significativas. Así, el aprendizaje deja de vivirse como materias aisladas y se convierte en una experiencia conectada con la vida cotidiana y el entorno.",
+      "Aunque el aprendizaje ocurre principalmente a través de proyectos, también dedicamos espacios específicos al fortalecimiento de aquellas habilidades que constituyen la base para seguir aprendiendo. En lenguaje, damos un lugar prioritario al razonamiento verbal, la comprensión lectora, la creación literaria y la expresión escrita. En matemáticas, continuamos desarrollando el pensamiento lógico-matemático y la resolución de problemas, favoreciendo que niñas y niños puedan aplicar lo aprendido en diferentes contextos y construir una comprensión cada vez más profunda.",
+      "Como parte del desarrollo integral de esta etapa, incorporamos clases de flauta, inspiradas en la pedagogía Waldorf, que fortalecen la coordinación, la atención, la escucha, la perseverancia y la sensibilidad artística. Asimismo, el teatro se convierte en un espacio para desarrollar la expresión, la creatividad, la confianza, la empatía y las habilidades sociales. Estas experiencias se complementan con el movimiento, la naturaleza y la educación socioemocional, enriqueciendo el aprendizaje desde múltiples lenguajes.",
+      "El propósito de esta etapa es fortalecer la autonomía, el pensamiento crítico y la confianza en sus capacidades, preparando a niñas y niños para comprender la realidad con mayor profundidad y participar de manera consciente, creativa y responsable en la construcción de su comunidad.",
     ],
-    closing:
-      "Integramos movimiento, juego, trabajo en equipo y experiencias significativas que les permitan canalizar su energía, fortalecer su autoestima y encontrar su lugar dentro de la comunidad.",
-    rhythmBullets: [
-      "Proyectos Transdisciplinarios.",
-      "Metodología Lecto escritura y matemáticas especializada.",
-      "Autodirigido.",
-      "Desarrollo de habilidades del pensamiento.",
-      "Huerto.",
-      "Escuela del bosque.",
-      "Artes: teatro, grabado, pintura.",
-      "Asambleas.",
-      "Diálogo Socrático.",
-      "Música: metodología basada en neurociencia.",
-      "Inglés.",
-      "Movimiento: Circo, Entrenamiento físico.",
+    hideRhythmSection: true,
+    experienceCards: [
+      {
+        title: "Proyectos Transdisciplinarios",
+        imageSrc: "/assets/images/DSC01638.png",
+        imageAlt: "Proyecto transdisciplinario en Grupo Helechos 1",
+        description: "El aprendizaje se organiza alrededor de proyectos que integran ciencias, historia, geografía, lenguaje, matemáticas, arte y otras áreas del conocimiento. A través de preguntas, investigaciones y desafíos reales, niñas y niños desarrollan una comprensión conectada del mundo y aprenden a aplicar sus conocimientos en contextos significativos. Las experiencias artísticas —como el teatro, el grabado, la pintura y otras disciplinas— forman parte de estos proyectos, enriqueciendo el aprendizaje mediante distintos lenguajes de expresión.",
+      },
+      {
+        title: "Lectoescritura y Pensamiento Matemático",
+        imageSrc: "/assets/images/DSC01639.png",
+        imageAlt: "Lectoescritura y pensamiento matemático en Grupo Helechos 1",
+        description: "Fortalecemos estas habilidades mediante una metodología especializada con más de 40 años de experiencia, enfocada en desarrollar una lectura fluida, comprensiva y sin vicios lectores, así como un pensamiento lógico-matemático sólido que les permita analizar, resolver problemas y aprender con autonomía.",
+      },
+      {
+        title: "Redacción y Escritura Creativa",
+        imageSrc: "/assets/images/DSC02336.png",
+        imageAlt: "Escritura creativa en Grupo Helechos 1",
+        description: "Promovemos la creación literaria como una herramienta para pensar, imaginar y comunicar. A través de distintos géneros y propuestas de escritura, niñas y niños fortalecen la expresión escrita, la organización de ideas, la creatividad y el razonamiento verbal.",
+      },
+      {
+        title: "Laboratorio de Pensamiento",
+        imageSrc: "/assets/images/DSC02353.png",
+        imageAlt: "Laboratorio de pensamiento en Grupo Helechos 1",
+        description: "Diseñamos experiencias que invitan a observar, cuestionar, investigar, analizar y argumentar. A través de retos, juegos de estrategia, resolución de problemas y espacios de reflexión, fortalecemos el pensamiento crítico, la creatividad y la capacidad de construir soluciones de manera autónoma y colaborativa.",
+      },
+      {
+        title: "Huerto",
+        imageSrc: "/assets/images/DSC02354.png",
+        imageAlt: "Huerto de Grupo Helechos 1",
+        description: "El huerto se convierte en un laboratorio vivo donde comprenden los ciclos de la naturaleza, desarrollan la responsabilidad, el trabajo colaborativo y la paciencia, mientras fortalecen su vínculo con el entorno.",
+      },
+      {
+        title: "Escuela del Bosque",
+        imageSrc: "/assets/images/DSC02358.png",
+        imageAlt: "Exploración en la Escuela del Bosque",
+        description: "La naturaleza continúa siendo un espacio privilegiado de aprendizaje. A través de caminatas, observación, exploración y experiencias al aire libre, fortalecen la autonomía, la resiliencia, la curiosidad y el respeto por los sistemas vivos.",
+      },
+      {
+        title: "Inteligencia Socioemocional",
+        imageSrc: "/assets/images/DSC02366.png",
+        imageAlt: "Espacio socioemocional en Grupo Helechos 1",
+        description: "A través de asambleas, círculos socráticos, juegos cooperativos y espacios de reflexión, fortalecemos el autoconocimiento, la empatía, la comunicación, la resolución de conflictos y la capacidad de construir comunidad desde el diálogo y el respeto.",
+      },
+      {
+        title: "Música",
+        imageSrc: "/assets/images/DSC02377.png",
+        imageAlt: "Aprendizaje musical con flauta en Grupo Helechos 1",
+        description: "El aprendizaje de la flauta, inspirado en la pedagogía Waldorf, favorece la coordinación, la atención, la escucha, la disciplina, la sensibilidad musical y la perseverancia, integrando el desarrollo cognitivo, emocional y corporal.",
+      },
+      {
+        title: "Inglés",
+        imageSrc: "/assets/images/DSC02381.png",
+        imageAlt: "Clase de inglés en Grupo Helechos 1",
+        description: "En esta etapa el aprendizaje del inglés evoluciona hacia clases más estructuradas, donde fortalecen progresivamente la comprensión lectora, la escritura, el vocabulario, la gramática y la comunicación oral. Todo ello se desarrolla mediante actividades dinámicas y significativas que permiten utilizar el idioma con mayor seguridad y confianza.",
+      },
+      {
+        title: "Movimiento",
+        imageSrc: "/assets/images/DSC01392.png",
+        imageAlt: "Experiencia de movimiento en Grupo Helechos 1",
+        description: "A través de disciplinas como circo y frisbee, fortalecemos la coordinación, el equilibrio, la conciencia corporal, el trabajo en equipo y la confianza. Entendemos el movimiento como una herramienta para aprender, colaborar y desarrollar habilidades para la vida.",
+      },
     ],
   },
   {
@@ -209,18 +355,26 @@ export const accompanimentGroups = [
     imageSrc: "/assets/images/DSC01280.png",
     imageAlt: "Niñez desarrollando autonomía y pensamiento crítico",
     paragraphs: [
-      "En esta etapa, las niñas y niños avanzan hacia una mayor conciencia de sí mism@s, de sus decisiones y de su impacto en el entorno.",
-      "Se fortalece el pensamiento crítico, la capacidad de reflexión y el deseo de participar activamente en el mundo que los rodea. Buscan mayor autonomía, pero aún requieren acompañamiento para sostener sus procesos emocionales y sociales.",
-      "Aquí acompañamos:",
+      "Durante esta etapa, niñas y niños desarrollan una mayor capacidad para reflexionar, argumentar, cuestionar y comprender la complejidad del mundo que los rodea. Comienzan a construir una identidad más consciente, fortaleciendo su autonomía y asumiendo un papel cada vez más activo en su aprendizaje y en la comunidad.",
+      "En KORU, el enfoque transdisciplinario continúa siendo el eje del aprendizaje. Los proyectos integran las ciencias, el lenguaje, las matemáticas, el arte y otras áreas del conocimiento alrededor de desafíos reales, promoviendo la investigación, la creatividad y la búsqueda de soluciones con impacto en su entorno.",
+      "Aunque el aprendizaje ocurre principalmente a través de proyectos, también dedicamos espacios específicos al fortalecimiento del razonamiento verbal, la comprensión lectora, la escritura, el pensamiento lógico-matemático y la resolución de problemas, consolidando las herramientas necesarias para continuar aprendiendo con autonomía y profundidad.",
+      "Los círculos socráticos adquieren un papel central en esta etapa, ofreciendo espacios donde niñas y niños desarrollan la capacidad de escuchar, argumentar, cuestionar ideas, construir pensamiento crítico y dialogar desde el respeto. Buscamos que aprendan no solo a expresar sus opiniones, sino también a fundamentarlas y enriquecerlas a partir del encuentro con otras perspectivas.",
+      "La naturaleza continúa siendo un espacio privilegiado de aprendizaje. Además del trabajo en el huerto, la conciencia ecológica y el cuidado del entorno, incorporamos experiencias de vida al aire libre y habilidades de supervivencia, como la construcción de refugios, el encendido responsable de fuego, la orientación y otras competencias que fortalecen la autonomía, la colaboración, la resiliencia y el vínculo con la naturaleza.",
+      "El propósito de esta etapa es acompañar a cada niña y niño en la consolidación de su identidad, el desarrollo de un pensamiento crítico y la capacidad de participar de manera consciente, creativa y responsable en la transformación de su comunidad y del mundo que habita.",
     ],
-    bullets: [
-      "El desarrollo de la responsabilidad y la autonomía",
-      "La toma de decisiones responsables",
-      "La participación activa en la comunidad",
-      "La conexión con propósito y servicio",
+    hideRhythmSection: true,
+    experienceCards: [
+      { title: "Proyectos Transdisciplinarios", imageSrc: "/assets/images/DSC01273.png", imageAlt: "Proyecto transdisciplinario en Grupo Helechos 2", description: "Los proyectos integran ciencias, historia, geografía, lenguaje, matemáticas, arte y otras áreas del conocimiento alrededor de preguntas, investigaciones y desafíos reales. Niñas y niños profundizan en la comprensión de sistemas complejos, desarrollan proyectos con mayor nivel de autonomía y fortalecen la capacidad de generar soluciones creativas con impacto en su entorno." },
+      { title: "Lectoescritura y Pensamiento Matemático", imageSrc: "/assets/images/DSC01276.png", imageAlt: "Lectoescritura y pensamiento matemático en Grupo Helechos 2", description: "Consolidamos la comprensión lectora, la escritura y el pensamiento lógico-matemático mediante una metodología especializada con más de 40 años de experiencia. Buscamos que niñas y niños desarrollen una lectura crítica y fluida, argumenten con claridad y utilicen el razonamiento matemático para analizar información, resolver problemas y tomar decisiones fundamentadas." },
+      { title: "Redacción y Escritura Creativa", imageSrc: "/assets/images/DSC01280.png", imageAlt: "Escritura creativa en Grupo Helechos 2", description: "La escritura se convierte en una herramienta para reflexionar, investigar, argumentar y expresar ideas con claridad. A través de distintos géneros literarios y proyectos de escritura, fortalecen el pensamiento crítico, la creatividad y la capacidad de comunicar con propósito." },
+      { title: "Laboratorio de Pensamiento", imageSrc: "/assets/images/DSC01281.png", imageAlt: "Laboratorio de pensamiento en Grupo Helechos 2", description: "A través de retos, investigaciones, análisis de casos, juegos de estrategia y círculos socráticos, fortalecemos el pensamiento crítico, la argumentación, la creatividad y la resolución de problemas, favoreciendo que niñas y niños aprendan a cuestionar, fundamentar sus ideas y construir conocimiento de manera colaborativa." },
+      { title: "Huerto y Sustentabilidad", imageSrc: "/assets/images/DSC01284.png", imageAlt: "Huerto y sustentabilidad en Grupo Helechos 2", description: "El huerto continúa siendo un laboratorio vivo donde profundizan en los procesos ecológicos y la comprensión de los sistemas naturales. Se complementa con proyectos de sustentabilidad, compostaje y cuidado del entorno que fortalecen la responsabilidad y el compromiso con la comunidad y el planeta." },
+      { title: "Escuela del Bosque", imageSrc: "/assets/images/DSC01285.png", imageAlt: "Escuela del Bosque en Grupo Helechos 2", description: "La naturaleza continúa siendo un espacio privilegiado de aprendizaje. A través de caminatas, exploración, orientación y habilidades de supervivencia —como construir refugios, encender fuego de manera responsable y desenvolverse en entornos naturales— fortalecen la autonomía, la resiliencia, el liderazgo y el trabajo colaborativo." },
+      { title: "Inteligencia Socioemocional", imageSrc: "/assets/images/DSC01286.png", imageAlt: "Espacio socioemocional en Grupo Helechos 2", description: "Las asambleas, los círculos socráticos y otros espacios de diálogo favorecen el autoconocimiento, la empatía, la comunicación, la resolución de conflictos y la construcción de acuerdos, fortaleciendo una participación cada vez más consciente dentro de la comunidad." },
+      { title: "Música", imageSrc: "/assets/images/DSC01291.png", imageAlt: "Aprendizaje musical en Grupo Helechos 2", description: "El aprendizaje de la flauta continúa desarrollando la atención, la disciplina, la sensibilidad musical, la coordinación y la perseverancia, integrando el desarrollo cognitivo, emocional y corporal." },
+      { title: "Inglés", imageSrc: "/assets/images/DSC01354.png", imageAlt: "Clase de inglés en Grupo Helechos 2", description: "El inglés se fortalece mediante clases estructuradas que profundizan en la comprensión lectora, la escritura, el vocabulario, la gramática y la comunicación oral. El objetivo es que niñas y niños utilicen el idioma con seguridad y confianza en diferentes contextos académicos y cotidianos." },
+      { title: "Movimiento", imageSrc: "/assets/images/DSC01355.png", imageAlt: "Experiencia de movimiento en Grupo Helechos 2", description: "A través de disciplinas como circo y frisbee, fortalecemos la conciencia corporal, la coordinación, el liderazgo, la cooperación y la capacidad de enfrentar retos con creatividad, perseverancia y confianza." },
     ],
-    closing:
-      "Fomentamos espacios donde puedan cuestionar, proponer, colaborar y poner en práctica sus ideas, integrando sus dones en experiencias reales que los conecten con el mundo y su transformación.",
   },
 ];
 

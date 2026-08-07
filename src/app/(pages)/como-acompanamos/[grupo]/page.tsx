@@ -27,7 +27,9 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: GroupPageProps) {
   const { grupo } = await params;
-  const group = accompanimentGroups.find((item) => groupSlug(item.title) === grupo);
+  const group = accompanimentGroups.find(
+    (item) => groupSlug(item.title) === grupo,
+  );
 
   if (!group) {
     return {};
@@ -62,16 +64,23 @@ function DetailSection({
   );
 }
 
-export default async function GrupoAcompanamientoPage({ params }: GroupPageProps) {
+export default async function GrupoAcompanamientoPage({
+  params,
+}: GroupPageProps) {
   const { grupo } = await params;
-  const group = accompanimentGroups.find((item) => groupSlug(item.title) === grupo);
+  const group = accompanimentGroups.find(
+    (item) => groupSlug(item.title) === grupo,
+  );
 
   if (!group) {
     notFound();
   }
 
   return (
-    <main className="bg-[#f7f6f1]" style={{ fontFamily: "var(--font-montserrat)" }}>
+    <main
+      className="bg-[#f7f6f1]"
+      style={{ fontFamily: "var(--font-montserrat)" }}
+    >
       <SmoothHashScroll />
       <section className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.95fr)] lg:px-14 lg:py-20">
         <div className="space-y-7">
@@ -103,9 +112,51 @@ export default async function GrupoAcompanamientoPage({ params }: GroupPageProps
         </div>
 
         <div className="relative mx-auto aspect-[4/5] w-full max-w-[24rem] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-          <Image src={group.imageSrc} alt={group.imageAlt} fill className="object-cover" priority />
+          <Image
+            src={group.imageSrc}
+            alt={group.imageAlt}
+            fill
+            className="object-cover"
+            priority
+          />
         </div>
       </section>
+
+      {"experienceCards" in group && group.experienceCards ? (
+        <section className="bg-white">
+          <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 md:py-20 lg:px-14">
+            <div className="mx-auto max-w-5xl pb-[45vh]">
+              {group.experienceCards.map((card, index) => (
+                <article
+                  key={card.title}
+                  className="sticky top-48 mb-[35vh] grid min-h-[34rem] overflow-hidden rounded-[2rem] border border-black/10 bg-[#f7f6f1] shadow-[0_22px_70px_rgba(0,0,0,0.16)] md:grid-cols-2 lg:min-h-[38rem]"
+                  style={{ zIndex: index + 1 }}
+                >
+                  <div className="flex flex-col justify-center p-7 md:p-10 lg:p-12">
+                    <h2
+                      className="mb-5 text-4xl leading-none text-black md:text-5xl"
+                      style={{ fontFamily: "var(--font-roboto-condensed)" }}
+                    >
+                      {card.title}
+                    </h2>
+                    <p className="text-lg leading-relaxed text-black/80 md:text-xl">
+                      {card.description}
+                    </p>
+                  </div>
+                  <div className="relative min-h-[18rem] md:min-h-full">
+                    <Image
+                      src={card.imageSrc}
+                      alt={card.imageAlt}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {group.closing ? (
         <section className="bg-[#f3f2ef]">
@@ -124,7 +175,10 @@ export default async function GrupoAcompanamientoPage({ params }: GroupPageProps
         <DetailSection eyebrow="En este grupo acompañamos">
           <ul className="space-y-4 pl-6">
             {group.bullets.map((item) => (
-              <li key={item} className="list-disc marker:text-[var(--complement-800)]">
+              <li
+                key={item}
+                className="list-disc marker:text-[var(--complement-800)]"
+              >
                 {item}
               </li>
             ))}
@@ -132,22 +186,28 @@ export default async function GrupoAcompanamientoPage({ params }: GroupPageProps
         </DetailSection>
       ) : null}
 
-      <DetailSection id="ritmo-y-experiencias" eyebrow="Ritmo y experiencias">
-        {group.rhythmIntro ? <p>{group.rhythmIntro}</p> : null}
-        {group.rhythmBullets ? (
-          <ul className="space-y-4 pl-6">
-            {group.rhythmBullets.map((item) => (
-              <li key={item} className="list-disc marker:text-[var(--complement-800)]">
-                {item}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>
-            Cada propuesta se adapta al momento evolutivo del grupo, integrando aprendizaje, vínculo, naturaleza y comunidad.
-          </p>
-        )}
-      </DetailSection>
+      {!("hideRhythmSection" in group && group.hideRhythmSection) ? (
+        <DetailSection id="ritmo-y-experiencias" eyebrow="Ritmo y experiencias">
+          {group.rhythmIntro ? <p>{group.rhythmIntro}</p> : null}
+          {group.rhythmBullets ? (
+            <ul className="space-y-4 pl-6">
+              {group.rhythmBullets.map((item) => (
+                <li
+                  key={item}
+                  className="list-disc marker:text-[var(--complement-800)]"
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>
+              Cada propuesta se adapta al momento evolutivo del grupo,
+              integrando aprendizaje, vínculo, naturaleza y comunidad.
+            </p>
+          )}
+        </DetailSection>
+      ) : null}
     </main>
   );
 }
