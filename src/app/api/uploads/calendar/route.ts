@@ -21,7 +21,7 @@ function uploadToCloudinary(buffer: Buffer) {
     cloudinary.uploader
       .upload_stream(
         {
-          folder: "koru/blog",
+          folder: "koru/calendar",
           resource_type: "image",
         },
         (error, result) => {
@@ -85,8 +85,7 @@ export async function POST(request: Request) {
 
   try {
     secureUrl = await uploadToCloudinary(buffer);
-  } catch (error) {
-    console.error("[blog-upload] Cloudinary upload failed", error);
+  } catch {
     return NextResponse.json(
       { ok: false, error: "No pudimos subir la imagen a Cloudinary" },
       { status: 500 },

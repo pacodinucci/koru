@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 
-import { auth } from "@/lib/auth";
+import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import { PublicCalendarView } from "@/modules/calendar/views/public-calendar-view";
 import { getRangeForView } from "@/modules/dashboard/lib/calendar-range";
 import { listPublicCalendarEventsByRange } from "@/modules/dashboard/server/calendar.repository";
@@ -25,9 +25,9 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   const dateCursor = parseDate(date);
   const selectedDate = day ? parseDate(day) : undefined;
   const { start, end } = getRangeForView(dateCursor, "month");
-  const session = await auth.api.getSession({ headers: await headers() });
+  const user = await getAuthenticatedUser();
   const events = await listPublicCalendarEventsByRange({
-    userId: session?.user.id,
+    viewer: user ? { id: user.id, role: user.role } : undefined,
     start,
     end,
   });

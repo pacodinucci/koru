@@ -4,6 +4,7 @@ import {
   CalendarAudienceType,
   CalendarEventStatus,
   CalendarEventVisibility,
+  CalendarRegistrationAccess,
 } from "@prisma/client";
 import { redirect } from "next/navigation";
 
@@ -64,6 +65,7 @@ export async function saveCalendarEventAction(formData: FormData) {
     const id = getString(formData, "id").trim();
     const title = getString(formData, "title").trim();
     const description = getString(formData, "description").trim();
+    const imageUrl = getString(formData, "imageUrl").trim();
     const eventDate = getString(formData, "eventDate").trim();
     const startTime = getString(formData, "startTime").trim();
     const durationMinutes = parseDurationMinutes(getString(formData, "durationMinutes").trim());
@@ -78,6 +80,11 @@ export async function saveCalendarEventAction(formData: FormData) {
         : parseAudience(getString(formData, "audienceType"));
     const status = CalendarEventStatus.PUBLISHED;
     const kind = getString(formData, "kind") === "MEETING" ? "MEETING" : "EVENT";
+    const registrationsEnabled = getBoolean(formData, "registrationsEnabled");
+    const registrationAccess =
+      visibility === CalendarEventVisibility.PUBLIC
+        ? CalendarRegistrationAccess.PUBLIC
+        : CalendarRegistrationAccess.MEMBERS;
     const privateAudienceUserIds =
       visibility === CalendarEventVisibility.PUBLIC
         ? []
@@ -95,6 +102,7 @@ export async function saveCalendarEventAction(formData: FormData) {
       id: id || undefined,
       title,
       description,
+      imageUrl,
       startsAt,
       endsAt,
       allDay,
@@ -103,6 +111,8 @@ export async function saveCalendarEventAction(formData: FormData) {
       audienceType,
       status,
       kind,
+      registrationsEnabled,
+      registrationAccess,
       privateAudienceUserIds,
       createdById: user.id,
     });

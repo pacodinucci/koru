@@ -1,6 +1,7 @@
 import type {
   CalendarAudienceType,
   CalendarEventVisibility,
+  CalendarRegistrationAccess,
   UserRole,
 } from "@prisma/client";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
@@ -16,10 +17,14 @@ type CalendarEventItem = {
   startsAt: Date;
   endsAt: Date;
   location?: string | null;
+  description?: string | null;
+  imageUrl?: string | null;
   visibility: CalendarEventVisibility;
   audienceType: CalendarAudienceType;
   status: string;
   kind: "EVENT" | "MEETING";
+  registrationsEnabled?: boolean;
+  registrationAccess?: CalendarRegistrationAccess;
   audiences?: Array<{ userId: string }>;
 };
 

@@ -7,6 +7,8 @@ import type {
   UserRole,
 } from "@prisma/client";
 
+import { CalendarEventImageField } from "@/modules/dashboard/components/calendar-event-image-field";
+
 import {
   cancelCalendarEventAction,
   saveCalendarEventAction,
@@ -18,9 +20,12 @@ type EventItem = {
   startsAt: Date;
   endsAt: Date;
   location?: string | null;
+  description?: string | null;
+  imageUrl?: string | null;
   visibility: CalendarEventVisibility;
   audienceType: CalendarAudienceType;
   kind: "EVENT" | "MEETING";
+  registrationsEnabled?: boolean;
   audiences?: Array<{ userId: string }>;
 };
 
@@ -72,6 +77,7 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
   const [visibility, setVisibility] =
     useState<CalendarEventVisibility>(initialVisibility);
   const [audienceType, setAudienceType] = useState<CalendarAudienceType>(initialAudience);
+  const [registrationsEnabled, setRegistrationsEnabled] = useState(event?.registrationsEnabled ?? false);
 
   const durationDefault = useMemo(() => {
     if (!event) return "60";
@@ -122,7 +128,13 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
         placeholder="Ubicación"
         defaultValue={event?.location ?? ""}
         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+      />      <textarea
+        name="description"
+        placeholder="Descripción del evento"
+        defaultValue={event?.description ?? ""}
+        className="min-h-24 w-full resize-y rounded-lg border border-slate-200 px-3 py-2 text-sm"
       />
+      <CalendarEventImageField defaultValue={event?.imageUrl} />
       <select
         name="visibility"
         value={visibility}
@@ -161,6 +173,23 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
         <option value="EVENT">Evento</option>
         <option value="MEETING">Reunión</option>
       </select>
+      <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+        <input
+          name="registrationsEnabled"
+          type="checkbox"
+          checked={registrationsEnabled}
+          onChange={(event) => setRegistrationsEnabled(event.target.checked)}
+        />
+        Permitir inscripciones
+      </label>
+      {registrationsEnabled ? (
+        <p className="text-xs text-slate-500">
+          {visibility === "PUBLIC"
+            ? "La inscripción será pública."
+            : "La inscripción será privada para miembros autorizados."}
+        </p>
+      ) : null}
+
 
       {visibility !== "PUBLIC" && audienceType === "PRIVATE" ? (
         <select name="privateAudienceUserIds" multiple className="h-24 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">

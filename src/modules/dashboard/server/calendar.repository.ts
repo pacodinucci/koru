@@ -2,6 +2,7 @@ import {
   CalendarAudienceType,
   CalendarEventStatus,
   CalendarEventVisibility,
+  CalendarRegistrationAccess,
   UserRole,
 } from "@prisma/client";
 
@@ -12,6 +13,7 @@ type SaveCalendarEventInput = {
   id?: string;
   title: string;
   description?: string;
+  imageUrl?: string;
   startsAt: Date;
   endsAt: Date;
   allDay: boolean;
@@ -20,6 +22,8 @@ type SaveCalendarEventInput = {
   visibility: CalendarEventVisibility;
   audienceType: CalendarAudienceType;
   kind: "EVENT" | "MEETING";
+  registrationsEnabled: boolean;
+  registrationAccess: CalendarRegistrationAccess;
   createdById: string;
   privateAudienceUserIds: string[];
 };
@@ -114,6 +118,7 @@ export async function saveCalendarEvent(input: SaveCalendarEventInput) {
       data: {
         title: input.title,
         description: input.description || null,
+        imageUrl: input.imageUrl || null,
         startsAt: input.startsAt,
         endsAt: input.endsAt,
         allDay: input.allDay,
@@ -122,6 +127,11 @@ export async function saveCalendarEvent(input: SaveCalendarEventInput) {
         visibility: input.visibility,
         audienceType: input.audienceType,
         kind: input.kind,
+        registrationsEnabled: input.registrationsEnabled,
+        registrationAccess:
+          input.visibility === CalendarEventVisibility.PUBLIC
+            ? CalendarRegistrationAccess.PUBLIC
+            : CalendarRegistrationAccess.MEMBERS,
         audiences: {
           deleteMany: {},
           create:
@@ -137,6 +147,7 @@ export async function saveCalendarEvent(input: SaveCalendarEventInput) {
     data: {
       title: input.title,
       description: input.description || null,
+      imageUrl: input.imageUrl || null,
       startsAt: input.startsAt,
       endsAt: input.endsAt,
       allDay: input.allDay,
@@ -145,6 +156,11 @@ export async function saveCalendarEvent(input: SaveCalendarEventInput) {
       visibility: input.visibility,
       audienceType: input.audienceType,
       kind: input.kind,
+      registrationsEnabled: input.registrationsEnabled,
+      registrationAccess:
+          input.visibility === CalendarEventVisibility.PUBLIC
+            ? CalendarRegistrationAccess.PUBLIC
+            : CalendarRegistrationAccess.MEMBERS,
       createdById: input.createdById,
       audiences: {
         create:
@@ -228,34 +244,44 @@ function getVisibleEventsWhere(userId: string, role: UserRole) {
 }
 
 export async function listPublicCalendarEventsByRange({
-  userId,
+  viewer,
   start,
   end,
 }: {
-  userId?: string;
+  viewer?: { id: string; role: UserRole };
   start: Date;
   end: Date;
 }) {
+  const visibilityWhere = viewer
+    ? getVisibleEventsWhere(viewer.id, viewer.role)
+    : {
+        status: CalendarEventStatus.PUBLISHED,
+        visibility: CalendarEventVisibility.PUBLIC,
+        audienceType: CalendarAudienceType.ALL,
+      };
+
   return prisma.calendarEvent.findMany({
     where: {
-      status: CalendarEventStatus.PUBLISHED,
+      ...visibilityWhere,
       startsAt: { lt: end },
       endsAt: { gte: start },
-      visibility: userId
-        ? { in: [CalendarEventVisibility.PUBLIC, CalendarEventVisibility.MEMBERS] }
-        : CalendarEventVisibility.PUBLIC,
     },
     orderBy: [{ startsAt: "asc" }],
     select: {
       id: true,
       title: true,
+      description: true,
+      imageUrl: true,
       startsAt: true,
       endsAt: true,
       location: true,
       visibility: true,
+      registrationsEnabled: true,
+      registrationAccess: true,
     },
   });
 }
+
 export async function listUpcomingPublicCalendarEvents({
   userId,
   limit = 4,
@@ -278,10 +304,13 @@ export async function listUpcomingPublicCalendarEvents({
     select: {
       id: true,
       title: true,
+      description: true,
+      imageUrl: true,
       startsAt: true,
       endsAt: true,
       location: true,
       visibility: true,
+      registrationsEnabled: true,
     },
   });
 }

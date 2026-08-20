@@ -20,6 +20,7 @@ model User {
   blogLikes     BlogPostLike[]
   createdCalendarEvents CalendarEvent[] @relation("CalendarEventCreator")
   calendarEventAudiences CalendarEventAudience[]
+  calendarEventRegistrations CalendarEventRegistration[]
   createdInvitations UserInvitation[] @relation("UserInvitationsCreated")
   teacherProfile TeacherProfile?
   studentGuardianLinks StudentGuardian[]
@@ -184,6 +185,11 @@ enum CalendarAudienceType {
 enum CalendarEventKind {
   EVENT
   MEETING
+}
+
+enum CalendarRegistrationAccess {
+  PUBLIC
+  MEMBERS
 }
 
 enum ExamStatus {
@@ -507,6 +513,7 @@ model CalendarEvent {
   id           String                @id @default(cuid())
   title        String
   description  String?
+  imageUrl     String?
   startsAt     DateTime
   endsAt       DateTime
   allDay       Boolean               @default(false)
@@ -515,9 +522,12 @@ model CalendarEvent {
   visibility   CalendarEventVisibility @default(MEMBERS)
   audienceType CalendarAudienceType  @default(ALL)
   kind         CalendarEventKind     @default(EVENT)
+  registrationsEnabled Boolean        @default(false)
+  registrationAccess  CalendarRegistrationAccess @default(PUBLIC)
   createdById  String
   createdBy    User                  @relation("CalendarEventCreator", fields: [createdById], references: [id], onDelete: Restrict)
   audiences    CalendarEventAudience[]
+  registrations CalendarEventRegistration[]
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
 
@@ -536,5 +546,23 @@ model CalendarEventAudience {
 
   @@unique([eventId, userId])
   @@index([eventId])
+  @@index([userId])
+}
+
+model CalendarEventRegistration {
+  id        String        @id @default(cuid())
+  eventId   String
+  event     CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name      String
+  email     String
+  phone     String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([eventId, userId])
+  @@unique([eventId, email])
+  @@index([eventId, createdAt])
   @@index([userId])
 }

@@ -9,5 +9,5 @@ export default async function DashboardPage() {
     redirect("/dashboard/exams");
   }
 
-  redirect("/dashboard/layout");
+  redirect("/dashboard/diseno");
 }

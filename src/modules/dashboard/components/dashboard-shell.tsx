@@ -111,7 +111,7 @@ export function DashboardShell({
   const isStudentsActive = pathname.startsWith("/dashboard/students");
   const isTeachersActive = pathname.startsWith("/dashboard/teachers");
   const isExamsActive = pathname.startsWith("/dashboard/exams");
-  const isLayoutActive = pathname.startsWith("/dashboard/layout");
+  const isLayoutActive = pathname.startsWith("/dashboard/diseno");
   const isContentActive = pathname.startsWith("/dashboard/content");
   const isPageEditorActive =
     pathname.startsWith("/dashboard/pages/edit") ||
@@ -188,7 +188,7 @@ export function DashboardShell({
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           isActive={isLayoutActive}
-                          render={<Link href="/dashboard/layout" />}
+                          render={<Link href="/dashboard/diseno" />}
                         >
                           <LayoutDashboard />
                           <span>Layout</span>

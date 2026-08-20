@@ -11,6 +11,7 @@ import { BlogPostVisibility } from "@prisma/client";
 
 import { auth } from "@/lib/auth";
 import { BlogLikeButton } from "@/modules/blog/components/blog-like-button";
+import { BlogEventDialog } from "@/modules/blog/components/blog-event-dialog";
 import {
   getPublishedBlogTags,
   getPublishedPosts,
@@ -74,8 +75,8 @@ function BlogEventsSidebar({ events }: { events: BlogCalendarEvent[] }) {
           const endsAt = new Date(event.endsAt);
 
           return (
+            <BlogEventDialog key={event.id} event={event}>
             <article
-              key={event.id}
               className="grid grid-cols-[3.7rem_minmax(0,1fr)_1.5rem] items-center border-b border-purple-200/60 bg-[#f7f3fb] transition-colors hover:bg-[#efe7f7] last:border-b-0"
             >
               <div className="flex h-full flex-col items-center justify-center border-r border-black/10 px-2 py-3 text-center">
@@ -108,6 +109,7 @@ function BlogEventsSidebar({ events }: { events: BlogCalendarEvent[] }) {
 
               <ChevronRightIcon className="mr-2 h-4 w-4 text-foreground" />
             </article>
+            </BlogEventDialog>
           );
         }) : (
           <p className="px-3 py-4 text-sm text-muted-foreground">
