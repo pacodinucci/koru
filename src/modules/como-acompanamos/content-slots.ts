@@ -39,8 +39,7 @@ export type LearningPrinciple = {
 export const learningPrinciples: LearningPrinciple[] = [
   {
     title: "Asombro",
-    description:
-      "Aprendemos jugando, explorando y maravillándonos del mundo.",
+    description: "Aprendemos jugando, explorando y maravillándonos del mundo.",
   },
   {
     title: "Interconexión",
@@ -65,7 +64,6 @@ export const learningPrinciples: LearningPrinciple[] = [
 
 export const learningPrinciplesSummary =
   "El aprendizaje florece cuando existe asombro, propósito y conexión. En Koru cultivamos experiencias que invitan a explorar, preguntar, colaborar y construir significado. Nuestros principios de aprendizaje son la brújula que guía nuestra comunidad, ayudando a cada persona a convertirse en protagonista de su propio camino y a descubrir su lugar dentro de una red viva de relaciones, conocimientos y posibilidades.";
-
 
 export const accompanyCopy = {
   eyebrow: "COMO ACOMPAÑAMOS",
@@ -118,6 +116,13 @@ export const accompanyPillars: AccompanyPillar[] = [
 //   "Conexión con la naturaleza",
 //   "Autoconocimiento",
 // ];
+
+export type Methodology = TextBlock & {
+  slug: string;
+  detailParagraphs?: string[];
+  cardHighlight?: string;
+  ctaLabel?: string;
+};
 
 export type AccompanimentExperienceCard = {
   title: string;
@@ -230,67 +235,78 @@ export const accompanimentGroups: AccompanimentGroup[] = [
         title: "Trabajo manual",
         imageSrc: "/assets/images/DSC01363.png",
         imageAlt: "Niñas y niños realizando trabajo manual",
-        description: "El tejido, el modelado con barro y plastilina, el huerto y otras experiencias manuales fortalecen la motricidad fina, la creatividad, la concentración y la perseverancia, integrando el pensamiento, la emoción y la voluntad a través del hacer.",
+        description:
+          "El tejido, el modelado con barro y plastilina, el huerto y otras experiencias manuales fortalecen la motricidad fina, la creatividad, la concentración y la perseverancia, integrando el pensamiento, la emoción y la voluntad a través del hacer.",
       },
       {
         title: "Arte y movimiento",
         imageSrc: "/assets/images/DSC01365.png",
         imageAlt: "Experiencia de arte y movimiento en Grupo Koru",
-        description: "Las artes plásticas y las clases de circo favorecen la creatividad, la coordinación, el equilibrio, la conciencia corporal y la confianza, acompañando el desarrollo integral mediante experiencias de expresión y movimiento.",
+        description:
+          "Las artes plásticas y las clases de circo favorecen la creatividad, la coordinación, el equilibrio, la conciencia corporal y la confianza, acompañando el desarrollo integral mediante experiencias de expresión y movimiento.",
       },
       {
         title: "Inglés",
         imageSrc: "/assets/images/DSC01367.png",
         imageAlt: "Aprendizaje vivencial de inglés en Grupo Koru",
-        description: "El idioma inglés continúa desarrollándose de manera vivencial a través de canciones, cuentos, versos, juegos y actividades cotidianas, ampliando progresivamente la comprensión y la comunicación en un segundo idioma.",
+        description:
+          "El idioma inglés continúa desarrollándose de manera vivencial a través de canciones, cuentos, versos, juegos y actividades cotidianas, ampliando progresivamente la comprensión y la comunicación en un segundo idioma.",
       },
       {
         title: "Exploración sensorial",
         imageSrc: "/assets/images/DSC01378.png",
         imageAlt: "Niñas y niños explorando la naturaleza",
-        description: "La cocina, las caminatas en la naturaleza y otras experiencias sensoriales permiten observar, experimentar y comprender el mundo desde el hacer, despertando la curiosidad, la atención y el pensamiento científico.",
+        description:
+          "La cocina, las caminatas en la naturaleza y otras experiencias sensoriales permiten observar, experimentar y comprender el mundo desde el hacer, despertando la curiosidad, la atención y el pensamiento científico.",
       },
       {
         title: "Música",
         imageSrc: "/assets/images/DSC01379.png",
         imageAlt: "Experiencia musical en Grupo Koru",
-        description: "Las rítmicas, el canto y el repertorio de canciones tradicionales fortalecen la escucha, la memoria, el ritmo, la coordinación y la sensibilidad musical, acompañando el desarrollo del lenguaje y la expresión.",
+        description:
+          "Las rítmicas, el canto y el repertorio de canciones tradicionales fortalecen la escucha, la memoria, el ritmo, la coordinación y la sensibilidad musical, acompañando el desarrollo del lenguaje y la expresión.",
       },
       {
         title: "Lectoescritura",
         imageSrc: "/assets/images/DSC01384.png",
         imageAlt: "Aprendizaje de lectoescritura en Grupo Koru",
-        description: "El acercamiento a la lectoescritura inicia desde una mirada inspirada en la pedagogía antroposófica. Las vocales se presentan mediante el dibujo de formas, el movimiento, la narración y la experiencia artística, permitiendo que el lenguaje se construya desde la vivencia antes que desde la abstracción. Conforme cada niña y niño muestra las señales de madurez necesarias, realizamos una transición gradual hacia una metodología especializada con más de 40 años de experiencia, fortaleciendo la comprensión lectora, la escritura y las primeras habilidades de redacción.",
+        description:
+          "El acercamiento a la lectoescritura inicia desde una mirada inspirada en la pedagogía antroposófica. Las vocales se presentan mediante el dibujo de formas, el movimiento, la narración y la experiencia artística, permitiendo que el lenguaje se construya desde la vivencia antes que desde la abstracción. Conforme cada niña y niño muestra las señales de madurez necesarias, realizamos una transición gradual hacia una metodología especializada con más de 40 años de experiencia, fortaleciendo la comprensión lectora, la escritura y las primeras habilidades de redacción.",
       },
       {
         title: "Pensamiento matemático",
         imageSrc: "/assets/images/DSC01385.png",
         imageAlt: "Experiencia de pensamiento matemático en Grupo Koru",
-        description: "Las matemáticas se presentan como un lenguaje para comprender el mundo. A través de materiales concretos, juegos, desafíos y experiencias significativas, niñas y niños desarrollan el razonamiento lógico-matemático, el sentido numérico y la capacidad para descubrir relaciones y resolver problemas.",
+        description:
+          "Las matemáticas se presentan como un lenguaje para comprender el mundo. A través de materiales concretos, juegos, desafíos y experiencias significativas, niñas y niños desarrollan el razonamiento lógico-matemático, el sentido numérico y la capacidad para descubrir relaciones y resolver problemas.",
       },
       {
         title: "Ritmo estacional",
         imageSrc: "/assets/images/DSC01386.png",
         imageAlt: "Niñas y niños conectando con el ritmo estacional",
-        description: "Las estaciones del año y sus festividades continúan marcando el ritmo de la vida del grupo, fortaleciendo el vínculo con la naturaleza, la comunidad y los ciclos que nos rodean.",
+        description:
+          "Las estaciones del año y sus festividades continúan marcando el ritmo de la vida del grupo, fortaleciendo el vínculo con la naturaleza, la comunidad y los ciclos que nos rodean.",
       },
       {
         title: "Huerto y compostaje",
         imageSrc: "/assets/images/DSC01392.png",
         imageAlt: "Huerto y compostaje en Grupo Koru",
-        description: "El huerto, el compostaje y el cuidado cotidiano del entorno permiten comprender los procesos de la naturaleza desde la experiencia directa, despertando una conciencia ecológica basada en el vínculo, la observación y el cuidado.",
+        description:
+          "El huerto, el compostaje y el cuidado cotidiano del entorno permiten comprender los procesos de la naturaleza desde la experiencia directa, despertando una conciencia ecológica basada en el vínculo, la observación y el cuidado.",
       },
       {
         title: "Juego",
         imageSrc: "/assets/images/DSC01400.png",
         imageAlt: "Niñas y niños jugando en Grupo Koru",
-        description: "El juego continúa siendo una herramienta esencial de aprendizaje. A través de él, niñas y niños exploran ideas, ponen a prueba hipótesis, desarrollan habilidades sociales y construyen conocimiento de manera activa y significativa.",
+        description:
+          "El juego continúa siendo una herramienta esencial de aprendizaje. A través de él, niñas y niños exploran ideas, ponen a prueba hipótesis, desarrollan habilidades sociales y construyen conocimiento de manera activa y significativa.",
       },
       {
         title: "Calma y narración",
         imageSrc: "/assets/images/DSC01443.png",
         imageAlt: "Momento de calma y narración en Grupo Koru",
-        description: "Cada día reservamos un momento para la calma, los cuentos y la narración, favoreciendo la imaginación, la atención, la comprensión del lenguaje y la integración de las experiencias vividas durante la jornada.",
+        description:
+          "Cada día reservamos un momento para la calma, los cuentos y la narración, favoreciendo la imaginación, la atención, la comprensión del lenguaje y la integración de las experiencias vividas durante la jornada.",
       },
     ],
   },
@@ -312,61 +328,71 @@ export const accompanimentGroups: AccompanimentGroup[] = [
         title: "Proyectos Transdisciplinarios",
         imageSrc: "/assets/images/DSC01638.png",
         imageAlt: "Proyecto transdisciplinario en Grupo Helechos 1",
-        description: "El aprendizaje se organiza alrededor de proyectos que integran ciencias, historia, geografía, lenguaje, matemáticas, arte y otras áreas del conocimiento. A través de preguntas, investigaciones y desafíos reales, niñas y niños desarrollan una comprensión conectada del mundo y aprenden a aplicar sus conocimientos en contextos significativos. Las experiencias artísticas —como el teatro, el grabado, la pintura y otras disciplinas— forman parte de estos proyectos, enriqueciendo el aprendizaje mediante distintos lenguajes de expresión.",
+        description:
+          "El aprendizaje se organiza alrededor de proyectos que integran ciencias, historia, geografía, lenguaje, matemáticas, arte y otras áreas del conocimiento. A través de preguntas, investigaciones y desafíos reales, niñas y niños desarrollan una comprensión conectada del mundo y aprenden a aplicar sus conocimientos en contextos significativos. Las experiencias artísticas —como el teatro, el grabado, la pintura y otras disciplinas— forman parte de estos proyectos, enriqueciendo el aprendizaje mediante distintos lenguajes de expresión.",
       },
       {
         title: "Lectoescritura y Pensamiento Matemático",
         imageSrc: "/assets/images/DSC01639.png",
         imageAlt: "Lectoescritura y pensamiento matemático en Grupo Helechos 1",
-        description: "Fortalecemos estas habilidades mediante una metodología especializada con más de 40 años de experiencia, enfocada en desarrollar una lectura fluida, comprensiva y sin vicios lectores, así como un pensamiento lógico-matemático sólido que les permita analizar, resolver problemas y aprender con autonomía.",
+        description:
+          "Fortalecemos estas habilidades mediante una metodología especializada con más de 40 años de experiencia, enfocada en desarrollar una lectura fluida, comprensiva y sin vicios lectores, así como un pensamiento lógico-matemático sólido que les permita analizar, resolver problemas y aprender con autonomía.",
       },
       {
         title: "Redacción y Escritura Creativa",
         imageSrc: "/assets/images/DSC02336.png",
         imageAlt: "Escritura creativa en Grupo Helechos 1",
-        description: "Promovemos la creación literaria como una herramienta para pensar, imaginar y comunicar. A través de distintos géneros y propuestas de escritura, niñas y niños fortalecen la expresión escrita, la organización de ideas, la creatividad y el razonamiento verbal.",
+        description:
+          "Promovemos la creación literaria como una herramienta para pensar, imaginar y comunicar. A través de distintos géneros y propuestas de escritura, niñas y niños fortalecen la expresión escrita, la organización de ideas, la creatividad y el razonamiento verbal.",
       },
       {
         title: "Laboratorio de Pensamiento",
         imageSrc: "/assets/images/DSC02353.png",
         imageAlt: "Laboratorio de pensamiento en Grupo Helechos 1",
-        description: "Diseñamos experiencias que invitan a observar, cuestionar, investigar, analizar y argumentar. A través de retos, juegos de estrategia, resolución de problemas y espacios de reflexión, fortalecemos el pensamiento crítico, la creatividad y la capacidad de construir soluciones de manera autónoma y colaborativa.",
+        description:
+          "Diseñamos experiencias que invitan a observar, cuestionar, investigar, analizar y argumentar. A través de retos, juegos de estrategia, resolución de problemas y espacios de reflexión, fortalecemos el pensamiento crítico, la creatividad y la capacidad de construir soluciones de manera autónoma y colaborativa.",
       },
       {
         title: "Huerto",
         imageSrc: "/assets/images/DSC02354.png",
         imageAlt: "Huerto de Grupo Helechos 1",
-        description: "El huerto se convierte en un laboratorio vivo donde comprenden los ciclos de la naturaleza, desarrollan la responsabilidad, el trabajo colaborativo y la paciencia, mientras fortalecen su vínculo con el entorno.",
+        description:
+          "El huerto se convierte en un laboratorio vivo donde comprenden los ciclos de la naturaleza, desarrollan la responsabilidad, el trabajo colaborativo y la paciencia, mientras fortalecen su vínculo con el entorno.",
       },
       {
         title: "Escuela del Bosque",
         imageSrc: "/assets/images/DSC02358.png",
         imageAlt: "Exploración en la Escuela del Bosque",
-        description: "La naturaleza continúa siendo un espacio privilegiado de aprendizaje. A través de caminatas, observación, exploración y experiencias al aire libre, fortalecen la autonomía, la resiliencia, la curiosidad y el respeto por los sistemas vivos.",
+        description:
+          "La naturaleza continúa siendo un espacio privilegiado de aprendizaje. A través de caminatas, observación, exploración y experiencias al aire libre, fortalecen la autonomía, la resiliencia, la curiosidad y el respeto por los sistemas vivos.",
       },
       {
         title: "Inteligencia Socioemocional",
         imageSrc: "/assets/images/DSC02366.png",
         imageAlt: "Espacio socioemocional en Grupo Helechos 1",
-        description: "A través de asambleas, círculos socráticos, juegos cooperativos y espacios de reflexión, fortalecemos el autoconocimiento, la empatía, la comunicación, la resolución de conflictos y la capacidad de construir comunidad desde el diálogo y el respeto.",
+        description:
+          "A través de asambleas, círculos socráticos, juegos cooperativos y espacios de reflexión, fortalecemos el autoconocimiento, la empatía, la comunicación, la resolución de conflictos y la capacidad de construir comunidad desde el diálogo y el respeto.",
       },
       {
         title: "Música",
         imageSrc: "/assets/images/DSC02377.png",
         imageAlt: "Aprendizaje musical con flauta en Grupo Helechos 1",
-        description: "El aprendizaje de la flauta, inspirado en la pedagogía Waldorf, favorece la coordinación, la atención, la escucha, la disciplina, la sensibilidad musical y la perseverancia, integrando el desarrollo cognitivo, emocional y corporal.",
+        description:
+          "El aprendizaje de la flauta, inspirado en la pedagogía Waldorf, favorece la coordinación, la atención, la escucha, la disciplina, la sensibilidad musical y la perseverancia, integrando el desarrollo cognitivo, emocional y corporal.",
       },
       {
         title: "Inglés",
         imageSrc: "/assets/images/DSC02381.png",
         imageAlt: "Clase de inglés en Grupo Helechos 1",
-        description: "En esta etapa el aprendizaje del inglés evoluciona hacia clases más estructuradas, donde fortalecen progresivamente la comprensión lectora, la escritura, el vocabulario, la gramática y la comunicación oral. Todo ello se desarrolla mediante actividades dinámicas y significativas que permiten utilizar el idioma con mayor seguridad y confianza.",
+        description:
+          "En esta etapa el aprendizaje del inglés evoluciona hacia clases más estructuradas, donde fortalecen progresivamente la comprensión lectora, la escritura, el vocabulario, la gramática y la comunicación oral. Todo ello se desarrolla mediante actividades dinámicas y significativas que permiten utilizar el idioma con mayor seguridad y confianza.",
       },
       {
         title: "Movimiento",
         imageSrc: "/assets/images/DSC01392.png",
         imageAlt: "Experiencia de movimiento en Grupo Helechos 1",
-        description: "A través de disciplinas como circo y frisbee, fortalecemos la coordinación, el equilibrio, la conciencia corporal, el trabajo en equipo y la confianza. Entendemos el movimiento como una herramienta para aprender, colaborar y desarrollar habilidades para la vida.",
+        description:
+          "A través de disciplinas como circo y frisbee, fortalecemos la coordinación, el equilibrio, la conciencia corporal, el trabajo en equipo y la confianza. Entendemos el movimiento como una herramienta para aprender, colaborar y desarrollar habilidades para la vida.",
       },
     ],
   },
@@ -385,80 +411,210 @@ export const accompanimentGroups: AccompanimentGroup[] = [
     ],
     hideRhythmSection: true,
     experienceCards: [
-      { title: "Proyectos Transdisciplinarios", imageSrc: "/assets/images/DSC01273.png", imageAlt: "Proyecto transdisciplinario en Grupo Helechos 2", description: "Los proyectos integran ciencias, historia, geografía, lenguaje, matemáticas, arte y otras áreas del conocimiento alrededor de preguntas, investigaciones y desafíos reales. Niñas y niños profundizan en la comprensión de sistemas complejos, desarrollan proyectos con mayor nivel de autonomía y fortalecen la capacidad de generar soluciones creativas con impacto en su entorno." },
-      { title: "Lectoescritura y Pensamiento Matemático", imageSrc: "/assets/images/DSC01276.png", imageAlt: "Lectoescritura y pensamiento matemático en Grupo Helechos 2", description: "Consolidamos la comprensión lectora, la escritura y el pensamiento lógico-matemático mediante una metodología especializada con más de 40 años de experiencia. Buscamos que niñas y niños desarrollen una lectura crítica y fluida, argumenten con claridad y utilicen el razonamiento matemático para analizar información, resolver problemas y tomar decisiones fundamentadas." },
-      { title: "Redacción y Escritura Creativa", imageSrc: "/assets/images/DSC01280.png", imageAlt: "Escritura creativa en Grupo Helechos 2", description: "La escritura se convierte en una herramienta para reflexionar, investigar, argumentar y expresar ideas con claridad. A través de distintos géneros literarios y proyectos de escritura, fortalecen el pensamiento crítico, la creatividad y la capacidad de comunicar con propósito." },
-      { title: "Laboratorio de Pensamiento", imageSrc: "/assets/images/DSC01281.png", imageAlt: "Laboratorio de pensamiento en Grupo Helechos 2", description: "A través de retos, investigaciones, análisis de casos, juegos de estrategia y círculos socráticos, fortalecemos el pensamiento crítico, la argumentación, la creatividad y la resolución de problemas, favoreciendo que niñas y niños aprendan a cuestionar, fundamentar sus ideas y construir conocimiento de manera colaborativa." },
-      { title: "Huerto y Sustentabilidad", imageSrc: "/assets/images/DSC01284.png", imageAlt: "Huerto y sustentabilidad en Grupo Helechos 2", description: "El huerto continúa siendo un laboratorio vivo donde profundizan en los procesos ecológicos y la comprensión de los sistemas naturales. Se complementa con proyectos de sustentabilidad, compostaje y cuidado del entorno que fortalecen la responsabilidad y el compromiso con la comunidad y el planeta." },
-      { title: "Escuela del Bosque", imageSrc: "/assets/images/DSC01285.png", imageAlt: "Escuela del Bosque en Grupo Helechos 2", description: "La naturaleza continúa siendo un espacio privilegiado de aprendizaje. A través de caminatas, exploración, orientación y habilidades de supervivencia —como construir refugios, encender fuego de manera responsable y desenvolverse en entornos naturales— fortalecen la autonomía, la resiliencia, el liderazgo y el trabajo colaborativo." },
-      { title: "Inteligencia Socioemocional", imageSrc: "/assets/images/DSC01286.png", imageAlt: "Espacio socioemocional en Grupo Helechos 2", description: "Las asambleas, los círculos socráticos y otros espacios de diálogo favorecen el autoconocimiento, la empatía, la comunicación, la resolución de conflictos y la construcción de acuerdos, fortaleciendo una participación cada vez más consciente dentro de la comunidad." },
-      { title: "Música", imageSrc: "/assets/images/DSC01291.png", imageAlt: "Aprendizaje musical en Grupo Helechos 2", description: "El aprendizaje de la flauta continúa desarrollando la atención, la disciplina, la sensibilidad musical, la coordinación y la perseverancia, integrando el desarrollo cognitivo, emocional y corporal." },
-      { title: "Inglés", imageSrc: "/assets/images/DSC01354.png", imageAlt: "Clase de inglés en Grupo Helechos 2", description: "El inglés se fortalece mediante clases estructuradas que profundizan en la comprensión lectora, la escritura, el vocabulario, la gramática y la comunicación oral. El objetivo es que niñas y niños utilicen el idioma con seguridad y confianza en diferentes contextos académicos y cotidianos." },
-      { title: "Movimiento", imageSrc: "/assets/images/DSC01355.png", imageAlt: "Experiencia de movimiento en Grupo Helechos 2", description: "A través de disciplinas como circo y frisbee, fortalecemos la conciencia corporal, la coordinación, el liderazgo, la cooperación y la capacidad de enfrentar retos con creatividad, perseverancia y confianza." },
+      {
+        title: "Proyectos Transdisciplinarios",
+        imageSrc: "/assets/images/DSC01273.png",
+        imageAlt: "Proyecto transdisciplinario en Grupo Helechos 2",
+        description:
+          "Los proyectos integran ciencias, historia, geografía, lenguaje, matemáticas, arte y otras áreas del conocimiento alrededor de preguntas, investigaciones y desafíos reales. Niñas y niños profundizan en la comprensión de sistemas complejos, desarrollan proyectos con mayor nivel de autonomía y fortalecen la capacidad de generar soluciones creativas con impacto en su entorno.",
+      },
+      {
+        title: "Lectoescritura y Pensamiento Matemático",
+        imageSrc: "/assets/images/DSC01276.png",
+        imageAlt: "Lectoescritura y pensamiento matemático en Grupo Helechos 2",
+        description:
+          "Consolidamos la comprensión lectora, la escritura y el pensamiento lógico-matemático mediante una metodología especializada con más de 40 años de experiencia. Buscamos que niñas y niños desarrollen una lectura crítica y fluida, argumenten con claridad y utilicen el razonamiento matemático para analizar información, resolver problemas y tomar decisiones fundamentadas.",
+      },
+      {
+        title: "Redacción y Escritura Creativa",
+        imageSrc: "/assets/images/DSC01280.png",
+        imageAlt: "Escritura creativa en Grupo Helechos 2",
+        description:
+          "La escritura se convierte en una herramienta para reflexionar, investigar, argumentar y expresar ideas con claridad. A través de distintos géneros literarios y proyectos de escritura, fortalecen el pensamiento crítico, la creatividad y la capacidad de comunicar con propósito.",
+      },
+      {
+        title: "Laboratorio de Pensamiento",
+        imageSrc: "/assets/images/DSC01281.png",
+        imageAlt: "Laboratorio de pensamiento en Grupo Helechos 2",
+        description:
+          "A través de retos, investigaciones, análisis de casos, juegos de estrategia y círculos socráticos, fortalecemos el pensamiento crítico, la argumentación, la creatividad y la resolución de problemas, favoreciendo que niñas y niños aprendan a cuestionar, fundamentar sus ideas y construir conocimiento de manera colaborativa.",
+      },
+      {
+        title: "Huerto y Sustentabilidad",
+        imageSrc: "/assets/images/DSC01284.png",
+        imageAlt: "Huerto y sustentabilidad en Grupo Helechos 2",
+        description:
+          "El huerto continúa siendo un laboratorio vivo donde profundizan en los procesos ecológicos y la comprensión de los sistemas naturales. Se complementa con proyectos de sustentabilidad, compostaje y cuidado del entorno que fortalecen la responsabilidad y el compromiso con la comunidad y el planeta.",
+      },
+      {
+        title: "Escuela del Bosque",
+        imageSrc: "/assets/images/DSC01285.png",
+        imageAlt: "Escuela del Bosque en Grupo Helechos 2",
+        description:
+          "La naturaleza continúa siendo un espacio privilegiado de aprendizaje. A través de caminatas, exploración, orientación y habilidades de supervivencia —como construir refugios, encender fuego de manera responsable y desenvolverse en entornos naturales— fortalecen la autonomía, la resiliencia, el liderazgo y el trabajo colaborativo.",
+      },
+      {
+        title: "Inteligencia Socioemocional",
+        imageSrc: "/assets/images/DSC01286.png",
+        imageAlt: "Espacio socioemocional en Grupo Helechos 2",
+        description:
+          "Las asambleas, los círculos socráticos y otros espacios de diálogo favorecen el autoconocimiento, la empatía, la comunicación, la resolución de conflictos y la construcción de acuerdos, fortaleciendo una participación cada vez más consciente dentro de la comunidad.",
+      },
+      {
+        title: "Música",
+        imageSrc: "/assets/images/DSC01291.png",
+        imageAlt: "Aprendizaje musical en Grupo Helechos 2",
+        description:
+          "El aprendizaje de la flauta continúa desarrollando la atención, la disciplina, la sensibilidad musical, la coordinación y la perseverancia, integrando el desarrollo cognitivo, emocional y corporal.",
+      },
+      {
+        title: "Inglés",
+        imageSrc: "/assets/images/DSC01354.png",
+        imageAlt: "Clase de inglés en Grupo Helechos 2",
+        description:
+          "El inglés se fortalece mediante clases estructuradas que profundizan en la comprensión lectora, la escritura, el vocabulario, la gramática y la comunicación oral. El objetivo es que niñas y niños utilicen el idioma con seguridad y confianza en diferentes contextos académicos y cotidianos.",
+      },
+      {
+        title: "Movimiento",
+        imageSrc: "/assets/images/DSC01355.png",
+        imageAlt: "Experiencia de movimiento en Grupo Helechos 2",
+        description:
+          "A través de disciplinas como circo y frisbee, fortalecemos la conciencia corporal, la coordinación, el liderazgo, la cooperación y la capacidad de enfrentar retos con creatividad, perseverancia y confianza.",
+      },
     ],
   },
 ];
 
-export const methodologies: TextBlock[] = [
+export const methodologies: Methodology[] = [
   {
     title: "1. Fundamentos Antroposóficos",
+    slug: "fundamentos-antroposoficos",
+    cardHighlight: "El desarrollo no se acelera; se acompaña.",
     paragraphs: [
-      "En Koru, hemos escogido ciertos fundamentos antroposóficos a través de: generar un ritmo de inhalación y exhalación claro y predecible, ritos y rituales del día a día, contacto con la naturaleza, expresión artística y juego libre. De esta mirada nacen los hitos de madurez que nos guían en la creación de las planeaciones transdisciplinarias.",
+      "Integramos algunos fundamentos de la pedagogía antroposófica que orientan nuestro modelo educativo y nos ayudan a diseñar experiencias de aprendizaje respetuosas del desarrollo integral de cada niña y niño.",
     ],
+    detailParagraphs: [
+      "En KORU integramos algunos fundamentos de la pedagogía antroposófica que consideramos especialmente valiosos para el desarrollo integral de niñas y niños. Más que adoptar una metodología de manera íntegra, retomamos aquellos principios que favorecen el bienestar, la seguridad emocional y un aprendizaje profundamente humano.",
+      "Esto se refleja en la construcción de ritmos diarios claros y predecibles, que alternan momentos de concentración y expansión (inhalación y exhalación); en la presencia de ritos y rituales que brindan sentido y pertenencia; en el contacto cotidiano con la naturaleza; y en el lugar esencial que ocupan la expresión artística y el juego libre como medios para explorar, crear, imaginar y comprender el mundo.",
+      "Desde esta mirada entendemos que el desarrollo humano ocurre por etapas y que cada una trae consigo procesos de maduración física, emocional, social y cognitiva. Por ello, observamos los hitos de madurez no como metas que deban alcanzarse en una edad específica, sino como señales que nos ayudan a comprender cuándo niñas y niños están preparados para determinados aprendizajes y experiencias.",
+      "Esta comprensión orienta el diseño de nuestras planeaciones transdisciplinarias, permitiéndonos ofrecer propuestas que respetan la singularidad de cada persona y acompañan su desarrollo de manera armónica.",
+    ],
+
   },
   {
     title: "2. Aprendizaje Transdisciplinario",
+    slug: "aprendizaje-transdisciplinario",
+    cardHighlight: "El mundo no está dividido en materias.",
+    ctaLabel: "Conoce el cómo y el por qué",
     paragraphs: [
-      "Desarrollamos proyectos que integran distintas áreas del conocimiento, permitiendo que las niñas y niños comprendan la realidad de manera conectada y significativa. A través de estos procesos, investigan, crean, colaboran y encuentran sentido en lo que aprenden.",
-      "En Koru adoptamos el aprendizaje transdisciplinario porque el mundo actual exige pensar y actuar más allá de las fronteras disciplinarias. La realidad es compleja, interconectada y en constante cambio, por lo que guiamos el aprendizaje social hacia la integración del conocimiento, la creatividad y la resolución de problemas reales.",
-      "La transdisciplinariedad fomenta el pensamiento crítico, la colaboración y el aprendizaje basado en la experiencia, permitiendo que los aprendices construyan significado de manera profunda.",
-      "Al cruzar y conectar saberes, promovemos una educación viva, flexible y en evolución, donde cada persona desarrolla herramientas para comprender y transformar su entorno con sensibilidad y propósito.",
+      "Diseñamos experiencias de aprendizaje que integran distintas áreas del conocimiento alrededor de preguntas, desafíos y situaciones reales, permitiendo que niñas y niños comprendan la realidad de manera conectada y significativa.",
+    ],
+    detailParagraphs: [
+      "En KORU entendemos que el mundo no está dividido en materias. Por ello, diseñamos experiencias de aprendizaje que integran distintas áreas del conocimiento alrededor de preguntas, desafíos y situaciones reales, permitiendo que niñas y niños comprendan la realidad de manera conectada y significativa.",
+      "A través de proyectos transdisciplinarios investigan, observan, experimentan, crean, dialogan y colaboran, relacionando lo que aprenden con su vida cotidiana, su comunidad y el entorno que los rodea. Así, el aprendizaje deja de ser la acumulación de información para convertirse en una experiencia con propósito.",
+      "Elegimos este enfoque porque el mundo actual requiere personas capaces de comprender la complejidad, establecer conexiones entre distintas formas de conocimiento y generar respuestas creativas a los desafíos de su tiempo. Más que memorizar contenidos de forma aislada, buscamos desarrollar la capacidad de formular preguntas, pensar críticamente, trabajar en comunidad y construir nuevos aprendizajes a partir de la experiencia.",
+      "Para nosotros, la transdisciplinariedad no consiste únicamente en integrar disciplinas, sino en conectar conocimientos, habilidades, emociones, valores y experiencias para que el aprendizaje refleje la complejidad de la vida misma. De esta manera formamos personas capaces de comprender su realidad y participar activamente en su transformación con sensibilidad, pensamiento crítico y propósito.",
     ],
   },
   {
     title: "3. Desarrollo Socio-Emocional",
+    slug: "desarrollo-socioemocional",
+    cardHighlight:
+      "Creemos que el bienestar individual y el bienestar colectivo están profundamente conectados.",
+    ctaLabel: "Conoce el cómo y el por qué",
     paragraphs: [
-      "Acompañamos los procesos socioemocionales desde la escucha, la empatía y el respeto.",
-      "Integramos herramientas como la Comunicación NoViolenta para gestionar conflictos, fortalecer la colaboración y desarrollar la capacidad de expresar necesidades y sentimientos de manera clara y cuidadosa.",
-      "Exploramos lenguajes y mapas de las emociones para poder ser más precisos a la hora de entender lo que nos sucede y poder tomar mejores decisiones y desarrollar la conexión con los demás y una comunicación asertiva.",
-      "Así, se fortalece la cultura de paz, sostenida por el diálogo, respeto y responsabilidad compartida, que nos permite crecer juntos como seres humanos y en el desarrollo socio emocional de Koru OSA.",
+      "Entendemos que aprender también implica conocerse, comprender a los demás y construir relaciones conscientes. A través de herramientas como la Comunicación No Violenta y el desarrollo del autoconocimiento, cultivamos una auténtica cultura de paz basada en la empatía, el diálogo y la corresponsabilidad.",
+    ],
+    detailParagraphs: [
+      "En KORU entendemos que aprender también implica conocerse, comprender a los demás y construir relaciones conscientes. Por ello, la educación socioemocional no es una asignatura aislada, sino una dimensión que atraviesa la vida cotidiana de nuestra comunidad y todas las experiencias de aprendizaje.",
+      "Acompañamos los procesos emocionales desde la escucha, la empatía y el respeto, creando espacios donde niñas y niños pueden reconocer lo que sienten, comprender qué les están comunicando sus emociones acerca de sus necesidades y desarrollar la capacidad de responder con mayor conciencia, en lugar de reaccionar de manera automática.",
+      "Integramos herramientas de inteligencia emocional, como la Comunicación No Violenta (CNV) entre otras, que fortalecen la empatía, el diálogo y la colaboración. A través de ellas aprendemos a expresar sentimientos y necesidades con claridad, escuchar profundamente a los demás y transformar los conflictos en oportunidades de aprendizaje, reparación y crecimiento.",
+      "Creemos que una comunidad se fortalece cuando quienes la integran participan activamente en su construcción. Por ello, muchos de los acuerdos de convivencia se dialogan y se construyen junto con niñas y niños, considerando las necesidades de todas las personas involucradas. Más que obedecer reglas impuestas, buscamos que comprendan el sentido de los acuerdos, desarrollen un compromiso genuino con ellos y experimenten cómo el diálogo, la corresponsabilidad y el respeto permiten construir una convivencia armónica.",
+      "Asimismo, exploramos diversos lenguajes y mapas de las emociones que enriquecen el vocabulario emocional y favorecen una comprensión más precisa de la experiencia interna. Entendemos que las emociones no son algo que deba reprimirse o evitarse, sino una valiosa fuente de información sobre nuestro mundo interior. Al desarrollar esta conciencia, niñas y niños fortalecen su autoconocimiento, toman decisiones más responsables y construyen relaciones basadas en el cuidado mutuo y el respeto.",
+      "Creemos que el bienestar individual y el bienestar colectivo están profundamente conectados. Por ello, cultivamos una auténtica cultura de paz, sostenida por el diálogo, la empatía, la corresponsabilidad y la convicción de que cada interacción es una oportunidad para crecer como personas y fortalecer la comunidad.",
     ],
   },
   {
     title:
       "4. Desarrollo de habilidades fundamentales (lectura, escritura y matemáticas)",
+    slug: "lectura-escritura-y-matematicas",
+    cardHighlight:
+      "Las grandes ideas se construyen sobre habilidades fundamentales",
+    ctaLabel: "Conoce el cómo y el por qué",
     paragraphs: [
-      "Acompañamos el desarrollo de la lectoescritura y el pensamiento matemático a través de metodologías estructuradas, respetuosas de los procesos individuales y reconocidas por su efectividad, integrando el aprendizaje de forma significativa y no mecánica.",
-      "Basada en una metodología premiada con más de 40 años de experiencia.",
+      "La lectura, la escritura y el pensamiento matemático son los lenguajes que nos permiten comprender, pensar y transformar la realidad.",
+      "Creemos que son mucho más que asignaturas: son lenguajes fundamentales para comprender, pensar y transformar la realidad. Por ello, constituyen uno de los pilares esenciales de nuestro modelo educativo.",
     ],
-    cta: { label: "Conocer más", href: "#lectura-escritura-y-matematicas" },
+    detailParagraphs: [
+      "En KORU creemos que la lectura, la escritura y el pensamiento matemático son habilidades fundamentales para comprender el mundo, comunicar ideas, resolver problemas y continuar aprendiendo a lo largo de la vida. Más que asignaturas, son lenguajes que nos permiten interpretar la realidad, organizar el pensamiento y construir nuevos conocimientos.",
+      "La lectura nos permite comprender las ideas de otros; la escritura nos ayuda a organizar, expresar y comunicar nuestro propio pensamiento; y las matemáticas nos enseñan a reconocer patrones, establecer relaciones y razonar con claridad. Juntas, estas habilidades amplían nuestra capacidad para comprender el mundo, tomar mejores decisiones y participar en él de manera crítica, creativa y consciente.",
+      "Por ello, damos especial importancia a que cada niña y niño desarrolle estas capacidades con profundidad, comprensión y confianza. Nuestro objetivo no es únicamente que aprendan a leer, escribir o resolver operaciones, sino que construyan un sólido razonamiento verbal y lógico-matemático que les permita analizar información, formular preguntas, expresar sus ideas con claridad y enfrentarse a nuevos desafíos con autonomía.",
+      "Para lograrlo, nos apoyamos en una metodología con más de 40 años de experiencia, basada en el desarrollo progresivo de capacidades y en el respeto al punto de partida de cada aprendiz. Este enfoque fortalece la comprensión lectora, la escritura, el pensamiento numérico, el cálculo mental y la resolución de problemas, priorizando siempre la comprensión profunda por encima de la memorización.",
+      "Creemos que cuando estas habilidades se desarrollan de manera sólida, todos los demás aprendizajes encuentran una base firme sobre la cual crecer. Por eso constituyen uno de los pilares esenciales de nuestro modelo pedagógico.",
+    ],
   },
   {
     title: "5. Conciencia ecológica",
+    slug: "conciencia-ecologica",
+    cardHighlight: "La conciencia ecológica nace del vínculo",
+    ctaLabel: "Conoce el cómo y el por qué",
     paragraphs: [
-      "Fomentamos una relación cercana y de reciprocidad con el entorno.",
-      "A través del huerto, habilidades de supervivencia, caminatas en el bosque, separación de residuos y prácticas como el uso de baños secos, entre otros, las niñas y niños desarrollan conciencia ecológica desde la experiencia, comprendiendo su papel dentro de un sistema vivo.",
+      "Cuidamos aquello de lo que nos sentimos parte.",
+      "Promovemos una conciencia ecológica y social que nace de la experiencia, el vínculo y el sentido de pertenencia. Buscamos formar personas que comprendan que cada acción genera un impacto y que el cuidado del planeta comienza por la manera en que habitamos y nos relacionamos con el mundo.",
     ],
-    cta: { label: "Quiero saber más", href: "#conciencia-ecologica" },
+    detailParagraphs: [
+      "En KORU entendemos que la conciencia ecológica no se construye únicamente aprendiendo sobre el medio ambiente, sino viviendo diariamente en relación con la naturaleza, la comunidad y los sistemas de los que formamos parte.",
+      "Creemos que cuando niñas y niños experimentan el cuidado de manera cotidiana, desarrollan una comprensión profunda de la interdependencia entre las personas, los seres vivos y el entorno. Desde esta mirada, el respeto por la naturaleza deja de ser una obligación para convertirse en una forma natural de habitar el mundo.",
+      "Por ello, la conciencia ecológica se vive todos los días a través de acciones concretas como la separación de residuos, el uso de baños secos, el cuidado de plantas, las actividades de huerto, las caminatas al bosque y el contacto constante con los ciclos naturales. Estas experiencias permiten comprender la naturaleza desde la observación, la participación y el cuidado, generando un vínculo profundo con el entorno.",
+      "Asimismo, desarrollamos experiencias inspiradas en la Escuela del Bosque, donde niñas y niños fortalecen su autonomía y confianza mediante el aprendizaje al aire libre. A través de caminatas, exploración, orientación y habilidades de supervivencia —como construir refugios, encender fuego de manera responsable, identificar recursos naturales y desenvolverse con seguridad en el bosque— descubren que la naturaleza no es solo un lugar para visitar, sino una comunidad viva de la que formamos parte y con la que aprendemos a relacionarnos de manera respetuosa.",
+      "Esta visión también se extiende a la dimensión social. Impulsamos proyectos y programas de impacto comunitario que fortalecen la empatía, el servicio y la corresponsabilidad, ayudando a comprender que el cuidado del entorno y el cuidado de las personas son inseparables.",
+      "Más que reducir nuestro impacto, buscamos aprender a generar un impacto positivo en los sistemas vivos de los que formamos parte. Aspiramos a formar personas capaces de observar, cuidar, colaborar y actuar con conciencia, comprendiendo que cada decisión puede contribuir a construir un mundo más humano, regenerativo y sostenible.",
+    ],
   },
   {
     title: "6. Pensamiento crítico y diálogo",
+    slug: "pensamiento-critico-y-dialogo",
+    cardHighlight: "Pensar también es aprender a dialogar.",
+    ctaLabel: "Conoce el cómo y el por qué",
     paragraphs: [
-      "Generamos espacios como círculos socráticos y asambleas, donde las niñas y niños desarrollan la escucha, el pensamiento reflexivo y la capacidad de expresar ideas, cuestionar y construir conocimiento en comunidad.",
+      "Creamos espacios de diálogo donde niñas y niños aprenden a escuchar, argumentar, cuestionar y construir conocimiento en comunidad. A través de círculos socráticos, asambleas y conversaciones significativas fortalecen un pensamiento crítico, reflexivo y respetuoso.",
+    ],
+    detailParagraphs: [
+      "En KORU creemos que el pensamiento crítico no consiste únicamente en encontrar respuestas, sino en aprender a formular buenas preguntas, analizar distintas perspectivas y construir ideas con fundamento.",
+      "Por ello, incorporamos de manera cotidiana herramientas como los círculos socráticos, las asambleas y otros espacios de diálogo donde niñas y niños desarrollan la capacidad de escuchar con atención, expresar sus ideas con claridad, argumentar con respeto y enriquecer su pensamiento a partir del intercambio con los demás.",
+      "Los círculos socráticos promueven la reflexión profunda a través de preguntas abiertas que invitan a analizar, relacionar ideas y construir significado de manera colectiva. Las asambleas, por su parte, fortalecen la participación democrática, la corresponsabilidad y la toma de decisiones en comunidad, permitiendo que cada voz sea escuchada y valorada.",
+      "Entendemos el diálogo como una herramienta para aprender, no para convencer. Al compartir diferentes perspectivas, niñas y niños descubren que el conocimiento también se construye en comunidad y que las diferencias de opinión representan oportunidades para ampliar la comprensión del mundo.",
+      "De esta manera fortalecemos la curiosidad, el pensamiento reflexivo, la capacidad de tomar decisiones fundamentadas y la disposición para participar de manera activa, responsable y respetuosa en la vida de su comunidad",
     ],
   },
   {
     title: "7. Expresión artística",
+    slug: "expresion-artistica",
+    cardHighlight: "El arte también es una forma de comprender el mundo.",
+    ctaLabel: "Conoce el cómo y el por qué",
     paragraphs: [
-      "El arte es un medio fundamental para el desarrollo emocional, creativo y expresivo. A través de talleres, integramos disciplinas como las artes plásticas y escénicas como parte del proceso de aprendizaje, permitiendo que las niñas y niños elaboren su mundo interno y se expresen con libertad.",
+      "En KORU entendemos el arte como un lenguaje esencial para expresar, imaginar, crear y dar sentido a la experiencia humana. A través de diversas disciplinas artísticas, niñas y niños desarrollan su creatividad, sensibilidad y capacidad de comunicar lo que piensan, sienten y descubren.",
     ],
-    cta: { label: "Conocer más", href: "#expresion-artistica" },
+    detailParagraphs: [
+      "En KORU creemos que el arte no es una actividad complementaria, sino una forma de aprender, pensar y relacionarse con el mundo. Es un lenguaje que permite explorar la imaginación, desarrollar la sensibilidad y expresar aquello que muchas veces las palabras no alcanzan a comunicar.",
+      "Por ello, integramos de manera cotidiana experiencias artísticas como las artes plásticas, el teatro, la música, la danza y otras formas de expresión creativa, entendiéndolas como parte esencial del proceso de aprendizaje y del desarrollo integral.",
+      "A través del arte, niñas y niños elaboran su mundo interior, fortalecen su creatividad, desarrollan la capacidad de observar con atención, experimentar, crear y expresar sus ideas, emociones y experiencias desde su propia autenticidad.",
+      "Creemos que la experiencia artística no solo forma personas más creativas, sino también más sensibles, curiosas y capaces de apreciar la belleza, conectar con los demás y participar de manera significativa en la construcción de la cultura y la comunidad.",
+    ],
   },
   {
     title: "8. Movimiento y desarrollo corporal",
+    slug: "movimiento-y-desarrollo-corporal",
+    cardHighlight: "El cuerpo también piensa, aprende y se expresa.",
+    ctaLabel: "Conoce el cómo y el por qué",
     paragraphs: [
-      "El cuerpo es parte esencial del aprendizaje.",
-      "Generamos experiencias de movimiento que responden a las necesidades e intereses del grupo, ofreciendo talleres como circo, fútbol, danza y otras actividades corporales que permiten canalizar energía, favorecer la autorregulación y fortalecer la conexión con el propio cuerpo.",
+      "En KORU entendemos el movimiento como una dimensión esencial del aprendizaje. A través de experiencias corporales como el circo y el frisbee, niñas y niños desarrollan coordinación, conciencia corporal, trabajo en equipo y la confianza para descubrir nuevas posibilidades en sí mismos.",
+    ],
+    detailParagraphs: [
+      "En KORU creemos que el aprendizaje también ocurre a través del cuerpo. El movimiento favorece la atención, la autorregulación, la coordinación, la percepción, la confianza y el desarrollo integral, convirtiéndose en una parte esencial de la experiencia educativa.",
+      "Por ello, integramos propuestas corporales que responden a las necesidades e intereses de cada etapa del desarrollo, entendiendo que moverse no solo fortalece el cuerpo, sino también la manera en que aprendemos, nos relacionamos y habitamos el mundo.",
+      "Nuestros talleres de circo y frisbee fueron elegidos porque promueven habilidades que van mucho más allá de la técnica deportiva. El circo fortalece el equilibrio, la coordinación, la motricidad, la creatividad, la perseverancia y la confianza para afrontar nuevos desafíos. El frisbee, por su parte, desarrolla la coordinación óculo-manual, la percepción espacial, la toma de decisiones, la comunicación, la cooperación y el trabajo en equipo, privilegiando el juego limpio y el respeto por los demás.",
+      "Más que formar deportistas, buscamos que niñas y niños descubran el movimiento como una herramienta para conocerse, cuidar su cuerpo, colaborar con otros y desarrollar habilidades que los acompañarán durante toda la vida.",
     ],
   },
 ];
@@ -528,8 +684,6 @@ export const evaluationBlocks: IllustratedTextBlock[] = [
   },
 ];
 
-
-
 const baseStyleControls: LandingContentSlot["styleControls"] = [
   "font",
   "size",
@@ -571,23 +725,22 @@ export const comoAcompanamosContentSlotIds = {
   heroIntro: "content.como-acompanamos.hero.intro",
   learningPrinciplesSummary:
     "content.como-acompanamos.learning-principles.summary",
-  connectedLearningTitle:
-    "content.como-acompanamos.connected-learning.title",
-  connectedLearningText:
-    "content.como-acompanamos.connected-learning.text",
+  connectedLearningTitle: "content.como-acompanamos.connected-learning.title",
+  connectedLearningText: "content.como-acompanamos.connected-learning.text",
   integralDevelopmentTitle:
     "content.como-acompanamos.integral-development.title",
-  integralDevelopmentText:
-    "content.como-acompanamos.integral-development.text",
+  integralDevelopmentText: "content.como-acompanamos.integral-development.text",
   groupsTitle: "content.como-acompanamos.groups.title",
   groupsIntro: "content.como-acompanamos.groups.intro",
   methodologiesTitle: "content.como-acompanamos.methodologies.title",
+  methodologiesLead: "content.como-acompanamos.methodologies.lead",
   methodologiesIntro: "content.como-acompanamos.methodologies.intro",
   evaluationTitle: "content.como-acompanamos.evaluation.title",
   evaluationLead: "content.como-acompanamos.evaluation.lead",
   evaluationParagraphOne: "content.como-acompanamos.evaluation.paragraph.one",
   evaluationParagraphTwo: "content.como-acompanamos.evaluation.paragraph.two",
-  evaluationParagraphThree: "content.como-acompanamos.evaluation.paragraph.three",
+  evaluationParagraphThree:
+    "content.como-acompanamos.evaluation.paragraph.three",
   evaluationCta: "content.como-acompanamos.evaluation.cta",
 } as const;
 
@@ -601,7 +754,6 @@ export function learningPrincipleSlotId(
 ) {
   return `content.como-acompanamos.learning-principles.${index}.${field}`;
 }
-
 
 export function groupSlotId(
   index: number,
@@ -638,7 +790,14 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
     defaultValue: accompanyCopy.eyebrow,
     defaultSize: 14,
     multiline: false,
-    styleControls: ["font", "size", "color", "align", "weight", "letterSpacing"],
+    styleControls: [
+      "font",
+      "size",
+      "color",
+      "align",
+      "weight",
+      "letterSpacing",
+    ],
   }),
   textSlot({
     id: comoAcompanamosContentSlotIds.heroIntro,
@@ -795,6 +954,14 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
     styleControls: ["font", "size", "color", "align", "weight"],
   }),
   textSlot({
+    id: comoAcompanamosContentSlotIds.methodologiesLead,
+    label: "Metodologías / Bajada destacada",
+    defaultValue:
+      "No elegimos metodologías por tradición, sino por el valor que aportan al desarrollo integral de cada aprendiz.",
+    defaultSize: 28,
+    styleControls: ["size", "color", "align", "lineHeight"],
+  }),
+  textSlot({
     id: comoAcompanamosContentSlotIds.methodologiesIntro,
     label: "Metodologías / Introducción",
     defaultValue:
@@ -809,13 +976,13 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
       multiline: false,
       styleControls: ["font", "size", "color", "align", "weight"],
     }),
-    ...((methodology.paragraphs ?? []).map((paragraph, paragraphIndex) =>
+    ...(methodology.paragraphs ?? []).map((paragraph, paragraphIndex) =>
       textSlot({
         id: methodologySlotId(index, `paragraph.${paragraphIndex}`),
         label: `Metodología ${index + 1} / Párrafo ${paragraphIndex + 1}`,
         defaultValue: paragraph,
       }),
-    )),
+    ),
     ...(methodology.cta
       ? [
           textSlot({
@@ -874,21 +1041,21 @@ export const hardcodedComoAcompanamosContentSlots: LandingContentSlot[] = [
       multiline: false,
       styleControls: ["font", "size", "color", "align", "weight"],
     }),
-    ...((block.paragraphs ?? []).map((paragraph, paragraphIndex) =>
+    ...(block.paragraphs ?? []).map((paragraph, paragraphIndex) =>
       textSlot({
         id: evaluationBlockSlotId(index, `paragraph.${paragraphIndex}`),
         label: `Evaluación bloque ${index + 1} / Párrafo ${paragraphIndex + 1}`,
         defaultValue: paragraph,
       }),
-    )),
-    ...((block.bullets ?? []).map((bullet, bulletIndex) =>
+    ),
+    ...(block.bullets ?? []).map((bullet, bulletIndex) =>
       textSlot({
         id: evaluationBlockSlotId(index, `bullet.${bulletIndex}`),
         label: `Evaluación bloque ${index + 1} / Lista ${bulletIndex + 1}`,
         defaultValue: bullet,
         multiline: false,
       }),
-    )),
+    ),
     ...(block.cta
       ? [
           textSlot({
@@ -928,8 +1095,14 @@ export function getComoAcompanamosContentSlotValue(
 
 export function resolveComoAcompanamosCopy(textMap: LandingTextMap) {
   return {
-    eyebrow: getComoAcompanamosContentSlotValue(textMap, comoAcompanamosContentSlotIds.heroEyebrow),
-    intro: getComoAcompanamosContentSlotValue(textMap, comoAcompanamosContentSlotIds.heroIntro),
+    eyebrow: getComoAcompanamosContentSlotValue(
+      textMap,
+      comoAcompanamosContentSlotIds.heroEyebrow,
+    ),
+    intro: getComoAcompanamosContentSlotValue(
+      textMap,
+      comoAcompanamosContentSlotIds.heroIntro,
+    ),
   };
 }
 
@@ -963,67 +1136,121 @@ export function resolveLearningPrinciples(
   }));
 }
 
-export function resolveAccompanyPillars(textMap: LandingTextMap): AccompanyPillar[] {
+export function resolveAccompanyPillars(
+  textMap: LandingTextMap,
+): AccompanyPillar[] {
   return accompanyPillars.map((pillar, index) => ({
     ...pillar,
-    title: getComoAcompanamosContentSlotValue(textMap, pillarSlotId(index, "title")),
-    paragraphs: [getComoAcompanamosContentSlotValue(textMap, pillarSlotId(index, "paragraph"))],
+    title: getComoAcompanamosContentSlotValue(
+      textMap,
+      pillarSlotId(index, "title"),
+    ),
+    paragraphs: [
+      getComoAcompanamosContentSlotValue(
+        textMap,
+        pillarSlotId(index, "paragraph"),
+      ),
+    ],
   }));
 }
 
 export function resolveAccompanimentGroups(textMap: LandingTextMap) {
   return accompanimentGroups.map((group, index) => ({
     ...group,
-    title: getComoAcompanamosContentSlotValue(textMap, groupSlotId(index, "title")),
-    ageRange: getComoAcompanamosContentSlotValue(textMap, groupSlotId(index, "ageRange")),
+    title: getComoAcompanamosContentSlotValue(
+      textMap,
+      groupSlotId(index, "title"),
+    ),
+    ageRange: getComoAcompanamosContentSlotValue(
+      textMap,
+      groupSlotId(index, "ageRange"),
+    ),
     paragraphs: group.paragraphs.map((_, paragraphIndex) =>
-      getComoAcompanamosContentSlotValue(textMap, groupSlotId(index, `paragraph.${paragraphIndex}`)),
+      getComoAcompanamosContentSlotValue(
+        textMap,
+        groupSlotId(index, `paragraph.${paragraphIndex}`),
+      ),
     ),
     bullets: group.bullets?.map((_, bulletIndex) =>
-      getComoAcompanamosContentSlotValue(textMap, groupSlotId(index, `bullet.${bulletIndex}`)),
+      getComoAcompanamosContentSlotValue(
+        textMap,
+        groupSlotId(index, `bullet.${bulletIndex}`),
+      ),
     ),
     closing: group.closing
-      ? getComoAcompanamosContentSlotValue(textMap, groupSlotId(index, "closing"))
+      ? getComoAcompanamosContentSlotValue(
+          textMap,
+          groupSlotId(index, "closing"),
+        )
       : undefined,
     rhythmIntro: group.rhythmIntro
-      ? getComoAcompanamosContentSlotValue(textMap, groupSlotId(index, "rhythmIntro"))
+      ? getComoAcompanamosContentSlotValue(
+          textMap,
+          groupSlotId(index, "rhythmIntro"),
+        )
       : undefined,
     rhythmBullets: group.rhythmBullets?.map((_, bulletIndex) =>
-      getComoAcompanamosContentSlotValue(textMap, groupSlotId(index, `rhythmBullet.${bulletIndex}`)),
+      getComoAcompanamosContentSlotValue(
+        textMap,
+        groupSlotId(index, `rhythmBullet.${bulletIndex}`),
+      ),
     ),
   }));
 }
 
-export function resolveMethodologies(textMap: LandingTextMap): TextBlock[] {
+export function resolveMethodologies(textMap: LandingTextMap): Methodology[] {
   return methodologies.map((methodology, index) => ({
     ...methodology,
-    title: getComoAcompanamosContentSlotValue(textMap, methodologySlotId(index, "title")),
+    title: getComoAcompanamosContentSlotValue(
+      textMap,
+      methodologySlotId(index, "title"),
+    ),
     paragraphs: methodology.paragraphs?.map((_, paragraphIndex) =>
-      getComoAcompanamosContentSlotValue(textMap, methodologySlotId(index, `paragraph.${paragraphIndex}`)),
+      getComoAcompanamosContentSlotValue(
+        textMap,
+        methodologySlotId(index, `paragraph.${paragraphIndex}`),
+      ),
     ),
     cta: methodology.cta
       ? {
           ...methodology.cta,
-          label: getComoAcompanamosContentSlotValue(textMap, methodologySlotId(index, "cta")),
+          label: getComoAcompanamosContentSlotValue(
+            textMap,
+            methodologySlotId(index, "cta"),
+          ),
         }
       : undefined,
   }));
 }
 
-export function resolveEvaluationBlocks(textMap: LandingTextMap): IllustratedTextBlock[] {
+export function resolveEvaluationBlocks(
+  textMap: LandingTextMap,
+): IllustratedTextBlock[] {
   return evaluationBlocks.map((block, index) => ({
     ...block,
-    title: getComoAcompanamosContentSlotValue(textMap, evaluationBlockSlotId(index, "title")),
+    title: getComoAcompanamosContentSlotValue(
+      textMap,
+      evaluationBlockSlotId(index, "title"),
+    ),
     paragraphs: block.paragraphs?.map((_, paragraphIndex) =>
-      getComoAcompanamosContentSlotValue(textMap, evaluationBlockSlotId(index, `paragraph.${paragraphIndex}`)),
+      getComoAcompanamosContentSlotValue(
+        textMap,
+        evaluationBlockSlotId(index, `paragraph.${paragraphIndex}`),
+      ),
     ),
     bullets: block.bullets?.map((_, bulletIndex) =>
-      getComoAcompanamosContentSlotValue(textMap, evaluationBlockSlotId(index, `bullet.${bulletIndex}`)),
+      getComoAcompanamosContentSlotValue(
+        textMap,
+        evaluationBlockSlotId(index, `bullet.${bulletIndex}`),
+      ),
     ),
     cta: block.cta
       ? {
           ...block.cta,
-          label: getComoAcompanamosContentSlotValue(textMap, evaluationBlockSlotId(index, "cta")),
+          label: getComoAcompanamosContentSlotValue(
+            textMap,
+            evaluationBlockSlotId(index, "cta"),
+          ),
         }
       : undefined,
   }));

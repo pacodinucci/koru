@@ -1,10 +1,11 @@
-﻿import Image from "next/image";
+import Image from "next/image";
+import { EcocycleSpiral } from "@/modules/evaluaciones/views/ecocycle-spiral";
 
 const evaluationIntroParagraphs = [
-  "En Koru entendemos la evaluación como un proceso integral: observamos, registramos y compartimos los procesos para que la evaluación sea un acompañamiento continuo y visible.",
-  "El seguimiento consiste en observar y acompañar el progreso del aprendiz en su día a día. Es un proceso continuo que se da en la interacción constante entre aprendices y maestr@s.",
-  "La evaluación parte de la lista de habilidades personales, que abarca áreas fundamentales del ser: cuerpo, autoconocimiento, habilidades sociales, comunicación y aprendizaje, desarrollándose según las etapas evolutivas.",
-  "Celebramos los logros y trazamos nuevas rutas de aprendizaje basadas en el registro del desarrollo. La evaluación responde a la pregunta: ¿qué podemos mejorar en el acompañamiento con este niño o niña?",
+  "En Koru entendemos la evaluación como un proceso integral, a través de la observación, registro y el compartir de los procesos, de manera que la evaluación sea un acompañamiento continuo y visible.",
+  "El seguimiento consiste en observar y acompañar el progreso del aprendiz en su día a día. Es un proceso continuo que se da en la interacción constante entre aprendices y maestro/as.",
+  "La evaluación parte de la lista de las habilidades personales, éstas abarcan las áreas fundamentales del ser: el cuerpo, autoconocimiento, sociales, comunicación, aprendizaje y se desarrollan según las etapas evolutivas.",
+  "Se celebran los logros y se trazan nuevas rutas de aprendizaje basadas en el registro del desarrollo. Responde a la pregunta “¿Qué podemos mejorar en el acompañamiento con este niño o niña?”, mostrando avances, identificando aspectos por mejorar y ofreciendo información valiosa para la toma de decisiones. Es el puente que conecta la evaluación con la acción, y convierte el aprendizaje en algo visible y significativo para todos.",
 ];
 
 const evaluationActions = [
@@ -39,6 +40,12 @@ const ecoCycleStages = [
   },
 ];
 
+const ecoCycleIntroParagraphs = [
+  "Utilizamos el Ecociclo como una herramienta para comprender y comunicar el desarrollo de cada niñ@ de forma integral.",
+  "A diferencia de los sistemas tradicionales, el Ecociclo no mide desde la comparación, sino que reconoce el desarrollo como un proceso continuo, dinámico y en constante transformación.",
+  "Este modelo permite ubicar los distintos potenciales del niñ@ dentro de un proceso evolutivo, entendiendo que cada aspecto del desarrollo tiene su propio ritmo.",
+  "El Ecociclo cuenta también con una sección escrita en la que se escribe un breve párrafo justificando la posición de cada potencial personal o de carácter.",
+];
 const communityParagraphs = [
   "El acompañamiento que ofrecemos a las niñas y niños parte de un principio fundamental: quienes acompañamos también estamos en constante aprendizaje.",
   "Por ello, sostenemos prácticas de evaluación y reflexión continua que nos permiten revisar, ajustar y enriquecer nuestra labor pedagógica y comunitaria.",
@@ -71,13 +78,20 @@ function OrganicImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+const organicPillStyles = [
+  "border-[color-mix(in_srgb,var(--complement-800)_38%,white)] bg-[color-mix(in_srgb,var(--complement-700)_28%,white)] rounded-[48%_52%_45%_55%/58%_42%_58%_42%]",
+  "border-[color-mix(in_srgb,var(--orange-500)_30%,white)] bg-[color-mix(in_srgb,var(--orange-500)_14%,white)] rounded-[54%_46%_58%_42%/44%_56%_44%_56%]",
+  "border-[color-mix(in_srgb,var(--brand-700)_24%,white)] bg-[color-mix(in_srgb,var(--orange-500)_20%,white)] rounded-[52%_48%_43%_57%/47%_55%_45%_53%]",
+  "border-[color-mix(in_srgb,var(--orange-500)_70%,white)] bg-[color-mix(in_srgb,var(--orange-500)_58%,white)] rounded-[56%_44%_61%_39%/42%_58%_42%_58%]",
+];
+
 function PillList({ items }: { items: string[] }) {
   return (
-    <ul className="flex flex-wrap gap-3">
-      {items.map((item) => (
+    <ul className="flex flex-wrap justify-center gap-3">
+      {items.map((item, index) => (
         <li
           key={item}
-          className="rounded-full border border-complement-700 bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--complement-800)]"
+          className={`flex min-h-[3.5rem] items-center border px-6 py-3.5 text-center text-sm font-semibold text-[var(--complement-800)] shadow-sm ${organicPillStyles[index % organicPillStyles.length]}`}
         >
           {item}
         </li>
@@ -113,7 +127,7 @@ export function EvaluacionesView() {
       </section>
 
       <section className="bg-white">
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[minmax(18rem,0.85fr)_minmax(0,1.15fr)] lg:px-14 lg:py-20">
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[minmax(18rem,0.85fr)_minmax(0,1.15fr)] lg:px-14 lg:pb-10 lg:pt-20">
           <OrganicImage
             src="/assets/images/DSC01379.png"
             alt="Niñez trabajando con herramientas de seguimiento"
@@ -122,7 +136,7 @@ export function EvaluacionesView() {
             <SectionTitle eyebrow="Evaluación a aprendices" title="Comprender el proceso para acompañar mejor" />
             <div className="space-y-4 text-base leading-relaxed text-black/80 md:text-lg">
               <p>
-                Entendemos la evaluación como un proceso continuo de crecimiento y auto-observación, no como un momento aislado ni como una definición.
+                Entendemos la evaluación como un proceso continuo de crecimiento, y auto-observación, no como un momento aislado, ni como una definición.
               </p>
               <p>
                 Observamos, registramos y compartimos el proceso de cada niñ@, haciendo visible su desarrollo en distintas dimensiones: corporal, emocional, social, cognitiva y de autogestión.
@@ -131,66 +145,46 @@ export function EvaluacionesView() {
                 Este seguimiento se construye en el día a día, a través de la interacción, la observación y el vínculo del acompañante con l@s niñ@s.
               </p>
             </div>
-            <div className="space-y-3 rounded-[2rem] bg-[#f7f6f1] p-6">
-              <h3 className="text-xl font-semibold text-black">La evaluación nos permite</h3>
-              <PillList items={evaluationActions} />
-            </div>
-            <div className="space-y-4 text-base leading-relaxed text-black/80 md:text-lg">
-              <p>
-                Más que emitir juicios, buscamos comprender el proceso y generar acciones que apoyen el crecimiento de cada niñ@.
-              </p>
-              <p>
-                El proceso de cada niñ@ es acompañado de manera cercana también con su familia.
-              </p>
-            </div>
-            <div className="space-y-3 rounded-[2rem] border border-complement-600 bg-white/80 p-6">
-              <h3 className="text-xl font-semibold text-black">Generamos</h3>
-              <PillList items={familyFollowUp} />
-              <p className="text-base leading-relaxed text-black/75">
-                Cada niñ@ cuenta con un registro donde se documentan avances, procesos y acuerdos, permitiendo que las familias estén informadas y puedan dar continuidad desde casa.
-              </p>
-            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto w-full max-w-7xl space-y-7 px-6 pb-12 md:px-10 md:pb-16 lg:px-14 lg:pb-20">
+          <div className="space-y-3 rounded-[2rem] bg-[#f7f6f1] p-6">
+            <h3 className="text-xl font-semibold text-black">La evaluación nos permite</h3>
+            <PillList items={evaluationActions} />
+          </div>
+          <div className="space-y-4 text-base leading-relaxed text-black/80 md:text-lg">
+            <p>
+              Más que emitir juicios, buscamos comprender el proceso y generar acciones que apoyen el crecimiento de cada niñ@.
+            </p>
+            <p>
+              El proceso de cada niñ@ es acompañado de manera cercana también con su familia.
+            </p>
+          </div>
+          <div className="space-y-3 rounded-[2rem] border border-complement-600 bg-white/80 p-6">
+            <h3 className="text-xl font-semibold text-black">Generamos</h3>
+            <PillList items={familyFollowUp} />
+            <p className="text-base leading-relaxed text-black/75">
+              Cada niñ@ cuenta con un registro donde se documentan avances, procesos y acuerdos, permitiendo que las familias estén informadas y puedan dar continuidad desde casa.
+            </p>
           </div>
         </div>
       </section>
 
       <section className="mx-auto w-full max-w-7xl space-y-10 px-6 py-12 md:px-10 md:py-16 lg:px-14 lg:py-20">
         <SectionTitle eyebrow="Nuestra herramienta de evaluación" title="El Ecociclo como mapa de desarrollo" />
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <div className="space-y-4 text-base leading-relaxed text-black/80 md:text-lg">
-            <p>
-              Utilizamos el Ecociclo como una herramienta para comprender y comunicar el desarrollo de cada niñ@ de forma integral.
-            </p>
-            <p>
-              A diferencia de los sistemas tradicionales, el Ecociclo no mide desde la comparación: reconoce el desarrollo como un proceso continuo, dinámico y en constante transformación.
-            </p>
-            <p>
-              Este modelo permite ubicar los distintos potenciales del niñ@ dentro de un proceso evolutivo, entendiendo que cada aspecto del desarrollo tiene su propio ritmo.
-            </p>
-            <p>
-              El Ecociclo cuenta también con una sección escrita en la que se redacta un breve párrafo justificando la posición de cada potencial personal o de carácter.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {ecoCycleStages.map((stage) => (
-              <article key={stage.title} className="rounded-[2rem] bg-white/80 p-6 shadow-sm">
-                <h3
-                  className="mb-2 text-3xl leading-none text-[var(--complement-800)]"
-                  style={{ fontFamily: "var(--font-roboto-condensed)" }}
-                >
-                  {stage.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-black/75 md:text-base">{stage.text}</p>
-              </article>
-            ))}
-          </div>
+        <div className="max-w-4xl space-y-4 text-base leading-relaxed text-black/80 md:text-lg">
+          {ecoCycleIntroParagraphs.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
         </div>
+        <EcocycleSpiral stages={ecoCycleStages} />
       </section>
 
       <section className="bg-white">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)] lg:px-14 lg:py-20">
           <div className="space-y-7">
-            <SectionTitle eyebrow="Colaboradores y familias" title="Una comunidad que también se observa" />
+            <SectionTitle eyebrow="Evaluación entre colaboradores y familias" title="Una comunidad que también se observa" />
             <div className="space-y-4 text-base leading-relaxed text-black/80 md:text-lg">
               {communityParagraphs.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>

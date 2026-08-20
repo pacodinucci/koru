@@ -69,6 +69,7 @@
   --orange-600: #e5822a;
   --orange-500: #f2a23a;
   --orange-300: #ffd28a;
+  --orange-300: #f7f0e5;
 
   --background: #ffffff;
   --foreground: #111827;
@@ -152,7 +153,6 @@
   }
   html {
     @apply font-sans;
-    scroll-behavior: smooth;
   }
 }
 
@@ -323,6 +323,7 @@
 .blog-editor-content p:has(img[data-gallery-cols]),
 .blog-post-content p:has(img[data-gallery-cols]) {
   display: grid;
+  width: 100%;
   gap: 0.5rem;
   margin: 1rem 0;
 }
@@ -330,16 +331,19 @@
 .blog-editor-content p:has(img[data-gallery-cols="2"]),
 .blog-post-content p:has(img[data-gallery-cols="2"]) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  aspect-ratio: 2 / 1;
 }
 
 .blog-editor-content p:has(img[data-gallery-cols="3"]),
 .blog-post-content p:has(img[data-gallery-cols="3"]) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  aspect-ratio: 3 / 1;
 }
 
 .blog-editor-content p:has(img[data-gallery-cols="4"]),
 .blog-post-content p:has(img[data-gallery-cols="4"]) {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  aspect-ratio: 4 / 1;
 }
 
 .blog-editor-content [data-type="masonry-gallery"],

@@ -52,6 +52,8 @@ const groupTagColorClasses = [
   },
 ];
 
+const suggestedCustomTags = ["Talleres"];
+
 type DashboardBlogComposerProps = {
   tagOptions: {
     groups: Array<{ id: string; name: string; slug: string }>;
@@ -100,6 +102,7 @@ export function DashboardBlogComposer({
       .filter((postTag) => postTag.tag.type === "CUSTOM")
       .map((postTag) => postTag.tag.name)
       .join(", ") ?? "";
+  const [customTags, setCustomTags] = useState(customTagValue);
 
   useEffect(() => {
     setOpen(true);
@@ -115,6 +118,36 @@ export function DashboardBlogComposer({
       }
       return next;
     });
+  }
+
+  function toggleSuggestedCustomTag(tagName: string) {
+    setCustomTags((current) => {
+      const tags = current
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+      const hasTag = tags.some(
+        (tag) => tag.localeCompare(tagName, "es", { sensitivity: "base" }) === 0,
+      );
+
+      return hasTag
+        ? tags
+            .filter(
+              (tag) =>
+                tag.localeCompare(tagName, "es", { sensitivity: "base" }) !== 0,
+            )
+            .join(", ")
+        : [...tags, tagName].join(", ");
+    });
+  }
+
+  function hasCustomTag(tagName: string) {
+    return customTags
+      .split(",")
+      .map((tag) => tag.trim())
+      .some(
+        (tag) => tag.localeCompare(tagName, "es", { sensitivity: "base" }) === 0,
+      );
   }
 
   const panel = portalTarget
@@ -423,10 +456,32 @@ export function DashboardBlogComposer({
                 >
                   Custom
                 </label>
+                <div className="flex flex-wrap gap-2">
+                  {suggestedCustomTags.map((tag) => {
+                    const isSelected = hasCustomTag(tag);
+
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => toggleSuggestedCustomTag(tag)}
+                        className={`inline-flex h-7 items-center rounded-md px-2.5 text-xs font-medium transition-colors ${
+                          isSelected
+                            ? "bg-slate-800 text-white"
+                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
                 <Input
                   id={`${formId}-custom-tags`}
                   name="customTags"
-                  defaultValue={customTagValue}
+                  value={customTags}
+                  onChange={(event) => setCustomTags(event.target.value)}
                   placeholder="Ej: Novedades, Familias, Talleres"
                   list={`${formId}-custom-tags-options`}
                 />

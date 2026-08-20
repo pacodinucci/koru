@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRef, useState } from "react";
 
 import { AccompanimentGroupsTabs } from "@/app/(pages)/como-acompanamos/accompaniment-groups-tabs";
@@ -18,7 +19,7 @@ import {
   resolveLearningPrinciples,
   resolveAccompanimentGroups,
   resolveMethodologies,
-  type TextBlock,
+  type Methodology,
 } from "@/modules/como-acompanamos/content-slots";
 
 type ComoAcompanamosViewProps = {
@@ -135,7 +136,7 @@ function ContentCard({
   selectedContentSlotId,
   onSelectContentSlot,
 }: {
-  block: TextBlock;
+  block: Methodology;
   index: number;
   className?: string;
   textMap: LandingTextMap;
@@ -165,6 +166,14 @@ function ContentCard({
           onSelectContentSlot={onSelectContentSlot}
         />
       </h3>
+      {block.cardHighlight ? (
+        <p
+          className="mb-5 max-w-3xl text-[clamp(1.6rem,3vw,2.35rem)] leading-[1.05] text-black/75"
+          style={{ fontFamily: "var(--font-indie-flower)" }}
+        >
+          {block.cardHighlight}
+        </p>
+      ) : null}
       <div className="min-w-0 flex-1 space-y-5 overflow-y-auto pr-2 text-lg leading-relaxed text-black/85 [scrollbar-color:var(--complement-900)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-button]:hidden [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--complement-700)] md:text-xl md:leading-9">
         {block.paragraphs?.map((paragraph, paragraphIndex) => (
           <EditableCopy
@@ -179,20 +188,12 @@ function ContentCard({
         ))}
         {block.bullets ? <BulletList items={block.bullets} /> : null}
       </div>
-      {block.cta ? (
-        <a
-          href={block.cta.href}
-          className="mt-8 inline-flex w-fit self-end items-center justify-center rounded-full border border-white bg-transparent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--complement-700)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
-        >
-          <EditableCopy
-            slotId={methodologySlotId(index, "cta")}
-            textMap={textMap}
-            previewMode={previewMode}
-            selectedContentSlotId={selectedContentSlotId}
-            onSelectContentSlot={onSelectContentSlot}
-          />
-        </a>
-      ) : null}
+      <Link
+        href={`/como-acompanamos/metodologias/${block.slug}`}
+        className="mt-8 inline-flex w-fit self-end items-center justify-center rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--complement-700)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
+      >
+        {block.ctaLabel ?? "Conoce el cómo"}
+      </Link>
     </article>
   );
 }
@@ -204,7 +205,7 @@ function MethodologiesCarousel({
   selectedContentSlotId,
   onSelectContentSlot,
 }: {
-  methodologies: TextBlock[];
+  methodologies: Methodology[];
   textMap: LandingTextMap;
 } & Pick<
   LandingPreviewBindings,
@@ -480,6 +481,16 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
               />
             }
           >
+            <div className="py-4">
+              <EditableCopy
+                as="p"
+                slotId={comoAcompanamosContentSlotIds.methodologiesLead}
+                className="max-w-3xl text-[clamp(1.55rem,3vw,2.1rem)] leading-[1.08]"
+                style={{ fontFamily: "var(--font-indie-flower)" }}
+                stylePriority="override"
+                {...slotBindingProps}
+              />
+            </div>
             <EditableCopy
               as="p"
               slotId={comoAcompanamosContentSlotIds.methodologiesIntro}

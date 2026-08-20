@@ -2,9 +2,11 @@ import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
 import { getAdminUser } from "@/modules/auth/server/auth-guards";
+import {
+  BLOG_IMAGE_MAX_SIZE_BYTES,
+  BLOG_IMAGE_MAX_SIZE_MB,
+} from "@/modules/blog/config/blog-upload";
 import { env } from "@/lib/env";
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 function isCloudinaryConfigured() {
   return (
@@ -53,9 +55,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Solo imagenes" }, { status: 400 });
   }
 
-  if (file.size > MAX_FILE_SIZE) {
+  if (file.size > BLOG_IMAGE_MAX_SIZE_BYTES) {
     return NextResponse.json(
-      { ok: false, error: "La imagen supera el limite de 10MB" },
+      {
+        ok: false,
+        error: `La imagen supera el limite de ${BLOG_IMAGE_MAX_SIZE_MB} MB`,
+      },
       { status: 400 },
     );
   }

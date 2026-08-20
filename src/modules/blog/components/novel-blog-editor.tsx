@@ -48,6 +48,10 @@ import TextAlign from "@tiptap/extension-text-align";
 import { Node } from "@tiptap/core";
 
 import { useToast } from "@/components/ui/toast";
+import {
+  BLOG_IMAGE_MAX_SIZE_BYTES,
+  BLOG_IMAGE_MAX_SIZE_MB,
+} from "@/modules/blog/config/blog-upload";
 
 const DEFAULT_CONTENT: JSONContent = {
   type: "doc",
@@ -954,8 +958,10 @@ export function NovelBlogEditor({
             return;
           }
 
-          if (file.size > 10 * 1024 * 1024) {
-            setUploadNotice("La imagen supera el limite de 10MB.");
+          if (file.size > BLOG_IMAGE_MAX_SIZE_BYTES) {
+            setUploadNotice(
+              `La imagen supera el limite de ${BLOG_IMAGE_MAX_SIZE_MB} MB.`,
+            );
             event.target.value = "";
             return;
           }

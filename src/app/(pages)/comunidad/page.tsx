@@ -269,6 +269,9 @@ export default function ComunidadPage() {
               priority
             />
           </div>
+          <p className="mt-4 text-center text-base leading-relaxed text-black/85 md:text-lg">
+            Una comunidad que aprende unida, crece unida.
+          </p>
         </div>
       </section>
 
