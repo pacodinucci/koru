@@ -367,8 +367,8 @@ export function DashboardCalendarUpcomingTable({
       <div className="border-b border-slate-200 px-4 py-3">
         <p className="text-lg font-semibold text-slate-900">Próximos eventos</p>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[700px] text-left">
+      <div className="min-w-0 max-w-full overflow-x-clip">
+        <table className="w-full table-fixed text-left">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3">Fecha</th>

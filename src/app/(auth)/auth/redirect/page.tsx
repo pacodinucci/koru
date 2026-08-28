@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { isDashboardRole } from "@/modules/auth/roles";
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 
 export default async function AuthRedirectPage() {
@@ -9,7 +10,7 @@ export default async function AuthRedirectPage() {
     redirect("/sign-in");
   }
 
-  if (user.role === "ADMIN" || user.role === "TEACHER") {
+  if (isDashboardRole(user.role)) {
     redirect("/dashboard");
   }
 

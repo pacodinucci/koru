@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { isAdminRole, type AppUserRole } from "@/modules/auth/roles";
 import {
   Drawer,
   DrawerContent,
@@ -79,7 +80,7 @@ type LandingNavProps = {
   user?: {
     name: string;
     email: string;
-    role?: "ADMIN" | "TEACHER" | "PARENT";
+    role?: AppUserRole;
   } | null;
   onSignOut?: (formData: FormData) => void;
 };
@@ -303,7 +304,7 @@ export function LandingNav({
 
   const userDisplay = user?.name?.trim() || user?.email || "Usuario";
   const userInitials = getInitials(userDisplay);
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user ? isAdminRole(user.role) : false;
   const activeSubmenu = navLinksWithSubmenu.find(
     (item, index) => (item.id?.trim() || `nav-${index}`) === activeSubmenuId,
   )?.submenu;

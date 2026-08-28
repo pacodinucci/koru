@@ -36,6 +36,8 @@ function formatDate(date: Date | null) {
 function roleLabel(role: UserRole) {
   const labels: Record<UserRole, string> = {
     ADMIN: "Admin",
+    ADMIN_TEACHER: "Admin docente",
+    SUPERADMIN: "Superadmin",
     TEACHER: "Docente",
     PARENT: "Familia",
   };
@@ -113,50 +115,54 @@ export async function DashboardUsersView({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-base">Usuarios creados</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-w-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Creado</TableHead>
-                <TableHead>Actualizar rol</TableHead>
-                <TableHead>Acciones</TableHead>
+                <TableHead className="w-[32%]">Usuario</TableHead>
+                <TableHead className="w-[20%]">Rol y alta</TableHead>
+                <TableHead className="w-[36%]">Actualizar rol</TableHead>
+                <TableHead className="w-[12%] text-center">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-muted-foreground">
+                  <TableCell colSpan={4} className="text-muted-foreground">
                     Todavia no hay usuarios creados.
                   </TableCell>
                 </TableRow>
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell>{user.name || "-"}</TableCell>
-                    <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={user.role === UserRole.ADMIN ? "default" : "secondary"}>
+                      <div className="min-w-0 font-medium">{user.name || "-"}</div>
+                      <div className="mt-1 break-all text-xs text-muted-foreground">
+                        {user.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={[UserRole.ADMIN, UserRole.ADMIN_TEACHER, UserRole.SUPERADMIN].includes(user.role) ? "default" : "secondary"}>
                         {roleLabel(user.role)}
                       </Badge>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {formatDate(user.createdAt)}
+                      </div>
                     </TableCell>
-                    <TableCell>{formatDate(user.createdAt)}</TableCell>
                     <TableCell>
                       <form
                         action={updateUserRoleAction}
-                        className="flex items-center gap-2"
+                        className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
                       >
                         <input type="hidden" name="userId" value={user.id} />
                         <select
                           name="role"
                           defaultValue={user.role}
-                          className="h-8 rounded-lg border border-slate-300 bg-white px-2 text-xs outline-none focus:border-slate-500"
+                          className="h-8 min-w-0 max-w-full rounded-lg border border-slate-300 bg-white px-2 text-xs outline-none focus:border-slate-500"
                         >
                           {Object.values(UserRole).map((role) => (
                             <option key={role} value={role}>
@@ -174,7 +180,7 @@ export async function DashboardUsersView({
                         </Button>
                       </form>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <UserDeleteButton
                         userId={user.id}
                         userEmail={user.email}
@@ -189,45 +195,48 @@ export async function DashboardUsersView({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-base">Emails autorizados</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-w-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Invito</TableHead>
-                <TableHead>Creada</TableHead>
-                <TableHead>Aceptada</TableHead>
-                <TableHead>Accion</TableHead>
+                <TableHead className="w-[38%]">Invitación</TableHead>
+                <TableHead className="w-[20%]">Rol y estado</TableHead>
+                <TableHead className="w-[27%]">Fechas</TableHead>
+                <TableHead className="w-[15%]">Acción</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {invitations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-muted-foreground">
+                  <TableCell colSpan={4} className="text-muted-foreground">
                     Todavia no hay emails autorizados.
                   </TableCell>
                 </TableRow>
               ) : (
                 invitations.map((invitation) => (
                   <TableRow key={invitation.id}>
-                    <TableCell>{invitation.email}</TableCell>
-                    <TableCell>{roleLabel(invitation.role)}</TableCell>
                     <TableCell>
-                      <Badge variant={invitationStatusVariant(invitation.status)}>
+                      <div className="break-all font-medium">{invitation.email}</div>
+                      <div className="mt-1 break-all text-xs text-muted-foreground">
+                        Invitó: {invitation.invitedBy?.email ?? "-"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>{roleLabel(invitation.role)}</div>
+                      <Badge className="mt-1" variant={invitationStatusVariant(invitation.status)}>
                         {invitationStatusLabel(invitation.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      {invitation.invitedBy?.email ?? "-"}
+                    <TableCell className="text-xs">
+                      <div>Creada: {formatDate(invitation.createdAt)}</div>
+                      <div className="mt-1 text-muted-foreground">
+                        Aceptada: {formatDate(invitation.acceptedAt)}
+                      </div>
                     </TableCell>
-                    <TableCell>{formatDate(invitation.createdAt)}</TableCell>
-                    <TableCell>{formatDate(invitation.acceptedAt)}</TableCell>
                     <TableCell>
                       {invitation.status === InvitationStatus.PENDING ? (
                         <form action={revokeUserInvitationAction}>
@@ -235,7 +244,7 @@ export async function DashboardUsersView({
                           <Button
                             type="submit"
                             variant="outline"
-                            className="h-8 px-3 text-xs"
+                            className="h-8 max-w-full px-2 text-xs"
                           >
                             Revocar
                           </Button>

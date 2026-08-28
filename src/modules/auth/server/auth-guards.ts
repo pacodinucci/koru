@@ -5,12 +5,17 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  isAdminRole,
+  isDashboardRole,
+  type AppUserRole,
+} from "@/modules/auth/roles";
 
 export type AuthenticatedUser = {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "TEACHER" | "PARENT";
+  role: AppUserRole;
 };
 
 function normalizeEmail(email: unknown) {
@@ -51,7 +56,7 @@ export async function getAuthenticatedUser() {
     },
   });
 
-  return user;
+  return user as AuthenticatedUser | null;
 }
 
 export async function requireUser(redirectTo = "/sign-in") {
@@ -67,7 +72,7 @@ export async function requireUser(redirectTo = "/sign-in") {
 export async function getAdminUser() {
   const user = await getAuthenticatedUser();
 
-  if (!user || user.role !== "ADMIN") {
+  if (!user || !isAdminRole(user.role)) {
     return null;
   }
 
@@ -79,7 +84,7 @@ export async function requireAdmin(
 ) {
   const user = await requireUser();
 
-  if (user.role !== "ADMIN") {
+  if (!isAdminRole(user.role)) {
     redirect(forbiddenRedirectTo);
   }
 
@@ -102,5 +107,11 @@ export async function requireRole(
 export async function requireDashboardUser(
   forbiddenRedirectTo = "/dashboard?error=forbidden",
 ) {
-  return requireRole(["ADMIN", "TEACHER"], forbiddenRedirectTo);
+  const user = await requireUser();
+
+  if (!isDashboardRole(user.role)) {
+    redirect(forbiddenRedirectTo);
+  }
+
+  return user;
 }

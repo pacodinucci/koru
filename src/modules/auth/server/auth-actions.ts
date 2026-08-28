@@ -7,6 +7,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
+import { isDashboardRole } from "@/modules/auth/roles";
 import {
   getPendingUserInvitationByEmail,
   normalizeInvitationEmail,
@@ -43,7 +44,7 @@ async function getPostAuthRedirect(email: string) {
     select: { role: true },
   });
 
-  if (user?.role === "ADMIN" || user?.role === "TEACHER") {
+  if (user && isDashboardRole(user.role)) {
     return "/dashboard";
   }
 

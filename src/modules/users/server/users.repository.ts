@@ -3,6 +3,7 @@ import "server-only";
 import { InvitationStatus, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { isAdminRole, isTeacherRole } from "@/modules/auth/roles";
 
 export type CreateUserInvitationInput = {
   email: string;
@@ -97,7 +98,7 @@ export async function reconcileUserInvitationAfterSignup(email: string) {
       });
     }
 
-    if (finalRole === UserRole.TEACHER) {
+    if (isTeacherRole(finalRole)) {
       await tx.teacherProfile.upsert({
         where: { userId: user.id },
         create: {
@@ -274,7 +275,7 @@ export async function updateUserRole({ userId, role }: UpdateUserRoleInput) {
       },
     });
 
-    if (role === UserRole.TEACHER) {
+    if (isTeacherRole(role)) {
       await tx.teacherProfile.upsert({
         where: { userId },
         create: {
@@ -291,7 +292,7 @@ export async function updateUserRole({ userId, role }: UpdateUserRoleInput) {
       });
     }
 
-    if (existingUser.role === UserRole.TEACHER && role !== UserRole.TEACHER) {
+    if (isTeacherRole(existingUser.role) && !isTeacherRole(role)) {
       await tx.teacherProfile.updateMany({
         where: { userId },
         data: { isActive: false },

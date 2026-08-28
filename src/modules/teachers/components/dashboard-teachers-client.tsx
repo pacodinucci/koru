@@ -165,7 +165,7 @@ export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersC
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button type="button" variant="outline" size="sm" onClick={() => editTeacher(teacher)}>
+                      <Button type="button" variant="outline" size="sm" className="h-auto max-w-full whitespace-normal px-2 py-1" onClick={() => editTeacher(teacher)}>
                         Editar perfil
                       </Button>
                     </TableCell>

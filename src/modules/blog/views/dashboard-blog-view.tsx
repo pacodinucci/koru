@@ -127,7 +127,7 @@ export async function DashboardBlogView({ ok, error }: DashboardBlogViewProps) {
                     <TableCell>{post._count.comments}</TableCell>
                     <TableCell>{formatDate(post.publishedAt)}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <Link
                           href={`/blog/${post.slug}`}
                           target="_blank"

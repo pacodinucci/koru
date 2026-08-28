@@ -308,7 +308,7 @@ export function DashboardStudentsClient({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button type="button" variant="outline" size="sm" onClick={() => editStudent(student)}>
+                      <Button type="button" variant="outline" size="sm" className="h-auto max-w-full whitespace-normal px-2 py-1" onClick={() => editStudent(student)}>
                         Editar
                       </Button>
                     </TableCell>

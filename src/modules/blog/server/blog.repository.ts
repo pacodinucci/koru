@@ -44,7 +44,6 @@ export async function getPublishedPosts({
       title: true,
       excerpt: true,
       content: true,
-      contentBlocks: true,
       visibility: true,
       authorName: true,
       publishedAt: true,

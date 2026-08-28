@@ -21,6 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import type { ExamFormInput, ExamStatusValue } from "@/modules/exams/schemas/exam.schema";
 import { saveExamAction } from "@/modules/exams/server/exam.actions";
+import { isAdminRole, type AppUserRole } from "@/modules/auth/roles";
 
 type TeacherOption = {
   id: string;
@@ -62,7 +63,7 @@ type Exam = {
 };
 
 type DashboardExamsClientProps = {
-  userRole: "ADMIN" | "TEACHER" | "PARENT";
+  userRole: AppUserRole;
   groups: StudentGroup[];
   students: StudentOption[];
   teachers: TeacherOption[];
@@ -132,7 +133,7 @@ export function DashboardExamsClient({ userRole, groups, students, teachers, exa
     setValues({
       ...emptyValues,
       groupId: firstGroup?.id ?? "",
-      teacherId: userRole === "ADMIN" ? (teachers[0]?.id ?? "") : (firstGroup?.teachers[0]?.id ?? ""),
+      teacherId: isAdminRole(userRole) ? (teachers[0]?.id ?? "") : (firstGroup?.teachers[0]?.id ?? ""),
       grades: createGradesForStudents(groupStudents),
     });
     setDialogOpen(true);
@@ -165,7 +166,7 @@ export function DashboardExamsClient({ userRole, groups, students, teachers, exa
     setValues((current) => ({
       ...current,
       groupId,
-      teacherId: userRole === "ADMIN" ? (teachers[0]?.id ?? "") : (group?.teachers[0]?.id ?? ""),
+      teacherId: isAdminRole(userRole) ? (teachers[0]?.id ?? "") : (group?.teachers[0]?.id ?? ""),
       grades: createGradesForStudents(groupStudents),
     }));
   }
@@ -262,7 +263,7 @@ export function DashboardExamsClient({ userRole, groups, students, teachers, exa
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button type="button" variant="outline" size="sm" onClick={() => editExam(exam)}>
+                      <Button type="button" variant="outline" size="sm" className="h-auto max-w-full whitespace-normal px-2 py-1" onClick={() => editExam(exam)}>
                         Editar
                       </Button>
                     </TableCell>
@@ -296,7 +297,7 @@ export function DashboardExamsClient({ userRole, groups, students, teachers, exa
                     ))}
                   </select>
                 </label>
-                {userRole === "ADMIN" ? (
+                {isAdminRole(userRole) ? (
                   <label className="space-y-1.5 text-sm">
                     <span className="font-medium">Docente responsable</span>
                     <select className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm" value={values.teacherId ?? ""} onChange={(event) => setValues((current) => ({ ...current, teacherId: event.target.value }))}>

@@ -50,9 +50,11 @@ const visibilityOptions: Array<{ value: CalendarEventVisibility; label: string }
 ];
 
 function roleLabel(role: UserRole) {
+  if (role === "SUPERADMIN") return "Superadmin";
+  if (role === "ADMIN_TEACHER") return "Admin docente";
   if (role === "ADMIN") return "Administrador";
   if (role === "TEACHER") return "Maestro";
-  return "Padre";
+  return "Familia";
 }
 
 function toDateValue(date: Date) {

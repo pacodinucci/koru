@@ -4,6 +4,7 @@ import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { isAdminRole } from "@/modules/auth/roles";
 import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { sendUserInvitationEmail } from "@/modules/mailing/server/mailing.service";
 import {
@@ -106,7 +107,7 @@ export async function updateUserRoleAction(formData: FormData): Promise<void> {
     return;
   }
 
-  if (parsed.data.userId === admin.id && parsed.data.role !== "ADMIN") {
+  if (parsed.data.userId === admin.id && !isAdminRole(parsed.data.role)) {
     return;
   }
 

@@ -64,10 +64,11 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import type { LandingTextMap } from "@/modules/landing/types/landing-text";
+import { isAdminRole, type AppUserRole } from "@/modules/auth/roles";
 
 type DashboardShellProps = {
   userEmail: string;
-  userRole?: "ADMIN" | "TEACHER" | "PARENT";
+  userRole?: AppUserRole;
   cmsPages?: Array<{
     slug: string;
     isDynamic?: boolean;
@@ -129,7 +130,7 @@ export function DashboardShell({
   const [cmsOpen, setCmsOpen] = useState(isCmsActive);
   const [pagesOpen, setPagesOpen] = useState(isLandingActive);
   const [contentOpen, setContentOpen] = useState(isContentActive);
-  const isAdmin = userRole === "ADMIN";
+  const isAdmin = isAdminRole(userRole);
   const sidebarMenuButtonClass = "h-10 rounded-xl px-3 text-slate-600 hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
 
 
@@ -419,7 +420,7 @@ export function DashboardShell({
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="h-svh bg-slate-50 md:h-[calc(100svh-1rem)]">
+      <SidebarInset className="h-svh min-w-0 max-w-full overflow-hidden bg-slate-50 md:h-[calc(100svh-1rem)]">
         <DashboardEditorPanelProvider
           defaultOpen={
             panelDefaultOpen || editorMode === "layout"
@@ -472,7 +473,7 @@ function DashboardCanvas({
   const canUsePanel = isCmsEditor || showPanelToggle;
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-hidden">
       <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur-md">
         <SidebarTrigger />
         <SidebarSeparator orientation="vertical" className="h-5" />
@@ -514,7 +515,7 @@ function DashboardCanvas({
           </main>
         </DashboardEditorPanelLayout>
       ) : canUsePanel ? (
-        <div className="flex min-h-0 h-full flex-1 flex-col overflow-hidden">
+        <div className="flex h-full min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-hidden">
           {contentHeader ? (
             <div className="border-b border-slate-200 bg-white px-2 py-2 md:px-3 lg:px-4">
               {contentHeader}
@@ -526,14 +527,14 @@ function DashboardCanvas({
             panelContent={sidePanelContent}
           >
             <main
-              className={`h-full min-h-0 min-w-0 overflow-y-auto ${contentNoPadding ? "p-0" : "p-2 md:p-3 lg:p-4"}`}
+              className={`h-full min-h-0 min-w-0 max-w-full overflow-x-clip overflow-y-auto ${contentNoPadding ? "p-0" : "p-2 md:p-3 lg:p-4"}`}
             >
               {children}
             </main>
           </DashboardEditorPanelLayout>
         </div>
       ) : (
-        <main className="h-full min-h-0 min-w-0 overflow-y-auto p-2 md:p-3 lg:p-4">
+        <main className="h-full min-h-0 min-w-0 max-w-full overflow-x-clip overflow-y-auto p-2 md:p-3 lg:p-4">
           {children}
         </main>
       )}

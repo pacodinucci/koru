@@ -146,6 +146,8 @@ enum EmailDeliveryStatus {
 
 enum UserRole {
   ADMIN
+  ADMIN_TEACHER
+  SUPERADMIN
   TEACHER
   PARENT
 }

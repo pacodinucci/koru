@@ -3,6 +3,7 @@ import "server-only";
 import { UserRole, type ExamStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { isAdminRole } from "@/modules/auth/roles";
 import type { AuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import type { ExamFormInput } from "@/modules/exams/schemas/exam.schema";
 
@@ -18,7 +19,7 @@ function parseExamDate(value: string) {
 
 async function getTeacherProfileForUser(userId: string) {
   return prisma.teacherProfile.findFirst({
-    where: { userId, isActive: true, user: { role: UserRole.TEACHER } },
+    where: { userId, isActive: true, user: { role: { in: [UserRole.TEACHER, UserRole.ADMIN_TEACHER] } } },
     select: { id: true, displayName: true, email: true },
   });
 }
@@ -80,9 +81,9 @@ export async function listExamsDashboardData(user: AuthenticatedUser) {
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       select: { id: true, firstName: true, lastName: true, groupId: true },
     }),
-    user.role === "ADMIN"
+    isAdminRole(user.role)
       ? prisma.teacherProfile.findMany({
-          where: { isActive: true, user: { role: UserRole.TEACHER } },
+          where: { isActive: true, user: { role: { in: [UserRole.TEACHER, UserRole.ADMIN_TEACHER] } } },
           orderBy: [{ displayName: "asc" }],
           select: { id: true, displayName: true, email: true },
         })
@@ -112,7 +113,7 @@ export async function saveExamForDashboard(user: AuthenticatedUser, input: ExamF
     const [group, teacher, activeStudents] = await Promise.all([
       tx.studentGroup.findUnique({ where: { id: input.groupId }, select: { id: true } }),
       tx.teacherProfile.findFirst({
-        where: { id: resolvedTeacherId, isActive: true, user: { role: UserRole.TEACHER } },
+        where: { id: resolvedTeacherId, isActive: true, user: { role: { in: [UserRole.TEACHER, UserRole.ADMIN_TEACHER] } } },
         select: { id: true },
       }),
       tx.student.findMany({
