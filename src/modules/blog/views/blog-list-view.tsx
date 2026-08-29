@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { headers } from "next/headers";
 import {
   ChevronRightIcon,
   ClockIcon,
@@ -9,7 +8,7 @@ import {
 } from "lucide-react";
 import { BlogPostVisibility } from "@prisma/client";
 
-import { auth } from "@/lib/auth";
+import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import { BlogLikeButton } from "@/modules/blog/components/blog-like-button";
 import { BlogEventDialog } from "@/modules/blog/components/blog-event-dialog";
 import {
@@ -57,7 +56,7 @@ function formatEventTime(start: Date, end: Date) {
   })}`;
 }
 
-function BlogEventsSidebar({ events }: { events: BlogCalendarEvent[] }) {
+function BlogEventsSidebar({ events, isAuthenticated }: { events: BlogCalendarEvent[]; isAuthenticated: boolean }) {
   return (
     <aside className="space-y-3 [font-family:var(--font-montserrat)]">
       <div>
@@ -75,7 +74,7 @@ function BlogEventsSidebar({ events }: { events: BlogCalendarEvent[] }) {
           const endsAt = new Date(event.endsAt);
 
           return (
-            <BlogEventDialog key={event.id} event={event}>
+            <BlogEventDialog key={event.id} event={event} isAuthenticated={isAuthenticated}>
             <article
               className="grid grid-cols-[3.7rem_minmax(0,1fr)_1.5rem] items-center border-b border-purple-200/60 bg-[#f7f3fb] transition-colors hover:bg-[#efe7f7] last:border-b-0"
             >
@@ -133,11 +132,13 @@ type BlogListViewProps = {
 };
 
 export async function BlogListView({ tagSlug }: BlogListViewProps) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const user = await getAuthenticatedUser();
   const [posts, tags, events] = await Promise.all([
-    getPublishedPosts({ userId: session?.user.id, tagSlug }),
-    getPublishedBlogTags(session?.user.id),
-    listUpcomingPublicCalendarEvents({ userId: session?.user.id }),
+    getPublishedPosts({ userId: user?.id, tagSlug }),
+    getPublishedBlogTags(user?.id),
+    listUpcomingPublicCalendarEvents({
+      viewer: user ? { id: user.id, role: user.role } : undefined,
+    }),
   ]);
 
   return (
@@ -285,7 +286,7 @@ export async function BlogListView({ tagSlug }: BlogListViewProps) {
 
         <div className="relative lg:pb-32">
           <div className="lg:sticky lg:top-28">
-            <BlogEventsSidebar events={events} />
+            <BlogEventsSidebar events={events} isAuthenticated={Boolean(user)} />
           </div>
         </div>
       </div>

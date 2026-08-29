@@ -10,6 +10,7 @@ import {
   markEmailMessageSent,
 } from "@/modules/mailing/server/mailing.repository";
 import { sendWithResend } from "@/modules/mailing/server/resend-mail-provider";
+import { CalendarEventInvitationEmail } from "@/modules/mailing/templates/calendar-event-invitation-email";
 import { UserInvitationEmail } from "@/modules/mailing/templates/user-invitation-email";
 import type { SendMailInput } from "@/modules/mailing/types/mailing";
 
@@ -39,6 +40,7 @@ export async function sendMail(input: SendMailInput) {
       to: input.to.map((recipient) => recipient.email),
       subject: input.subject,
       react: input.react,
+      idempotencyKey: input.idempotencyKey,
     });
 
     await markEmailMessageSent(message.id, result.providerMessageId);
@@ -80,5 +82,44 @@ export async function sendUserInvitationEmail({
       email,
       role,
     },
+  });
+}
+
+type SendCalendarEventInvitationEmailInput = {
+  attendanceId: string;
+  email: string;
+  recipientName: string;
+  event: {
+    id: string;
+    title: string;
+    startsAt: Date;
+    endsAt: Date;
+    location: string | null;
+  };
+};
+
+export async function sendCalendarEventInvitationEmail({
+  attendanceId,
+  email,
+  recipientName,
+  event,
+}: SendCalendarEventInvitationEmailInput) {
+  const eventUrl = new URL(`/calendario/eventos/${event.id}`, getAppUrl());
+
+
+  return sendMail({
+    type: EmailMessageType.CALENDAR_EVENT,
+    to: [{ email, name: recipientName }],
+    subject: `Confirmá tu asistencia: ${event.title}`,
+    react: createElement(CalendarEventInvitationEmail, {
+      recipientName,
+      eventTitle: event.title,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      location: event.location,
+      eventUrl: eventUrl.toString(),
+    }),
+    payload: { attendanceId, eventId: event.id, email },
+    idempotencyKey: `calendar-attendance-${attendanceId}`,
   });
 }

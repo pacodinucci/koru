@@ -814,3 +814,12 @@
   opacity: 1;
   pointer-events: auto;
 }
+
+.blog-editor-content img:not([data-placeholder="true"]),
+.blog-editor-content [data-type="masonry-gallery"] img:not([data-placeholder="true"]) {
+  cursor: grab;
+  user-select: none;
+}
+.blog-editor-content img:not([data-placeholder="true"]) {
+  touch-action: none;
+}

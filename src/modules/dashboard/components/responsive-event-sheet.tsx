@@ -12,6 +12,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
+const PANEL_TRANSITION_MS = 300;
+
 type Props = {
   title: string;
   description: string;
@@ -19,6 +21,7 @@ type Props = {
   children: ReactNode;
   openOnMount?: boolean;
   closeHref?: string;
+  onClose?: () => void;
 };
 
 export function ResponsiveEventSheet({
@@ -28,6 +31,7 @@ export function ResponsiveEventSheet({
   children,
   openOnMount = false,
   closeHref,
+  onClose,
 }: Props) {
   const isMobile = useIsMobile();
   const router = useRouter();
@@ -39,8 +43,9 @@ export function ResponsiveEventSheet({
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
-    if (!next && closeHref) {
-      router.push(closeHref);
+    if (!next) {
+      if (closeHref) router.push(closeHref);
+      window.setTimeout(() => onClose?.(), PANEL_TRANSITION_MS);
     }
   };
 
@@ -53,7 +58,7 @@ export function ResponsiveEventSheet({
       ) : null}
 
       <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetContent side={isMobile ? "bottom" : "right"} className="w-full sm:max-w-md [font-family:var(--font-montserrat)]">
+        <SheetContent side={isMobile ? "bottom" : "right"} className="w-full duration-300 sm:max-w-md [font-family:var(--font-montserrat)]" overlayClassName="duration-300">
           <SheetHeader>
             <SheetTitle>{title}</SheetTitle>
             <SheetDescription>{description}</SheetDescription>
@@ -64,3 +69,4 @@ export function ResponsiveEventSheet({
     </>
   );
 }
+

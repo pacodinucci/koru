@@ -21,6 +21,8 @@ model User {
   createdCalendarEvents CalendarEvent[] @relation("CalendarEventCreator")
   calendarEventAudiences CalendarEventAudience[]
   calendarEventRegistrations CalendarEventRegistration[]
+  calendarEventAttendances CalendarEventAttendance[]
+  uploadedMediaAssets MediaAsset[]
   createdInvitations UserInvitation[] @relation("UserInvitationsCreated")
   teacherProfile TeacherProfile?
   studentGuardianLinks StudentGuardian[]
@@ -194,6 +196,17 @@ enum CalendarRegistrationAccess {
   MEMBERS
 }
 
+enum CalendarAttendanceStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+}
+
+enum MediaAssetPurpose {
+  BLOG
+  CALENDAR
+}
+
 enum ExamStatus {
   DRAFT
   PUBLISHED
@@ -266,6 +279,7 @@ model BlogPost {
   comments      BlogComment[]
   likes         BlogPostLike[]
   tags          BlogPostTag[]
+  mediaAssets   MediaAsset[]
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 
@@ -516,6 +530,7 @@ model CalendarEvent {
   title        String
   description  String?
   imageUrl     String?
+  imagePublicId String?
   startsAt     DateTime
   endsAt       DateTime
   allDay       Boolean               @default(false)
@@ -525,17 +540,39 @@ model CalendarEvent {
   audienceType CalendarAudienceType  @default(ALL)
   kind         CalendarEventKind     @default(EVENT)
   registrationsEnabled Boolean        @default(false)
+  attendanceConfirmationEnabled Boolean @default(false)
   registrationAccess  CalendarRegistrationAccess @default(PUBLIC)
   createdById  String
   createdBy    User                  @relation("CalendarEventCreator", fields: [createdById], references: [id], onDelete: Restrict)
   audiences    CalendarEventAudience[]
   registrations CalendarEventRegistration[]
+  attendances CalendarEventAttendance[]
+  mediaAssets MediaAsset[]
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
 
   @@index([startsAt, endsAt])
   @@index([status, audienceType])
   @@index([status, visibility, startsAt])
+}
+
+model MediaAsset {
+  id              String            @id @default(cuid())
+  url             String            @unique
+  publicId        String            @unique
+  purpose         MediaAssetPurpose
+  uploadedById    String
+  uploadedBy      User              @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  blogPostId      String?
+  blogPost        BlogPost?         @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  calendarEventId String?
+  calendarEvent   CalendarEvent?    @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
+  createdAt       DateTime          @default(now())
+  attachedAt      DateTime?
+
+  @@index([purpose, uploadedById, attachedAt])
+  @@index([blogPostId])
+  @@index([calendarEventId])
 }
 
 model CalendarEventAudience {
@@ -567,4 +604,26 @@ model CalendarEventRegistration {
   @@unique([eventId, email])
   @@index([eventId, createdAt])
   @@index([userId])
+}
+
+model CalendarEventAttendance {
+  id               String                   @id @default(cuid())
+  eventId          String
+  event            CalendarEvent            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId           String?
+  user             User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name             String
+  email            String
+  status           CalendarAttendanceStatus @default(PENDING)
+  invitationSentAt DateTime?
+  invitationError  String?
+  respondedAt      DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@unique([eventId, userId])
+  @@unique([eventId, email])
+  @@index([eventId, status])
+  @@index([userId])
+  @@index([invitationSentAt])
 }

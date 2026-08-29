@@ -24,6 +24,15 @@ type CalendarEventItem = {
   status: string;
   kind: "EVENT" | "MEETING";
   registrationsEnabled?: boolean;
+  attendanceConfirmationEnabled?: boolean;
+  attendances?: Array<{
+    id: string;
+    name: string;
+    email: string;
+    status: "PENDING" | "CONFIRMED" | "DECLINED";
+    invitationSentAt?: Date | string | null;
+    invitationError?: string | null;
+  }>;
   registrationAccess?: CalendarRegistrationAccess;
   audiences?: Array<{ userId: string }>;
 };
@@ -36,6 +45,7 @@ type Props = {
   dateCursor: Date;
   viewMode: CalendarViewMode;
   selectedEventId?: string;
+  onCloseSelectedEvent?: () => void;
   onChangeView?: (viewMode: CalendarViewMode) => void;
   onMoveCursor?: (direction: -1 | 1) => void;
   onGoToday?: () => void;
@@ -240,7 +250,9 @@ export function DashboardCalendarGrid({
   );
 }
 
-export function DashboardCalendarTopBar({ users, ok, error, selectedEventId, events, dateCursor, viewMode }: Pick<Props, "users" | "ok" | "error" | "selectedEventId" | "events" | "dateCursor" | "viewMode">) {
+export function DashboardCalendarTopBar({
+  users, ok, error, selectedEventId, events, dateCursor, viewMode, onCloseSelectedEvent,
+}: Pick<Props, "users" | "ok" | "error" | "selectedEventId" | "events" | "dateCursor" | "viewMode" | "onCloseSelectedEvent">) {
   const selectedEvent = events.find((e) => e.id === selectedEventId);
   const closeHref = hrefWith(dateCursor, viewMode);
 
@@ -263,6 +275,7 @@ export function DashboardCalendarTopBar({ users, ok, error, selectedEventId, eve
             description="Actualiza los datos del evento"
             openOnMount
             closeHref={closeHref}
+            onClose={onCloseSelectedEvent}
           >
             <CalendarEventForm users={users} ok={ok} error={error} event={selectedEvent} mode="edit" />
           </ResponsiveEventSheet>
@@ -394,12 +407,16 @@ export function DashboardCalendarUpcomingTable({
                   {new Date(event.endsAt).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
                 </td>
                 <td className="px-4 py-3 font-semibold text-slate-900">
-                  {onSelectEvent ? (
-                    <button type="button" onClick={() => onSelectEvent(event.id)} className="text-left hover:underline">
-                      {event.title}
-                    </button>
-                  ) : event.title}
-                </td>
+                    {onSelectEvent ? (
+                      <button type="button" onClick={() => onSelectEvent(event.id)} className="text-left hover:underline">
+                        {event.title}
+                      </button>
+                    ) : (
+                      <Link href={`/dashboard/calendar/${event.id}`} className="hover:underline">
+                        {event.title}
+                      </Link>
+                    )}
+                  </td>
                 <td className="px-4 py-3 text-slate-700">
                   {event.location ?? "-"}
                 </td>

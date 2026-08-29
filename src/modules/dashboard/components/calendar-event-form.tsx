@@ -11,6 +11,7 @@ import { CalendarEventImageField } from "@/modules/dashboard/components/calendar
 
 import {
   cancelCalendarEventAction,
+  retryCalendarEventInvitationsAction,
   saveCalendarEventAction,
 } from "@/modules/dashboard/server/calendar.actions";
 
@@ -26,6 +27,15 @@ type EventItem = {
   audienceType: CalendarAudienceType;
   kind: "EVENT" | "MEETING";
   registrationsEnabled?: boolean;
+  attendanceConfirmationEnabled?: boolean;
+  attendances?: Array<{
+    id: string;
+    name: string;
+    email: string;
+    status: "PENDING" | "CONFIRMED" | "DECLINED";
+    invitationSentAt?: Date | string | null;
+    invitationError?: string | null;
+  }>;
   audiences?: Array<{ userId: string }>;
 };
 
@@ -80,6 +90,9 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
     useState<CalendarEventVisibility>(initialVisibility);
   const [audienceType, setAudienceType] = useState<CalendarAudienceType>(initialAudience);
   const [registrationsEnabled, setRegistrationsEnabled] = useState(event?.registrationsEnabled ?? false);
+  const [attendanceConfirmationEnabled, setAttendanceConfirmationEnabled] = useState(
+    event?.attendanceConfirmationEnabled ?? false,
+  );
 
   const durationDefault = useMemo(() => {
     if (!event) return "60";
@@ -192,6 +205,21 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
         </p>
       ) : null}
 
+      <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+        <input
+          name="attendanceConfirmationEnabled"
+          type="checkbox"
+          checked={attendanceConfirmationEnabled}
+          onChange={(changeEvent) => setAttendanceConfirmationEnabled(changeEvent.target.checked)}
+        />
+        Solicitar confirmación de asistencia
+      </label>
+      {attendanceConfirmationEnabled ? (
+        <p className="text-xs text-slate-500">
+          Al guardar se invitará por email a la audiencia seleccionada. El organizador no recibe invitación.
+        </p>
+      ) : null}
+
 
       {visibility !== "PUBLIC" && audienceType === "PRIVATE" ? (
         <select name="privateAudienceUserIds" multiple className="h-24 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
@@ -201,6 +229,41 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
             </option>
           ))}
         </select>
+      ) : null}
+
+      {event?.attendanceConfirmationEnabled ? (
+        <section className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-slate-800">Asistencia</p>
+            <span className="text-xs text-slate-500">{event.attendances?.length ?? 0} invitados</span>
+          </div>
+          <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
+            <span className="rounded-md bg-amber-50 px-2 py-1 text-amber-700">{event.attendances?.filter((item) => item.status === "PENDING").length ?? 0} pendientes</span>
+            <span className="rounded-md bg-emerald-50 px-2 py-1 text-emerald-700">{event.attendances?.filter((item) => item.status === "CONFIRMED").length ?? 0} confirmados</span>
+            <span className="rounded-md bg-rose-50 px-2 py-1 text-rose-700">{event.attendances?.filter((item) => item.status === "DECLINED").length ?? 0} no asisten</span>
+          </div>
+          {event.attendances?.length ? (
+            <ul className="mt-3 max-h-36 space-y-1 overflow-y-auto pr-1 text-xs">
+              {event.attendances.map((item) => (
+                <li key={item.id} className="flex items-center justify-between gap-2 rounded bg-white px-2 py-1.5">
+                  <span className="min-w-0 truncate text-slate-700">{item.name} · {item.email}</span>
+                  <span className="shrink-0 font-semibold text-slate-500">
+                    {item.status === "CONFIRMED" ? "Confirmado" : item.status === "DECLINED" ? "No asiste" : "Pendiente"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="mt-3 text-xs text-slate-500">No se encontraron destinatarios para esta audiencia.</p>}
+          {event.attendances?.some((item) => !item.invitationSentAt) ? (
+            <button
+              type="submit"
+              formAction={retryCalendarEventInvitationsAction}
+              className="mt-3 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+            >
+              Reintentar emails pendientes
+            </button>
+          ) : null}
+        </section>
       ) : null}
 
       {ok ? <p className="text-xs text-emerald-700">Guardado: {ok}</p> : null}

@@ -2,11 +2,11 @@ import {
   CalendarAudienceType,
   CalendarEventStatus,
   CalendarEventVisibility,
-  CalendarRegistrationAccess,
   UserRole,
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { getAudienceTypesForViewer } from "@/modules/calendar/lib/calendar-audience";
 
 type Viewer = { id: string; role: UserRole };
 
@@ -19,17 +19,11 @@ function visibleWhere(viewer?: Viewer) {
     };
   }
 
-  const audienceByRole: Record<UserRole, CalendarAudienceType> = {
-    ADMIN: CalendarAudienceType.ALL,
-    PARENT: CalendarAudienceType.PARENTS,
-    TEACHER: CalendarAudienceType.TEACHERS,
-  };
 
   return {
     status: CalendarEventStatus.PUBLISHED,
     OR: [
-      { audienceType: CalendarAudienceType.ALL },
-      { audienceType: audienceByRole[viewer.role] },
+      { audienceType: { in: getAudienceTypesForViewer(viewer.role) } },
       { audienceType: CalendarAudienceType.PRIVATE, audiences: { some: { userId: viewer.id } } },
     ],
   };
@@ -83,4 +77,17 @@ export async function registerForCalendarEvent({
     }
     throw error;
   }
+}
+
+export async function calendarEventRequiresAuthentication(id: string) {
+  const event = await prisma.calendarEvent.findFirst({
+    where: {
+      id,
+      status: CalendarEventStatus.PUBLISHED,
+      visibility: CalendarEventVisibility.MEMBERS,
+    },
+    select: { id: true },
+  });
+
+  return Boolean(event);
 }

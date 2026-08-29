@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import { PublicCalendarView } from "@/modules/calendar/views/public-calendar-view";

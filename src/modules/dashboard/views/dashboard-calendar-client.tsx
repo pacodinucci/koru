@@ -36,6 +36,15 @@ type CalendarEventItem = {
   status: string;
   kind: "EVENT" | "MEETING";
   registrationsEnabled: boolean;
+  attendanceConfirmationEnabled: boolean;
+  attendances?: Array<{
+    id: string;
+    name: string;
+    email: string;
+    status: "PENDING" | "CONFIRMED" | "DECLINED";
+    invitationSentAt?: Date | string | null;
+    invitationError?: string | null;
+  }>;
   registrationAccess: CalendarRegistrationAccess;
   audiences?: Array<{ userId: string }>;
 };
@@ -52,6 +61,7 @@ type CalendarClientContextValue = {
   isUpcomingListOpen: boolean;
   navigate: (cursor: Date, viewMode: CalendarViewMode) => void;
   selectEvent: (eventId: string) => void;
+  clearSelectedEvent: () => void;
   toggleUpcomingList: () => void;
 };
 
@@ -147,6 +157,10 @@ export function DashboardCalendarClientProvider({
     syncUrl(dateCursor, viewMode, eventId);
   };
 
+  const clearSelectedEvent = () => {
+    setSelectedEventId(undefined);
+  };
+
   const toggleUpcomingList = () => {
     setIsUpcomingListOpen((prev) => !prev);
   };
@@ -165,6 +179,7 @@ export function DashboardCalendarClientProvider({
         isUpcomingListOpen,
         navigate,
         selectEvent,
+        clearSelectedEvent,
         toggleUpcomingList,
       }}
     >
@@ -180,8 +195,13 @@ function useCalendarClient() {
 }
 
 export function DashboardCalendarTopBarClient() {
-  const { users, ok, error, events, dateCursor, viewMode, selectedEventId } = useCalendarClient();
-  return <DashboardCalendarTopBar users={users} ok={ok} error={error} events={events} dateCursor={dateCursor} viewMode={viewMode} selectedEventId={selectedEventId} />;
+  const { users, ok, error, events, upcomingEvents, dateCursor, viewMode, selectedEventId, clearSelectedEvent } = useCalendarClient();
+  const selectableEvents = [
+    ...events,
+    ...upcomingEvents.filter((upcomingEvent) => !events.some((event) => event.id === upcomingEvent.id)),
+  ];
+
+  return <DashboardCalendarTopBar users={users} ok={ok} error={error} events={selectableEvents} dateCursor={dateCursor} viewMode={viewMode} selectedEventId={selectedEventId} onCloseSelectedEvent={clearSelectedEvent} />;
 }
 
 export function DashboardCalendarGridClient() {
@@ -197,7 +217,7 @@ export function DashboardCalendarGridClient() {
   } = useCalendarClient();
 
   if (isUpcomingListOpen) {
-    return <DashboardCalendarUpcomingTable events={upcomingEvents} onSelectEvent={selectEvent} />;
+    return <DashboardCalendarUpcomingTable events={upcomingEvents} />;
   }
 
   return (
@@ -228,3 +248,5 @@ export function DashboardCalendarSidePanelClient() {
     />
   );
 }
+
+

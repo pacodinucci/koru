@@ -253,7 +253,9 @@ export function PublicCalendarView({
                       className="border-b-[2.5px] border-[var(--complement-800)] pb-4 last:border-b-0"
                     >
                       <h3 className="text-base font-semibold leading-tight text-[var(--complement-900)]">
-                        {event.title}
+                        <Link href={`/calendario/eventos/${event.id}`} className="hover:underline">
+                          {event.title}
+                        </Link>
                       </h3>
                       <p className="mt-2 text-sm text-black/65">
                         {startsAt.toLocaleDateString("es-AR", {

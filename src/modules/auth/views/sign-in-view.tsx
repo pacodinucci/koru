@@ -10,12 +10,16 @@ import {
 type SignInViewProps = {
   searchParams: Promise<{
     error?: string;
+    returnTo?: string;
   }>;
 };
 
 export async function SignInView({ searchParams }: SignInViewProps) {
   const params = await searchParams;
   const error = getAuthErrorMessage(params.error);
+  const returnTo = params.returnTo?.startsWith("/") && !params.returnTo.startsWith("//")
+    ? params.returnTo
+    : undefined;
 
   return (
     <AuthSplitShell
@@ -40,6 +44,7 @@ export async function SignInView({ searchParams }: SignInViewProps) {
       ) : null}
 
       <form action={signInGoogleAction}>
+        {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
         <button
           type="submit"
           className="mb-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#dce4b8] bg-white px-4 text-sm font-semibold text-[#2f3716] transition hover:bg-[#f7f9ef]"
@@ -65,6 +70,7 @@ export async function SignInView({ searchParams }: SignInViewProps) {
       </div>
 
       <form action={signInAction} className="space-y-5">
+        {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-semibold text-[#2f3716]">
             Email

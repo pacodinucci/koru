@@ -32,6 +32,11 @@ const signUpSchema = z
     path: ["confirmPassword"],
   });
 
+function getSafeReturnTo(value: FormDataEntryValue | string | null | undefined) {
+  if (typeof value !== "string") return undefined;
+  if (!value.startsWith("/") || value.startsWith("//")) return undefined;
+  return value;
+}
 function getErrorPath(basePath: string, message: string) {
   const params = new URLSearchParams({ error: message });
   return `${basePath}?${params.toString()}`;
@@ -52,6 +57,7 @@ async function getPostAuthRedirect(email: string) {
 }
 
 export async function signInAction(formData: FormData) {
+  const returnTo = getSafeReturnTo(formData.get("returnTo"));
   const parsed = signInSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -70,15 +76,18 @@ export async function signInAction(formData: FormData) {
     redirect(getErrorPath("/sign-in", "Email o password incorrectos."));
   }
 
-  redirect(await getPostAuthRedirect(parsed.data.email));
+  redirect(returnTo ?? (await getPostAuthRedirect(parsed.data.email)));
 }
 
-export async function signInGoogleAction() {
+export async function signInGoogleAction(formData: FormData) {
+  const returnTo = getSafeReturnTo(formData.get("returnTo"));
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
     redirect(getErrorPath("/sign-in", "Google no esta configurado."));
   }
 
-  const callbackURL = `${env.BETTER_AUTH_URL}/auth/redirect`;
+  const callback = new URL("/auth/redirect", env.BETTER_AUTH_URL);
+  if (returnTo) callback.searchParams.set("returnTo", returnTo);
+  const callbackURL = callback.toString();
 
   let result: { url?: string };
 

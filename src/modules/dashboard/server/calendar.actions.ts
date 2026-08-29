@@ -7,8 +7,10 @@ import {
   CalendarRegistrationAccess,
 } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 
 import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { sendPendingCalendarEventInvitations } from "@/modules/calendar/server/calendar-invitation.service";
 import {
   cancelCalendarEvent,
   saveCalendarEvent,
@@ -24,116 +26,115 @@ function getBoolean(formData: FormData, key: string) {
 }
 
 function parseAudience(value: string): CalendarAudienceType {
-  if (Object.values(CalendarAudienceType).includes(value as CalendarAudienceType)) {
-    return value as CalendarAudienceType;
-  }
-  return CalendarAudienceType.ALL;
+  return Object.values(CalendarAudienceType).includes(value as CalendarAudienceType)
+    ? value as CalendarAudienceType
+    : CalendarAudienceType.ALL;
 }
 
 function parseVisibility(value: string): CalendarEventVisibility {
-  if (Object.values(CalendarEventVisibility).includes(value as CalendarEventVisibility)) {
-    return value as CalendarEventVisibility;
-  }
-  return CalendarEventVisibility.MEMBERS;
+  return Object.values(CalendarEventVisibility).includes(value as CalendarEventVisibility)
+    ? value as CalendarEventVisibility
+    : CalendarEventVisibility.MEMBERS;
 }
 
 function parseDurationMinutes(value: string) {
   const minutes = Number.parseInt(value, 10);
-  if (!Number.isFinite(minutes) || minutes <= 0) {
-    throw new Error("invalid_duration");
-  }
-  if (minutes > 24 * 60) {
-    throw new Error("duration_too_long");
-  }
+  if (!Number.isFinite(minutes) || minutes <= 0) throw new Error("invalid_duration");
+  if (minutes > 24 * 60) throw new Error("duration_too_long");
   return minutes;
 }
 
 function combineDateAndTime(dateValue: string, timeValue: string) {
-  const iso = `${dateValue}T${timeValue}:00`;
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) {
-    throw new Error("invalid_date");
-  }
+  const parsed = new Date(`${dateValue}T${timeValue}:00`);
+  if (Number.isNaN(parsed.getTime())) throw new Error("invalid_date");
   return parsed;
 }
 
-
 export async function saveCalendarEventAction(formData: FormData) {
   const user = await requireAdmin("/dashboard/calendar?error=forbidden");
+  let savedEventId: string;
+  let shouldNotify = false;
 
   try {
     const id = getString(formData, "id").trim();
     const title = getString(formData, "title").trim();
+    if (!title) throw new Error("missing_title");
+
     const description = getString(formData, "description").trim();
     const imageUrl = getString(formData, "imageUrl").trim();
+    const imagePublicId = getString(formData, "imagePublicId").trim();
     const eventDate = getString(formData, "eventDate").trim();
     const startTime = getString(formData, "startTime").trim();
     const durationMinutes = parseDurationMinutes(getString(formData, "durationMinutes").trim());
     const startsAt = combineDateAndTime(eventDate, startTime);
-    const endsAt = new Date(startsAt.getTime() + durationMinutes * 60_000);
-    const allDay = getBoolean(formData, "allDay");
-    const location = getString(formData, "location").trim();
     const visibility = parseVisibility(getString(formData, "visibility"));
-    const audienceType =
-      visibility === CalendarEventVisibility.PUBLIC
-        ? CalendarAudienceType.ALL
-        : parseAudience(getString(formData, "audienceType"));
-    const status = CalendarEventStatus.PUBLISHED;
-    const kind = getString(formData, "kind") === "MEETING" ? "MEETING" : "EVENT";
-    const registrationsEnabled = getBoolean(formData, "registrationsEnabled");
-    const registrationAccess =
-      visibility === CalendarEventVisibility.PUBLIC
-        ? CalendarRegistrationAccess.PUBLIC
-        : CalendarRegistrationAccess.MEMBERS;
-    const privateAudienceUserIds =
-      visibility === CalendarEventVisibility.PUBLIC
-        ? []
-        : formData
-            .getAll("privateAudienceUserIds")
-            .filter((value): value is string => typeof value === "string")
-            .map((value) => value.trim())
-            .filter(Boolean);
+    const audienceType = visibility === CalendarEventVisibility.PUBLIC
+      ? CalendarAudienceType.ALL
+      : parseAudience(getString(formData, "audienceType"));
+    const attendanceConfirmationEnabled = getBoolean(formData, "attendanceConfirmationEnabled");
+    const privateAudienceUserIds = visibility === CalendarEventVisibility.PUBLIC
+      ? []
+      : formData
+          .getAll("privateAudienceUserIds")
+          .filter((value): value is string => typeof value === "string")
+          .map((value) => value.trim())
+          .filter(Boolean);
 
-    if (!title) {
-      redirect("/dashboard/calendar?error=missing_title");
-    }
-
-    await saveCalendarEvent({
+    const savedEvent = await saveCalendarEvent({
       id: id || undefined,
       title,
       description,
       imageUrl,
+      imagePublicId,
       startsAt,
-      endsAt,
-      allDay,
-      location,
+      endsAt: new Date(startsAt.getTime() + durationMinutes * 60_000),
+      allDay: getBoolean(formData, "allDay"),
+      location: getString(formData, "location").trim(),
       visibility,
       audienceType,
-      status,
-      kind,
-      registrationsEnabled,
-      registrationAccess,
+      status: CalendarEventStatus.PUBLISHED,
+      kind: getString(formData, "kind") === "MEETING" ? "MEETING" : "EVENT",
+      registrationsEnabled: getBoolean(formData, "registrationsEnabled"),
+      attendanceConfirmationEnabled,
+      registrationAccess: visibility === CalendarEventVisibility.PUBLIC
+        ? CalendarRegistrationAccess.PUBLIC
+        : CalendarRegistrationAccess.MEMBERS,
       privateAudienceUserIds,
       createdById: user.id,
     });
 
-    redirect("/dashboard/calendar?ok=saved");
+    savedEventId = savedEvent.id;
+    shouldNotify = attendanceConfirmationEnabled;
   } catch (error) {
-    if (error instanceof Error) {
-      redirect(`/dashboard/calendar?error=${encodeURIComponent(error.message)}`);
-    }
-    redirect("/dashboard/calendar?error=unknown");
+    const code = error instanceof Error ? error.message : "unknown";
+    redirect(`/dashboard/calendar?error=${encodeURIComponent(code)}`);
   }
+
+  if (shouldNotify) {
+    after(async () => {
+      await sendPendingCalendarEventInvitations(savedEventId);
+    });
+  }
+
+  redirect(`/dashboard/calendar?ok=${shouldNotify ? "invitation_scheduled" : "saved"}`);
 }
 
 export async function cancelCalendarEventAction(formData: FormData) {
   await requireAdmin("/dashboard/calendar?error=forbidden");
-
   const id = getString(formData, "id").trim();
-  if (!id) {
-    redirect("/dashboard/calendar?error=missing_event_id");
-  }
+  if (!id) redirect("/dashboard/calendar?error=missing_event_id");
 
   await cancelCalendarEvent(id);
   redirect("/dashboard/calendar?ok=canceled");
+}
+
+export async function retryCalendarEventInvitationsAction(formData: FormData) {
+  await requireAdmin("/dashboard/calendar?error=forbidden");
+  const id = getString(formData, "id").trim();
+  if (!id) redirect("/dashboard/calendar?error=missing_event_id");
+
+  after(async () => {
+    await sendPendingCalendarEventInvitations(id);
+  });
+  redirect("/dashboard/calendar?ok=mail_retry_scheduled");
 }

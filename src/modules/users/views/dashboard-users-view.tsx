@@ -20,6 +20,7 @@ import {
   updateUserRoleAction,
 } from "@/modules/users/server/user-invitations.actions";
 import { UserDeleteButton } from "@/modules/users/components/user-delete-button";
+import { isAdminRole } from "@/modules/auth/roles";
 
 function formatDate(date: Date | null) {
   if (!date) {
@@ -146,7 +147,7 @@ export async function DashboardUsersView({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={[UserRole.ADMIN, UserRole.ADMIN_TEACHER, UserRole.SUPERADMIN].includes(user.role) ? "default" : "secondary"}>
+                      <Badge variant={isAdminRole(user.role) ? "default" : "secondary"}>
                         {roleLabel(user.role)}
                       </Badge>
                       <div className="mt-1 text-xs text-muted-foreground">

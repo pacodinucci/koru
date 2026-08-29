@@ -12,6 +12,7 @@ export type SendMailInput = {
   subject: string;
   react: ReactNode;
   payload?: Record<string, unknown>;
+  idempotencyKey?: string;
 };
 
 export type MailProviderSendInput = {
@@ -19,6 +20,7 @@ export type MailProviderSendInput = {
   to: string[];
   subject: string;
   react: ReactNode;
+  idempotencyKey?: string;
 };
 
 export type MailProviderSendResult = {

@@ -304,7 +304,7 @@ export function LandingNav({
 
   const userDisplay = user?.name?.trim() || user?.email || "Usuario";
   const userInitials = getInitials(userDisplay);
-  const isAdmin = user ? isAdminRole(user.role) : false;
+  const isAdmin = user?.role ? isAdminRole(user.role) : false;
   const activeSubmenu = navLinksWithSubmenu.find(
     (item, index) => (item.id?.trim() || `nav-${index}`) === activeSubmenuId,
   )?.submenu;

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import {

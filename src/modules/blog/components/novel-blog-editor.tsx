@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   useCallback,
@@ -48,10 +48,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import { Node } from "@tiptap/core";
 
 import { useToast } from "@/components/ui/toast";
-import {
-  BLOG_IMAGE_MAX_SIZE_BYTES,
-  BLOG_IMAGE_MAX_SIZE_MB,
-} from "@/modules/blog/config/blog-upload";
+import { optimizeImageForUpload } from "@/modules/media/client/optimize-image";
 
 const DEFAULT_CONTENT: JSONContent = {
   type: "doc",
@@ -264,7 +261,19 @@ const BlogImage = UpdatedImage.extend({
           return { "data-placeholder": "true" };
         },
       },
-      imgAlign: {
+      cropX: {
+        default: 50,
+        renderHTML: (attributes: { cropX?: number | null }) => ({
+          "data-crop-x": String(attributes.cropX ?? 50),
+          style: `object-position: ${attributes.cropX ?? 50}% ${attributes.cropY ?? 50}%`,
+        }),
+      },
+      cropY: {
+        default: 50,
+        renderHTML: (attributes: { cropY?: number | null }) => ({
+          "data-crop-y": String(attributes.cropY ?? 50),
+        }),
+      },      imgAlign: {
         default: "center",
         renderHTML: (attributes: { imgAlign?: string | null }) => {
           if (!attributes.imgAlign) {
@@ -531,6 +540,7 @@ export function NovelBlogEditor({
 
   const editorRef = useRef<EditorInstance | null>(null);
   const imageFileInputRef = useRef<HTMLInputElement | null>(null);
+  const panStateRef = useRef<{ nodePos: number; startX: number; startY: number; cropX: number; cropY: number; masonrySlot?: number } | null>(null);
   const resizeStateRef = useRef<{
     nodePos: number;
     startX: number;
@@ -539,11 +549,63 @@ export function NovelBlogEditor({
     keepSquare: boolean;
   } | null>(null);
 
+  function startImagePan({ nodePos, image, startX, startY, masonrySlot }: { nodePos: number; image: HTMLImageElement; startX: number; startY: number; masonrySlot?: number }) {
+    const cropX = Number.parseFloat(image.getAttribute("data-crop-x") ?? "50") || 50;
+    const cropY = Number.parseFloat(image.getAttribute("data-crop-y") ?? "50") || 50;
+    const rect = image.getBoundingClientRect();
+    const naturalWidth = image.naturalWidth || rect.width;
+    const naturalHeight = image.naturalHeight || rect.height;
+    const scale = Math.max(rect.width / naturalWidth, rect.height / naturalHeight);
+    const overflowX = Math.max(0, naturalWidth * scale - rect.width);
+    const overflowY = Math.max(0, naturalHeight * scale - rect.height);
+    const originalObjectPosition = image.style.objectPosition;
+    let nextX = cropX;
+    let nextY = cropY;
+
+    const clamp = (value: number) => Math.max(0, Math.min(100, value));
+    const move = (event: MouseEvent) => {
+      // The DOM preview stays independent from Tiptap, so dragging remains smooth.
+      nextX = overflowX > 0
+        ? clamp(cropX - ((event.clientX - startX) / overflowX) * 100)
+        : 50;
+      nextY = overflowY > 0
+        ? clamp(cropY - ((event.clientY - startY) / overflowY) * 100)
+        : 50;
+      image.style.objectPosition = `${nextX.toFixed(3)}% ${nextY.toFixed(3)}%`;
+    };
+    const up = () => {
+      panStateRef.current = null;
+      document.body.style.cursor = "";
+      image.style.objectPosition = originalObjectPosition;
+      if (editorRef.current) {
+        if (masonrySlot) {
+          const node = editorRef.current.state.doc.nodeAt(nodePos);
+          const items = Array.isArray(node?.attrs.items) ? node.attrs.items as MasonryItem[] : [];
+          editorRef.current.chain().focus().setNodeSelection(nodePos).updateAttributes("masonryGallery", {
+            items: items.map((item) => item.slot === masonrySlot ? { ...item, cropX: nextX, cropY: nextY } : item),
+          }).run();
+        } else {
+          editorRef.current.chain().focus().setNodeSelection(nodePos).updateAttributes("image", {
+            cropX: nextX,
+            cropY: nextY,
+          }).run();
+        }
+      }
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+
+    panStateRef.current = { nodePos, startX, startY, cropX, cropY, masonrySlot };
+    document.body.style.cursor = "grabbing";
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  }
   async function uploadImage(file: File) {
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("purpose", "BLOG");
 
-    const response = await fetch("/api/uploads/blog", {
+    const response = await fetch("/api/uploads/images", {
       method: "POST",
       body: formData,
     });
@@ -592,6 +654,8 @@ export function NovelBlogEditor({
           width,
           height,
           imgAlign: "center",
+          cropX: 50,
+          cropY: 50,
         },
       };
     });
@@ -958,18 +1022,11 @@ export function NovelBlogEditor({
             return;
           }
 
-          if (file.size > BLOG_IMAGE_MAX_SIZE_BYTES) {
-            setUploadNotice(
-              `La imagen supera el limite de ${BLOG_IMAGE_MAX_SIZE_MB} MB.`,
-            );
-            event.target.value = "";
-            return;
-          }
-
           setUploadNotice("");
           setUploadingImage(true);
           try {
-            const url = await uploadImage(file);
+            const optimizedFile = await optimizeImageForUpload(file);
+            const url = await uploadImage(optimizedFile);
             toast("Imagen subida correctamente.", "success");
 
             if (pendingMasonrySlot) {
@@ -1010,6 +1067,8 @@ export function NovelBlogEditor({
                   width: pendingPlaceholderNode.width ?? size,
                   height: pendingPlaceholderNode.height ?? size,
                   imgAlign: "center",
+                  cropX: 50,
+                  cropY: 50,
                 })
                 .run();
 
@@ -1034,6 +1093,8 @@ export function NovelBlogEditor({
               }
 
               attrs.imgAlign = "center";
+              (attrs as typeof attrs & { cropX: number; cropY: number }).cropX = 50;
+              (attrs as typeof attrs & { cropX: number; cropY: number }).cropY = 50;
               editorRef.current.chain().focus().setImage(attrs).run();
             }
           } catch (error) {
@@ -1070,11 +1131,16 @@ export function NovelBlogEditor({
                 const nearLeft = Math.abs(event.clientX - rect.left) <= threshold;
                 const nearRight = Math.abs(event.clientX - rect.right) <= threshold;
 
+                const nodePos = view.posAtDOM(image, 0);
                 if (!nearLeft && !nearRight) {
-                  return false;
+                  const masonryContainer = image.closest('[data-type="masonry-gallery"]') as HTMLElement | null;
+                  const masonrySlot = Number.parseInt(image.getAttribute("data-slot") ?? "", 10);
+                  if (image.getAttribute("data-placeholder") === "true") return false;
+                  startImagePan({ nodePos: masonryContainer ? view.posAtDOM(masonryContainer, 0) : nodePos, image, startX: event.clientX, startY: event.clientY, masonrySlot: Number.isFinite(masonrySlot) ? masonrySlot : undefined });
+                  event.preventDefault();
+                  return true;
                 }
 
-                const nodePos = view.posAtDOM(image, 0);
                 const startWidth =
                   Number.parseInt(image.getAttribute("width") ?? "", 10) ||
                   Math.round(rect.width);
