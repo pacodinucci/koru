@@ -263,7 +263,7 @@ const BlogImage = UpdatedImage.extend({
       },
       cropX: {
         default: 50,
-        renderHTML: (attributes: { cropX?: number | null }) => ({
+        renderHTML: (attributes: { cropX?: number | null; cropY?: number | null }) => ({
           "data-crop-x": String(attributes.cropX ?? 50),
           style: `object-position: ${attributes.cropX ?? 50}% ${attributes.cropY ?? 50}%`,
         }),
