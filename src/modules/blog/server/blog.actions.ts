@@ -9,6 +9,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { sanitizeBlogHtml } from "@/modules/blog/lib/sanitize-blog-html";
 
 const createPostSchema = z.object({
   title: z.string().min(4).max(180),
@@ -223,7 +224,9 @@ export async function createBlogPostAction(formData: FormData) {
     redirect(buildDashboardError("El contenido del post es invalido.", dashboardPath));
   }
 
-  if (parsed.data.contentHtml.includes('data-placeholder=\"true\"')) {
+  const contentHtml = sanitizeBlogHtml(parsed.data.contentHtml);
+
+  if (contentHtml.includes('data-placeholder=\"true\"')) {
     redirect(
       buildDashboardError(
         "Completa todas las imagenes pendientes de la galeria antes de guardar.",
@@ -232,7 +235,7 @@ export async function createBlogPostAction(formData: FormData) {
     );
   }
 
-  const plainTextContent = stripHtml(parsed.data.contentHtml);
+  const plainTextContent = stripHtml(contentHtml);
   if (plainTextContent.length < 30) {
     redirect(
       buildDashboardError(
@@ -253,7 +256,7 @@ export async function createBlogPostAction(formData: FormData) {
         title: parsed.data.title,
         slug: parsed.data.slug,
         excerpt: parsed.data.excerpt,
-        content: parsed.data.contentHtml,
+        content: contentHtml,
         contentBlocks: parsedContentJson,
         status: parsed.data.status,
         visibility: parsed.data.visibility,
@@ -328,7 +331,9 @@ export async function updateBlogPostAction(formData: FormData) {
     redirect(buildDashboardError("El contenido del post es invalido.", dashboardPath));
   }
 
-  if (parsed.data.contentHtml.includes('data-placeholder="true"')) {
+  const contentHtml = sanitizeBlogHtml(parsed.data.contentHtml);
+
+  if (contentHtml.includes('data-placeholder="true"')) {
     redirect(
       buildDashboardError(
         "Completa todas las imagenes pendientes de la galeria antes de guardar.",
@@ -337,7 +342,7 @@ export async function updateBlogPostAction(formData: FormData) {
     );
   }
 
-  const plainTextContent = stripHtml(parsed.data.contentHtml);
+  const plainTextContent = stripHtml(contentHtml);
   if (plainTextContent.length < 30) {
     redirect(
       buildDashboardError(
@@ -359,7 +364,7 @@ export async function updateBlogPostAction(formData: FormData) {
         title: parsed.data.title,
         slug: parsed.data.slug,
         excerpt: parsed.data.excerpt,
-        content: parsed.data.contentHtml,
+        content: contentHtml,
         contentBlocks: parsedContentJson,
         status: parsed.data.status,
         visibility: parsed.data.visibility,

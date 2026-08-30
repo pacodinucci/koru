@@ -13,6 +13,7 @@ import {
   getPublishedPostAccessBySlug,
   getPublishedPostBySlug,
 } from "@/modules/blog/server/blog.repository";
+import { sanitizeBlogHtml } from "@/modules/blog/lib/sanitize-blog-html";
 
 type BlogPostViewProps = {
   slug: string;
@@ -68,7 +69,7 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
     notFound();
   }
 
-  const contentWithImageOverlay = addImageHoverIcon(post.content);
+  const contentWithImageOverlay = addImageHoverIcon(sanitizeBlogHtml(post.content));
 
   return (
     <main className="mx-auto w-full max-w-5xl space-y-8 pl-6 pr-12 py-10 md:pl-10 md:pr-20 lg:pl-14 lg:pr-48">
