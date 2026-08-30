@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 type PublicCalendarEvent = {
   id: string;
@@ -12,6 +13,7 @@ type PublicCalendarViewProps = {
   dateCursor: Date;
   selectedDate?: Date;
   events: PublicCalendarEvent[];
+  googleCalendarCard?: ReactNode;
 };
 
 const weekDays = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
@@ -70,6 +72,7 @@ export function PublicCalendarView({
   dateCursor,
   selectedDate,
   events,
+  googleCalendarCard,
 }: PublicCalendarViewProps) {
   const selected =
     selectedDate &&
@@ -279,6 +282,9 @@ export function PublicCalendarView({
               )}
             </div>
           </div>
+          {googleCalendarCard ? (
+            <div className="px-5 pb-5">{googleCalendarCard}</div>
+          ) : null}
         </aside>
       </section>
     </main>

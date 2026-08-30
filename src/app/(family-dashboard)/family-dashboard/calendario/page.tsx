@@ -3,6 +3,8 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { requireUser } from "@/modules/auth/server/auth-guards";
+import { GoogleCalendarConnectionCard } from "@/modules/calendar/components/google-calendar-connection-card";
+import { getGoogleCalendarConnectionState } from "@/modules/calendar/server/google-calendar/google-calendar.repository";
 import { type CalendarViewMode } from "@/modules/dashboard/lib/calendar-range";
 import {
   listUpcomingVisibleEventsForUser,
@@ -35,9 +37,10 @@ export default async function FamilyCalendarPage({
   const parsedDate = date ? new Date(`${date}T00:00:00`) : new Date();
   const dateCursor = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
   const viewMode = parseView(view);
-  const [events, upcomingEvents] = await Promise.all([
+  const [events, upcomingEvents, googleConnection] = await Promise.all([
     listVisibleEventsForUserByRange(user.id, user.role, dateCursor, viewMode),
     listUpcomingVisibleEventsForUser(user.id, user.role, 6),
+    getGoogleCalendarConnectionState(user.id),
   ]);
 
   return (
@@ -57,6 +60,12 @@ export default async function FamilyCalendarPage({
             </div>
             <aside className="rounded-xl border bg-white">
               <FamilyCalendarSidePanelClient />
+              <div className="px-4 pb-4">
+                <GoogleCalendarConnectionCard
+                  connection={googleConnection}
+                  compact
+                />
+              </div>
             </aside>
           </main>
         </FamilyCalendarClientProvider>

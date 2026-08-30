@@ -7,25 +7,26 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  role          UserRole  @default(PARENT)
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
-  blogLikes     BlogPostLike[]
-  createdCalendarEvents CalendarEvent[] @relation("CalendarEventCreator")
-  calendarEventAudiences CalendarEventAudience[]
+  id                         String                      @id
+  name                       String
+  email                      String
+  role                       UserRole                    @default(PARENT)
+  emailVerified              Boolean                     @default(false)
+  image                      String?
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  sessions                   Session[]
+  accounts                   Account[]
+  blogLikes                  BlogPostLike[]
+  createdCalendarEvents      CalendarEvent[]             @relation("CalendarEventCreator")
+  calendarEventAudiences     CalendarEventAudience[]
   calendarEventRegistrations CalendarEventRegistration[]
-  calendarEventAttendances CalendarEventAttendance[]
-  uploadedMediaAssets MediaAsset[]
-  createdInvitations UserInvitation[] @relation("UserInvitationsCreated")
-  teacherProfile TeacherProfile?
-  studentGuardianLinks StudentGuardian[]
+  calendarEventAttendances   CalendarEventAttendance[]
+  googleCalendarConnection   GoogleCalendarConnection?
+  uploadedMediaAssets        MediaAsset[]
+  createdInvitations         UserInvitation[]            @relation("UserInvitationsCreated")
+  teacherProfile             TeacherProfile?
+  studentGuardianLinks       StudentGuardian[]
 
   @@unique([email])
   @@map("user")
@@ -48,20 +49,21 @@ model Session {
 }
 
 model Account {
-  id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                       String                    @id
+  accountId                String
+  providerId               String
+  userId                   String
+  user                     User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken              String?
+  refreshToken             String?
+  idToken                  String?
+  accessTokenExpiresAt     DateTime?
+  refreshTokenExpiresAt    DateTime?
+  scope                    String?
+  password                 String?
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  googleCalendarConnection GoogleCalendarConnection?
 
   @@index([userId])
   @@map("account")
@@ -202,6 +204,19 @@ enum CalendarAttendanceStatus {
   DECLINED
 }
 
+enum GoogleCalendarConnectionStatus {
+  ACTIVE
+  NEEDS_REAUTH
+  DISABLED
+}
+
+enum GoogleCalendarSyncStatus {
+  PENDING
+  SYNCED
+  FAILED
+  REMOVED
+}
+
 enum MediaAssetPurpose {
   BLOG
   CALENDAR
@@ -227,34 +242,34 @@ model Page {
 }
 
 model PageBlock {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   pageId    String
-  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page      Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
   type      BlockType
   order     Int
   data      Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@unique([pageId, order])
   @@index([pageId, type])
 }
 
 model Donation {
-  id              String           @id @default(cuid())
-  provider        DonationProvider
-  providerRef     String?          @unique
-  amount          Decimal          @db.Decimal(10, 2)
-  currency        String           @default("ARS")
-  donorName       String?
-  donorEmail      String?
-  status          DonationStatus   @default(PENDING)
-  pageId          String?
-  page            Page?            @relation(fields: [pageId], references: [id], onDelete: SetNull)
-  metadata        Json?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  completedAt     DateTime?
+  id          String           @id @default(cuid())
+  provider    DonationProvider
+  providerRef String?          @unique
+  amount      Decimal          @db.Decimal(10, 2)
+  currency    String           @default("ARS")
+  donorName   String?
+  donorEmail  String?
+  status      DonationStatus   @default(PENDING)
+  pageId      String?
+  page        Page?            @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  completedAt DateTime?
 }
 
 model CmsTextEntry {
@@ -326,14 +341,14 @@ model BlogPostLike {
 
 model BlogComment {
   id          String   @id @default(cuid())
-  postId       String
-  post         BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  authorName   String
-  authorEmail  String?
-  content      String
-  approved     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  postId      String
+  post        BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorName  String
+  authorEmail String?
+  content     String
+  approved    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([postId, approved, createdAt])
 }
@@ -405,36 +420,36 @@ model EmailRecipient {
 }
 
 model StudentGroup {
-  id          String    @id @default(cuid())
-  name        String
-  slug        String    @unique
-  ageRange    String
-  description String?
-  sortOrder   Int       @default(0)
-  isActive    Boolean   @default(true)
-  students    Student[]
+  id                      String                @id @default(cuid())
+  name                    String
+  slug                    String                @unique
+  ageRange                String
+  description             String?
+  sortOrder               Int                   @default(0)
+  isActive                Boolean               @default(true)
+  students                Student[]
   teacherResponsibilities StudentGroupTeacher[]
-  exams       Exam[]
-  blogTags    BlogTag[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  exams                   Exam[]
+  blogTags                BlogTag[]
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
 
   @@index([isActive, sortOrder])
 }
 
 model TeacherProfile {
-  id          String    @id @default(cuid())
-  userId      String?   @unique
-  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  displayName String
-  email       String?
-  phone       String?
-  bio         String?
-  isActive    Boolean   @default(true)
+  id                    String                @id @default(cuid())
+  userId                String?               @unique
+  user                  User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  displayName           String
+  email                 String?
+  phone                 String?
+  bio                   String?
+  isActive              Boolean               @default(true)
   groupResponsibilities StudentGroupTeacher[]
-  exams       Exam[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  exams                 Exam[]
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
 
   @@index([isActive, displayName])
   @@index([email])
@@ -454,18 +469,18 @@ model StudentGroupTeacher {
 }
 
 model Student {
-  id               String            @id @default(cuid())
-  firstName        String
-  lastName         String
-  birthDate        DateTime
-  groupId          String
-  group            StudentGroup      @relation(fields: [groupId], references: [id], onDelete: Restrict)
-  status           StudentStatus     @default(ACTIVE)
-  notes            String?
-  guardians        StudentGuardian[]
-  examGrades       ExamGrade[]
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id         String            @id @default(cuid())
+  firstName  String
+  lastName   String
+  birthDate  DateTime
+  groupId    String
+  group      StudentGroup      @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  status     StudentStatus     @default(ACTIVE)
+  notes      String?
+  guardians  StudentGuardian[]
+  examGrades ExamGrade[]
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
 
   @@index([groupId, status])
   @@index([lastName, firstName])
@@ -526,30 +541,31 @@ model StudentGuardian {
 }
 
 model CalendarEvent {
-  id           String                @id @default(cuid())
-  title        String
-  description  String?
-  imageUrl     String?
-  imagePublicId String?
-  startsAt     DateTime
-  endsAt       DateTime
-  allDay       Boolean               @default(false)
-  location     String?
-  status       CalendarEventStatus   @default(DRAFT)
-  visibility   CalendarEventVisibility @default(MEMBERS)
-  audienceType CalendarAudienceType  @default(ALL)
-  kind         CalendarEventKind     @default(EVENT)
-  registrationsEnabled Boolean        @default(false)
-  attendanceConfirmationEnabled Boolean @default(false)
-  registrationAccess  CalendarRegistrationAccess @default(PUBLIC)
-  createdById  String
-  createdBy    User                  @relation("CalendarEventCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  audiences    CalendarEventAudience[]
-  registrations CalendarEventRegistration[]
-  attendances CalendarEventAttendance[]
-  mediaAssets MediaAsset[]
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
+  id                            String                      @id @default(cuid())
+  title                         String
+  description                   String?
+  imageUrl                      String?
+  imagePublicId                 String?
+  startsAt                      DateTime
+  endsAt                        DateTime
+  allDay                        Boolean                     @default(false)
+  location                      String?
+  status                        CalendarEventStatus         @default(DRAFT)
+  visibility                    CalendarEventVisibility     @default(MEMBERS)
+  audienceType                  CalendarAudienceType        @default(ALL)
+  kind                          CalendarEventKind           @default(EVENT)
+  registrationsEnabled          Boolean                     @default(false)
+  attendanceConfirmationEnabled Boolean                     @default(false)
+  registrationAccess            CalendarRegistrationAccess  @default(PUBLIC)
+  createdById                   String
+  createdBy                     User                        @relation("CalendarEventCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  audiences                     CalendarEventAudience[]
+  registrations                 CalendarEventRegistration[]
+  attendances                   CalendarEventAttendance[]
+  googleCalendarSyncs           GoogleCalendarEventSync[]
+  mediaAssets                   MediaAsset[]
+  createdAt                     DateTime                    @default(now())
+  updatedAt                     DateTime                    @updatedAt
 
   @@index([startsAt, endsAt])
   @@index([status, audienceType])
@@ -626,4 +642,39 @@ model CalendarEventAttendance {
   @@index([eventId, status])
   @@index([userId])
   @@index([invitationSentAt])
+}
+
+model GoogleCalendarConnection {
+  id                  String                         @id @default(cuid())
+  userId              String                         @unique
+  user                User                           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId           String                         @unique
+  account             Account                        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  calendarId          String                         @default("primary")
+  status              GoogleCalendarConnectionStatus @default(ACTIVE)
+  syncConfirmedEvents Boolean                        @default(true)
+  lastError           String?
+  connectedAt         DateTime                       @default(now())
+  updatedAt           DateTime                       @updatedAt
+  eventSyncs          GoogleCalendarEventSync[]
+
+  @@index([status])
+}
+
+model GoogleCalendarEventSync {
+  id            String                   @id @default(cuid())
+  connectionId  String
+  connection    GoogleCalendarConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  eventId       String
+  event         CalendarEvent            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  googleEventId String?
+  status        GoogleCalendarSyncStatus @default(PENDING)
+  lastError     String?
+  lastSyncedAt  DateTime?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  @@unique([connectionId, eventId])
+  @@index([eventId, status])
+  @@index([googleEventId])
 }

@@ -61,6 +61,9 @@ const indieFlower = Indie_Flower({
 export const metadata: Metadata = {
   title: "Koru",
   description: "CMS interno full-stack para sitio institucional y donaciones.",
+  verification: {
+    google: "UDUOf2t_5Nd1NTBMD7dBC6llOi9I2yoDjfZx2bP1r8M",
+  },
 };
 
 export default function RootLayout({

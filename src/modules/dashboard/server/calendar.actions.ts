@@ -12,6 +12,10 @@ import { after } from "next/server";
 import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { sendPendingCalendarEventInvitations } from "@/modules/calendar/server/calendar-invitation.service";
 import {
+  removeEventFromGoogleCalendars,
+  syncEventForConfirmedUsers,
+} from "@/modules/calendar/server/google-calendar/google-calendar-sync.service";
+import {
   cancelCalendarEvent,
   saveCalendarEvent,
 } from "@/modules/dashboard/server/calendar.repository";
@@ -110,11 +114,12 @@ export async function saveCalendarEventAction(formData: FormData) {
     redirect(`/dashboard/calendar?error=${encodeURIComponent(code)}`);
   }
 
-  if (shouldNotify) {
-    after(async () => {
+  after(async () => {
+    if (shouldNotify) {
       await sendPendingCalendarEventInvitations(savedEventId);
-    });
-  }
+    }
+    await syncEventForConfirmedUsers(savedEventId);
+  });
 
   redirect(`/dashboard/calendar?ok=${shouldNotify ? "invitation_scheduled" : "saved"}`);
 }
@@ -125,6 +130,9 @@ export async function cancelCalendarEventAction(formData: FormData) {
   if (!id) redirect("/dashboard/calendar?error=missing_event_id");
 
   await cancelCalendarEvent(id);
+  after(async () => {
+    await removeEventFromGoogleCalendars(id);
+  });
   redirect("/dashboard/calendar?ok=canceled");
 }
 

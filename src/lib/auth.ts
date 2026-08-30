@@ -18,6 +18,8 @@ const googleCredentials =
         google: {
           clientId: env.GOOGLE_CLIENT_ID,
           clientSecret: env.GOOGLE_CLIENT_SECRET,
+          accessType: "offline" as const,
+          prompt: "select_account consent" as const,
         },
       }
     : undefined;
@@ -31,6 +33,13 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+  },
+  account: {
+    encryptOAuthTokens: true,
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"],
+    },
   },
   databaseHooks: {
     user: {
