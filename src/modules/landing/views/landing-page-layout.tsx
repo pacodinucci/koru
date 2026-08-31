@@ -9,7 +9,7 @@ import {
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { LandingNav } from "@/modules/landing/components/landing-nav";
 import type { AppUserRole } from "@/modules/auth/roles";
 import {
@@ -46,6 +46,7 @@ type LandingPageLayoutProps = {
     role?: AppUserRole;
   } | null;
   onSignOut?: (formData: FormData) => void;
+  hideChrome?: boolean;
 } & LandingPreviewBindings;
 
 function clamp(value: number, min: number, max: number) {
@@ -269,6 +270,7 @@ export function LandingPageLayout({
   previewViewportHeight,
   user = null,
   onSignOut,
+  hideChrome = false,
   previewMode,
   selectedLayoutSectionId,
   onSelectLayoutSection,
@@ -278,6 +280,8 @@ export function LandingPageLayout({
   children,
 }: LandingPageLayoutProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const hideSiteChrome = hideChrome || searchParams.get("cmsPreview") === "1";
   const isLandingRoute = pathname === "/";
   const completeMap = ensureLandingDefaults(textMap);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -723,7 +727,8 @@ export function LandingPageLayout({
         </>
       ) : null}
       <div className="relative z-[1]">
-        <div
+                {!hideSiteChrome ? (<>
+<div
           className="relative"
           data-preview-layout-section-id="layout-navbar"
         >
@@ -743,7 +748,7 @@ export function LandingPageLayout({
             }
             containerStyles={containerStyles}
           />
-          {previewMode && onSelectLayoutSection ? (
+          {previewMode && !hideSiteChrome && onSelectLayoutSection ? (
             <button
               type="button"
               className="absolute inset-0 z-[3] bg-transparent"
@@ -759,16 +764,17 @@ export function LandingPageLayout({
             />
           ) : null}
         </div>
-        <div className="relative" data-preview-layout-section-id="layout-body">
+                </>) : null}
+<div className="relative" data-preview-layout-section-id="layout-body">
           <div
             style={{
               paddingTop:
-                !previewMode && !isLandingRoute ? `${navHeight}px` : undefined,
+                !previewMode && !isLandingRoute && !hideSiteChrome ? `${navHeight}px` : undefined,
             }}
           >
             {children}
           </div>
-          {previewMode && onSelectLayoutSection ? (
+          {previewMode && !hideSiteChrome && onSelectLayoutSection ? (
             <button
               type="button"
               className="absolute inset-0 z-[3] bg-transparent"
@@ -784,7 +790,7 @@ export function LandingPageLayout({
             />
           ) : null}
         </div>
-        <footer
+                {!hideSiteChrome ? (<footer
           data-preview-layout-section-id="layout-footer"
           className=""
           style={{
@@ -927,7 +933,8 @@ export function LandingPageLayout({
             </div>
           )}
         </footer>
-        {previewMode && onSelectLayoutSection ? (
+                ) : null}
+{previewMode && !hideSiteChrome && onSelectLayoutSection ? (
           <button
             type="button"
             className="absolute left-0 right-0 z-[3] bg-transparent"

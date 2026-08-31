@@ -10,6 +10,7 @@ import { BlogPostVisibility } from "@prisma/client";
 
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import { BlogLikeButton } from "@/modules/blog/components/blog-like-button";
+import { BlogPageHeader } from "@/modules/blog/components/blog-page-header";
 import { BlogEventDialog } from "@/modules/blog/components/blog-event-dialog";
 import {
   getPublishedBlogTags,
@@ -129,9 +130,10 @@ function BlogEventsSidebar({ events, isAuthenticated }: { events: BlogCalendarEv
 
 type BlogListViewProps = {
   tagSlug?: string;
+  textMap?: Record<string, string>;
 };
 
-export async function BlogListView({ tagSlug }: BlogListViewProps) {
+export async function BlogListView({ tagSlug, textMap = {} }: BlogListViewProps) {
   const user = await getAuthenticatedUser();
   const [posts, tags, events] = await Promise.all([
     getPublishedPosts({ userId: user?.id, tagSlug }),
@@ -143,16 +145,7 @@ export async function BlogListView({ tagSlug }: BlogListViewProps) {
 
   return (
     <main className="mx-auto w-full max-w-7xl bg-white px-6 pb-16 pt-10 md:px-10 lg:px-14">
-      <header className="mx-auto mb-8 max-w-5xl space-y-3">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight [font-family:var(--font-roboto-condensed)] md:text-4xl">
-            Koru OSA
-          </h1>
-          <p className="text-2xl font-semibold italic tracking-wider [font-family:var(--font-indie-flower)] md:text-4xl">
-            Blog
-          </p>
-        </div>
-      </header>
+      <BlogPageHeader textMap={textMap} />
 
       {tags.length > 0 ? (
         <nav className="mx-auto mb-8 flex max-w-5xl flex-wrap gap-2 [font-family:var(--font-montserrat)]">
@@ -293,4 +286,3 @@ export async function BlogListView({ tagSlug }: BlogListViewProps) {
     </main>
   );
 }
-

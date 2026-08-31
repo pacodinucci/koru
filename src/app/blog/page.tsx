@@ -1,4 +1,5 @@
 import { BlogListView } from "@/modules/blog/views/blog-list-view";
+import { getCmsPublishedTextMapBySlug } from "@/modules/cms/server/cms-text.repository";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ type BlogPageProps = {
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
   const { tag } = await searchParams;
-  return <BlogListView tagSlug={tag} />;
+  const textMap = await getCmsPublishedTextMapBySlug("/blog");
+  return <BlogListView tagSlug={tag} textMap={textMap} />;
 }
 

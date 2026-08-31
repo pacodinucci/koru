@@ -143,6 +143,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+  button:not(:disabled),
+  a[href]:not([aria-disabled="true"]),
+  [role="button"]:not([aria-disabled="true"]),
+  [data-slot="button"]:not(:disabled):not([data-disabled]):not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
   html,
   body {
     margin: 0;

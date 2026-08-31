@@ -125,8 +125,7 @@ export function DashboardShell({
       ? `/${decodeURIComponent(pathnamePageSegment)}`
       : null;
   const isLandingActive = pathname.startsWith("/dashboard/pages/landing");
-  const isCmsActive =
-    isLayoutActive || isLandingActive || isPageEditorActive || isContentActive;
+  const isCmsActive = isLayoutActive || isLandingActive || isPageEditorActive;
   const [cmsOpen, setCmsOpen] = useState(isCmsActive);
   const [pagesOpen, setPagesOpen] = useState(isLandingActive);
   const [contentOpen, setContentOpen] = useState(isContentActive);
@@ -233,54 +232,74 @@ export function DashboardShell({
                           })}
                         </SidebarMenuSub>
                       ) : null}
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          isActive={isContentActive}
-                          onClick={() => setContentOpen((previous) => !previous)}
-                        >
-                          <FileText />
-                          <span>Contenido</span>
-                          <ChevronDown
-                            className={`ml-auto transition-transform ${contentOpen ? "rotate-180" : ""}`}
-                          />
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      {contentOpen ? (
-                        <SidebarMenuSub className="mx-6">
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              isActive={pathname === "/dashboard/content/landing"}
-                              render={<Link href="/dashboard/content/landing" />}
-                            >
-                              <FileText />
-                              <span>Landing</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              isActive={pathname === "/dashboard/content/quienes-somos"}
-                              render={<Link href="/dashboard/content/quienes-somos" />}
-                            >
-                              <FileText />
-                              <span>Quienes Somos</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              isActive={pathname === "/dashboard/content/como-acompanamos"}
-                              render={<Link href="/dashboard/content/como-acompanamos" />}
-                            >
-                              <FileText />
-                              <span>Cómo acompañamos</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        </SidebarMenuSub>
-                      ) : null}
                       </SidebarMenuSub>
                     ) : null}
                   </SidebarMenuItem>
                 ) : null}
 
+                {isAdmin ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isContentActive}
+                      className={sidebarMenuButtonClass}
+                      onClick={() => setContentOpen((previous) => !previous)}
+                    >
+                      <FileText />
+                      <span>Contenido</span>
+                      <ChevronDown
+                        className={`ml-auto transition-transform ${contentOpen ? "rotate-180" : ""}`}
+                      />
+                    </SidebarMenuButton>
+
+                    {contentOpen ? (
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            isActive={pathname === "/dashboard/content/landing"}
+                            render={<Link href="/dashboard/content/landing" />}
+                          >
+                            <FileText />
+                            <span>Landing</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            isActive={pathname === "/dashboard/content/quienes-somos"}
+                            render={<Link href="/dashboard/content/quienes-somos" />}
+                          >
+                            <FileText />
+                            <span>Quienes Somos</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            isActive={pathname === "/dashboard/content/como-acompanamos"}
+                            render={<Link href="/dashboard/content/como-acompanamos" />}
+                          >
+                            <FileText />
+                            <span>Cómo acompañamos</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        {[
+                          ["comunidad", "Comunidad"],
+                          ["blog", "Blog"],
+                          ["admisiones", "Admisiones"],
+                          ["contacto", "Contacto"],
+                        ].map(([slug, label]) => (
+                          <SidebarMenuSubItem key={slug}>
+                            <SidebarMenuSubButton
+                              isActive={pathname === `/dashboard/content/${slug}`}
+                              render={<Link href={`/dashboard/content/${slug}`} />}
+                            >
+                              <FileText />
+                              <span>{label}</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    ) : null}
+                  </SidebarMenuItem>
+                ) : null}
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={isCalendarActive}

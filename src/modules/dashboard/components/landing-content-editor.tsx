@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Monitor, Save } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -60,8 +61,6 @@ function getLandingEditorFontFamilyValue(value: string | undefined) {
 
 const PREVIEW_ZOOM_BASE_SCALE = 0.62;
 const PREVIEW_CANVAS_WIDTH = 1440;
-const PREVIEW_CANVAS_DISPLAY_WIDTH =
-  PREVIEW_CANVAS_WIDTH * PREVIEW_ZOOM_BASE_SCALE;
 
 function normalizeTextMap(textMap: LandingTextMap, slots: LandingContentSlot[]) {
   const next = Object.fromEntries(
@@ -79,11 +78,12 @@ function normalizeTextMap(textMap: LandingTextMap, slots: LandingContentSlot[]) 
   return next;
 }
 
-type PageContentEditorProps = {
+export type PageContentEditorProps = {
   initialTextMap: LandingTextMap;
   slots: LandingContentSlot[];
   pageSlug?: string;
   previewLabel: string;
+  previewScale?: number;
   renderPreview: (props: {
     textMap: LandingTextMap;
     selectedSlotId: string;
@@ -91,11 +91,12 @@ type PageContentEditorProps = {
   }) => ReactNode;
 };
 
-function PageContentEditor({
+export function PageContentEditor({
   initialTextMap,
   slots: baseSlots,
   pageSlug = "/",
   previewLabel,
+  previewScale = PREVIEW_ZOOM_BASE_SCALE,
   renderPreview,
 }: PageContentEditorProps) {
   const [textMap, setTextMap] = useState(() =>
@@ -240,10 +241,15 @@ function PageContentEditor({
         scrollRef={previewScrollRef}
         actions={
           <>
-            <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-xs text-slate-600">
+            <Link
+              href={pageSlug}
+              target="_blank"
+              rel="noreferrer"
+              className="flex cursor-pointer items-center gap-2 rounded-lg border bg-white px-3 py-2 text-xs text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+            >
               <Monitor className="h-4 w-4" />
               {previewLabel}
-            </div>
+            </Link>
             {panelPortal}
           </>
         }
@@ -253,15 +259,15 @@ function PageContentEditor({
             <div
               className="pointer-events-none relative h-6 rounded-md border bg-background/95 shadow-sm"
               style={{
-                width: `${PREVIEW_CANVAS_DISPLAY_WIDTH}px`,
-                minWidth: `${PREVIEW_CANVAS_DISPLAY_WIDTH}px`,
+                width: `${PREVIEW_CANVAS_WIDTH * previewScale}px`,
+                minWidth: `${PREVIEW_CANVAS_WIDTH * previewScale}px`,
               }}
               aria-hidden
             />
             <div
               className="origin-top-left bg-white"
               style={{
-                zoom: PREVIEW_ZOOM_BASE_SCALE,
+                zoom: previewScale,
                 width: `${PREVIEW_CANVAS_WIDTH}px`,
               }}
             >
@@ -291,7 +297,7 @@ export function LandingContentEditor({
       slots={slots}
       previewLabel="Preview de landing"
       renderPreview={({ textMap, selectedSlotId, onSelectSlot }) => (
-        <LandingPageLayout textMap={textMap} previewMode>
+        <LandingPageLayout textMap={textMap} previewMode hideChrome>
           <LandingView
             textMap={textMap}
             previewMode
@@ -320,7 +326,7 @@ export function QuienesSomosContentEditor({
       pageSlug="/quienes-somos"
       previewLabel="Preview de Quienes Somos"
       renderPreview={({ textMap, selectedSlotId, onSelectSlot }) => (
-        <LandingPageLayout textMap={textMap} previewMode>
+        <LandingPageLayout textMap={textMap} previewMode hideChrome>
           <QuienesSomosView
             textMap={textMap}
             previewMode
@@ -347,7 +353,7 @@ export function ComoAcompanamosContentEditor({
       pageSlug="/como-acompanamos"
       previewLabel="Preview de Cómo acompañamos"
       renderPreview={({ textMap, selectedSlotId, onSelectSlot }) => (
-        <LandingPageLayout textMap={textMap} previewMode>
+        <LandingPageLayout textMap={textMap} previewMode hideChrome>
           <ComoAcompanamosView
             textMap={textMap}
             previewMode
