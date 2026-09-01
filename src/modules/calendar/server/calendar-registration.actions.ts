@@ -2,12 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import {
   getCalendarEventForViewer,
   registerForCalendarEvent,
 } from "@/modules/calendar/server/calendar-registration.repository";
+import { syncConfirmedAttendanceToGoogle } from "@/modules/calendar/server/google-calendar/google-calendar-sync.service";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -46,6 +48,12 @@ export async function registerForCalendarEventAction(formData: FormData) {
   } catch (error) {
     const code = error instanceof Error ? error.message : "unknown";
     redirect(`/calendario/eventos/${eventId}?error=${encodeURIComponent(code)}`);
+  }
+
+  if (user) {
+    after(async () => {
+      await syncConfirmedAttendanceToGoogle(user.id, eventId);
+    });
   }
 
   revalidatePath(`/calendario/eventos/${eventId}`);

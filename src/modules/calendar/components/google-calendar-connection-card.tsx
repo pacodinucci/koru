@@ -96,12 +96,12 @@ export function GoogleCalendarConnectionCard({
           </div>
           <p className="mt-2 text-xs leading-relaxed text-black/60">
             {isActive
-              ? "Tus asistencias confirmadas se sincronizan automáticamente."
+              ? "Tus eventos confirmados e inscripciones se sincronizan automáticamente."
               : needsReauth
                 ? "Volvé a autorizar Google para continuar sincronizando."
                 : isDisabled
                   ? "La sincronización automática está desactivada."
-                  : "Conectalo para agregar los eventos que confirmes."}
+                  : "Conectalo para agregar los eventos que confirmes o en los que te inscribas."}
           </p>
           {message === "connected" ? (
             <p className="mt-2 text-xs font-medium text-emerald-700">

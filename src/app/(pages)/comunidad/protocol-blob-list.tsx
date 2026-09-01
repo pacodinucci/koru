@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type Protocol = {
   id: string;
-  title: string;
-  text: string;
+  title: ReactNode;
+  text: ReactNode;
 };
 
 type ProtocolBlobListProps = {

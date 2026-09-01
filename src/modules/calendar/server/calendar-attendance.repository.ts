@@ -48,7 +48,6 @@ export async function getCalendarAttendanceForUser(eventId: string, userId: stri
     where: {
       eventId,
       userId,
-      event: { attendanceConfirmationEnabled: true },
     },
     select: { id: true, status: true, respondedAt: true },
   });

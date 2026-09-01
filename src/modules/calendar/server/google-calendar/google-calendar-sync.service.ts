@@ -163,7 +163,6 @@ export async function syncConfirmedAttendanceToGoogle(
     where: {
       id: eventId,
       status: CalendarEventStatus.PUBLISHED,
-      attendanceConfirmationEnabled: true,
       attendances: {
         some: {
           userId,

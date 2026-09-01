@@ -38,7 +38,7 @@ export default async function DashboardCalendarAttendancePage({ params }: Props)
   const pending = event.attendances.filter((attendance) => attendance.status === "PENDING");
   const declined = event.attendances.filter((attendance) => attendance.status === "DECLINED");
 
-  const showsAttendance = event.attendanceConfirmationEnabled;
+  const showsAttendance = event.attendanceConfirmationEnabled || event.registrationsEnabled;
   const showsRegistrations = event.registrationsEnabled;
   return (
     <DashboardShell

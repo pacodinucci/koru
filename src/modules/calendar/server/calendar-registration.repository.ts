@@ -1,5 +1,6 @@
 import {
   CalendarAudienceType,
+  CalendarAttendanceStatus,
   CalendarEventStatus,
   CalendarEventVisibility,
   UserRole,
@@ -68,8 +69,49 @@ export async function registerForCalendarEvent({
   }
 
   try {
-    return await prisma.calendarEventRegistration.create({
-      data: { eventId, userId: viewer?.id, name, email: email.toLowerCase(), phone },
+    return await prisma.$transaction(async (tx) => {
+      const registration = await tx.calendarEventRegistration.create({
+        data: { eventId, userId: viewer?.id, name, email: email.toLowerCase(), phone },
+      });
+
+      if (!viewer) return registration;
+
+      const attendanceForUser = await tx.calendarEventAttendance.findUnique({
+        where: { eventId_userId: { eventId, userId: viewer.id } },
+        select: { id: true },
+      });
+      const attendanceForEmail = attendanceForUser
+        ? null
+        : await tx.calendarEventAttendance.findUnique({
+            where: { eventId_email: { eventId, email: email.toLowerCase() } },
+            select: { id: true },
+          });
+
+      const attendanceData = {
+        userId: viewer.id,
+        name,
+        email: email.toLowerCase(),
+        status: CalendarAttendanceStatus.CONFIRMED,
+        respondedAt: new Date(),
+      };
+
+      if (attendanceForUser) {
+        await tx.calendarEventAttendance.update({
+          where: { id: attendanceForUser.id },
+          data: { status: attendanceData.status, respondedAt: attendanceData.respondedAt },
+        });
+      } else if (attendanceForEmail) {
+        await tx.calendarEventAttendance.update({
+          where: { id: attendanceForEmail.id },
+          data: attendanceData,
+        });
+      } else {
+        await tx.calendarEventAttendance.create({
+          data: { eventId, ...attendanceData },
+        });
+      }
+
+      return registration;
     });
   } catch (error) {
     if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") {

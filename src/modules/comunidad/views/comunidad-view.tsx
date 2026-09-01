@@ -9,9 +9,9 @@ import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/t
 
 type TextImageSectionProps = {
   id?: string;
-  title: string;
-  subtitle?: string;
-  paragraphs: string[];
+  title: ReactNode;
+  subtitle?: ReactNode;
+  paragraphs: ReactNode[];
   imageSrc?: string;
   imageAlt?: string;
   reverse?: boolean;
@@ -102,8 +102,8 @@ function TextImageSection({
           </h2>
 
           <div className="max-w-3xl space-y-4 text-base leading-relaxed text-black/85 md:text-lg">
-            {paragraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
+            {paragraphs.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
             ))}
           </div>
 
@@ -129,7 +129,7 @@ function TextImageSection({
   );
 }
 
-function CommunityActionRow({ items }: { items: string[] }) {
+function CommunityActionRow({ items }: { items: ReactNode[] }) {
   return (
     <div className="grid w-full max-w-[18.5rem] grid-cols-2 items-center gap-3 pt-1 sm:max-w-none sm:flex sm:flex-wrap sm:justify-center lg:flex-nowrap">
       {items.map((item, index) => {
@@ -138,7 +138,7 @@ function CommunityActionRow({ items }: { items: string[] }) {
 
         return (
           <div
-            key={item}
+            key={index}
             className={`relative flex min-h-[3.75rem] w-full min-w-0 items-center justify-center overflow-hidden border px-3 py-2 text-center text-xs font-medium leading-tight text-[var(--complement-900)] shadow-sm sm:min-h-[4.6rem] sm:w-auto sm:min-w-[8.75rem] sm:px-5 sm:py-3 sm:text-sm ${style.color} ${style.border} ${style.shape}`}
           >
             <span
@@ -153,7 +153,7 @@ function CommunityActionRow({ items }: { items: string[] }) {
   );
 }
 
-const protocols = [
+const protocolDefinitions = [
   {
     id: "resolucion-de-conflictos",
     title: "Resolución de conflictos",
@@ -221,6 +221,12 @@ type ComunidadViewProps = {
 
 export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onSelectContentSlot }: ComunidadViewProps) {
   const editable = { page: "comunidad" as const, textMap, previewMode, selectedContentSlotId, onSelectContentSlot };
+  const copy = (slotId: string) => <CmsPageEditableCopy as="span" slotId={slotId} {...editable} />;
+  const protocols = protocolDefinitions.map((protocol, index) => ({
+    ...protocol,
+    title: copy(`community.protocols.item.${index}.title`),
+    text: copy(`community.protocols.item.${index}.description`),
+  }));
   return (
     <main
       className="bg-white"
@@ -285,14 +291,14 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
             className="mx-auto max-w-[19rem] text-center text-2xl leading-[1.15] text-black sm:max-w-3xl md:text-3xl"
             style={{ fontFamily: "var(--font-roboto-condensed)" }}
           >
-            No buscamos familias perfectas, sino disponibles a:
+            {copy("community.actions.title")}
           </p>
           <CommunityActionRow
             items={[
-              "Cuestionar",
-              "Aprender",
-              "Construir en conjunto",
-              "Participar",
+              copy("community.actions.item.0"),
+              copy("community.actions.item.1"),
+              copy("community.actions.item.2"),
+              copy("community.actions.item.3"),
             ]}
           />
         </div>
@@ -300,69 +306,67 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
 
       <TextImageSection
         id="escuela-para-familias"
-        title="Escuela para familias"
-        subtitle="Las familias no observan el proceso desde fuera; forman parte de él."
+        title={copy("community.school.title")}
+        subtitle={copy("community.school.subtitle")}
         imageSrc="/assets/images/comu1.png"
         imageAlt="Encuentros de formación para familias"
         reverse
         sectionClassName="bg-white"
         paragraphs={[
-          "Contamos con un espacio de formación y acompañamiento para madres y padres, con el propósito de construir una visión compartida sobre cómo acompañar el desarrollo de las niñas y niños.",
-          "Talleres introductorios obligatorios:",
+          copy("community.school.description"),
+          copy("community.school.workshopsLabel"),
         ]}
       >
         <div className="space-y-4">
           <div className="flex flex-wrap gap-3">
             {[
-              "Comunicación No Violenta",
-              "Etapas evolutivas desde la antroposofía",
+              "community.school.workshop.0",
+              "community.school.workshop.1",
             ].map((workshop, index) => (
               <div key={workshop} className="flex items-center gap-2">
-                <span className={workshopChipClassName(index)}>{workshop}</span>
+                <span className={workshopChipClassName(index)}>{copy(workshop)}</span>
                 <Link
                   href="/blog"
                   className="text-sm font-medium text-[var(--complement-800)] underline underline-offset-4 transition hover:text-[var(--complement-900)]"
                 >
-                  Conoce más
+                  {copy(`community.school.workshopCta.${index}`)}
                 </Link>
               </div>
             ))}
           </div>
-          <div>Ambos incluídos en su cuota de inscripción.</div>
+          <div>{copy("community.school.note")}</div>
         </div>
       </TextImageSection>
 
       <TextImageSection
         id="talleres-y-charlas"
-        title="Talleres y charlas"
+        title={copy("community.talks.title")}
         sectionClassName="bg-white"
         paragraphs={[
-          "Se realizan encuentros dos veces al mes donde abordamos temas como:",
+          copy("community.talks.description"),
         ]}
       >
         <div className="space-y-4">
           <div className="flex max-w-4xl flex-wrap gap-3">
             {[
-              "Gestión emocional",
-              "Retos cotidianos en la crianza",
-              "Construcción de acuerdos",
-              "Educación sexual",
-              "Retos de cada etapa",
-              "Pantallas",
-              "Límites",
-              "Otros",
+              "community.talks.topic.0",
+              "community.talks.topic.1",
+              "community.talks.topic.2",
+              "community.talks.topic.3",
+              "community.talks.topic.4",
+              "community.talks.topic.5",
+              "community.talks.topic.6",
+              "community.talks.topic.7",
             ].map((topic, index) => (
               <span key={topic} className={workshopChipClassName(index)}>
-                {topic}
+                {copy(topic)}
               </span>
             ))}
           </div>
           <div className="max-w-3xl space-y-4 text-base leading-relaxed text-black/85 md:text-lg">
-            <p>Estos talleres pueden tener un costo extra.</p>
+            <p>{copy("community.talks.note")}</p>
             <p>
-              Además de contenido, estos espacios permiten compartir
-              experiencias, reflexionar y generar herramientas prácticas para la
-              vida diaria.
+              {copy("community.talks.closing")}
             </p>
           </div>
         </div>
@@ -370,21 +374,21 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
 
       <TextImageSection
         id="acompanamiento-conjunto"
-        title="Acompañamiento conjunto"
+        title={copy("community.support.title")}
         imageSrc="/assets/images/comu5.png"
         imageAlt="Acompañamiento entre familia y comunidad educativa"
         sectionClassName="bg-[#f7f6f1]"
         reverse
         paragraphs={[
-          "Nuestra comunidad se sostiene a partir de acuerdos que nos permiten convivir, acompañar y crecer de manera coherente.",
-          "Estos acuerdos no son reglas impuestas, sino compromisos compartidos que hacen posible el bienestar individual y colectivo.",
+          copy("community.support.description.0"),
+          copy("community.support.description.1"),
         ]}
       >
         <Link
           href="/comunidad/acuerdos"
           className="text-base font-medium text-[var(--complement-800)] underline underline-offset-4 transition hover:text-[var(--complement-900)]"
         >
-          Conoce los acuerdos que mantenemos como comunidad
+          {copy("community.support.cta")}
         </Link>
       </TextImageSection>
 
@@ -396,18 +400,14 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
                 className="text-3xl leading-[1] tracking-tight text-black md:text-4xl lg:text-5xl"
                 style={{ fontFamily: "var(--font-roboto-condensed)" }}
               >
-                Protocolos y cuidado
+                {copy("community.protocols.title")}
               </h2>
               <div className="space-y-4 text-base leading-relaxed text-black/85 md:text-lg">
                 <p>
-                  Para sostener un entorno seguro y coherente, contamos con
-                  protocolos claros que forman parte del funcionamiento de la
-                  comunidad.
+                  {copy("community.protocols.description.0")}
                 </p>
                 <p>
-                  Estos lineamientos permiten cuidar el bienestar individual y
-                  colectivo, generando claridad y confianza para todas las
-                  familias.
+                  {copy("community.protocols.description.1")}
                 </p>
               </div>
             </div>
@@ -436,19 +436,19 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
                 className="text-3xl leading-[1] tracking-tight text-black md:text-4xl lg:text-5xl"
                 style={{ fontFamily: "var(--font-roboto-condensed)" }}
               >
-                El día a día en KORU
+                {copy("community.daily.title")}
               </h2>
               <p
                 className="text-lg leading-relaxed text-black/85 md:text-2xl"
                 style={{ fontFamily: "var(--font-indie-flower)" }}
               >
-                Conoce cómo se vive cada día en KORU.
+                {copy("community.daily.subtitle")}
               </p>
             </div>
 
             <div className="space-y-3">
               <p className="text-sm font-semibold tracking-[0.16em] text-black/55">
-                RITMOS POR GRUPO Y RITMO ANUAL
+                {copy("community.daily.eyebrow")}
               </p>
               <div className="flex max-w-4xl flex-wrap gap-3">
                 {dailyRhythms.map((rhythm, index) => (
@@ -457,7 +457,7 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
                     href={rhythm.href}
                     className={workshopChipClassName(index)}
                   >
-                    {rhythm.label}
+                    {copy(`community.daily.rhythm.${index}`)}
                   </Link>
                 ))}
               </div>
@@ -487,16 +487,15 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
               className="text-3xl leading-[1] tracking-tight text-black md:text-4xl lg:text-5xl"
               style={{ fontFamily: "var(--font-roboto-condensed)" }}
             >
-              Nuestras celebraciones comunitarias
+              {copy("community.celebrations.title")}
             </h2>
             <p className="text-base leading-relaxed text-black/75 md:text-lg">
-              El ritmo anual también nos reúne como comunidad: celebramos,
-              compartimos y hacemos visible lo que cada etapa trae al proceso.
+              {copy("community.celebrations.description")}
             </p>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {communityCelebrations.map((celebration) => (
+            {communityCelebrations.map((celebration, index) => (
               <article
                 key={celebration.title}
                 className="group overflow-hidden rounded-[1.75rem] border border-black/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
@@ -515,7 +514,7 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
                     className="text-2xl leading-tight text-black"
                     style={{ fontFamily: "var(--font-roboto-condensed)" }}
                   >
-                    {celebration.title}
+                    {copy(`community.celebrations.item.${index}`)}
                   </h3>
                 </div>
               </article>
