@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
-import Image from "next/image";
 import { KoruShape1 } from "@/components/koru-shape-1";
+import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
 import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
@@ -15,6 +16,8 @@ type NonCmsEditorialSectionProps = {
   highlightText?: string;
   closingText?: string;
   imageSrc?: string;
+  imageSlotId?: string;
+  imageMap?: CmsImageMap;
   imageFrameWidth?: string;
   imageFrameHeight?: string;
   imageScale?: number;
@@ -48,6 +51,8 @@ export function NonCmsEditorialSection({
   bodyText = "Creemos que la educación es un proceso compartido. Niñas, niños, familias y colaboradores formamos un mismo organismo, donde cada parte influye en el desarrollo individual y colectivo.",
   highlightText = "Por eso, el acompañamiento no ocurre sólo dentro del espacio educativo, sino también en casa y en la relación cotidiana.",
   closingText = "Ser parte de esta comunidad implica una participación activa y comprometida. Ser parte de este espacio implica formar parte de una comunidad que aprende, se cuestiona y evoluciona.",
+  imageSlotId,
+  imageMap,
   imageSrc = cloudinaryImageUrl(
     "koru/landing/DSC01342",
     "/assets/images/DSC01342.png",
@@ -182,9 +187,14 @@ export function NonCmsEditorialSection({
           <div className="mx-auto" style={frameStyle}>
             <div className="relative overflow-hidden">
               {imageSrc ? (
-                <Image
-                  src={imageSrc}
+                <CmsPageEditableImage
+                  slotId={imageSlotId ?? ""}
+                  defaultSrc={imageSrc}
                   alt="Niñas y niños en actividad comunitaria"
+                  imageMap={imageMap}
+                  previewMode={previewMode && Boolean(imageSlotId)}
+                  selectedContentSlotId={selectedContentSlotId}
+                  onSelectContentSlot={onSelectContentSlot}
                   width={1200}
                   height={1200}
                   sizes="(max-width: 1024px) 100vw, 40vw"

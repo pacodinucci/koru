@@ -220,6 +220,7 @@ enum GoogleCalendarSyncStatus {
 enum MediaAssetPurpose {
   BLOG
   CALENDAR
+  CMS
 }
 
 enum ExamStatus {
@@ -278,6 +279,27 @@ model CmsTextEntry {
   publishedValue String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model CmsImageEntry {
+  id                String   @id @default(cuid())
+  pageSlug          String
+  key               String
+  draftUrl          String
+  draftPublicId     String
+  publishedUrl      String?
+  publishedPublicId String?
+  draftCropX        Float    @default(50)
+  draftCropY        Float    @default(50)
+  publishedCropX    Float?
+  publishedCropY    Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([pageSlug, key])
+  @@index([pageSlug])
+  @@index([draftPublicId])
+  @@index([publishedPublicId])
 }
 
 model BlogPost {

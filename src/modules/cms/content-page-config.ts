@@ -7,6 +7,63 @@ export type CmsContentField = {
   multiline?: boolean;
 };
 
+export type CmsImageSlot = {
+  key: string;
+  label: string;
+  defaultSrc: string;
+  alt: string;
+};
+
+export const landingCmsImageSlots: CmsImageSlot[] = [
+  { key: "landing.image.welcome", label: "Bienvenida", defaultSrc: "/assets/images/DSC01443.png", alt: "Comunidad educativa compartiendo actividades" },
+  { key: "landing.image.editorial.0", label: "Qué nos hace diferentes", defaultSrc: "/assets/images/DSC01344.png", alt: "Experiencia de aprendizaje en Koru" },
+  { key: "landing.image.editorial.1", label: "Enfoque pedagógico", defaultSrc: "/assets/images/DSC01273.png", alt: "Comunidad Koru compartiendo una experiencia" },
+  { key: "landing.image.grid.0", label: "Grilla · Grupos de acompañamiento", defaultSrc: "/assets/images/DSC01363.png", alt: "Grupo de acompañamiento" },
+  { key: "landing.image.grid.1", label: "Grilla · Metodologías", defaultSrc: "/assets/images/DSC01338.png", alt: "Metodologías de acompañamiento" },
+  { key: "landing.image.grid.2", label: "Grilla · Instalaciones", defaultSrc: "/assets/images/insta8.png", alt: "Instalaciones" },
+  { key: "landing.image.grid.3", label: "Grilla · Equipo", defaultSrc: "/assets/images/DSC02336.png", alt: "Equipo" },
+  ...[5, 6, 7, 8, 9, 1, 2, 3].map((number, index) => ({
+    key: `landing.image.grid.${index + 4}`,
+    label: `Grilla · Imagen ${index + 5}`,
+    defaultSrc: `/assets/img${number}.jpg`,
+    alt: `Imagen ${index + 5}`,
+  })),
+];
+
+export const quienesSomosCmsImageSlots: CmsImageSlot[] = [
+  { key: "about.image.hero", label: "Hero", defaultSrc: "/assets/images/DSC01400.png", alt: "Niñas y niños compartiendo una actividad en comunidad" },
+  { key: "about.image.mission", label: "Misión", defaultSrc: "/assets/images/image2.png", alt: "Niñas y niños aprendiendo juntos en la naturaleza" },
+  { key: "about.image.vision", label: "Visión", defaultSrc: "/assets/images/image1.png", alt: "Comunidad educativa compartiendo actividades" },
+  { key: "about.image.team.0", label: "Equipo · Karla Novelo", defaultSrc: "/assets/images/equipo11.png", alt: "Karla Novelo, Fundadora y Directora General" },
+  { key: "about.image.team.1", label: "Equipo · Florencia Bennetts", defaultSrc: "/assets/images/equipo10.png", alt: "Florencia Bennetts, Directora de la Cultura" },
+  { key: "about.image.team.2", label: "Equipo · Samantha", defaultSrc: "/assets/images/equipo7.png", alt: "Samantha, Coordinadora Académica" },
+  { key: "about.image.team.3", label: "Equipo · Daniel", defaultSrc: "/assets/images/equipo14.png", alt: "Daniel, Coordinador Psicopedagógico" },
+  { key: "about.image.team.4", label: "Equipo · Radha", defaultSrc: "/assets/images/equipo3.png", alt: "Radha, Tutora Grupo Esporas" },
+  { key: "about.image.team.7", label: "Equipo · Indra", defaultSrc: "/assets/images/equipo15.png", alt: "Indra, Asistente Grupo Koru" },
+  { key: "about.image.team.8", label: "Equipo · Beatriz", defaultSrc: "/assets/images/equipo1.png", alt: "Beatriz, Tutora de Helechos 1" },
+  { key: "about.image.team.9", label: "Equipo · Jari", defaultSrc: "/assets/images/equipo16.png", alt: "Jari, Asistente Helechos 1" },
+  { key: "about.image.team.10", label: "Equipo · Diego", defaultSrc: "/assets/images/equipo17.png", alt: "Diego, Co-tutor Helechos 2" },
+  { key: "about.image.team.12", label: "Equipo · Violeta", defaultSrc: "/assets/images/equipo9.png", alt: "Violeta, Maestra de Lectura y Matemáticas" },
+  { key: "about.image.team.13", label: "Equipo · Francisco", defaultSrc: "/assets/images/equipo12.png", alt: "Francisco, Circo" },
+  ...Array.from({ length: 8 }, (_, index) => ({
+    key: `about.image.facility.${index}`,
+    label: `Instalaciones · Imagen ${index + 1}`,
+    defaultSrc: `/assets/images/insta${index + 1}.png`,
+    alt: `Instalaciones de Koru · Imagen ${index + 1}`,
+  })),
+];
+
+export const comoAcompanamosCmsImageSlots: CmsImageSlot[] = [
+  { key: "accompaniment.image.hero", label: "Hero", defaultSrc: "/assets/images/DSC01280.png", alt: "Acompañantes y niñez compartiendo un espacio de aprendizaje" },
+  { key: "accompaniment.image.evaluation", label: "Evaluación", defaultSrc: "/assets/images/DSC01386.png", alt: "Acompañante registrando procesos de aprendizaje en comunidad" },
+];
+
+const cmsImageSlotsBySlug: Record<string, CmsImageSlot[]> = {
+  "/": landingCmsImageSlots,
+  "/quienes-somos": quienesSomosCmsImageSlots,
+  "/como-acompanamos": comoAcompanamosCmsImageSlots,
+};
+
 export const cmsContentPages = {
   comunidad: {
     slug: "/comunidad",
@@ -75,6 +132,62 @@ export const cmsContentPages = {
       { key: "community.celebrations.item.1", label: "Celebraciones · Evento 2", defaultValue: "Celebración día de muertos" },
       { key: "community.celebrations.item.2", label: "Celebraciones · Evento 3", defaultValue: "Bazar navideño" },
       { key: "community.celebrations.item.3", label: "Celebraciones · Evento 4", defaultValue: "Kermés de primavera" },
+    ],
+    images: [
+      {
+        key: "community.image.hero",
+        label: "Imagen principal",
+        defaultSrc: "/assets/images/comu3.png",
+        alt: "Comunidad Koru compartiendo actividades",
+      },
+      {
+        key: "community.image.school",
+        label: "Escuela para familias",
+        defaultSrc: "/assets/images/comu1.png",
+        alt: "Encuentros de formación para familias",
+      },
+      {
+        key: "community.image.support",
+        label: "Acompañamiento conjunto",
+        defaultSrc: "/assets/images/comu5.png",
+        alt: "Acompañamiento entre familia y comunidad educativa",
+      },
+      {
+        key: "community.image.protocols",
+        label: "Protocolos y cuidado",
+        defaultSrc: "/assets/images/comu2.png",
+        alt: "Cuidado y seguridad en la comunidad",
+      },
+      {
+        key: "community.image.daily",
+        label: "El día a día en KORU",
+        defaultSrc: "/assets/images/comu6.png",
+        alt: "Vida cotidiana en la comunidad Koru",
+      },
+      {
+        key: "community.image.celebration.0",
+        label: "Celebración del Maíz",
+        defaultSrc: "/assets/images/DSC01273.png",
+        alt: "Celebración del Maíz",
+      },
+      {
+        key: "community.image.celebration.1",
+        label: "Celebración día de muertos",
+        defaultSrc: "/assets/images/DSC01338.png",
+        alt: "Celebración día de muertos",
+      },
+      {
+        key: "community.image.celebration.2",
+        label: "Bazar navideño",
+        defaultSrc: "/assets/images/DSC01638.png",
+        alt: "Bazar navideño",
+      },
+      {
+        key: "community.image.celebration.3",
+        label: "Kermés de primavera",
+        defaultSrc: "/assets/images/DSC02336.png",
+        alt: "Kermés de primavera",
+      },
     ],
   },
   blog: {
@@ -173,4 +286,18 @@ export function getCmsContentSlots(key: CmsContentPageKey): LandingContentSlot[]
       "letterSpacing",
     ],
   }));
+}
+
+export function getCmsImageSlots(key: CmsContentPageKey): CmsImageSlot[] {
+  const page = cmsContentPages[key];
+  return "images" in page ? [...page.images] : [];
+}
+export function getCmsImageSlotsBySlug(slug: string): CmsImageSlot[] {
+  const configuredPage = Object.values(cmsContentPages).find(
+    (page) => page.slug === slug,
+  );
+  if (configuredPage && "images" in configuredPage) {
+    return [...configuredPage.images];
+  }
+  return [...(cmsImageSlotsBySlug[slug] ?? [])];
 }

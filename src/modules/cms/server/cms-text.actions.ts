@@ -1,9 +1,10 @@
-﻿"use server";
+"use server";
 
 import { z } from "zod";
 
 import { requireAdmin } from "@/modules/auth/server/auth-guards";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
+import { publishAllCmsDraftImages } from "@/modules/cms/server/cms-image.repository";
 import {
   getCmsDraftTextMap,
   getCmsDraftTextMapBySlug,
@@ -76,6 +77,7 @@ export async function publishAllCmsPagesAction() {
 
   const baseDraft = await getCmsDraftTextMap();
   await publishCmsTextMap(baseDraft);
+  await publishAllCmsDraftImages();
 
   const pages = (await discoverPagesGroupRoutes()).filter(
     (page) => !page.isDynamic && page.slug !== "/",
@@ -90,4 +92,3 @@ export async function publishAllCmsPagesAction() {
 
   return { ok: true as const, message: "Global publish completed." };
 }
-

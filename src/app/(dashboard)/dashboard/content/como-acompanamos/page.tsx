@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { getCmsDraftImageMapBySlug } from "@/modules/cms/server/cms-image.repository";
 import { getCmsDraftTextMapBySlug } from "@/modules/cms/server/cms-text.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { ComoAcompanamosContentEditor } from "@/modules/dashboard/components/landing-content-editor";
@@ -6,7 +7,10 @@ import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.r
 
 export default async function DashboardComoAcompanamosContentPage() {
   const user = await requireAdmin();
-  const initialTextMap = await getCmsDraftTextMapBySlug("/como-acompanamos");
+  const [initialTextMap, initialImageMap] = await Promise.all([
+    getCmsDraftTextMapBySlug("/como-acompanamos"),
+    getCmsDraftImageMapBySlug("/como-acompanamos"),
+  ]);
   const cmsPages = (await discoverPagesGroupRoutes()).filter(
     (page) => !page.isDynamic,
   );
@@ -20,7 +24,7 @@ export default async function DashboardComoAcompanamosContentPage() {
       panelDefaultOpen
       contentNoPadding
     >
-      <ComoAcompanamosContentEditor initialTextMap={initialTextMap} />
+      <ComoAcompanamosContentEditor initialTextMap={initialTextMap} initialImageMap={initialImageMap} />
     </DashboardShell>
   );
 }

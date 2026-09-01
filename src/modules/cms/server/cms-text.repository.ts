@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { BlockType, PageStatus } from "@prisma/client";
+import { BlockType, PageStatus, type Prisma } from "@prisma/client";
 import {
   ensureLandingDefaults,
   getDefaultLandingTextMap,
@@ -7,14 +7,21 @@ import {
 
 export type CmsTextMap = Record<string, string>;
 
-async function getEntries() {
-  return prisma.cmsTextEntry.findMany({
+type CmsTextRepositoryClient = Pick<
+  Prisma.TransactionClient,
+  "cmsTextEntry" | "page" | "pageBlock"
+>;
+
+async function getEntries(client: CmsTextRepositoryClient = prisma) {
+  return client.cmsTextEntry.findMany({
     orderBy: { key: "asc" },
   });
 }
 
-export async function getCmsDraftTextMap(): Promise<CmsTextMap> {
-  const entries = await getEntries();
+export async function getCmsDraftTextMap(
+  client: CmsTextRepositoryClient = prisma,
+): Promise<CmsTextMap> {
+  const entries = await getEntries(client);
   const map = Object.fromEntries(
     entries.map((entry) => [entry.key, entry.draftValue]),
   );
@@ -51,7 +58,10 @@ export async function saveCmsDraftTextMap(textMap: CmsTextMap) {
   );
 }
 
-export async function publishCmsTextMap(textMap: CmsTextMap) {
+export async function publishCmsTextMap(
+  textMap: CmsTextMap,
+  client: CmsTextRepositoryClient = prisma,
+) {
   const fullPayload = {
     ...getDefaultLandingTextMap(),
     ...textMap,
@@ -59,7 +69,7 @@ export async function publishCmsTextMap(textMap: CmsTextMap) {
 
   await Promise.all(
     Object.entries(fullPayload).map(([key, value]) =>
-      prisma.cmsTextEntry.upsert({
+      client.cmsTextEntry.upsert({
         where: { key },
         create: {
           key,
@@ -125,8 +135,11 @@ function buildOverrides(
   return overrides;
 }
 
-async function getPageLandingBlock(slug: string) {
-  const page = await prisma.page.findUnique({
+async function getPageLandingBlock(
+  slug: string,
+  client: CmsTextRepositoryClient = prisma,
+) {
+  const page = await client.page.findUnique({
     where: { slug },
     include: {
       blocks: {
@@ -236,20 +249,28 @@ export async function saveCmsPageDraftTextMap(slug: string, textMap: CmsTextMap)
 }
 
 export async function publishCmsPageTextMap(slug: string, textMap: CmsTextMap) {
+  return publishCmsPageTextMapWithClient(prisma, slug, textMap);
+}
+
+export async function publishCmsPageTextMapWithClient(
+  client: CmsTextRepositoryClient,
+  slug: string,
+  textMap: CmsTextMap,
+) {
   const normalizedSlug = slug.trim() || "/";
   if (normalizedSlug === "/") {
-    await publishCmsTextMap(textMap);
+    await publishCmsTextMap(textMap, client);
     return;
   }
 
-  const baseMap = await getCmsDraftTextMap();
+  const baseMap = await getCmsDraftTextMap(client);
   const fullPayload = {
     ...getDefaultLandingTextMap(),
     ...textMap,
   };
   const overrides = buildOverrides(baseMap, fullPayload);
 
-  const page = await prisma.page.upsert({
+  const page = await client.page.upsert({
     where: { slug: normalizedSlug },
     create: {
       slug: normalizedSlug,
@@ -263,11 +284,11 @@ export async function publishCmsPageTextMap(slug: string, textMap: CmsTextMap) {
     },
   });
 
-  const { block } = await getPageLandingBlock(normalizedSlug);
+  const { block } = await getPageLandingBlock(normalizedSlug, client);
   const previousData =
     block && block.data && typeof block.data === "object" ? block.data : {};
 
-  await prisma.pageBlock.upsert({
+  await client.pageBlock.upsert({
     where: {
       pageId_order: {
         pageId: page.id,

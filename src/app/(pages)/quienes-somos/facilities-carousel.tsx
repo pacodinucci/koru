@@ -1,7 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useRef } from "react";
+
+import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 
 type FacilityImage = {
   src: string;
@@ -12,9 +14,19 @@ type FacilityImage = {
 
 type FacilitiesCarouselProps = {
   images: FacilityImage[];
+  imageMap?: CmsImageMap;
+  previewMode?: boolean;
+  selectedContentSlotId?: string | null;
+  onSelectContentSlot?: (slotId: string) => void;
 };
 
-export function FacilitiesCarousel({ images }: FacilitiesCarouselProps) {
+export function FacilitiesCarousel({
+  images,
+  imageMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
+}: FacilitiesCarouselProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "previous" | "next") => {
@@ -35,15 +47,20 @@ export function FacilitiesCarousel({ images }: FacilitiesCarouselProps) {
         className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-[7vw] pb-5 md:gap-7 md:px-[10vw] [&::-webkit-scrollbar]:hidden"
         aria-label="Carrusel de instalaciones"
       >
-        {images.map((image) => (
+        {images.map((image, index) => (
           <figure
             key={image.src}
             className="min-w-[84vw] snap-center md:min-w-[70vw] lg:min-w-[66vw]"
           >
             <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
-              <Image
-                src={image.src}
+              <CmsPageEditableImage
+                slotId={`about.image.facility.${index}`}
+                defaultSrc={image.src}
                 alt={image.alt}
+                imageMap={imageMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
                 fill
                 sizes="(min-width: 1024px) 66vw, (min-width: 768px) 70vw, 84vw"
                 className="object-cover"

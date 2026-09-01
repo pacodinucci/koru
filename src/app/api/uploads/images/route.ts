@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getAdminUser } from "@/modules/auth/server/auth-guards";
 import { IMAGE_UPLOAD_ACCEPTED_TYPES, IMAGE_UPLOAD_MAX_SIZE_BYTES, IMAGE_UPLOAD_MAX_SIZE_MB } from "@/modules/media/config/image-upload";
 import { type MediaPurpose, uploadImageToCloudinary } from "@/modules/media/server/cloudinary-images";
-function parsePurpose(value: FormDataEntryValue | null): MediaPurpose | null { return value === "BLOG" || value === "CALENDAR" ? value : null; }
+function parsePurpose(value: FormDataEntryValue | null): MediaPurpose | null { return value === "BLOG" || value === "CALENDAR" || value === "CMS" ? value : null; }
 export async function POST(request: Request) {
   const user = await getAdminUser();
   if (!user) return NextResponse.json({ok:false,error:"Forbidden"},{status:403});

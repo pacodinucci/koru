@@ -13,7 +13,23 @@ import {
   publishCmsAction,
   publishCmsPageAction,
 } from "@/modules/cms/server/cms-text.actions";
+import {
+  publishCmsPageContentAction,
+  saveCmsPageDraftImageAction,
+} from "@/modules/cms/server/cms-image.actions";
+import type {
+  CmsImageMap,
+  CmsImageValue,
+} from "@/modules/cms/server/cms-image.repository";
+import {
+  comoAcompanamosCmsImageSlots,
+  landingCmsImageSlots,
+  quienesSomosCmsImageSlots,
+  type CmsImageSlot,
+} from "@/modules/cms/content-page-config";
+import { CmsImageAdjustmentProvider } from "@/modules/cms/components/cms-page-editable-image";
 import { CmsPreviewFrame } from "@/modules/dashboard/components/cms-preview-frame";
+import { CmsImageField } from "@/modules/dashboard/components/cms-image-field";
 import { useDashboardEditorPanel } from "@/modules/dashboard/components/dashboard-editor-panel";
 import {
   getLandingContentSlotStyleKeys,
@@ -80,12 +96,15 @@ function normalizeTextMap(textMap: LandingTextMap, slots: LandingContentSlot[]) 
 
 export type PageContentEditorProps = {
   initialTextMap: LandingTextMap;
+  initialImageMap?: CmsImageMap;
   slots: LandingContentSlot[];
+  imageSlots?: CmsImageSlot[];
   pageSlug?: string;
   previewLabel: string;
   previewScale?: number;
   renderPreview: (props: {
     textMap: LandingTextMap;
+    imageMap: CmsImageMap;
     selectedSlotId: string;
     onSelectSlot: (slotId: string) => void;
   }) => ReactNode;
@@ -93,7 +112,9 @@ export type PageContentEditorProps = {
 
 export function PageContentEditor({
   initialTextMap,
+  initialImageMap = {},
   slots: baseSlots,
+  imageSlots = [],
   pageSlug = "/",
   previewLabel,
   previewScale = PREVIEW_ZOOM_BASE_SCALE,
@@ -102,13 +123,36 @@ export function PageContentEditor({
   const [textMap, setTextMap] = useState(() =>
     normalizeTextMap(initialTextMap, baseSlots),
   );
-  const slots = baseSlots;
-  const [selectedSlotId, setSelectedSlotId] = useState(slots[0]?.id ?? "");
+  const [imageMap, setImageMap] = useState<CmsImageMap>(initialImageMap);
+  const navigationSlots = useMemo(
+    () => [
+      ...baseSlots.map((slot) => ({
+        id: slot.id,
+        label: slot.selectorLabel,
+        kind: "text" as const,
+      })),
+      ...imageSlots.map((slot) => ({
+        id: slot.key,
+        label: slot.label,
+        kind: "image" as const,
+      })),
+    ],
+    [baseSlots, imageSlots],
+  );
+  const [selectedSlotId, setSelectedSlotId] = useState(
+    navigationSlots[0]?.id ?? "",
+  );
+  const [adjustingImageSlotId, setAdjustingImageSlotId] = useState<
+    string | null
+  >(null);
   const [statusMessage, setStatusMessage] = useState("");
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const { portalTarget } = useDashboardEditorPanel();
 
-  const validSlotIds = useMemo(() => new Set(slots.map((slot) => slot.id)), [slots]);
+  const validSlotIds = useMemo(
+    () => new Set(navigationSlots.map((slot) => slot.id)),
+    [navigationSlots],
+  );
 
   function selectSlot(slotId: string) {
     if (!validSlotIds.has(slotId)) {
@@ -116,13 +160,23 @@ export function PageContentEditor({
     }
 
     setSelectedSlotId(slotId);
+    if (slotId !== selectedSlotId) {
+      setAdjustingImageSlotId(null);
+    }
   }
 
   const selectedIndex = Math.max(
     0,
-    slots.findIndex((slot) => slot.id === selectedSlotId),
+    navigationSlots.findIndex((slot) => slot.id === selectedSlotId),
   );
-  const selectedSlot = slots[selectedIndex] ?? slots[0];
+  const selectedNavigationSlot =
+    navigationSlots[selectedIndex] ?? navigationSlots[0];
+  const selectedTextSlot = baseSlots.find(
+    (slot) => slot.id === selectedNavigationSlot?.id,
+  );
+  const selectedImageSlot = imageSlots.find(
+    (slot) => slot.key === selectedNavigationSlot?.id,
+  );
 
   useEffect(() => {
     if (!selectedSlotId) {
@@ -145,11 +199,26 @@ export function PageContentEditor({
   }
 
   function goToSlot(direction: -1 | 1) {
-    if (slots.length === 0) {
+    if (navigationSlots.length === 0) {
       return;
     }
-    const nextIndex = (selectedIndex + direction + slots.length) % slots.length;
-    setSelectedSlotId(slots[nextIndex]!.id);
+    const nextIndex =
+      (selectedIndex + direction + navigationSlots.length) %
+      navigationSlots.length;
+    setSelectedSlotId(navigationSlots[nextIndex]!.id);
+    setAdjustingImageSlotId(null);
+  }
+
+  async function updateImage(key: string, image: CmsImageValue) {
+    setImageMap((previous) => ({ ...previous, [key]: image }));
+    setStatusMessage("Guardando borrador de imagen...");
+
+    const result = await saveCmsPageDraftImageAction(pageSlug, key, image);
+    setStatusMessage(
+      result.ok
+        ? "Borrador de imagen guardado."
+        : "No se pudo guardar el borrador de imagen.",
+    );
   }
 
   async function handlePublish() {
@@ -160,8 +229,9 @@ export function PageContentEditor({
       ]),
     ) as LandingTextMap;
     setTextMap(repairedTextMap);
-    const result =
-      pageSlug === "/"
+    const result = imageSlots.length
+      ? await publishCmsPageContentAction(pageSlug, repairedTextMap, imageMap)
+      : pageSlug === "/"
         ? await publishCmsAction(repairedTextMap)
         : await publishCmsPageAction(pageSlug, repairedTextMap);
     setStatusMessage(
@@ -171,7 +241,7 @@ export function PageContentEditor({
     );
   }
 
-  if (!selectedSlot) {
+  if (!selectedNavigationSlot) {
     return null;
   }
 
@@ -182,16 +252,16 @@ export function PageContentEditor({
         variant="ghost"
         size="icon-sm"
         onClick={() => goToSlot(-1)}
-        aria-label="Texto anterior"
+        aria-label="Elemento anterior"
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
       <div className="min-w-0 flex-1 px-2 text-center">
         <p className="truncate text-sm font-semibold text-slate-900">
-          {selectedSlot.selectorLabel}
+          {selectedNavigationSlot.label}
         </p>
         <p className="text-[11px] text-slate-500">
-          {selectedIndex + 1} de {slots.length}
+          {selectedIndex + 1} de {navigationSlots.length}
         </p>
       </div>
       <Button
@@ -199,7 +269,7 @@ export function PageContentEditor({
         variant="ghost"
         size="icon-sm"
         onClick={() => goToSlot(1)}
-        aria-label="Texto siguiente"
+        aria-label="Elemento siguiente"
       >
         <ChevronRight className="h-4 w-4" />
       </Button>
@@ -223,11 +293,26 @@ export function PageContentEditor({
               {statusMessage}
             </p>
           ) : null}
-          <LandingContentSidePanel
-            textMap={textMap}
-            selectedSlot={selectedSlot}
-            onChange={updateValue}
-          />
+          {selectedTextSlot ? (
+            <LandingContentSidePanel
+              textMap={textMap}
+              selectedSlot={selectedTextSlot}
+              onChange={updateValue}
+            />
+          ) : null}
+          {selectedImageSlot ? (
+            <CmsImageField
+              slot={selectedImageSlot}
+              value={imageMap[selectedImageSlot.key]}
+              isAdjusting={adjustingImageSlotId === selectedImageSlot.key}
+              onAdjustingChange={(adjusting) =>
+                setAdjustingImageSlotId(
+                  adjusting ? selectedImageSlot.key : null,
+                )
+              }
+              onChange={(image) => updateImage(selectedImageSlot.key, image)}
+            />
+          ) : null}
         </div>,
         portalTarget,
       )
@@ -271,11 +356,19 @@ export function PageContentEditor({
                 width: `${PREVIEW_CANVAS_WIDTH}px`,
               }}
             >
-              {renderPreview({
-                textMap,
-                selectedSlotId,
-                onSelectSlot: selectSlot,
-              })}
+              <CmsImageAdjustmentProvider
+                adjustingSlotId={adjustingImageSlotId}
+                onCommitCrop={(slotId, image) => {
+                  void updateImage(slotId, image);
+                }}
+              >
+                {renderPreview({
+                  textMap,
+                  imageMap,
+                  selectedSlotId,
+                  onSelectSlot: selectSlot,
+                })}
+              </CmsImageAdjustmentProvider>
             </div>
           </div>
         </div>
@@ -286,20 +379,25 @@ export function PageContentEditor({
 
 export function LandingContentEditor({
   initialTextMap,
+  initialImageMap,
 }: {
   initialTextMap: LandingTextMap;
+  initialImageMap: CmsImageMap;
 }) {
   const slots = useMemo(() => getLandingContentSlots(), []);
 
   return (
     <PageContentEditor
       initialTextMap={initialTextMap}
+      initialImageMap={initialImageMap}
       slots={slots}
+      imageSlots={landingCmsImageSlots}
       previewLabel="Preview de landing"
-      renderPreview={({ textMap, selectedSlotId, onSelectSlot }) => (
+      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot }) => (
         <LandingPageLayout textMap={textMap} previewMode hideChrome>
           <LandingView
             textMap={textMap}
+            imageMap={imageMap}
             previewMode
             selectedFieldId={selectedSlotId}
             onSelectField={onSelectSlot}
@@ -314,21 +412,26 @@ export function LandingContentEditor({
 
 export function QuienesSomosContentEditor({
   initialTextMap,
+  initialImageMap,
 }: {
   initialTextMap: LandingTextMap;
+  initialImageMap: CmsImageMap;
 }) {
   const slots = useMemo(() => getQuienesSomosContentSlots(), []);
 
   return (
     <PageContentEditor
       initialTextMap={initialTextMap}
+      initialImageMap={initialImageMap}
       slots={slots}
+      imageSlots={quienesSomosCmsImageSlots}
       pageSlug="/quienes-somos"
       previewLabel="Preview de Quienes Somos"
-      renderPreview={({ textMap, selectedSlotId, onSelectSlot }) => (
+      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot }) => (
         <LandingPageLayout textMap={textMap} previewMode hideChrome>
           <QuienesSomosView
             textMap={textMap}
+            imageMap={imageMap}
             previewMode
             selectedContentSlotId={selectedSlotId}
             onSelectContentSlot={onSelectSlot}
@@ -341,21 +444,26 @@ export function QuienesSomosContentEditor({
 
 export function ComoAcompanamosContentEditor({
   initialTextMap,
+  initialImageMap,
 }: {
   initialTextMap: LandingTextMap;
+  initialImageMap: CmsImageMap;
 }) {
   const slots = useMemo(() => getComoAcompanamosContentSlots(), []);
 
   return (
     <PageContentEditor
       initialTextMap={initialTextMap}
+      initialImageMap={initialImageMap}
       slots={slots}
+      imageSlots={comoAcompanamosCmsImageSlots}
       pageSlug="/como-acompanamos"
       previewLabel="Preview de Cómo acompañamos"
-      renderPreview={({ textMap, selectedSlotId, onSelectSlot }) => (
+      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot }) => (
         <LandingPageLayout textMap={textMap} previewMode hideChrome>
           <ComoAcompanamosView
             textMap={textMap}
+            imageMap={imageMap}
             previewMode
             selectedContentSlotId={selectedSlotId}
             onSelectContentSlot={onSelectSlot}

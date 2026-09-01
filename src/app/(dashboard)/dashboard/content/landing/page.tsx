@@ -1,4 +1,5 @@
-﻿import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { getCmsDraftImageMapBySlug } from "@/modules/cms/server/cms-image.repository";
 import { getCmsDraftTextMap } from "@/modules/cms/server/cms-text.repository";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
@@ -6,7 +7,10 @@ import { LandingContentEditor } from "@/modules/dashboard/components/landing-con
 
 export default async function DashboardLandingContentPage() {
   const user = await requireAdmin();
-  const initialTextMap = await getCmsDraftTextMap();
+  const [initialTextMap, initialImageMap] = await Promise.all([
+    getCmsDraftTextMap(),
+    getCmsDraftImageMapBySlug("/"),
+  ]);
   const cmsPages = (await discoverPagesGroupRoutes()).filter(
     (page) => !page.isDynamic,
   );
@@ -20,7 +24,7 @@ export default async function DashboardLandingContentPage() {
       panelDefaultOpen
       contentNoPadding
     >
-      <LandingContentEditor initialTextMap={initialTextMap} />
+      <LandingContentEditor initialTextMap={initialTextMap} initialImageMap={initialImageMap} />
     </DashboardShell>
   );
 }

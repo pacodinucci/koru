@@ -1,8 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import type { CSSProperties, ElementType } from "react";
 
+import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
 import type {
   LandingPreviewBindings,
@@ -162,6 +163,7 @@ function getInitials(name: string) {
 
 type QuienesSomosViewProps = {
   textMap: LandingTextMap;
+  imageMap?: CmsImageMap;
 } & Pick<
   LandingPreviewBindings,
   "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
@@ -210,6 +212,7 @@ type MissionVisionSectionProps = {
   bodySlotId: string;
   imageSrc: string;
   imageAlt: string;
+  imageSlotId: string;
   reverse?: boolean;
 } & QuienesSomosViewProps;
 
@@ -218,8 +221,10 @@ function MissionVisionSection({
   bodySlotId,
   imageSrc,
   imageAlt,
+  imageSlotId,
   reverse = false,
   textMap,
+  imageMap,
   previewMode,
   selectedContentSlotId,
   onSelectContentSlot,
@@ -261,9 +266,14 @@ function MissionVisionSection({
           className={`relative mx-auto w-full max-w-[28rem] ${reverse ? "lg:order-1" : ""}`}
         >
           <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-            <Image
-              src={imageSrc}
+            <CmsPageEditableImage
+              slotId={imageSlotId}
+              defaultSrc={imageSrc}
               alt={imageAlt}
+              imageMap={imageMap}
+              previewMode={previewMode}
+              selectedContentSlotId={selectedContentSlotId}
+              onSelectContentSlot={onSelectContentSlot}
               fill
               className="object-cover"
             />
@@ -276,6 +286,7 @@ function MissionVisionSection({
 
 function TeamSection({
   textMap,
+  imageMap,
   previewMode,
   selectedContentSlotId,
   onSelectContentSlot,
@@ -306,9 +317,14 @@ function TeamSection({
               className="group relative aspect-[4/5] overflow-hidden bg-black outline-none transition-transform duration-300 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110"
             >
               {member.imageSrc ? (
-                <Image
-                  src={member.imageSrc}
+                <CmsPageEditableImage
+                  slotId={`about.image.team.${index}`}
+                  defaultSrc={member.imageSrc}
                   alt={`${member.name}, ${member.role}`}
+                  imageMap={imageMap}
+                  previewMode={previewMode}
+                  selectedContentSlotId={selectedContentSlotId}
+                  onSelectContentSlot={onSelectContentSlot}
                   fill
                   sizes="(min-width: 768px) 25vw, 50vw"
                   className="object-cover opacity-65 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
@@ -340,6 +356,7 @@ function TeamSection({
 
 function FacilitiesSection({
   textMap,
+  imageMap,
   previewMode,
   selectedContentSlotId,
   onSelectContentSlot,
@@ -371,13 +388,20 @@ function FacilitiesSection({
         />
       </div>
 
-      <FacilitiesCarousel images={facilityImages} />
+      <FacilitiesCarousel
+        images={facilityImages}
+        imageMap={imageMap}
+        previewMode={previewMode}
+        selectedContentSlotId={selectedContentSlotId}
+        onSelectContentSlot={onSelectContentSlot}
+      />
     </section>
   );
 }
 
 export function QuienesSomosView({
   textMap,
+  imageMap,
   previewMode,
   selectedContentSlotId,
   onSelectContentSlot,
@@ -441,9 +465,14 @@ export function QuienesSomosView({
 
         <div className="relative mx-auto w-full max-w-[28rem]">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-            <Image
-              src="/assets/images/DSC01400.png"
-              alt="Ni?as y ni?os compartiendo una actividad en comunidad"
+            <CmsPageEditableImage
+              slotId="about.image.hero"
+              defaultSrc="/assets/images/DSC01400.png"
+              alt="Niñas y niños compartiendo una actividad en comunidad"
+              imageMap={imageMap}
+              previewMode={previewMode}
+              selectedContentSlotId={selectedContentSlotId}
+              onSelectContentSlot={onSelectContentSlot}
               fill
               className="object-cover"
               priority
@@ -471,7 +500,9 @@ export function QuienesSomosView({
         titleSlotId={quienesSomosContentSlotIds.missionTitle}
         bodySlotId={quienesSomosContentSlotIds.missionBody}
         imageSrc="/assets/images/image2.png"
-        imageAlt="Ni?as y ni?os aprendiendo juntos en la naturaleza"
+        imageAlt="Niñas y niños aprendiendo juntos en la naturaleza"
+        imageSlotId="about.image.mission"
+        imageMap={imageMap}
         textMap={textMap}
         previewMode={previewMode}
         selectedContentSlotId={selectedContentSlotId}
@@ -483,6 +514,8 @@ export function QuienesSomosView({
         bodySlotId={quienesSomosContentSlotIds.visionBody}
         imageSrc="/assets/images/image1.png"
         imageAlt="Comunidad educativa compartiendo actividades"
+        imageSlotId="about.image.vision"
+        imageMap={imageMap}
         reverse
         textMap={textMap}
         previewMode={previewMode}
@@ -492,12 +525,14 @@ export function QuienesSomosView({
 
       <TeamSection
         textMap={textMap}
+        imageMap={imageMap}
         previewMode={previewMode}
         selectedContentSlotId={selectedContentSlotId}
         onSelectContentSlot={onSelectContentSlot}
       />
       <FacilitiesSection
         textMap={textMap}
+        imageMap={imageMap}
         previewMode={previewMode}
         selectedContentSlotId={selectedContentSlotId}
         onSelectContentSlot={onSelectContentSlot}

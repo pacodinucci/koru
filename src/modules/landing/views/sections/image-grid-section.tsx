@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 import { cloudinaryImageUrl } from "@/lib/cloudinary";
 import { ScrollReveal } from "@/modules/landing/views/components/scroll-reveal";
 import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
@@ -47,7 +48,10 @@ export function ImageGridSection({
   selectedFieldId,
   onSelectField,
   responsiveMode,
-}: LandingSectionComponentProps) {
+  selectedContentSlotId,
+  onSelectContentSlot,
+  imageMap,
+}: LandingSectionComponentProps & { imageMap?: CmsImageMap }) {
   const router = useRouter();
   const topCardRefs = useRef<Array<HTMLElement | null>>([]);
   const [visibleTopCardIndexes, setVisibleTopCardIndexes] = useState<
@@ -312,8 +316,14 @@ export function ImageGridSection({
                     }
                   }}
                 >
-                  <Image
-                    src={imageUrls[index]?.primary}
+                  <CmsPageEditableImage
+                    slotId={`landing.image.grid.${index}`}
+                    defaultSrc={imageUrls[index]?.primary ?? imageUrls[index]?.fallback}
+                    alt={fixedHoverLabels[index] ?? `Imagen ${index + 1}`}
+                    imageMap={imageMap}
+                    previewMode={previewMode}
+                    selectedContentSlotId={selectedContentSlotId}
+                    onSelectContentSlot={onSelectContentSlot}
                     fill
                     sizes="(min-width: 768px) 25vw, 100vw"
                     quality={70}
@@ -324,7 +334,6 @@ export function ImageGridSection({
                         ? "rotate-90 scale-[1.55] group-hover:scale-[1.45] group-focus-visible:scale-[1.45]"
                         : "scale-110 group-hover:scale-100 group-focus-visible:scale-100",
                     )}
-                    alt={fixedHoverLabels[index] ?? `Imagen ${index + 1}`}
                   />
                   <div
                     className={cn(
@@ -334,7 +343,7 @@ export function ImageGridSection({
                   />
                   <div
                     className={cn(
-                      "absolute inset-x-0 bottom-0 translate-y-4 p-5 text-white opacity-0 transition-all duration-300 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-visible:translate-y-0 md:group-focus-visible:opacity-100",
+                      "absolute inset-x-0 bottom-0 z-30 translate-y-4 p-5 text-white opacity-0 transition-all duration-300 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-visible:translate-y-0 md:group-focus-visible:opacity-100",
                       isVisibleOnMobile && "translate-y-0 opacity-100",
                     )}
                   >
@@ -390,8 +399,14 @@ export function ImageGridSection({
                     height: `${imageGridImageSize}px`,
                   }}
                 >
-                  <Image
-                    src={imageUrls[imageIndex]?.primary}
+                  <CmsPageEditableImage
+                    slotId={`landing.image.grid.${imageIndex}`}
+                    defaultSrc={imageUrls[imageIndex]?.primary ?? imageUrls[imageIndex]?.fallback}
+                    alt={`Imagen ${imageIndex + 1}`}
+                    imageMap={imageMap}
+                    previewMode={previewMode}
+                    selectedContentSlotId={selectedContentSlotId}
+                    onSelectContentSlot={onSelectContentSlot}
                     fill
                     sizes={`${imageGridImageSize}px`}
                     quality={70}
@@ -400,10 +415,9 @@ export function ImageGridSection({
                         ? "rotate-90 scale-[1.55] group-hover:scale-[1.45] group-focus-visible:scale-[1.45]"
                         : "scale-110 group-hover:scale-100 group-focus-visible:scale-100"
                     }`}
-                    alt={`Imagen ${imageIndex + 1}`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />
-                  <div className="absolute inset-x-0 bottom-0 translate-y-4 p-5 text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                  <div className="absolute inset-x-0 bottom-0 z-30 translate-y-4 p-5 text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
                     <p
                       className={cn(
                         previewMode

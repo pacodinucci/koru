@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   type CSSProperties,
@@ -9,6 +9,8 @@ import {
 } from "react";
 import Image from "next/image";
 import { KoruShape1 } from "@/components/koru-shape-1";
+import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 import { SporeShape } from "@/components/spore-shape";
 import { isCodeFirstLandingMode } from "@/modules/landing/config/landing-mode";
 import {
@@ -48,11 +50,13 @@ import { VideoSection } from "@/modules/landing/views/sections/video-section";
 
 type LandingViewProps = {
   textMap: LandingTextMap;
+  imageMap?: CmsImageMap;
 } & LandingPreviewBindings;
 
 type SectionRendererProps = {
   section: LandingSectionInstance;
   textMap: LandingTextMap;
+  imageMap?: CmsImageMap;
 } & LandingPreviewBindings;
 
 type ScopedSectionGroup = {
@@ -74,6 +78,7 @@ function getHardcodedSlot(slotId: string) {
 
 type HardcodedContentBindings = {
   textMap: LandingTextMap;
+  imageMap?: CmsImageMap;
   previewMode?: boolean;
   selectedContentSlotId?: string | null;
   onSelectContentSlot?: (slotId: string) => void;
@@ -82,6 +87,7 @@ type HardcodedContentBindings = {
 
 function LandingVisionBridgeSection({
   textMap,
+  imageMap,
   previewMode,
   selectedContentSlotId,
   onSelectContentSlot,
@@ -162,9 +168,14 @@ function LandingVisionBridgeSection({
         >
           <div className="relative aspect-square overflow-hidden rounded-full">
             {imageUrl ? (
-              <Image
-                src={imageUrl}
+              <CmsPageEditableImage
+                slotId="landing.image.welcome"
+                defaultSrc={imageUrl}
                 alt="Comunidad educativa compartiendo actividades"
+                imageMap={imageMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
                 fill
                 className="object-cover rotate-90"
               />
@@ -406,6 +417,7 @@ function ScopeBackground({
 function SectionRenderer({
   section,
   textMap,
+  imageMap,
   previewMode,
   selectedFieldId,
   onSelectField,
@@ -537,6 +549,12 @@ function SectionRenderer({
           selectedContentSlotId={selectedContentSlotId}
           onSelectContentSlot={onSelectContentSlot}
           responsiveMode={responsiveMode}
+          imageSlotId={
+            section.id.includes("-copy")
+              ? "landing.image.editorial.1"
+              : "landing.image.editorial.0"
+          }
+          imageMap={imageMap}
           imageSrc={
             section.id.includes("-copy")
               ? cloudinaryImageUrl(
@@ -568,11 +586,14 @@ function SectionRenderer({
         <ImageGridSection
           section={section}
           textMap={textMap}
+          imageMap={imageMap}
           previewMode={previewMode}
           selectedFieldId={selectedFieldId}
           onSelectField={onSelectField}
           responsiveMode={responsiveMode}
           onMoveSectionExtraPosition={onMoveSectionExtraPosition}
+          selectedContentSlotId={selectedContentSlotId}
+          onSelectContentSlot={onSelectContentSlot}
         />
       );
     case "video":
@@ -608,6 +629,7 @@ function SectionRenderer({
 
 export function LandingView({
   textMap,
+  imageMap,
   previewMode,
   selectedFieldId,
   onSelectField,
@@ -719,6 +741,7 @@ export function LandingView({
                             <SectionRenderer
                               section={section}
                               textMap={responsiveMap}
+                              imageMap={imageMap}
                               previewMode={previewMode}
                               selectedFieldId={selectedFieldId}
                               onSelectField={onSelectField}
@@ -735,6 +758,7 @@ export function LandingView({
                       <div className="landing-overlap-content">
                         <LandingVisionBridgeSection
                           textMap={responsiveMap}
+                          imageMap={imageMap}
                           previewMode={previewMode}
                           selectedContentSlotId={selectedContentSlotId}
                           onSelectContentSlot={onSelectContentSlot}
@@ -759,6 +783,7 @@ export function LandingView({
                       <SectionRenderer
                         section={section}
                         textMap={responsiveMap}
+                        imageMap={imageMap}
                         previewMode={previewMode}
                         selectedFieldId={selectedFieldId}
                         onSelectField={onSelectField}

@@ -1,9 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
+import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 import { AccompanimentGroupsTabs } from "@/app/(pages)/como-acompanamos/accompaniment-groups-tabs";
 import { AccompanyPrinciplesWheel } from "@/modules/como-acompanamos/views/accompany-principles-wheel";
 import { IntegralDevelopmentMap } from "@/modules/como-acompanamos/views/integral-development-map";
@@ -24,6 +25,7 @@ import {
 
 type ComoAcompanamosViewProps = {
   textMap?: LandingTextMap;
+  imageMap?: CmsImageMap;
 } & Pick<
   LandingPreviewBindings,
   "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
@@ -324,7 +326,7 @@ function BulletList({ items }: { items: string[] }) {
 }
 
 export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
-  const { previewMode, selectedContentSlotId, onSelectContentSlot } = props;
+  const { imageMap, previewMode, selectedContentSlotId, onSelectContentSlot } = props;
   const textMap = props.textMap ?? {};
 
   const slotBindingProps = {
@@ -358,9 +360,14 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
             </SectionHeading>
             <div className="relative mx-auto w-full max-w-[22rem] lg:pt-20">
               <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-                <Image
-                  src="/assets/images/DSC01280.png"
+                <CmsPageEditableImage
+                  slotId="accompaniment.image.hero"
+                  defaultSrc="/assets/images/DSC01280.png"
                   alt="Acompañantes y niñez compartiendo un espacio de aprendizaje"
+                  imageMap={imageMap}
+                  previewMode={previewMode}
+                  selectedContentSlotId={selectedContentSlotId}
+                  onSelectContentSlot={onSelectContentSlot}
                   fill
                   className="object-cover"
                   priority
@@ -552,9 +559,14 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
           </div>
           <div className="relative mx-auto w-full max-w-[22rem]">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <Image
-                src="/assets/images/DSC01386.png"
+              <CmsPageEditableImage
+                slotId="accompaniment.image.evaluation"
+                defaultSrc="/assets/images/DSC01386.png"
                 alt="Acompañante registrando procesos de aprendizaje en comunidad"
+                imageMap={imageMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
                 fill
                 className="object-cover"
               />

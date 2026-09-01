@@ -1,10 +1,11 @@
 
-import Image from "next/image";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { ProtocolBlobList } from "@/app/(pages)/comunidad/protocol-blob-list";
 import { CmsPageEditableCopy } from "@/modules/cms/components/cms-page-editable-copy";
+import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
 import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
 
 type TextImageSectionProps = {
@@ -14,6 +15,11 @@ type TextImageSectionProps = {
   paragraphs: ReactNode[];
   imageSrc?: string;
   imageAlt?: string;
+  imageSlotId?: string;
+  imageMap?: CmsImageMap;
+  previewMode?: boolean;
+  selectedContentSlotId?: string | null;
+  onSelectContentSlot?: (slotId: string) => void;
   reverse?: boolean;
   sectionClassName?: string;
   children?: ReactNode;
@@ -68,6 +74,11 @@ function TextImageSection({
   paragraphs,
   imageSrc,
   imageAlt,
+  imageSlotId,
+  imageMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
   reverse = false,
   sectionClassName = "bg-white",
   children,
@@ -115,9 +126,14 @@ function TextImageSection({
             className={`relative mx-auto w-full max-w-[22rem] ${reverse ? "lg:order-1" : ""}`}
           >
             <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <Image
-                src={imageSrc}
+              <CmsPageEditableImage
+                slotId={imageSlotId ?? ""}
+                defaultSrc={imageSrc}
                 alt={imageAlt ?? ""}
+                imageMap={imageMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
                 fill
                 className="object-cover"
               />
@@ -200,26 +216,35 @@ const communityCelebrations = [
   {
     title: "Celebración del Maíz",
     imageSrc: "/assets/images/DSC01273.png",
+    imageSlotId: "community.image.celebration.0",
+    imageAlt: "Celebración del Maíz",
   },
   {
     title: "Celebración día de muertos",
     imageSrc: "/assets/images/DSC01338.png",
+    imageSlotId: "community.image.celebration.1",
+    imageAlt: "Celebración día de muertos",
   },
   {
     title: "Bazar navideño",
     imageSrc: "/assets/images/DSC01638.png",
+    imageSlotId: "community.image.celebration.2",
+    imageAlt: "Bazar navideño",
   },
   {
     title: "Kermés de primavera",
     imageSrc: "/assets/images/DSC02336.png",
+    imageSlotId: "community.image.celebration.3",
+    imageAlt: "Kermés de primavera",
   },
 ];
 
 type ComunidadViewProps = {
   textMap: LandingTextMap;
+  imageMap?: CmsImageMap;
 } & Pick<LandingPreviewBindings, "previewMode" | "selectedContentSlotId" | "onSelectContentSlot">;
 
-export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onSelectContentSlot }: ComunidadViewProps) {
+export function ComunidadView({ textMap, imageMap = {}, previewMode, selectedContentSlotId, onSelectContentSlot }: ComunidadViewProps) {
   const editable = { page: "comunidad" as const, textMap, previewMode, selectedContentSlotId, onSelectContentSlot };
   const copy = (slotId: string) => <CmsPageEditableCopy as="span" slotId={slotId} {...editable} />;
   const protocols = protocolDefinitions.map((protocol, index) => ({
@@ -271,9 +296,14 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
 
         <div className="relative mx-auto w-full max-w-[22rem] lg:mx-0">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-            <Image
-              src="/assets/images/comu3.png"
+            <CmsPageEditableImage
+              slotId="community.image.hero"
+              defaultSrc="/assets/images/comu3.png"
               alt="Comunidad Koru compartiendo actividades"
+              imageMap={imageMap}
+              previewMode={previewMode}
+              selectedContentSlotId={selectedContentSlotId}
+              onSelectContentSlot={onSelectContentSlot}
               fill
               className="object-cover"
               priority
@@ -310,6 +340,11 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
         subtitle={copy("community.school.subtitle")}
         imageSrc="/assets/images/comu1.png"
         imageAlt="Encuentros de formación para familias"
+        imageSlotId="community.image.school"
+        imageMap={imageMap}
+        previewMode={previewMode}
+        selectedContentSlotId={selectedContentSlotId}
+        onSelectContentSlot={onSelectContentSlot}
         reverse
         sectionClassName="bg-white"
         paragraphs={[
@@ -377,6 +412,11 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
         title={copy("community.support.title")}
         imageSrc="/assets/images/comu5.png"
         imageAlt="Acompañamiento entre familia y comunidad educativa"
+        imageSlotId="community.image.support"
+        imageMap={imageMap}
+        previewMode={previewMode}
+        selectedContentSlotId={selectedContentSlotId}
+        onSelectContentSlot={onSelectContentSlot}
         sectionClassName="bg-[#f7f6f1]"
         reverse
         paragraphs={[
@@ -417,9 +457,14 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
 
           <div className="relative mx-auto w-full max-w-[22rem] lg:mx-0 lg:justify-self-end">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <Image
-                src="/assets/images/comu2.png"
+              <CmsPageEditableImage
+                slotId="community.image.protocols"
+                defaultSrc="/assets/images/comu2.png"
                 alt="Cuidado y seguridad en la comunidad"
+                imageMap={imageMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
                 fill
                 className="object-cover"
               />
@@ -466,9 +511,14 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
 
           <div className="relative mx-auto w-full max-w-[22rem] lg:mx-0 lg:justify-self-end">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <Image
-                src="/assets/images/comu6.png"
+              <CmsPageEditableImage
+                slotId="community.image.daily"
+                defaultSrc="/assets/images/comu6.png"
                 alt="Vida cotidiana en la comunidad Koru"
+                imageMap={imageMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
                 fill
                 className="object-cover"
               />
@@ -501,9 +551,14 @@ export function ComunidadView({ textMap, previewMode, selectedContentSlotId, onS
                 className="group overflow-hidden rounded-[1.75rem] border border-black/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <Image
-                    src={celebration.imageSrc}
-                    alt={celebration.title}
+                  <CmsPageEditableImage
+                    slotId={celebration.imageSlotId}
+                    defaultSrc={celebration.imageSrc}
+                    alt={celebration.imageAlt}
+                    imageMap={imageMap}
+                    previewMode={previewMode}
+                    selectedContentSlotId={selectedContentSlotId}
+                    onSelectContentSlot={onSelectContentSlot}
                     fill
                     className="object-cover transition duration-500 group-hover:scale-105"
                     sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
