@@ -22,6 +22,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
+import { getCmsContentNavigation } from "@/modules/cms/content-page-config";
 import { CmsLandingEditor } from "@/modules/dashboard/components/cms-landing-editor";
 import {
   DashboardEditorPanelLayout,
@@ -65,6 +66,21 @@ import {
 } from "@/components/ui/sidebar";
 import type { LandingTextMap } from "@/modules/landing/types/landing-text";
 import { isAdminRole, type AppUserRole } from "@/modules/auth/roles";
+
+const contentNavigationItems = [
+  { key: "landing", label: "Landing", parent: undefined },
+  { key: "quienes-somos", label: "Quienes Somos", parent: undefined },
+  { key: "como-acompanamos", label: "Cómo acompañamos", parent: undefined },
+  ...getCmsContentNavigation().map(({ key, label, parent }) => ({ key, label, parent })),
+].sort((left, right) => {
+  const leftGroup = left.parent?.split(" · ")[0] ?? left.label;
+  const rightGroup = right.parent?.split(" · ")[0] ?? right.label;
+  const groupOrder = leftGroup.localeCompare(rightGroup, "es");
+  if (groupOrder !== 0) return groupOrder;
+  if (!left.parent) return -1;
+  if (!right.parent) return 1;
+  return left.label.localeCompare(right.label, "es");
+});
 
 type DashboardShellProps = {
   userEmail: string;
@@ -252,50 +268,31 @@ export function DashboardShell({
                     </SidebarMenuButton>
 
                     {contentOpen ? (
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            isActive={pathname === "/dashboard/content/landing"}
-                            render={<Link href="/dashboard/content/landing" />}
-                          >
-                            <FileText />
-                            <span>Landing</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            isActive={pathname === "/dashboard/content/quienes-somos"}
-                            render={<Link href="/dashboard/content/quienes-somos" />}
-                          >
-                            <FileText />
-                            <span>Quienes Somos</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            isActive={pathname === "/dashboard/content/como-acompanamos"}
-                            render={<Link href="/dashboard/content/como-acompanamos" />}
-                          >
-                            <FileText />
-                            <span>Cómo acompañamos</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        {[
-                          ["comunidad", "Comunidad"],
-                          ["blog", "Blog"],
-                          ["admisiones", "Admisiones"],
-                          ["contacto", "Contacto"],
-                        ].map(([slug, label]) => (
-                          <SidebarMenuSubItem key={slug}>
+                      <SidebarMenuSub className="koru-scrollbar-minimal max-h-[55dvh] overflow-y-auto pr-1">
+                        {contentNavigationItems.map(({ key, label, parent }) => (
+                          <SidebarMenuSubItem key={key}>
                             <SidebarMenuSubButton
-                              isActive={pathname === `/dashboard/content/${slug}`}
-                              render={<Link href={`/dashboard/content/${slug}`} />}
+                              isActive={pathname === `/dashboard/content/${key}`}
+                              className={parent ? "pl-6" : undefined}
+                              render={<Link href={`/dashboard/content/${key}`} />}
                             >
                               <FileText />
-                              <span>{label}</span>
+                              <span className="truncate">{parent ? `↳ ${label}` : label}</span>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton render={<Link href="/dashboard/blog" />}>
+                            <NotebookPen />
+                            <span>↳ Publicaciones del blog</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton render={<Link href="/dashboard/calendar" />}>
+                            <CalendarDays />
+                            <span>↳ Eventos del calendario</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
                       </SidebarMenuSub>
                     ) : null}
                   </SidebarMenuItem>
@@ -560,4 +557,3 @@ function DashboardCanvas({
     </div>
   );
 }
-

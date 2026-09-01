@@ -1,4 +1,9 @@
-import Image from "next/image";
+"use client";
+
+import { CmsPageEditableCopy } from "@/modules/cms/components/cms-page-editable-copy";
+import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
+import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
 import { EcocycleSpiral } from "@/modules/evaluaciones/views/ecocycle-spiral";
 
 const evaluationIntroParagraphs = [
@@ -6,19 +11,6 @@ const evaluationIntroParagraphs = [
   "El seguimiento consiste en observar y acompañar el progreso del aprendiz en su día a día. Es un proceso continuo que se da en la interacción constante entre aprendices y maestro/as.",
   "La evaluación parte de la lista de las habilidades personales, éstas abarcan las áreas fundamentales del ser: el cuerpo, autoconocimiento, sociales, comunicación, aprendizaje y se desarrollan según las etapas evolutivas.",
   "Se celebran los logros y se trazan nuevas rutas de aprendizaje basadas en el registro del desarrollo. Responde a la pregunta “¿Qué podemos mejorar en el acompañamiento con este niño o niña?”, mostrando avances, identificando aspectos por mejorar y ofreciendo información valiosa para la toma de decisiones. Es el puente que conecta la evaluación con la acción, y convierte el aprendizaje en algo visible y significativo para todos.",
-];
-
-const evaluationActions = [
-  "Reconocer avances y fortalezas",
-  "Identificar áreas de oportunidad",
-  "Ajustar el acompañamiento",
-  "Trazar nuevas rutas de desarrollo",
-];
-
-const familyFollowUp = [
-  "Espacios de seguimiento",
-  "Comunicación continua",
-  "Acuerdos compartidos",
 ];
 
 const ecoCycleStages = [
@@ -54,26 +46,33 @@ const communityParagraphs = [
   "Entendemos la comunidad como un sistema vivo en constante evolución. Así como acompañamos el desarrollo de cada niñ@, también observamos y ajustamos el funcionamiento del equipo, la relación con las familias y la dinámica comunitaria en su conjunto.",
 ];
 
-function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
+function SectionTitle({ eyebrowSlot, titleSlot, editable }: { eyebrowSlot: string; titleSlot: string; editable: EvaluacionesEditable }) {
   return (
     <header className="max-w-4xl space-y-3">
       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#6d7e96]">
-        {eyebrow}
+        <CmsPageEditableCopy {...editable} as="span" slotId={eyebrowSlot} />
       </p>
       <h2
         className="text-[clamp(2.35rem,7vw,4.5rem)] leading-[0.95] tracking-tight text-black"
         style={{ fontFamily: "var(--font-roboto-condensed)" }}
       >
-        {title}
+        <CmsPageEditableCopy {...editable} as="span" slotId={titleSlot} />
       </h2>
     </header>
   );
 }
 
-function OrganicImage({ src, alt }: { src: string; alt: string }) {
+type EvaluacionesEditable = {
+  page: "evaluaciones";
+  textMap: LandingTextMap;
+} & Pick<LandingPreviewBindings, "previewMode" | "selectedContentSlotId" | "onSelectContentSlot">;
+
+function OrganicImage({ slotId, src, alt, imageMap, previewMode, selectedContentSlotId, onSelectContentSlot }: {
+  slotId: string; src: string; alt: string; imageMap: CmsImageMap;
+} & Pick<LandingPreviewBindings, "previewMode" | "selectedContentSlotId" | "onSelectContentSlot">) {
   return (
     <div className="relative mx-auto aspect-[4/5] w-full max-w-[22rem] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-      <Image src={src} alt={alt} fill className="object-cover" />
+      <CmsPageEditableImage slotId={slotId} defaultSrc={src} alt={alt} imageMap={imageMap} previewMode={previewMode} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} fill className="object-cover" />
     </div>
   );
 }
@@ -85,42 +84,43 @@ const organicPillStyles = [
   "border-[color-mix(in_srgb,var(--orange-500)_70%,white)] bg-[color-mix(in_srgb,var(--orange-500)_58%,white)] rounded-[56%_44%_61%_39%/42%_58%_42%_58%]",
 ];
 
-function PillList({ items }: { items: string[] }) {
+function PillList({ count, prefix, editable }: { count: number; prefix: string; editable: EvaluacionesEditable }) {
   return (
     <ul className="flex flex-wrap justify-center gap-3">
-      {items.map((item, index) => (
-        <li
-          key={item}
-          className={`flex min-h-[3.5rem] items-center border px-6 py-3.5 text-center text-sm font-semibold text-[var(--complement-800)] shadow-sm ${organicPillStyles[index % organicPillStyles.length]}`}
-        >
-          {item}
+      {Array.from({ length: count }, (_, index) => (
+        <li key={index} className={`flex min-h-[3.5rem] items-center border px-6 py-3.5 text-center text-sm font-semibold text-[var(--complement-800)] shadow-sm ${organicPillStyles[index % organicPillStyles.length]}`}>
+          <CmsPageEditableCopy {...editable} as="span" slotId={prefix + index} />
         </li>
       ))}
     </ul>
   );
 }
 
-export function EvaluacionesView() {
+export function EvaluacionesView({ textMap, imageMap = {}, previewMode, selectedContentSlotId, onSelectContentSlot }: { textMap: LandingTextMap; imageMap?: CmsImageMap } & Pick<LandingPreviewBindings, "previewMode" | "selectedContentSlotId" | "onSelectContentSlot">) {
+  const editable: EvaluacionesEditable = { page: "evaluaciones", textMap, previewMode, selectedContentSlotId, onSelectContentSlot };
+  const imageBindings = { imageMap, previewMode, selectedContentSlotId, onSelectContentSlot };
   return (
     <main className="bg-[#f7f6f1]" style={{ fontFamily: "var(--font-montserrat)" }}>
       <section className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)] lg:px-14 lg:py-20">
         <div className="space-y-7">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#6d7e96]">
-            Conocer más
+            <CmsPageEditableCopy {...editable} as="span" slotId="evaluations.eyebrow" />
           </p>
           <h1
             className="text-[clamp(3rem,9vw,6rem)] leading-[0.9] tracking-tight text-black"
             style={{ fontFamily: "var(--font-roboto-condensed)" }}
           >
-            Evaluación como acompañamiento visible
+            <CmsPageEditableCopy {...editable} as="span" slotId="evaluations.title" />
           </h1>
           <div className="space-y-4 text-lg leading-relaxed text-black/80 md:text-xl">
-            {evaluationIntroParagraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
+            {evaluationIntroParagraphs.map((_, index) => (
+              <CmsPageEditableCopy key={index} {...editable} as="p" slotId={"evaluations.intro." + index} />
             ))}
           </div>
         </div>
         <OrganicImage
+          {...imageBindings}
+          slotId="evaluations.image.hero"
           src="/assets/images/DSC01386.png"
           alt="Acompañante registrando procesos de aprendizaje"
         />
@@ -129,69 +129,61 @@ export function EvaluacionesView() {
       <section className="bg-white">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[minmax(18rem,0.85fr)_minmax(0,1.15fr)] lg:px-14 lg:pb-10 lg:pt-20">
           <OrganicImage
+            {...imageBindings}
+            slotId="evaluations.image.learners"
             src="/assets/images/DSC01379.png"
             alt="Niñez trabajando con herramientas de seguimiento"
           />
           <div className="space-y-7">
-            <SectionTitle eyebrow="Evaluación a aprendices" title="Comprender el proceso para acompañar mejor" />
+            <SectionTitle eyebrowSlot="evaluations.learners.eyebrow" titleSlot="evaluations.learners.title" editable={editable} />
             <div className="space-y-4 text-base leading-relaxed text-black/80 md:text-lg">
-              <p>
-                Entendemos la evaluación como un proceso continuo de crecimiento, y auto-observación, no como un momento aislado, ni como una definición.
-              </p>
-              <p>
-                Observamos, registramos y compartimos el proceso de cada niñ@, haciendo visible su desarrollo en distintas dimensiones: corporal, emocional, social, cognitiva y de autogestión.
-              </p>
-              <p>
-                Este seguimiento se construye en el día a día, a través de la interacción, la observación y el vínculo del acompañante con l@s niñ@s.
-              </p>
+              <CmsPageEditableCopy {...editable} as="p" slotId="evaluations.learners.paragraph.0" />
+              <CmsPageEditableCopy {...editable} as="p" slotId="evaluations.learners.paragraph.1" />
+              <CmsPageEditableCopy {...editable} as="p" slotId="evaluations.learners.paragraph.2" />
             </div>
           </div>
         </div>
 
         <div className="mx-auto w-full max-w-7xl space-y-7 px-6 pb-12 md:px-10 md:pb-16 lg:px-14 lg:pb-20">
           <div className="space-y-3 rounded-[2rem] bg-[#f7f6f1] p-6">
-            <h3 className="text-xl font-semibold text-black">La evaluación nos permite</h3>
-            <PillList items={evaluationActions} />
+            <CmsPageEditableCopy {...editable} as="h3" slotId="evaluations.actions.title" className="text-xl font-semibold text-black" />
+            <PillList count={4} prefix="evaluations.actions." editable={editable} />
           </div>
           <div className="space-y-4 text-base leading-relaxed text-black/80 md:text-lg">
-            <p>
-              Más que emitir juicios, buscamos comprender el proceso y generar acciones que apoyen el crecimiento de cada niñ@.
-            </p>
-            <p>
-              El proceso de cada niñ@ es acompañado de manera cercana también con su familia.
-            </p>
+            <CmsPageEditableCopy {...editable} as="p" slotId="evaluations.followup.paragraph.0" />
+            <CmsPageEditableCopy {...editable} as="p" slotId="evaluations.followup.paragraph.1" />
           </div>
           <div className="space-y-3 rounded-[2rem] border border-complement-600 bg-white/80 p-6">
-            <h3 className="text-xl font-semibold text-black">Generamos</h3>
-            <PillList items={familyFollowUp} />
-            <p className="text-base leading-relaxed text-black/75">
-              Cada niñ@ cuenta con un registro donde se documentan avances, procesos y acuerdos, permitiendo que las familias estén informadas y puedan dar continuidad desde casa.
-            </p>
+            <CmsPageEditableCopy {...editable} as="h3" slotId="evaluations.family.title" className="text-xl font-semibold text-black" />
+            <PillList count={3} prefix="evaluations.family.item." editable={editable} />
+            <CmsPageEditableCopy {...editable} as="p" slotId="evaluations.family.closing" className="text-base leading-relaxed text-black/75" />
           </div>
         </div>
       </section>
 
       <section className="mx-auto w-full max-w-7xl space-y-10 px-6 py-12 md:px-10 md:py-16 lg:px-14 lg:py-20">
-        <SectionTitle eyebrow="Nuestra herramienta de evaluación" title="El Ecociclo como mapa de desarrollo" />
+        <SectionTitle eyebrowSlot="evaluations.ecocycle.eyebrow" titleSlot="evaluations.ecocycle.title" editable={editable} />
         <div className="max-w-4xl space-y-4 text-base leading-relaxed text-black/80 md:text-lg">
-          {ecoCycleIntroParagraphs.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
+          {ecoCycleIntroParagraphs.map((_, index) => (
+            <CmsPageEditableCopy key={index} {...editable} as="p" slotId={"evaluations.ecocycle.intro." + index} />
           ))}
         </div>
-        <EcocycleSpiral stages={ecoCycleStages} />
+        <EcocycleSpiral stages={ecoCycleStages} textMap={textMap} previewMode={previewMode} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} />
       </section>
 
       <section className="bg-white">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)] lg:px-14 lg:py-20">
           <div className="space-y-7">
-            <SectionTitle eyebrow="Evaluación entre colaboradores y familias" title="Una comunidad que también se observa" />
+            <SectionTitle eyebrowSlot="evaluations.community.eyebrow" titleSlot="evaluations.community.title" editable={editable} />
             <div className="space-y-4 text-base leading-relaxed text-black/80 md:text-lg">
-              {communityParagraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
+              {communityParagraphs.map((_, index) => (
+                <CmsPageEditableCopy key={index} {...editable} as="p" slotId={"evaluations.community.paragraph." + index} />
               ))}
             </div>
           </div>
           <OrganicImage
+            {...imageBindings}
+            slotId="evaluations.image.community"
             src="/assets/images/DSC01384.png"
             alt="Comunidad educativa compartiendo acompañamiento"
           />

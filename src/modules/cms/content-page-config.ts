@@ -1,10 +1,20 @@
 import type { LandingContentSlot } from "@/modules/landing/content-slots";
+import { childCmsContentPages } from "@/modules/cms/child-content-config";
 
 export type CmsContentField = {
   key: string;
   label: string;
   defaultValue: string;
   multiline?: boolean;
+};
+
+export type CmsContentPageConfig = {
+  slug: string;
+  label: string;
+  publicUrl: string;
+  parent?: string;
+  fields: readonly CmsContentField[];
+  images?: readonly CmsImageSlot[];
 };
 
 export type CmsImageSlot = {
@@ -64,7 +74,7 @@ const cmsImageSlotsBySlug: Record<string, CmsImageSlot[]> = {
   "/como-acompanamos": comoAcompanamosCmsImageSlots,
 };
 
-export const cmsContentPages = {
+export const cmsContentPages: Record<string, CmsContentPageConfig> = {
   comunidad: {
     slug: "/comunidad",
     label: "Comunidad",
@@ -252,9 +262,19 @@ export const cmsContentPages = {
       { key: "contact.directEmailCta", label: "Enlace de correo", defaultValue: "Escribir directamente al correo" },
     ],
   },
-} as const;
+  ...childCmsContentPages,
+};
 
-export type CmsContentPageKey = keyof typeof cmsContentPages;
+export type CmsContentPageKey = string;
+
+export function getCmsContentNavigation() {
+  return Object.entries(cmsContentPages).map(([key, page]) => ({
+    key,
+    slug: page.slug,
+    label: page.label,
+    parent: "parent" in page ? page.parent : undefined,
+  }));
+}
 
 export function getCmsContentPage(key: string) {
   return cmsContentPages[key as CmsContentPageKey] ?? null;
@@ -290,13 +310,13 @@ export function getCmsContentSlots(key: CmsContentPageKey): LandingContentSlot[]
 
 export function getCmsImageSlots(key: CmsContentPageKey): CmsImageSlot[] {
   const page = cmsContentPages[key];
-  return "images" in page ? [...page.images] : [];
+  return page.images ? [...page.images] : [];
 }
 export function getCmsImageSlotsBySlug(slug: string): CmsImageSlot[] {
   const configuredPage = Object.values(cmsContentPages).find(
     (page) => page.slug === slug,
   );
-  if (configuredPage && "images" in configuredPage) {
+  if (configuredPage?.images) {
     return [...configuredPage.images];
   }
   return [...(cmsImageSlotsBySlug[slug] ?? [])];

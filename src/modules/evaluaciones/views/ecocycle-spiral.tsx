@@ -1,3 +1,8 @@
+"use client";
+
+import { CmsPageEditableCopy } from "@/modules/cms/components/cms-page-editable-copy";
+import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
+
 export type EcocycleStage = { title: string; text: string };
 
 const stageStyles = [
@@ -7,19 +12,22 @@ const stageStyles = [
   { color: "bg-[color-mix(in_srgb,var(--orange-500)_58%,white)]", border: "border-[color-mix(in_srgb,var(--orange-500)_70%,white)]", shape: "rounded-[56%_44%_61%_39%/42%_58%_42%_58%]", innerShape: "rounded-[48%_52%_39%_61%/42%_58%_53%_47%]" },
 ];
 
-function EcocycleStageCard({ stage, index, className = "" }: { stage: EcocycleStage; index: number; className?: string }) {
+function EcocycleStageCard({ index, editable, className = "" }: { index: number; editable: EcocycleEditable; className?: string }) {
   const style = stageStyles[index % stageStyles.length];
 
   return (
     <article className={`relative z-10 flex min-h-[12rem] w-full max-w-[16rem] flex-col items-center justify-center overflow-hidden border px-5 py-6 text-center shadow-sm ${style.color} ${style.border} ${style.shape} ${className}`}>
       <span className={`pointer-events-none absolute inset-[0.38rem] border border-white/70 ${style.innerShape}`} aria-hidden="true" />
-      <h3 className="relative z-10 text-[clamp(1.55rem,2.4vw,2.1rem)] leading-none text-[var(--complement-800)]" style={{ fontFamily: "var(--font-roboto-condensed)" }}>{stage.title}</h3>
-      <p className="relative z-10 mt-3 text-sm leading-relaxed text-black/75">{stage.text}</p>
+      <h3 className="relative z-10 text-[clamp(1.55rem,2.4vw,2.1rem)] leading-none text-[var(--complement-800)]" style={{ fontFamily: "var(--font-roboto-condensed)" }}><CmsPageEditableCopy {...editable} as="span" slotId={"evaluations.ecocycle.stage." + index + ".title"} /></h3>
+      <p className="relative z-10 mt-3 text-sm leading-relaxed text-black/75"><CmsPageEditableCopy {...editable} as="span" slotId={"evaluations.ecocycle.stage." + index + ".text"} /></p>
     </article>
   );
 }
 
-export function EcocycleSpiral({ stages }: { stages: EcocycleStage[] }) {
+type EcocycleEditable = { page: "evaluaciones"; textMap: LandingTextMap } & Pick<LandingPreviewBindings, "previewMode" | "selectedContentSlotId" | "onSelectContentSlot">;
+
+export function EcocycleSpiral({ stages, textMap, previewMode, selectedContentSlotId, onSelectContentSlot }: { stages: EcocycleStage[]; textMap: LandingTextMap } & Pick<LandingPreviewBindings, "previewMode" | "selectedContentSlotId" | "onSelectContentSlot">) {
+  const editable: EcocycleEditable = { page: "evaluaciones", textMap, previewMode, selectedContentSlotId, onSelectContentSlot };
   return (
     <div className="w-full">
       <div className="relative mx-auto hidden w-full max-w-[70rem] py-12 md:block">
@@ -35,7 +43,7 @@ export function EcocycleSpiral({ stages }: { stages: EcocycleStage[] }) {
         <div className="relative grid grid-cols-4 items-center gap-5 px-5">
           {stages.map((stage, index) => (
             <div key={stage.title} className="flex justify-center">
-              <EcocycleStageCard stage={stage} index={index} />
+              <EcocycleStageCard index={index} editable={editable} />
             </div>
           ))}
         </div>
@@ -44,7 +52,7 @@ export function EcocycleSpiral({ stages }: { stages: EcocycleStage[] }) {
       <div className="relative mx-auto max-w-sm md:hidden">
         <div className="absolute bottom-8 left-1/2 top-8 -translate-x-1/2 border-l-[3px] border-dotted border-[var(--orange-500)] opacity-85" aria-hidden="true" />
         <div className="relative z-10 grid justify-items-center gap-5">
-          {stages.map((stage, index) => <EcocycleStageCard key={stage.title} stage={stage} index={index} className="max-w-[21rem]" />)}
+          {stages.map((stage, index) => <EcocycleStageCard key={stage.title} index={index} editable={editable} className="max-w-[21rem]" />)}
         </div>
       </div>
     </div>
