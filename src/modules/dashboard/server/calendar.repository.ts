@@ -300,6 +300,7 @@ export async function listVisibleEventsForUser(userId: string, role: UserRole) {
   return prisma.calendarEvent.findMany({
     where: getVisibleEventsWhere(userId, role),
     orderBy: [{ startsAt: "asc" }],
+    select: getVisibleEventSelect(userId),
   });
 }
 
@@ -318,6 +319,7 @@ export async function listVisibleEventsForUserByRange(
       endsAt: { gte: start },
     },
     orderBy: [{ startsAt: "asc" }],
+    select: getVisibleEventSelect(userId),
   });
 }
 
@@ -335,6 +337,7 @@ export async function listUpcomingVisibleEventsForUser(
     },
     orderBy: [{ startsAt: "asc" }],
     take: limit,
+    select: getVisibleEventSelect(userId),
   });
 }
 
@@ -351,6 +354,29 @@ function getVisibleEventsWhere(userId: string, role: UserRole) {
   };
 }
 
+function getVisibleEventSelect(userId: string) {
+  return {
+    id: true,
+    title: true,
+    description: true,
+    imageUrl: true,
+    startsAt: true,
+    endsAt: true,
+    allDay: true,
+    location: true,
+    visibility: true,
+    audienceType: true,
+    status: true,
+    kind: true,
+    registrationsEnabled: true,
+    attendanceConfirmationEnabled: true,
+    attendances: {
+      where: { userId },
+      select: { id: true, name: true, email: true, status: true },
+      take: 1,
+    },
+  } satisfies Prisma.CalendarEventSelect;
+}
 export async function listPublicCalendarEventsByRange({
   viewer,
   start,
@@ -425,7 +451,7 @@ export async function listUpcomingPublicCalendarEvents({
       attendanceConfirmationEnabled: true,
       attendances: {
         where: { userId: viewer?.id ?? "__anonymous__" },
-        select: { id: true, status: true },
+        select: { id: true, name: true, email: true, status: true },
         take: 1,
       },
     },

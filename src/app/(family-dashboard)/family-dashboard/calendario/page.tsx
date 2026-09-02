@@ -22,6 +22,9 @@ type FamilyCalendarPageProps = {
   searchParams: Promise<{
     date?: string;
     view?: string;
+    event?: string;
+    ok?: string;
+    error?: string;
   }>;
 };
 
@@ -33,7 +36,7 @@ export default async function FamilyCalendarPage({
   searchParams,
 }: FamilyCalendarPageProps) {
   const user = await requireUser();
-  const { date, view } = await searchParams;
+  const { date, view, event, ok, error } = await searchParams;
   const parsedDate = date ? new Date(`${date}T00:00:00`) : new Date();
   const dateCursor = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
   const viewMode = parseView(view);
@@ -53,6 +56,9 @@ export default async function FamilyCalendarPage({
           initialUpcomingEvents={upcomingEvents}
           initialDateCursor={dateCursor}
           initialViewMode={viewMode}
+          initialSelectedEventId={event}
+          initialFeedback={{ ok, error }}
+          viewer={{ name: user.name, email: user.email }}
         >
           <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0 overflow-hidden rounded-xl border bg-white">
