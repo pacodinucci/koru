@@ -106,20 +106,6 @@ export function CmsImageField({
           payload.error ?? "No pudimos cargar la biblioteca de imágenes.",
         );
       }
-
-      console.log(
-        "[cloudinary] CLOUDINARY_CLOUD_NAME:",
-        payload.cloudinaryDiagnostic?.cloudName,
-      );
-      console.log(
-        "[cloudinary] CLOUDINARY_API_KEY configured:",
-        payload.cloudinaryDiagnostic?.apiKeyConfigured,
-      );
-      console.log(
-        "[cloudinary] CLOUDINARY_API_SECRET configured:",
-        payload.cloudinaryDiagnostic?.apiSecretConfigured,
-      );
-
       setLibrary((previous) =>
         cursor
           ? [...previous, ...(payload.images ?? [])]
