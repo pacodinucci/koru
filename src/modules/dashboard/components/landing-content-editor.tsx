@@ -1,6 +1,14 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Monitor, Save } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Monitor,
+  Save,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -28,6 +36,19 @@ import {
   type CmsImageSlot,
 } from "@/modules/cms/content-page-config";
 import { CmsImageAdjustmentProvider } from "@/modules/cms/components/cms-page-editable-image";
+import { CmsTextEditorProvider } from "@/modules/cms/components/cms-text-editor-context";
+import {
+  CMS_DELETED_TEXT_SLOT_IDS_KEY,
+  CMS_INSERTED_TEXT_BLOCKS_KEY,
+  CMS_INSERTED_TEXT_BLOCK_ID_PREFIX,
+  getCmsDeletedTextSlotIds,
+  getCmsInsertedTextBlocks,
+  getCmsInsertedTextSlot,
+  serializeCmsDeletedTextSlotIds,
+  serializeCmsInsertedTextBlocks,
+  type CmsInsertedTextBlock,
+  type CmsInsertedTextPosition,
+} from "@/modules/cms/inserted-text-blocks";
 import { CmsPreviewFrame } from "@/modules/dashboard/components/cms-preview-frame";
 import { CmsImageField } from "@/modules/dashboard/components/cms-image-field";
 import { useDashboardEditorPanel } from "@/modules/dashboard/components/dashboard-editor-panel";
@@ -57,18 +78,10 @@ const colorOptions = [
   "#dbe78a",
 ];
 
-const fontOptions = [
-  { value: "montserrat", label: "Montserrat" },
-  { value: "indie-flower", label: "Indie Flower" },
-  { value: "roboto-condensed", label: "Roboto Condensed" },
-];
+const fontOptions = [{ value: "montserrat", label: "Montserrat" }];
 
 function getLandingEditorFontFamilyValue(value: string | undefined) {
-  if (
-    value === "montserrat" ||
-    value === "indie-flower" ||
-    value === "roboto-condensed"
-  ) {
+  if (value === "montserrat") {
     return value;
   }
 
@@ -82,7 +95,10 @@ function normalizeTextMap(textMap: LandingTextMap, slots: LandingContentSlot[]) 
   const next = Object.fromEntries(
     Object.entries(textMap).map(([key, value]) => [
       key,
-      repairLandingContentText(value),
+      (key === CMS_INSERTED_TEXT_BLOCKS_KEY ||
+        key === CMS_DELETED_TEXT_SLOT_IDS_KEY)
+        ? value
+        : repairLandingContentText(value),
     ]),
   ) as LandingTextMap;
 
@@ -124,9 +140,22 @@ export function PageContentEditor({
     normalizeTextMap(initialTextMap, baseSlots),
   );
   const [imageMap, setImageMap] = useState<CmsImageMap>(initialImageMap);
+  const insertedBlocks = useMemo(
+    () => getCmsInsertedTextBlocks(textMap),
+    [textMap],
+  );
+  const insertedSlots = useMemo(
+    () => insertedBlocks.map(getCmsInsertedTextSlot),
+    [insertedBlocks],
+  );
   const navigationSlots = useMemo(
     () => [
       ...baseSlots.map((slot) => ({
+        id: slot.id,
+        label: slot.selectorLabel,
+        kind: "text" as const,
+      })),
+      ...insertedSlots.map((slot) => ({
         id: slot.id,
         label: slot.selectorLabel,
         kind: "text" as const,
@@ -137,7 +166,7 @@ export function PageContentEditor({
         kind: "image" as const,
       })),
     ],
-    [baseSlots, imageSlots],
+    [baseSlots, imageSlots, insertedSlots],
   );
   const [selectedSlotId, setSelectedSlotId] = useState(
     navigationSlots[0]?.id ?? "",
@@ -171,9 +200,12 @@ export function PageContentEditor({
   );
   const selectedNavigationSlot =
     navigationSlots[selectedIndex] ?? navigationSlots[0];
-  const selectedTextSlot = baseSlots.find(
-    (slot) => slot.id === selectedNavigationSlot?.id,
+  const selectedInsertedBlock = insertedBlocks.find(
+    (block) => block.id === selectedNavigationSlot?.id,
   );
+  const selectedTextSlot =
+    baseSlots.find((slot) => slot.id === selectedNavigationSlot?.id) ??
+    insertedSlots.find((slot) => slot.id === selectedNavigationSlot?.id);
   const selectedImageSlot = imageSlots.find(
     (slot) => slot.key === selectedNavigationSlot?.id,
   );
@@ -195,6 +227,129 @@ export function PageContentEditor({
 
   function updateValue(key: string, value: string) {
     setTextMap((previous) => ({ ...previous, [key]: value }));
+    setStatusMessage("");
+  }
+
+  function insertText(
+    targetSlotId: string,
+    requestedPosition: CmsInsertedTextPosition,
+  ) {
+    const blocks = getCmsInsertedTextBlocks(textMap);
+    const targetBlock = blocks.find((block) => block.id === targetSlotId);
+    const anchorSlotId = targetBlock?.anchorSlotId ?? targetSlotId;
+    const position = targetBlock?.position ?? requestedPosition;
+    const group = blocks
+      .filter(
+        (block) =>
+          block.anchorSlotId === anchorSlotId && block.position === position,
+      )
+      .sort((left, right) => left.order - right.order);
+
+    const newBlock: CmsInsertedTextBlock = {
+      id: CMS_INSERTED_TEXT_BLOCK_ID_PREFIX + crypto.randomUUID(),
+      anchorSlotId,
+      position,
+      order: 0,
+    };
+
+    if (targetBlock) {
+      const targetIndex = group.findIndex((block) => block.id === targetBlock.id);
+      group.splice(
+        requestedPosition === "before" ? targetIndex : targetIndex + 1,
+        0,
+        newBlock,
+      );
+    } else {
+      group.splice(position === "before" ? group.length : 0, 0, newBlock);
+    }
+
+    const normalizedGroup = group.map((block, order) => ({ ...block, order }));
+    const groupIds = new Set(normalizedGroup.map((block) => block.id));
+    const nextBlocks = [
+      ...blocks.filter((block) => !groupIds.has(block.id)),
+      ...normalizedGroup,
+    ];
+
+    setTextMap((previous) => ({
+      ...previous,
+      [CMS_INSERTED_TEXT_BLOCKS_KEY]:
+        serializeCmsInsertedTextBlocks(nextBlocks),
+      [newBlock.id]: "Nuevo texto",
+    }));
+    setSelectedSlotId(newBlock.id);
+    setAdjustingImageSlotId(null);
+    setStatusMessage("Texto agregado. Publicá para guardar el cambio.");
+  }
+
+  function deleteInsertedText(block: CmsInsertedTextBlock) {
+    setTextMap((previous) => {
+      const next = Object.fromEntries(
+        Object.entries(previous).filter(
+          ([key]) => key !== block.id && !key.startsWith(block.id + "__"),
+        ),
+      ) as LandingTextMap;
+      next[CMS_INSERTED_TEXT_BLOCKS_KEY] = serializeCmsInsertedTextBlocks(
+        getCmsInsertedTextBlocks(previous).filter(
+          (candidate) => candidate.id !== block.id,
+        ),
+      );
+      return next;
+    });
+    setSelectedSlotId(block.anchorSlotId);
+    setStatusMessage("Texto eliminado. Publicá para guardar el cambio.");
+  }
+
+  function deleteText(slotId: string) {
+    const insertedBlock = getCmsInsertedTextBlocks(textMap).find(
+      (block) => block.id === slotId,
+    );
+    if (insertedBlock) {
+      deleteInsertedText(insertedBlock);
+      return;
+    }
+
+    setTextMap((previous) => ({
+      ...previous,
+      [CMS_DELETED_TEXT_SLOT_IDS_KEY]: serializeCmsDeletedTextSlotIds([
+        ...getCmsDeletedTextSlotIds(previous),
+        slotId,
+      ]),
+    }));
+    setSelectedSlotId("");
+    setStatusMessage("Texto eliminado. Publicá para guardar el cambio.");
+  }
+
+  function moveInsertedText(block: CmsInsertedTextBlock, direction: -1 | 1) {
+    const blocks = getCmsInsertedTextBlocks(textMap);
+    const group = blocks
+      .filter(
+        (candidate) =>
+          candidate.anchorSlotId === block.anchorSlotId &&
+          candidate.position === block.position,
+      )
+      .sort((left, right) => left.order - right.order);
+    const currentIndex = group.findIndex((candidate) => candidate.id === block.id);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= group.length) return;
+
+    [group[currentIndex], group[nextIndex]] = [
+      group[nextIndex]!,
+      group[currentIndex]!,
+    ];
+    const normalizedGroup = group.map((candidate, order) => ({
+      ...candidate,
+      order,
+    }));
+    const groupIds = new Set(normalizedGroup.map((candidate) => candidate.id));
+    const nextBlocks = [
+      ...blocks.filter((candidate) => !groupIds.has(candidate.id)),
+      ...normalizedGroup,
+    ];
+    setTextMap((previous) => ({
+      ...previous,
+      [CMS_INSERTED_TEXT_BLOCKS_KEY]:
+        serializeCmsInsertedTextBlocks(nextBlocks),
+    }));
     setStatusMessage("");
   }
 
@@ -225,7 +380,10 @@ export function PageContentEditor({
     const repairedTextMap = Object.fromEntries(
       Object.entries(textMap).map(([key, value]) => [
         key,
-        repairLandingContentText(value),
+        (key === CMS_INSERTED_TEXT_BLOCKS_KEY ||
+          key === CMS_DELETED_TEXT_SLOT_IDS_KEY)
+          ? value
+          : repairLandingContentText(value),
       ]),
     ) as LandingTextMap;
     setTextMap(repairedTextMap);
@@ -286,7 +444,7 @@ export function PageContentEditor({
 
   const panelPortal = portalTarget
     ? createPortal(
-        <div className="flex h-full min-h-0 flex-col bg-white">
+        <div className="flex h-full min-h-0 flex-col bg-white [font-family:var(--font-montserrat)]">
           {selector}
           {statusMessage ? (
             <p className="border-b bg-slate-50 px-4 py-2 text-xs text-slate-600">
@@ -297,7 +455,10 @@ export function PageContentEditor({
             <LandingContentSidePanel
               textMap={textMap}
               selectedSlot={selectedTextSlot}
+              insertedBlock={selectedInsertedBlock}
               onChange={updateValue}
+              onDeleteInserted={deleteInsertedText}
+              onMoveInserted={moveInsertedText}
             />
           ) : null}
           {selectedImageSlot ? (
@@ -319,7 +480,7 @@ export function PageContentEditor({
     : null;
 
   return (
-    <main className="h-full min-h-0 min-w-0 overflow-hidden">
+    <main className="h-full min-h-0 min-w-0 overflow-hidden [font-family:var(--font-montserrat)]">
       <CmsPreviewFrame
         title="Editor de contenido"
         frameVariant="flush"
@@ -362,12 +523,21 @@ export function PageContentEditor({
                   void updateImage(slotId, image);
                 }}
               >
-                {renderPreview({
-                  textMap,
-                  imageMap,
-                  selectedSlotId,
-                  onSelectSlot: selectSlot,
-                })}
+                <CmsTextEditorProvider
+                  value={{
+                    selectedSlotId,
+                    onSelectSlot: selectSlot,
+                    onInsertText: insertText,
+                    onDeleteText: deleteText,
+                  }}
+                >
+                  {renderPreview({
+                    textMap,
+                    imageMap,
+                    selectedSlotId,
+                    onSelectSlot: selectSlot,
+                  })}
+                </CmsTextEditorProvider>
               </CmsImageAdjustmentProvider>
             </div>
           </div>
@@ -476,24 +646,80 @@ export function ComoAcompanamosContentEditor({
 export function LandingContentSidePanel({
   textMap,
   selectedSlot,
+  insertedBlock,
   onChange,
+  onDeleteInserted,
+  onMoveInserted,
 }: {
   textMap: LandingTextMap;
   selectedSlot: LandingContentSlot;
+  insertedBlock?: CmsInsertedTextBlock;
   onChange: (key: string, value: string) => void;
+  onDeleteInserted?: (block: CmsInsertedTextBlock) => void;
+  onMoveInserted?: (block: CmsInsertedTextBlock, direction: -1 | 1) => void;
 }) {
   const styleKeys = getLandingContentSlotStyleKeys(selectedSlot.id);
   const value = getLandingContentSlotValue(textMap, selectedSlot);
+  const siblingBlocks = insertedBlock
+    ? getCmsInsertedTextBlocks(textMap)
+        .filter(
+          (block) =>
+            block.anchorSlotId === insertedBlock.anchorSlotId &&
+            block.position === insertedBlock.position,
+        )
+        .sort((left, right) => left.order - right.order)
+    : [];
+  const insertedIndex = insertedBlock
+    ? siblingBlocks.findIndex((block) => block.id === insertedBlock.id)
+    : -1;
 
   return (
     <div className="h-full overflow-y-auto bg-white">
-      <div className="border-b px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Texto seleccionado
-        </p>
-        <h2 className="mt-1 text-sm font-semibold text-slate-900">
-          {selectedSlot.label}
-        </h2>
+      <div className="flex items-center gap-3 border-b px-4 py-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Texto seleccionado
+          </p>
+          <h2 className="mt-1 truncate text-sm font-semibold text-slate-900">
+            {selectedSlot.label}
+          </h2>
+        </div>
+        {insertedBlock ? (
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              disabled={insertedIndex <= 0}
+              onClick={() => onMoveInserted?.(insertedBlock, -1)}
+              aria-label="Mover texto hacia arriba"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              disabled={
+                insertedIndex < 0 || insertedIndex >= siblingBlocks.length - 1
+              }
+              onClick={() => onMoveInserted?.(insertedBlock, 1)}
+              aria-label="Mover texto hacia abajo"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => onDeleteInserted?.(insertedBlock)}
+              aria-label="Eliminar texto agregado"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : null}
       </div>
       <div className="space-y-5 p-4">
         <div className="space-y-2">
@@ -641,3 +867,8 @@ export function LandingContentSidePanel({
     </div>
   );
 }
+
+
+
+
+

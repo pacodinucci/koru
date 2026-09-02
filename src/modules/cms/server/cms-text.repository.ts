@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { BlockType, PageStatus, type Prisma } from "@prisma/client";
 import {
+  CMS_DELETED_TEXT_SLOT_IDS_KEY,
+  CMS_INSERTED_TEXT_BLOCKS_KEY,
+  getCmsInsertedTextBlocks,
+} from "@/modules/cms/inserted-text-blocks";
+import {
   ensureLandingDefaults,
   getDefaultLandingTextMap,
 } from "@/modules/landing/config/landing-sections";
@@ -120,6 +125,20 @@ function getLandingOverrides(
   return toStringMap(data.cmsLandingDraftOverrides);
 }
 
+function withoutInsertedTextBlockData(textMap: CmsTextMap): CmsTextMap {
+  const insertedIds = getCmsInsertedTextBlocks(textMap).map((block) => block.id);
+  return Object.fromEntries(
+    Object.entries(textMap).filter(
+      ([key]) =>
+        key !== CMS_INSERTED_TEXT_BLOCKS_KEY &&
+        key !== CMS_DELETED_TEXT_SLOT_IDS_KEY &&
+        !insertedIds.some(
+          (blockId) => key === blockId || key.startsWith(blockId + "__"),
+        ),
+    ),
+  );
+}
+
 function buildOverrides(
   base: Record<string, string>,
   fullPayload: Record<string, string>,
@@ -165,13 +184,17 @@ export async function getCmsDraftTextMapBySlug(slug: string): Promise<CmsTextMap
     return getCmsDraftTextMap();
   }
 
-  const baseMap = await getCmsDraftTextMap();
+  const baseMap = withoutInsertedTextBlockData(await getCmsDraftTextMap());
   const { block } = await getPageLandingBlock(normalizedSlug);
   const overrides = getLandingOverrides(block?.data, "draft");
 
   return ensureLandingDefaults({
     ...baseMap,
     ...overrides,
+    [CMS_INSERTED_TEXT_BLOCKS_KEY]:
+      overrides[CMS_INSERTED_TEXT_BLOCKS_KEY] ?? "[]",
+    [CMS_DELETED_TEXT_SLOT_IDS_KEY]:
+      overrides[CMS_DELETED_TEXT_SLOT_IDS_KEY] ?? "[]",
   });
 }
 
@@ -184,13 +207,17 @@ export async function getCmsPublishedTextMapBySlug(
     return getCmsPublishedTextMap();
   }
 
-  const baseMap = await getCmsPublishedTextMap();
+  const baseMap = withoutInsertedTextBlockData(await getCmsPublishedTextMap());
   const { block } = await getPageLandingBlock(normalizedSlug);
   const overrides = getLandingOverrides(block?.data, "published");
 
   return ensureLandingDefaults({
     ...baseMap,
     ...overrides,
+    [CMS_INSERTED_TEXT_BLOCKS_KEY]:
+      overrides[CMS_INSERTED_TEXT_BLOCKS_KEY] ?? "[]",
+    [CMS_DELETED_TEXT_SLOT_IDS_KEY]:
+      overrides[CMS_DELETED_TEXT_SLOT_IDS_KEY] ?? "[]",
   });
 }
 
@@ -201,7 +228,11 @@ export async function saveCmsPageDraftTextMap(slug: string, textMap: CmsTextMap)
     return;
   }
 
-  const baseMap = await getCmsDraftTextMap();
+  const baseMap = {
+    ...withoutInsertedTextBlockData(await getCmsDraftTextMap()),
+    [CMS_INSERTED_TEXT_BLOCKS_KEY]: "[]",
+    [CMS_DELETED_TEXT_SLOT_IDS_KEY]: "[]",
+  };
   const fullPayload = {
     ...getDefaultLandingTextMap(),
     ...textMap,
@@ -263,7 +294,11 @@ export async function publishCmsPageTextMapWithClient(
     return;
   }
 
-  const baseMap = await getCmsDraftTextMap(client);
+  const baseMap = {
+    ...withoutInsertedTextBlockData(await getCmsDraftTextMap(client)),
+    [CMS_INSERTED_TEXT_BLOCKS_KEY]: "[]",
+    [CMS_DELETED_TEXT_SLOT_IDS_KEY]: "[]",
+  };
   const fullPayload = {
     ...getDefaultLandingTextMap(),
     ...textMap,
@@ -315,3 +350,6 @@ export async function publishCmsPageTextMapWithClient(
     },
   });
 }
+
+
+
