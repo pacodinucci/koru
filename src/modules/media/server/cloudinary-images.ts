@@ -21,18 +21,6 @@ function configure() {
     throw new Error("cloudinary_not_configured");
   }
 
-  console.log(
-    "[cloudinary] CLOUDINARY_CLOUD_NAME:",
-    env.CLOUDINARY_CLOUD_NAME,
-  );
-  console.log(
-    "[cloudinary] CLOUDINARY_API_KEY configured:",
-    Boolean(env.CLOUDINARY_API_KEY),
-  );
-  console.log(
-    "[cloudinary] CLOUDINARY_API_SECRET configured:",
-    Boolean(env.CLOUDINARY_API_SECRET),
-  );
 
   cloudinary.config({
     cloud_name: env.CLOUDINARY_CLOUD_NAME,
