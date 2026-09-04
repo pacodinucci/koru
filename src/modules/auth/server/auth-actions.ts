@@ -176,7 +176,7 @@ export async function signUpAction(formData: FormData) {
         email: normalizedEmail,
         password: parsed.data.password,
         invitationToken: parsed.data.invitationToken,
-      },
+      } as Parameters<typeof auth.api.signUpEmail>[0]["body"],
     });
   } catch {
     redirect(
