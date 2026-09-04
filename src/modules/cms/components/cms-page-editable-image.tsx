@@ -45,6 +45,7 @@ type CmsPageEditableImageProps = Omit<ImageProps, "src" | "alt" | "ref"> & {
   previewMode?: boolean;
   selectedContentSlotId?: string | null;
   onSelectContentSlot?: (slotId: string) => void;
+  lockFrame?: boolean;
 };
 
 export function CmsPageEditableImage({
@@ -55,6 +56,7 @@ export function CmsPageEditableImage({
   previewMode = false,
   selectedContentSlotId,
   onSelectContentSlot,
+  lockFrame = false,
   style,
   fill,
   ...imageProps
@@ -83,10 +85,10 @@ export function CmsPageEditableImage({
       clipPath: frame.style.clipPath,
       overflow: frame.style.overflow,
     };
-    const frameShape = value?.frameShape ?? "RECTANGULAR";
+    const frameShape = lockFrame ? "RECTANGULAR" : value?.frameShape ?? "RECTANGULAR";
 
-    if (value?.frameSize === "COMPACT") frame.style.aspectRatio = "1 / 1";
-    if (value?.frameSize === "LARGE") frame.style.aspectRatio = "3 / 5";
+    if (!lockFrame && value?.frameSize === "COMPACT") frame.style.aspectRatio = "1 / 1";
+    if (!lockFrame && value?.frameSize === "LARGE") frame.style.aspectRatio = "3 / 5";
 
     if (frameShape === "RECTANGLE_HORIZONTAL") {
       frame.style.aspectRatio = "4 / 3";
