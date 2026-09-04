@@ -140,7 +140,19 @@ export const hardcodedQuienesSomosContentSlots: LandingContentSlot[] = [
     defaultSize: 14,
     styleControls: ["font", "size", "color", "align", "weight", "letterSpacing"],
   },
-  {
+  ...[
+    ["Karla Novelo", "Fundadora y Directora General"], ["Florencia Bennetts", "Directora de la Cultura"],
+    ["Samantha", "Coordinadora Académica"], ["Daniel", "Coordinador Psicopedagógico"],
+    ["Radha", "Tutora Grupo Esporas"], ["Nélida", "Tutora Grupo Esporas"], ["Isaac", "Tutor Grupo Koru"],
+    ["Indra", "Asistente Grupo Koru"], ["Beatriz", "Tutora de Helechos 1"], ["Jari", "Asistente Helechos 1"],
+    ["Diego", "Co-tutor Helechos 2"], ["Vamsi", "Co-tutora Helechos 2"], ["Violeta", "Maestra de Lectura y Matemáticas"],
+    ["Francisco", "Circo"], ["Carlos", "Inglés"], ["???", "Ecología"],
+    ["Nuevo integrante", "Rol por definir"], ["Nuevo integrante", "Rol por definir"],
+    ["Nuevo integrante", "Rol por definir"], ["Nuevo integrante", "Rol por definir"],
+  ].flatMap(([name, role], index) => [
+    { id: `content.quienes-somos.team.member.${index}.name`, label: `Equipo / Integrante ${index + 1} / Nombre`, selectorLabel: `Equipo ${index + 1} / Nombre`, defaultValue: name, defaultSize: 30, styleControls: ["font", "size", "color", "align", "weight", "lineHeight"] },
+    { id: `content.quienes-somos.team.member.${index}.role`, label: `Equipo / Integrante ${index + 1} / Rol`, selectorLabel: `Equipo ${index + 1} / Rol`, defaultValue: role, defaultSize: 14, styleControls: ["font", "size", "color", "align", "weight", "letterSpacing", "lineHeight"] },
+  ] satisfies LandingContentSlot[]),  {
     id: quienesSomosContentSlotIds.facilitiesEyebrow,
     label: "Instalaciones / Volanta",
     selectorLabel: "Instalaciones / Volanta",

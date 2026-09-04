@@ -3,7 +3,7 @@
 import Image, { type ImageProps } from "next/image";
 import {
   createContext,
-  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
   useContext,
   useEffect,
@@ -60,6 +60,7 @@ export function CmsPageEditableImage({
   ...imageProps
 }: CmsPageEditableImageProps) {
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const panCleanupRef = useRef<(() => void) | null>(null);
   const adjustment = useContext(CmsImageAdjustmentContext);
   const value = imageMap[slotId];
   const src = value?.url || defaultSrc;
@@ -67,18 +68,61 @@ export function CmsPageEditableImage({
   const cropY = value?.cropY ?? 50;
   const zoom = value?.zoom ?? 1;
   const fitMode = value?.fitMode ?? "COVER";
+  const rotation = value?.rotation ?? 0;
   const panFactor = (zoom - 1) / zoom;
   const translateX = ((50 - cropX) / 100) * panFactor * 100;
   const translateY = ((50 - cropY) / 100) * panFactor * 100;
   useEffect(() => {
-    if (!fill || !imageRef.current) return;
+    if (!imageRef.current) return;
     const frame = imageRef.current.parentElement;
     if (!frame) return;
-    const previousAspectRatio = frame.style.aspectRatio;
+
+    const previous = {
+      aspectRatio: frame.style.aspectRatio,
+      borderRadius: frame.style.borderRadius,
+      clipPath: frame.style.clipPath,
+      overflow: frame.style.overflow,
+    };
+    const frameShape = value?.frameShape ?? "RECTANGULAR";
+
     if (value?.frameSize === "COMPACT") frame.style.aspectRatio = "1 / 1";
     if (value?.frameSize === "LARGE") frame.style.aspectRatio = "3 / 5";
-    return () => { frame.style.aspectRatio = previousAspectRatio; };
-  }, [fill, value?.frameSize]);
+
+    if (frameShape === "RECTANGLE_HORIZONTAL") {
+      frame.style.aspectRatio = "4 / 3";
+      frame.style.borderRadius = "0";
+    }
+    if (frameShape === "RECTANGLE_VERTICAL") {
+      frame.style.aspectRatio = "4 / 5";
+      frame.style.borderRadius = "0";
+    }
+    if (frameShape === "SQUARE") {
+      frame.style.aspectRatio = "1 / 1";
+      frame.style.borderRadius = "0";
+    }
+    if (frameShape === "OVAL") {
+      frame.style.aspectRatio = "4 / 5";
+      frame.style.borderRadius = "50%";
+    }
+    if (frameShape === "CIRCLE") {
+      frame.style.aspectRatio = "1 / 1";
+      frame.style.borderRadius = "50%";
+    }
+    if (frameShape === "IRREGULAR") {
+      frame.style.aspectRatio = "4 / 5";
+      frame.style.borderRadius = "44% 56% 47% 53% / 53% 45% 55% 47%";
+    }
+    if (frameShape !== "RECTANGULAR") frame.style.overflow = "hidden";
+
+    return () => {
+      frame.style.aspectRatio = previous.aspectRatio;
+      frame.style.borderRadius = previous.borderRadius;
+      frame.style.clipPath = previous.clipPath;
+      frame.style.overflow = previous.overflow;
+    };
+  }, [value?.frameShape, value?.frameSize]);
+
+  useEffect(() => () => panCleanupRef.current?.(), []);
 
   const selected = previewMode && selectedContentSlotId === slotId;
   const isAdjusting =
@@ -87,8 +131,8 @@ export function CmsPageEditableImage({
     adjustment?.adjustingSlotId === slotId &&
     Boolean(value);
 
-  function startImagePan(event: ReactMouseEvent<HTMLButtonElement>) {
-    if (!isAdjusting || !value) {
+  function startImagePan(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (!isAdjusting || !value || event.button !== 0) {
       return;
     }
 
@@ -113,7 +157,7 @@ export function CmsPageEditableImage({
     let nextY = cropY;
 
     const clamp = (position: number) => Math.max(0, Math.min(100, position));
-    const move = (moveEvent: MouseEvent) => {
+    const move = (moveEvent: PointerEvent) => {
       nextX =
         overflowX > 0
           ? clamp(cropX - ((moveEvent.clientX - startX) / overflowX) * 100)
@@ -124,10 +168,16 @@ export function CmsPageEditableImage({
           : 50;
       image.style.objectPosition = `${nextX.toFixed(3)}% ${nextY.toFixed(3)}%`;
     };
-    const up = () => {
+    const cleanup = () => {
       document.body.style.cursor = "";
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cleanup);
+      panCleanupRef.current = null;
+    };
+    const up = () => {
+      cleanup();
+      if (Math.abs(nextX - cropX) < 0.01 && Math.abs(nextY - cropY) < 0.01) return;
       adjustment?.onCommitCrop(slotId, {
         ...value,
         cropX: nextX,
@@ -135,9 +185,12 @@ export function CmsPageEditableImage({
       });
     };
 
+    panCleanupRef.current?.();
+    panCleanupRef.current = cleanup;
     document.body.style.cursor = "grabbing";
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cleanup);
   }
 
   return (
@@ -150,7 +203,7 @@ export function CmsPageEditableImage({
           ...style,
           objectPosition: `${cropX}% ${cropY}%`,
           objectFit: fitMode.toLowerCase() as "cover" | "contain",
-          transform: `translate3d(${translateX}%, ${translateY}%, 0) scale(${zoom})`,
+          transform: `translate3d(${translateX}%, ${translateY}%, 0) scale(${zoom}) rotate(${rotation}deg)`,
         }}
         data-cms-frame-size={value?.frameSize ?? "NORMAL"}
         fill={fill}
@@ -160,7 +213,7 @@ export function CmsPageEditableImage({
         <button
           type="button"
           data-content-slot-id={slotId}
-          onMouseDown={startImagePan}
+          onPointerDown={startImagePan}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();

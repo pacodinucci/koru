@@ -66,6 +66,7 @@ function EditableGroupCopy({
   className,
   style,
   stylePriority,
+  renderInsertedBlocks,
   textMap,
   previewMode,
   selectedContentSlotId,
@@ -76,6 +77,7 @@ function EditableGroupCopy({
   className?: string;
   style?: React.CSSProperties;
   stylePriority?: "base" | "override";
+  renderInsertedBlocks?: boolean;
   textMap: LandingTextMap;
 } & Pick<
   LandingPreviewBindings,
@@ -92,6 +94,7 @@ function EditableGroupCopy({
       className={`${responsiveTextClass} ${className ?? ""}`}
       style={style}
       stylePriority={stylePriority}
+      renderInsertedBlocks={renderInsertedBlocks}
     />
   );
 }
@@ -193,12 +196,14 @@ export function AccompanimentGroupsTabs({
                 slotId={groupSlotId(activeGroupIndex, "title")}
                 style={{ fontSize: "inherit", lineHeight: "inherit" }}
                 stylePriority="override"
+                renderInsertedBlocks={false}
                 {...slotBindingProps}
               />
             </span>
             <span className="mt-2 block max-w-full break-words text-[1.6rem] leading-none text-black/75 [overflow-wrap:anywhere]" style={{ fontFamily: "var(--font-indie-flower)" }}>
               <EditableGroupCopy
                 slotId={groupSlotId(activeGroupIndex, "ageRange")}
+                renderInsertedBlocks={false}
                 {...slotBindingProps}
               />
             </span>
@@ -226,12 +231,14 @@ export function AccompanimentGroupsTabs({
                 slotId={groupSlotId(index, "title")}
                 style={{ fontSize: "inherit", lineHeight: "inherit" }}
                 stylePriority="override"
+                renderInsertedBlocks={false}
                 {...slotBindingProps}
               />
             </span>
             <span className="mt-2 block max-w-full break-words text-[1.3rem] leading-none [overflow-wrap:anywhere]" style={{ fontFamily: "var(--font-indie-flower)" }}>
               <EditableGroupCopy
                 slotId={groupSlotId(index, "ageRange")}
+                renderInsertedBlocks={false}
                 {...slotBindingProps}
               />
             </span>

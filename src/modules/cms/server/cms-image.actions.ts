@@ -12,7 +12,6 @@ import {
   type CmsImageMap,
 } from "@/modules/cms/server/cms-image.repository";
 import { publishCmsPageTextMapWithClient } from "@/modules/cms/server/cms-text.repository";
-import { initializeAllCmsImages } from "@/modules/cms/server/cms-image-initializer";
 
 const imageValueSchema = z.object({
   url: z.string().url().refine((value) => {
@@ -35,6 +34,9 @@ const imageValueSchema = z.object({
   zoom: z.number().min(1).max(3),
   fitMode: z.enum(["COVER", "CONTAIN"]),
   frameSize: z.enum(["COMPACT", "NORMAL", "LARGE"]),
+  frameShape: z.enum(["RECTANGULAR", "RECTANGLE_HORIZONTAL", "RECTANGLE_VERTICAL", "SQUARE", "OVAL", "CIRCLE", "IRREGULAR"]),
+  frameScale: z.number().min(0.5).max(2.5),
+  rotation: z.number().int().min(0).max(270).multipleOf(90),
 });
 
 const imageMapSchema = z.record(z.string().min(1), imageValueSchema);
@@ -100,16 +102,4 @@ export async function publishCmsPageContentAction(
   });
 
   return { ok: true as const, message: "Contenido publicado." };
-}
-
-export async function initializeAllCmsImagesAction() {
-  await requireAdmin();
-
-  try {
-    const initialized = await initializeAllCmsImages();
-    return { ok: true as const, initialized };
-  } catch (error) {
-    console.error("[cms-images] Initialization failed", error);
-    return { ok: false as const, message: "No se pudieron inicializar las imágenes." };
-  }
 }

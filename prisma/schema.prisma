@@ -369,11 +369,17 @@ model CmsImageEntry {
   draftZoom          Float    @default(1)
   draftFitMode       String   @default("COVER")
   draftFrameSize     String   @default("NORMAL")
+  draftFrameShape    String   @default("RECTANGULAR")
+  draftFrameScale    Float    @default(1)
+  draftRotation      Int      @default(0)
   publishedCropX     Float?
   publishedCropY     Float?
   publishedZoom      Float?
   publishedFitMode   String?
   publishedFrameSize String?
+  publishedFrameShape String?
+  publishedFrameScale Float?
+  publishedRotation   Int?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

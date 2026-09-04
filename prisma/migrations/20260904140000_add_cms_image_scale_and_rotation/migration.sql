@@ -1,0 +1,5 @@
+ALTER TABLE "CmsImageEntry"
+  ADD COLUMN "draftFrameScale" DOUBLE PRECISION NOT NULL DEFAULT 1,
+  ADD COLUMN "draftRotation" INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN "publishedFrameScale" DOUBLE PRECISION,
+  ADD COLUMN "publishedRotation" INTEGER;

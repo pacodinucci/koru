@@ -22,6 +22,8 @@ export type CmsImageSlot = {
   label: string;
   defaultSrc: string;
   alt: string;
+  /** Keeps fixed-grid cards from changing their shared layout. */
+  frameLocked?: boolean;
 };
 
 export const landingCmsImageSlots: CmsImageSlot[] = [
@@ -54,7 +56,16 @@ export const quienesSomosCmsImageSlots: CmsImageSlot[] = [
   { key: "about.image.team.9", label: "Equipo · Jari", defaultSrc: "/assets/images/equipo16.png", alt: "Jari, Asistente Helechos 1" },
   { key: "about.image.team.10", label: "Equipo · Diego", defaultSrc: "/assets/images/equipo17.png", alt: "Diego, Co-tutor Helechos 2" },
   { key: "about.image.team.12", label: "Equipo · Violeta", defaultSrc: "/assets/images/equipo9.png", alt: "Violeta, Maestra de Lectura y Matemáticas" },
-  { key: "about.image.team.13", label: "Equipo · Francisco", defaultSrc: "/assets/images/equipo12.png", alt: "Francisco, Circo" },
+  { key: "about.image.team.13", label: "Equipo · Francisco", defaultSrc: "/assets/images/equipo12.png", alt: "Francisco, Circo", frameLocked: true },
+  { key: "about.image.team.5", label: "Equipo · Nélida", defaultSrc: "", alt: "Nélida, Tutora Grupo Esporas", frameLocked: true },
+  { key: "about.image.team.6", label: "Equipo · Isaac", defaultSrc: "", alt: "Isaac, Tutor Grupo Koru", frameLocked: true },
+  { key: "about.image.team.11", label: "Equipo · Vamsi", defaultSrc: "", alt: "Vamsi, Co-tutora Helechos 2", frameLocked: true },
+  { key: "about.image.team.14", label: "Equipo · Carlos", defaultSrc: "", alt: "Carlos, Inglés", frameLocked: true },
+  { key: "about.image.team.15", label: "Equipo · Ecología", defaultSrc: "", alt: "Ecología", frameLocked: true },
+  { key: "about.image.team.16", label: "Equipo · Integrante 17", defaultSrc: "", alt: "Nuevo integrante", frameLocked: true },
+  { key: "about.image.team.17", label: "Equipo · Integrante 18", defaultSrc: "", alt: "Nuevo integrante", frameLocked: true },
+  { key: "about.image.team.18", label: "Equipo · Integrante 19", defaultSrc: "", alt: "Nuevo integrante", frameLocked: true },
+  { key: "about.image.team.19", label: "Equipo · Integrante 20", defaultSrc: "", alt: "Nuevo integrante", frameLocked: true },
   ...Array.from({ length: 8 }, (_, index) => ({
     key: `about.image.facility.${index}`,
     label: `Instalaciones · Imagen ${index + 1}`,

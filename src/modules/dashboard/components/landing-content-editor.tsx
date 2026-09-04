@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/button";
@@ -78,7 +78,11 @@ const colorOptions = [
   "#dbe78a",
 ];
 
-const fontOptions = [{ value: "montserrat", label: "Montserrat" }];
+const fontOptions = [
+  { value: "montserrat", label: "Montserrat" },
+  { value: "indie-flower", label: "Indie Flower" },
+  { value: "roboto-condensed", label: "Roboto Condensed" },
+];
 
 function getLandingEditorFontFamilyValue(value: string | undefined) {
   if (value === "montserrat") {
@@ -90,6 +94,11 @@ function getLandingEditorFontFamilyValue(value: string | undefined) {
 
 const PREVIEW_ZOOM_BASE_SCALE = 0.62;
 const PREVIEW_CANVAS_WIDTH = 1440;
+const IMAGE_SAVE_DELAY_MS = 600;
+
+function isSameCmsImageValue(left: CmsImageValue | undefined, right: CmsImageValue | undefined) {
+  return left?.url === right?.url && left?.publicId === right?.publicId && left?.cropX === right?.cropX && left?.cropY === right?.cropY && left?.zoom === right?.zoom && left?.fitMode === right?.fitMode && left?.frameSize === right?.frameSize && left?.frameShape === right?.frameShape && left?.frameScale === right?.frameScale && left?.rotation === right?.rotation;
+}
 
 function normalizeTextMap(textMap: LandingTextMap, slots: LandingContentSlot[]) {
   const next = Object.fromEntries(
@@ -140,6 +149,12 @@ export function PageContentEditor({
     normalizeTextMap(initialTextMap, baseSlots),
   );
   const [imageMap, setImageMap] = useState<CmsImageMap>(initialImageMap);
+  const imageSaveTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const queuedImageSavesRef = useRef(new Map<string, CmsImageValue>());
+  const savedImageMapRef = useRef<CmsImageMap>(initialImageMap);
+  const savingImageKeysRef = useRef(new Set<string>());
+  const persistQueuedImageRef = useRef<((key: string) => Promise<void>) | null>(null);
+  const isMountedRef = useRef(true);
   const insertedBlocks = useMemo(
     () => getCmsInsertedTextBlocks(textMap),
     [textMap],
@@ -364,18 +379,52 @@ export function PageContentEditor({
     setAdjustingImageSlotId(null);
   }
 
-  async function updateImage(key: string, image: CmsImageValue) {
-    setImageMap((previous) => ({ ...previous, [key]: image }));
-    setStatusMessage("Guardando borrador de imagen...");
-
+  const persistQueuedImage = useCallback(async (key: string) => {
+    const image = queuedImageSavesRef.current.get(key);
+    if (!image || isSameCmsImageValue(savedImageMapRef.current[key], image) || savingImageKeysRef.current.has(key)) return;
+    savingImageKeysRef.current.add(key);
+    if (isMountedRef.current) setStatusMessage("Guardando borrador de imagen...");
     const result = await saveCmsPageDraftImageAction(pageSlug, key, image);
-    setStatusMessage(
-      result.ok
-        ? "Borrador de imagen guardado."
-        : "No se pudo guardar el borrador de imagen.",
-    );
+    if (result.ok) savedImageMapRef.current[key] = image;
+    savingImageKeysRef.current.delete(key);
+    const latestImage = queuedImageSavesRef.current.get(key);
+    if (latestImage && !isSameCmsImageValue(savedImageMapRef.current[key], latestImage)) {
+      const timer = setTimeout(() => { imageSaveTimersRef.current.delete(key); void persistQueuedImageRef.current?.(key); }, IMAGE_SAVE_DELAY_MS);
+      imageSaveTimersRef.current.set(key, timer);
+    } else {
+      queuedImageSavesRef.current.delete(key);
+    }
+    if (isMountedRef.current) setStatusMessage(result.ok ? "Borrador de imagen guardado." : "No se pudo guardar el borrador de imagen.");
+  }, [pageSlug]);
+
+  useEffect(() => {
+    persistQueuedImageRef.current = persistQueuedImage;
+  }, [persistQueuedImage]);
+
+  const queueImageSave = useCallback((key: string, image: CmsImageValue) => {
+    if (isSameCmsImageValue(savedImageMapRef.current[key], image)) return;
+    queuedImageSavesRef.current.set(key, image);
+    const previousTimer = imageSaveTimersRef.current.get(key);
+    if (previousTimer) clearTimeout(previousTimer);
+    const timer = setTimeout(() => { imageSaveTimersRef.current.delete(key); void persistQueuedImageRef.current?.(key); }, IMAGE_SAVE_DELAY_MS);
+    imageSaveTimersRef.current.set(key, timer);
+  }, []);
+
+  function updateImage(key: string, image: CmsImageValue) {
+    setImageMap((previous) => isSameCmsImageValue(previous[key], image) ? previous : { ...previous, [key]: image });
   }
 
+  async function commitImage(key: string, image: CmsImageValue) {
+    updateImage(key, image);
+    queueImageSave(key, image);
+    if (isMountedRef.current) setStatusMessage("Cambios de imagen pendientes de guardado.");
+  }
+
+  useEffect(() => () => {
+    isMountedRef.current = false;
+    imageSaveTimersRef.current.forEach((timer) => clearTimeout(timer));
+    imageSaveTimersRef.current.clear();
+  }, []);
   async function handlePublish() {
     const repairedTextMap = Object.fromEntries(
       Object.entries(textMap).map(([key, value]) => [
@@ -472,6 +521,7 @@ export function PageContentEditor({
                 )
               }
               onChange={(image) => updateImage(selectedImageSlot.key, image)}
+                onCommit={(image) => commitImage(selectedImageSlot.key, image)}
             />
           ) : null}
         </div>,
@@ -520,7 +570,7 @@ export function PageContentEditor({
               <CmsImageAdjustmentProvider
                 adjustingSlotId={adjustingImageSlotId}
                 onCommitCrop={(slotId, image) => {
-                  void updateImage(slotId, image);
+                  void commitImage(slotId, image);
                 }}
               >
                 <CmsTextEditorProvider

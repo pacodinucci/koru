@@ -106,6 +106,22 @@ const teamMembers = [
     name: "???",
     role: "Ecolog?a",
   },
+  {
+    name: "Nuevo integrante",
+    role: "Rol por definir",
+  },
+  {
+    name: "Nuevo integrante",
+    role: "Rol por definir",
+  },
+  {
+    name: "Nuevo integrante",
+    role: "Rol por definir",
+  },
+  {
+    name: "Nuevo integrante",
+    role: "Rol por definir",
+  },
 ];
 
 const facilityImages = [
@@ -316,10 +332,10 @@ function TeamSection({
               tabIndex={0}
               className="group relative aspect-[4/5] overflow-hidden bg-black outline-none transition-transform duration-300 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110"
             >
-              {member.imageSrc ? (
+              {member.imageSrc || imageMap?.[`about.image.team.${index}`] ? (
                 <CmsPageEditableImage
                   slotId={`about.image.team.${index}`}
-                  defaultSrc={member.imageSrc}
+                  defaultSrc={member.imageSrc ?? ""}
                   alt={`${member.name}, ${member.role}`}
                   imageMap={imageMap}
                   previewMode={previewMode}
@@ -328,23 +344,45 @@ function TeamSection({
                   fill
                   sizes="(min-width: 768px) 25vw, 50vw"
                   className="object-cover opacity-65 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
+                  lockFrame
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-[#f3d889] text-6xl font-semibold text-slate-950/80 transition duration-300 group-hover:text-slate-950 group-focus-visible:text-slate-950">
+                <button
+                  type="button"
+                  data-content-slot-id={`about.image.team.${index}`}
+                  onClick={(event) => {
+                    if (!previewMode) return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onSelectContentSlot?.(`about.image.team.${index}`);
+                  }}
+                  className="flex h-full w-full items-center justify-center bg-[#f3d889] text-6xl font-semibold text-slate-950/80 transition duration-300 group-hover:text-slate-950 group-focus-visible:text-slate-950"
+                  aria-label={`Cargar imagen de ${member.name}`}
+                >
                   {getInitials(member.name)}
-                </div>
+                </button>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />
-              <div className="absolute inset-x-0 bottom-0 translate-y-4 p-5 text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
-                <h3
+<div className={`pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/15 to-transparent transition-opacity duration-300 ${previewMode ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"}`} />
+              <div className={`absolute inset-x-0 bottom-0 z-30 p-5 text-white transition-all duration-300 ${previewMode ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"}`}>
+                <EditableCopy
+                  as="h3"
+                  slotId={`content.quienes-somos.team.member.${index}.name`}
+                  textMap={textMap}
+                  previewMode={previewMode}
+                  selectedContentSlotId={selectedContentSlotId}
+                  onSelectContentSlot={onSelectContentSlot}
                   className="text-3xl leading-none"
                   style={{ fontFamily: "var(--font-roboto-condensed)" }}
-                >
-                  {member.name}
-                </h3>
-                <p className="mt-2 text-sm font-medium uppercase tracking-[0.14em] text-white/80">
-                  {member.role}
-                </p>
+                />
+                <EditableCopy
+                  as="p"
+                  slotId={`content.quienes-somos.team.member.${index}.role`}
+                  textMap={textMap}
+                  previewMode={previewMode}
+                  selectedContentSlotId={selectedContentSlotId}
+                  onSelectContentSlot={onSelectContentSlot}
+                  className="mt-2 text-sm font-medium uppercase tracking-[0.14em] text-white/80"
+                />
               </div>
             </article>
           ))}

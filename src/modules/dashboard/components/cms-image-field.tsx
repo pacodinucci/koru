@@ -1,6 +1,6 @@
 "use client";
 
-import { Images, Loader2, Move, RotateCcw, Upload, ZoomIn, ZoomOut } from "lucide-react";
+import { Images, Loader2, Move, RotateCcw, RotateCw, Upload, ZoomIn, ZoomOut } from "lucide-react";
 import Image from "next/image";
 import { useId, useState } from "react";
 
@@ -28,18 +28,39 @@ type LibraryResponse = {
   };
 };
 
+const frameShapes = [
+  { id: "RECTANGLE_HORIZONTAL", label: "Rectángulo horizontal", previewClassName: "aspect-[4/3] rounded-none" },
+  { id: "RECTANGLE_VERTICAL", label: "Rectángulo vertical", previewClassName: "aspect-[4/5] rounded-none" },
+  { id: "SQUARE", label: "Cuadrado", previewClassName: "aspect-square rounded-none" },
+  { id: "OVAL", label: "Ovalado", previewClassName: "aspect-[4/5] rounded-[50%]" },
+  { id: "CIRCLE", label: "Circular", previewClassName: "aspect-square rounded-full" },
+  { id: "IRREGULAR", label: "Forma orgánica de Koru", previewClassName: "aspect-[4/5] rounded-[44%_56%_47%_53%/53%_45%_55%_47%]" },
+] as const;
+
+function getFrameShapePreviewStyle(shape: CmsImageValue["frameShape"] | undefined) {
+  if (shape === "RECTANGLE_HORIZONTAL") return { aspectRatio: "4 / 3", borderRadius: 0 };
+  if (shape === "RECTANGLE_VERTICAL") return { aspectRatio: "4 / 5", borderRadius: 0 };
+  if (shape === "SQUARE") return { aspectRatio: "1 / 1", borderRadius: 0 };
+  if (shape === "OVAL") return { aspectRatio: "4 / 5", borderRadius: "50%" };
+  if (shape === "CIRCLE") return { aspectRatio: "1 / 1", borderRadius: "50%" };
+  if (shape === "IRREGULAR") return { aspectRatio: "4 / 5", borderRadius: "44% 56% 47% 53% / 53% 45% 55% 47%" };
+  return undefined;
+}
+
 export function CmsImageField({
   slot,
   value,
   isAdjusting,
   onAdjustingChange,
   onChange,
+  onCommit,
 }: {
   slot: CmsImageSlot;
   value?: CmsImageValue;
   isAdjusting: boolean;
   onAdjustingChange: (adjusting: boolean) => void;
-  onChange: (value: CmsImageValue) => Promise<void>;
+  onChange: (value: CmsImageValue) => void;
+  onCommit: (value: CmsImageValue) => Promise<void>;
 }) {
   const inputId = useId();
   const [isUploading, setIsUploading] = useState(false);
@@ -48,6 +69,11 @@ export function CmsImageField({
   const [library, setLibrary] = useState<LibraryImage[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  async function commitImage(value: CmsImageValue) {
+    onChange(value);
+    await onCommit(value);
+  }
 
   async function upload(file: File) {
     setIsUploading(true);
@@ -75,7 +101,7 @@ export function CmsImageField({
       }
 
       onAdjustingChange(false);
-      await onChange({
+      await commitImage({
         url: payload.url,
         publicId: payload.publicId,
         cropX: 50,
@@ -83,6 +109,9 @@ export function CmsImageField({
         zoom: 1,
         fitMode: "COVER",
         frameSize: "NORMAL",
+        frameShape: "RECTANGULAR",
+        frameScale: 1,
+        rotation: 0,
       });
     } catch (caught) {
       setError(
@@ -135,14 +164,14 @@ export function CmsImageField({
 
   async function selectLibraryImage(image: LibraryImage) {
     onAdjustingChange(false);
-    await onChange({ ...image, cropX: 50, cropY: 50, zoom: 1, fitMode: "COVER", frameSize: "NORMAL" });
+    await commitImage({ ...image, cropX: 50, cropY: 50, zoom: 1, fitMode: "COVER", frameSize: "NORMAL", frameShape: "RECTANGULAR", frameScale: 1, rotation: 0 });
   }
 
   async function centerImage() {
     if (!value) {
       return;
     }
-    await onChange({ ...value, cropX: 50, cropY: 50, zoom: 1, fitMode: "COVER", frameSize: "NORMAL" });
+    await commitImage({ ...value, cropX: 50, cropY: 50, zoom: 1, fitMode: "COVER", frameSize: "NORMAL" });
   }
 
   return (
@@ -157,25 +186,67 @@ export function CmsImageField({
       </div>
 
       <div className="space-y-4 p-4">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-xl border bg-slate-100">
-          <Image
-            src={value?.url || slot.defaultSrc}
-            alt={slot.alt}
-            fill
-            className={value?.fitMode === "CONTAIN" ? "object-contain" : "object-cover"}
-            style={{
-              objectPosition: `${value?.cropX ?? 50}% ${value?.cropY ?? 50}%`,
-              transform: `scale(${value?.zoom ?? 1})`,
-            }}
-            sizes="360px"
-          />
+        <div className="relative aspect-[4/3] overflow-hidden rounded-xl border bg-slate-100" style={getFrameShapePreviewStyle(value?.frameShape)}>
+          {value?.url || slot.defaultSrc ? (
+            <Image
+              src={value?.url || slot.defaultSrc}
+              alt={slot.alt}
+              fill
+              className={value?.fitMode === "CONTAIN" ? "object-contain" : "object-cover"}
+              style={{
+                objectPosition: `${value?.cropX ?? 50}% ${value?.cropY ?? 50}%`,
+                transform: `scale(${value?.zoom ?? 1})`,
+              }}
+              sizes="360px"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-slate-500">
+              Todavía no hay una imagen cargada.
+            </div>
+          )}
         </div>
 
         <div className="space-y-3 rounded-xl border border-slate-200 p-3">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-600"><span>Zoom</span><span>{(value?.zoom ?? 1).toFixed(1)}×</span></div>
-          <div className="flex items-center gap-2"><ZoomOut className="h-4 w-4 text-slate-500" /><input type="range" min="1" max="3" step="0.1" value={value?.zoom ?? 1} disabled={!value} onChange={(event) => value && void onChange({ ...value, zoom: Number(event.target.value) })} className="w-full" /><ZoomIn className="h-4 w-4 text-slate-500" /></div>
-          <div className="grid grid-cols-2 gap-2"><Button type="button" size="sm" variant={(value?.fitMode ?? "COVER") === "COVER" ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, fitMode: "COVER" })}>Recortar</Button><Button type="button" size="sm" variant={value?.fitMode === "CONTAIN" ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, fitMode: "CONTAIN", zoom: 1 })}>Completa</Button></div>
-          <div className="grid grid-cols-3 gap-2">{(["COMPACT", "NORMAL", "LARGE"] as const).map((frameSize) => <Button key={frameSize} type="button" size="sm" variant={(value?.frameSize ?? "NORMAL") === frameSize ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, frameSize })}>{frameSize === "COMPACT" ? "Chico" : frameSize === "LARGE" ? "Grande" : "Normal"}</Button>)}</div>
+          <div className="flex items-center gap-2"><ZoomOut className="h-4 w-4 text-slate-500" /><input type="range" min="1" max="3" step="0.1" value={value?.zoom ?? 1} disabled={!value} onChange={(event) => value && onChange({ ...value, zoom: Number(event.target.value) })} onPointerUp={(event) => value && void onCommit({ ...value, zoom: Number(event.currentTarget.value) })} onBlur={(event) => value && void onCommit({ ...value, zoom: Number(event.currentTarget.value) })} className="w-full" /><ZoomIn className="h-4 w-4 text-slate-500" /></div>          <div
+            className="flex flex-wrap gap-2"
+            role="radiogroup"
+            aria-label="Forma del contenedor de imagen"
+          >
+            {frameShapes.map((shape) => {
+              const selected = (value?.frameShape ?? "RECTANGULAR") === shape.id;
+
+              return (
+                <button
+                  key={shape.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={shape.label}
+                  title={shape.label}
+                  disabled={!value}
+                  onClick={() => value && void commitImage({ ...value, frameShape: shape.id })}
+                  className={cn(
+                    "flex size-11 shrink-0 items-center justify-center rounded-md border p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-700 disabled:cursor-not-allowed disabled:opacity-45",
+                    selected
+                      ? "border-2 border-primary bg-slate-100"
+                      : "border-slate-200 bg-white hover:border-slate-400",
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "block w-7 bg-slate-300",
+                      shape.previewClassName,
+                    )}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+        <div className="grid grid-cols-2 gap-2"><Button type="button" size="sm" variant={(value?.fitMode ?? "COVER") === "COVER" ? "default" : "outline"} disabled={!value} onClick={() => value && void commitImage({ ...value, fitMode: "COVER" })}>Recortar</Button><Button type="button" size="sm" variant={value?.fitMode === "CONTAIN" ? "default" : "outline"} disabled={!value} onClick={() => value && void commitImage({ ...value, fitMode: "CONTAIN", zoom: 1 })}>Completa</Button></div>
+          <div className="space-y-1"><div className="flex justify-between text-xs font-semibold text-slate-600"><span>Tamaño</span><span>{slot.frameLocked ? "Fijo en esta grilla" : "100%"}</span></div><input type="range" min="0.5" max="2.5" step="0.05" value={value?.frameScale ?? 1} disabled={!value || slot.frameLocked} onChange={(event) => value && onChange({ ...value, frameScale: Number(event.target.value) })} onPointerUp={(event) => value && void commitImage({ ...value, frameScale: Number(event.currentTarget.value) })} onBlur={(event) => value && void commitImage({ ...value, frameScale: Number(event.currentTarget.value) })} className="w-full" /></div><Button type="button" size="sm" variant="outline" className="w-full" disabled={!value} onClick={() => value && void commitImage({ ...value, rotation: ((value.rotation ?? 0) + 90) % 360 })}><RotateCw className="mr-2 h-4 w-4" />Girar 90°</Button>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
@@ -281,13 +352,6 @@ export function CmsImageField({
                 Cargando imágenes...
               </div>
             ) : null}
-
-            <div className="space-y-3 rounded-xl border border-slate-200 p-3">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-600"><span>Zoom</span><span>{(value?.zoom ?? 1).toFixed(1)}×</span></div>
-          <div className="flex items-center gap-2"><ZoomOut className="h-4 w-4 text-slate-500" /><input type="range" min="1" max="3" step="0.1" value={value?.zoom ?? 1} disabled={!value} onChange={(event) => value && void onChange({ ...value, zoom: Number(event.target.value) })} className="w-full" /><ZoomIn className="h-4 w-4 text-slate-500" /></div>
-          <div className="grid grid-cols-2 gap-2"><Button type="button" size="sm" variant={(value?.fitMode ?? "COVER") === "COVER" ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, fitMode: "COVER" })}>Recortar</Button><Button type="button" size="sm" variant={value?.fitMode === "CONTAIN" ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, fitMode: "CONTAIN", zoom: 1 })}>Completa</Button></div>
-          <div className="grid grid-cols-3 gap-2">{(["COMPACT", "NORMAL", "LARGE"] as const).map((frameSize) => <Button key={frameSize} type="button" size="sm" variant={(value?.frameSize ?? "NORMAL") === frameSize ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, frameSize })}>{frameSize === "COMPACT" ? "Chico" : frameSize === "LARGE" ? "Grande" : "Normal"}</Button>)}</div>
-        </div>
 
         <div className="grid grid-cols-2 gap-2">
               {library.map((image) => (

@@ -357,7 +357,11 @@ export function ImageGridSection({
                           previewMode,
                         ),
                       )}
-                      onClick={() => onSelectField?.(card.key)}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onSelectField?.(card.key);
+                      }}
                       style={getFieldStyle({
                         ...card,
                         fontSize: sharedTextStyleField.fontSize,
@@ -428,7 +432,11 @@ export function ImageGridSection({
                           previewMode,
                         ),
                       )}
-                      onClick={() => onSelectField?.(card.key)}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onSelectField?.(card.key);
+                      }}
                       style={getFieldStyle({
                         ...card,
                         fontSize: sharedTextStyleField.fontSize,

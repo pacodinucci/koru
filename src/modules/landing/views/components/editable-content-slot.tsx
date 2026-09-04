@@ -46,6 +46,7 @@ export function EditableContentSlot({
   children,
   style,
   stylePriority = "base",
+  renderInsertedBlocks = true,
 }: {
   as?: ElementType;
   slot: LandingContentSlot;
@@ -58,6 +59,7 @@ export function EditableContentSlot({
   children?: ReactNode;
   style?: CSSProperties;
   stylePriority?: "base" | "override";
+  renderInsertedBlocks?: boolean;
 }) {
   const Component = as ?? "span";
   const value = getLandingContentSlotValue(textMap, slot);
@@ -65,16 +67,22 @@ export function EditableContentSlot({
   const editor = useCmsTextEditor();
   const isDeleted = getCmsDeletedTextSlotIds(textMap).includes(slot.id);
   const insertedBlocks = getCmsInsertedTextBlocks(textMap);
-  const beforeBlocks = sortCmsInsertedTextBlocks(
-    insertedBlocks.filter(
-      (block) => block.anchorSlotId === slot.id && block.position === "before",
-    ),
-  );
-  const afterBlocks = sortCmsInsertedTextBlocks(
-    insertedBlocks.filter(
-      (block) => block.anchorSlotId === slot.id && block.position === "after",
-    ),
-  );
+  const beforeBlocks = renderInsertedBlocks
+    ? sortCmsInsertedTextBlocks(
+        insertedBlocks.filter(
+          (block) =>
+            block.anchorSlotId === slot.id && block.position === "before",
+        ),
+      )
+    : [];
+  const afterBlocks = renderInsertedBlocks
+    ? sortCmsInsertedTextBlocks(
+        insertedBlocks.filter(
+          (block) =>
+            block.anchorSlotId === slot.id && block.position === "after",
+        ),
+      )
+    : [];
 
   if (isDeleted) {
     return null;
@@ -92,8 +100,22 @@ export function EditableContentSlot({
       )}
       style={
         stylePriority === "override"
-          ? { ...slotStyle, ...style, fontFamily: "var(--font-montserrat)" }
-          : { ...style, ...slotStyle, fontFamily: "var(--font-montserrat)" }
+          ? {
+              ...slotStyle,
+              ...style,
+              fontFamily:
+                style?.fontFamily ??
+                slotStyle.fontFamily ??
+                "var(--font-montserrat)",
+            }
+          : {
+              ...style,
+              ...slotStyle,
+              fontFamily:
+                slotStyle.fontFamily ??
+                style?.fontFamily ??
+                "var(--font-montserrat)",
+            }
       }
       onClick={(event: MouseEvent) => {
         if (!previewMode) return;
@@ -120,7 +142,7 @@ export function EditableContentSlot({
           responsiveMode={responsiveMode}
         />
       ))}
-      {previewMode && editor ? (
+      {previewMode && editor && renderInsertedBlocks ? (
         <CmsInsertContextMenu targetSlotId={slot.id} trigger={originalElement} canDelete />
       ) : (
         originalElement
@@ -214,7 +236,10 @@ function CmsInsertedText({
         editor?.selectedSlotId === block.id &&
           "outline outline-2 outline-[#2563eb] shadow-[0_0_0_5px_rgba(37,99,235,0.20)]",
       )}
-      style={{ ...dynamicStyle, fontFamily: "var(--font-montserrat)" }}
+      style={{
+        ...dynamicStyle,
+        fontFamily: dynamicStyle.fontFamily ?? "var(--font-montserrat)",
+      }}
       onClick={(event) => {
         if (!previewMode) return;
         event.preventDefault();

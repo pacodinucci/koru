@@ -10,11 +10,20 @@ export type CmsImageValue = {
   zoom: number;
   fitMode: "COVER" | "CONTAIN";
   frameSize: "COMPACT" | "NORMAL" | "LARGE";
+  frameShape: "RECTANGULAR" | "RECTANGLE_HORIZONTAL" | "RECTANGLE_VERTICAL" | "SQUARE" | "OVAL" | "CIRCLE" | "IRREGULAR";
+  frameScale: number;
+  rotation: number;
 };
 
 export type CmsImageMap = Record<string, CmsImageValue>;
 
 type CmsImageRepositoryClient = Pick<Prisma.TransactionClient, "cmsImageEntry">;
+
+function normalizeFrameShape(value: string | null): CmsImageValue["frameShape"] {
+  return value === "RECTANGLE_HORIZONTAL" || value === "RECTANGLE_VERTICAL" || value === "SQUARE" || value === "OVAL" || value === "CIRCLE" || value === "IRREGULAR"
+    ? value
+    : "RECTANGULAR";
+}
 
 function entriesToMap(
   entries: Array<{
@@ -28,11 +37,17 @@ function entriesToMap(
     draftZoom: number;
     draftFitMode: string;
     draftFrameSize: string;
+    draftFrameShape: string;
+    draftFrameScale: number;
+    draftRotation: number;
     publishedCropX: number | null;
     publishedCropY: number | null;
     publishedZoom: number | null;
     publishedFitMode: string | null;
     publishedFrameSize: string | null;
+    publishedFrameShape: string | null;
+    publishedFrameScale: number | null;
+    publishedRotation: number | null;
   }>,
   mode: "draft" | "published",
 ): CmsImageMap {
@@ -49,6 +64,9 @@ function entriesToMap(
             zoom: entry.draftZoom,
             fitMode: entry.draftFitMode === "CONTAIN" ? "CONTAIN" : "COVER",
             frameSize: entry.draftFrameSize === "COMPACT" ? "COMPACT" : entry.draftFrameSize === "LARGE" ? "LARGE" : "NORMAL",
+            frameShape: normalizeFrameShape(entry.draftFrameShape),
+            frameScale: entry.draftFrameScale,
+            rotation: entry.draftRotation,
           },
         ]];
       }
@@ -66,6 +84,9 @@ function entriesToMap(
               zoom: entry.publishedZoom ?? 1,
               fitMode: entry.publishedFitMode === "CONTAIN" ? "CONTAIN" : "COVER",
               frameSize: entry.publishedFrameSize === "COMPACT" ? "COMPACT" : entry.publishedFrameSize === "LARGE" ? "LARGE" : "NORMAL",
+              frameShape: normalizeFrameShape(entry.publishedFrameShape),
+              frameScale: entry.publishedFrameScale ?? 1,
+              rotation: entry.publishedRotation ?? 0,
             },
           ]]
         : [];
@@ -112,6 +133,9 @@ export async function saveCmsDraftImage(
       draftZoom: image.zoom,
       draftFitMode: image.fitMode,
       draftFrameSize: image.frameSize,
+      draftFrameShape: image.frameShape,
+      draftFrameScale: image.frameScale,
+      draftRotation: image.rotation,
     },
     update: {
       draftUrl: image.url,
@@ -121,6 +145,9 @@ export async function saveCmsDraftImage(
       draftZoom: image.zoom,
       draftFitMode: image.fitMode,
       draftFrameSize: image.frameSize,
+      draftFrameShape: image.frameShape,
+      draftFrameScale: image.frameScale,
+      draftRotation: image.rotation,
     },
   });
 }
@@ -143,6 +170,10 @@ export async function saveCmsDraftImageMap(
           draftZoom: image.zoom,
           draftFitMode: image.fitMode,
           draftFrameSize: image.frameSize,
+          draftFrameShape: image.frameShape,
+          draftFrameScale: image.frameScale,
+          draftRotation: image.rotation,
+
         },
         update: {
           draftUrl: image.url,
@@ -152,6 +183,10 @@ export async function saveCmsDraftImageMap(
           draftZoom: image.zoom,
           draftFitMode: image.fitMode,
           draftFrameSize: image.frameSize,
+          draftFrameShape: image.frameShape,
+          draftFrameScale: image.frameScale,
+          draftRotation: image.rotation,
+
         },
       }),
     ),
@@ -186,6 +221,10 @@ export async function publishCmsImageMapWithClient(
           draftZoom: image.zoom,
           draftFitMode: image.fitMode,
           draftFrameSize: image.frameSize,
+          draftFrameShape: image.frameShape,
+          draftFrameScale: image.frameScale,
+          draftRotation: image.rotation,
+
           publishedUrl: image.url,
           publishedPublicId: image.publicId,
           publishedCropX: image.cropX,
@@ -193,6 +232,9 @@ export async function publishCmsImageMapWithClient(
           publishedZoom: image.zoom,
           publishedFitMode: image.fitMode,
           publishedFrameSize: image.frameSize,
+          publishedFrameShape: image.frameShape,
+          publishedFrameScale: image.frameScale,
+          publishedRotation: image.rotation,
         },
         update: {
           draftUrl: image.url,
@@ -202,6 +244,10 @@ export async function publishCmsImageMapWithClient(
           draftZoom: image.zoom,
           draftFitMode: image.fitMode,
           draftFrameSize: image.frameSize,
+          draftFrameShape: image.frameShape,
+          draftFrameScale: image.frameScale,
+          draftRotation: image.rotation,
+
           publishedUrl: image.url,
           publishedPublicId: image.publicId,
           publishedCropX: image.cropX,
@@ -209,6 +255,9 @@ export async function publishCmsImageMapWithClient(
           publishedZoom: image.zoom,
           publishedFitMode: image.fitMode,
           publishedFrameSize: image.frameSize,
+          publishedFrameShape: image.frameShape,
+          publishedFrameScale: image.frameScale,
+          publishedRotation: image.rotation,
         },
       }),
     ),
@@ -226,6 +275,9 @@ export async function publishAllCmsDraftImages() {
       "publishedZoom" = "draftZoom",
       "publishedFitMode" = "draftFitMode",
       "publishedFrameSize" = "draftFrameSize",
+      "publishedFrameShape" = "draftFrameShape",
+      "publishedFrameScale" = "draftFrameScale",
+      "publishedRotation" = "draftRotation",
       "updatedAt" = NOW()
   `;
 }
