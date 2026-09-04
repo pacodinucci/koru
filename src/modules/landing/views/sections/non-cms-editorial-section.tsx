@@ -76,10 +76,12 @@ export function NonCmsEditorialSection({
   const highlightTextSlot = getSlot(highlightTextSlotId);
   const closingTextSlot = getSlot(closingTextSlotId);
   const imageCaptionTextSlot = getSlot(imageCaptionTextSlotId);
+  const frameSize = imageSlotId ? imageMap?.[imageSlotId]?.frameSize ?? "NORMAL" : "NORMAL";
+  const frameSizeScale = frameSize === "COMPACT" ? 0.8 : frameSize === "LARGE" ? 1.25 : 1;
   const frameStyle = {
-    width: `calc(${imageFrameWidth} * ${imageScale})`,
+    width: `calc(${imageFrameWidth} * ${imageScale} * ${frameSizeScale})`,
     height: imageFrameHeight
-      ? `calc(${imageFrameHeight} * ${imageScale})`
+      ? `calc(${imageFrameHeight} * ${imageScale} * ${frameSizeScale})`
       : undefined,
   } as const;
 

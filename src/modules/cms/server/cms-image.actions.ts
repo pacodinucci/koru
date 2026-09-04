@@ -12,6 +12,7 @@ import {
   type CmsImageMap,
 } from "@/modules/cms/server/cms-image.repository";
 import { publishCmsPageTextMapWithClient } from "@/modules/cms/server/cms-text.repository";
+import { initializeAllCmsImages } from "@/modules/cms/server/cms-image-initializer";
 
 const imageValueSchema = z.object({
   url: z.string().url().refine((value) => {
@@ -99,4 +100,16 @@ export async function publishCmsPageContentAction(
   });
 
   return { ok: true as const, message: "Contenido publicado." };
+}
+
+export async function initializeAllCmsImagesAction() {
+  await requireAdmin();
+
+  try {
+    const initialized = await initializeAllCmsImages();
+    return { ok: true as const, initialized };
+  } catch (error) {
+    console.error("[cms-images] Initialization failed", error);
+    return { ok: false as const, message: "No se pudieron inicializar las imágenes." };
+  }
 }

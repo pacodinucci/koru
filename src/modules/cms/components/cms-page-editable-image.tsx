@@ -67,6 +67,9 @@ export function CmsPageEditableImage({
   const cropY = value?.cropY ?? 50;
   const zoom = value?.zoom ?? 1;
   const fitMode = value?.fitMode ?? "COVER";
+  const panFactor = (zoom - 1) / zoom;
+  const translateX = ((50 - cropX) / 100) * panFactor * 100;
+  const translateY = ((50 - cropY) / 100) * panFactor * 100;
   useEffect(() => {
     if (!fill || !imageRef.current) return;
     const frame = imageRef.current.parentElement;
@@ -99,15 +102,13 @@ export function CmsPageEditableImage({
 
     const startX = event.clientX;
     const startY = event.clientY;
-    const rect = image.getBoundingClientRect();
-    const naturalWidth = image.naturalWidth || rect.width;
-    const naturalHeight = image.naturalHeight || rect.height;
-    const scale = Math.max(
-      rect.width / naturalWidth,
-      rect.height / naturalHeight,
-    );
-    const overflowX = Math.max(0, naturalWidth * scale * zoom - rect.width);
-    const overflowY = Math.max(0, naturalHeight * scale * zoom - rect.height);
+    const frame = image.parentElement;
+    if (!frame) return;
+    const frameRect = frame.getBoundingClientRect();
+    const baseWidth = image.offsetWidth || frameRect.width;
+    const baseHeight = image.offsetHeight || frameRect.height;
+    const overflowX = Math.max(0, baseWidth * zoom - frameRect.width);
+    const overflowY = Math.max(0, baseHeight * zoom - frameRect.height);
     let nextX = cropX;
     let nextY = cropY;
 
@@ -149,7 +150,7 @@ export function CmsPageEditableImage({
           ...style,
           objectPosition: `${cropX}% ${cropY}%`,
           objectFit: fitMode.toLowerCase() as "cover" | "contain",
-          transform: `scale(${zoom})`,
+          transform: `translate3d(${translateX}%, ${translateY}%, 0) scale(${zoom})`,
         }}
         data-cms-frame-size={value?.frameSize ?? "NORMAL"}
         fill={fill}

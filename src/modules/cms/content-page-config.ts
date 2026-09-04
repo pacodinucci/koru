@@ -321,3 +321,23 @@ export function getCmsImageSlotsBySlug(slug: string): CmsImageSlot[] {
   }
   return [...(cmsImageSlotsBySlug[slug] ?? [])];
 }
+
+export function getAllCmsImagePages() {
+  const configuredPages = Object.values(cmsContentPages).map((page) => ({
+    slug: page.slug,
+    images: page.images ? [...page.images] : [],
+  }));
+  const standalonePages = Object.entries(cmsImageSlotsBySlug).map(([slug, images]) => ({
+    slug,
+    images: [...images],
+  }));
+  const pages = new Map<string, { slug: string; images: CmsImageSlot[] }>();
+  for (const page of [...standalonePages, ...configuredPages]) {
+    const current = pages.get(page.slug);
+    pages.set(page.slug, {
+      slug: page.slug,
+      images: [...(current?.images ?? []), ...page.images],
+    });
+  }
+  return [...pages.values()];
+}

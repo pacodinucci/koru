@@ -199,6 +199,7 @@ export function CmsImageField({
           </Button>
         </div>
 
+
         {isAdjusting ? (
           <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-800">
             Arrastrá la imagen directamente en la vista previa. La posición se

@@ -33,6 +33,7 @@ function configure() {
 export async function uploadImageToCloudinary(
   buffer: Buffer,
   purpose: MediaPurpose,
+  options?: { publicId?: string },
 ) {
   configure();
 
@@ -41,6 +42,9 @@ export async function uploadImageToCloudinary(
       .upload_stream(
         {
           folder: folders[purpose],
+          public_id: options?.publicId?.replace(`${folders[purpose]}/`, ""),
+          overwrite: Boolean(options?.publicId),
+          invalidate: Boolean(options?.publicId),
           resource_type: "image",
           allowed_formats: ["jpg", "jpeg", "png", "webp", "avif"],
         },
