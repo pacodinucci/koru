@@ -126,6 +126,7 @@ export function DashboardShell({
   const isUsersActive = pathname.startsWith("/dashboard/users");
   const isMailingActive = pathname.startsWith("/dashboard/mailing");
   const isStudentsActive = pathname.startsWith("/dashboard/students");
+  const isFamiliesActive = pathname.startsWith("/dashboard/families");
   const isTeachersActive = pathname.startsWith("/dashboard/teachers");
   const isExamsActive = pathname.startsWith("/dashboard/exams");
   const isLayoutActive = pathname.startsWith("/dashboard/diseno");
@@ -330,6 +331,19 @@ export function DashboardShell({
                     >
                       <Mail />
                       <span>Mailing</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
+
+                {isAdmin ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isFamiliesActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/families" />}
+                    >
+                      <Users />
+                      <span>Familias</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ) : null}

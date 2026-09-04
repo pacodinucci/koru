@@ -1,6 +1,6 @@
 "use client";
 
-import { Images, Loader2, Move, RotateCcw, Upload } from "lucide-react";
+import { Images, Loader2, Move, RotateCcw, Upload, ZoomIn, ZoomOut } from "lucide-react";
 import Image from "next/image";
 import { useId, useState } from "react";
 
@@ -80,6 +80,9 @@ export function CmsImageField({
         publicId: payload.publicId,
         cropX: 50,
         cropY: 50,
+        zoom: 1,
+        fitMode: "COVER",
+        frameSize: "NORMAL",
       });
     } catch (caught) {
       setError(
@@ -132,14 +135,14 @@ export function CmsImageField({
 
   async function selectLibraryImage(image: LibraryImage) {
     onAdjustingChange(false);
-    await onChange({ ...image, cropX: 50, cropY: 50 });
+    await onChange({ ...image, cropX: 50, cropY: 50, zoom: 1, fitMode: "COVER", frameSize: "NORMAL" });
   }
 
   async function centerImage() {
     if (!value) {
       return;
     }
-    await onChange({ ...value, cropX: 50, cropY: 50 });
+    await onChange({ ...value, cropX: 50, cropY: 50, zoom: 1, fitMode: "COVER", frameSize: "NORMAL" });
   }
 
   return (
@@ -159,12 +162,20 @@ export function CmsImageField({
             src={value?.url || slot.defaultSrc}
             alt={slot.alt}
             fill
-            className="object-cover"
+            className={value?.fitMode === "CONTAIN" ? "object-contain" : "object-cover"}
             style={{
               objectPosition: `${value?.cropX ?? 50}% ${value?.cropY ?? 50}%`,
+              transform: `scale(${value?.zoom ?? 1})`,
             }}
             sizes="360px"
           />
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-slate-200 p-3">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-600"><span>Zoom</span><span>{(value?.zoom ?? 1).toFixed(1)}×</span></div>
+          <div className="flex items-center gap-2"><ZoomOut className="h-4 w-4 text-slate-500" /><input type="range" min="1" max="3" step="0.1" value={value?.zoom ?? 1} disabled={!value} onChange={(event) => value && void onChange({ ...value, zoom: Number(event.target.value) })} className="w-full" /><ZoomIn className="h-4 w-4 text-slate-500" /></div>
+          <div className="grid grid-cols-2 gap-2"><Button type="button" size="sm" variant={(value?.fitMode ?? "COVER") === "COVER" ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, fitMode: "COVER" })}>Recortar</Button><Button type="button" size="sm" variant={value?.fitMode === "CONTAIN" ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, fitMode: "CONTAIN", zoom: 1 })}>Completa</Button></div>
+          <div className="grid grid-cols-3 gap-2">{(["COMPACT", "NORMAL", "LARGE"] as const).map((frameSize) => <Button key={frameSize} type="button" size="sm" variant={(value?.frameSize ?? "NORMAL") === frameSize ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, frameSize })}>{frameSize === "COMPACT" ? "Chico" : frameSize === "LARGE" ? "Grande" : "Normal"}</Button>)}</div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
@@ -237,7 +248,7 @@ export function CmsImageField({
             onClick={() => void openLibrary()}
           >
             <Images className="mr-2 h-4 w-4" />
-            Elegir de Cloudinary
+            Elegir de Koru
           </Button>
         </div>
 
@@ -270,7 +281,14 @@ export function CmsImageField({
               </div>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-3 rounded-xl border border-slate-200 p-3">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-600"><span>Zoom</span><span>{(value?.zoom ?? 1).toFixed(1)}×</span></div>
+          <div className="flex items-center gap-2"><ZoomOut className="h-4 w-4 text-slate-500" /><input type="range" min="1" max="3" step="0.1" value={value?.zoom ?? 1} disabled={!value} onChange={(event) => value && void onChange({ ...value, zoom: Number(event.target.value) })} className="w-full" /><ZoomIn className="h-4 w-4 text-slate-500" /></div>
+          <div className="grid grid-cols-2 gap-2"><Button type="button" size="sm" variant={(value?.fitMode ?? "COVER") === "COVER" ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, fitMode: "COVER" })}>Recortar</Button><Button type="button" size="sm" variant={value?.fitMode === "CONTAIN" ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, fitMode: "CONTAIN", zoom: 1 })}>Completa</Button></div>
+          <div className="grid grid-cols-3 gap-2">{(["COMPACT", "NORMAL", "LARGE"] as const).map((frameSize) => <Button key={frameSize} type="button" size="sm" variant={(value?.frameSize ?? "NORMAL") === frameSize ? "default" : "outline"} disabled={!value} onClick={() => value && void onChange({ ...value, frameSize })}>{frameSize === "COMPACT" ? "Chico" : frameSize === "LARGE" ? "Grande" : "Normal"}</Button>)}</div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
               {library.map((image) => (
                 <button
                   key={image.publicId}

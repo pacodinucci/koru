@@ -15,6 +15,7 @@ type UserInvitationEmailProps = {
   email: string;
   role: UserRole;
   invitationUrl: string;
+  familyName?: string;
 };
 
 const roleLabels: Record<UserRole, string> = {
@@ -29,6 +30,7 @@ export function UserInvitationEmail({
   email,
   role,
   invitationUrl,
+  familyName,
 }: UserInvitationEmailProps) {
   return (
     <Html>
@@ -42,6 +44,11 @@ export function UserInvitationEmail({
             Autorizamos el email <strong>{email}</strong> para ingresar al
             ecosistema Koru con rol de <strong>{roleLabels[role]}</strong>.
           </Text>
+          {familyName ? (
+            <Text style={text}>
+              Tu usuario quedará vinculado a la familia <strong>{familyName}</strong>.
+            </Text>
+          ) : null}
           <Section style={buttonWrapper}>
             <Button href={invitationUrl} style={button}>
               Crear usuario

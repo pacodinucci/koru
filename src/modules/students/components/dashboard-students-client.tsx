@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
 
@@ -59,12 +60,16 @@ type Student = {
   birthDate: string;
   groupId: string;
   status: StudentStatus;
+  recordStatus: "DRAFT" | "SUBMITTED" | "REVIEWED" | "NEEDS_CHANGES";
+  updatedAt: string;
   notes: string | null;
   group: StudentGroup;
   teachers: TeacherOption[];
   guardians: Array<{
     id: string;
     email: string;
+    fullName: string | null;
+    phone: string | null;
     relationship: GuardianRelationship;
     isPrimary: boolean;
     canPickup: boolean;
@@ -77,6 +82,7 @@ type DashboardStudentsClientProps = {
   students: Student[];
   groups: StudentGroup[];
   familyUsers: FamilyUserOption[];
+  readOnly?: boolean;
 };
 
 const relationshipLabels: Record<GuardianRelationship, string> = {
@@ -91,6 +97,12 @@ const statusLabels: Record<StudentStatus, string> = {
   ACTIVE: "Activo",
   INACTIVE: "Inactivo",
   GRADUATED: "Egresado",
+};
+const recordStatusLabels: Record<Student["recordStatus"], string> = {
+  DRAFT: "En progreso",
+  SUBMITTED: "Pendiente de revisión",
+  REVIEWED: "Revisada",
+  NEEDS_CHANGES: "Requiere cambios",
 };
 
 const emptyValues: StudentFormInput = {
@@ -154,6 +166,7 @@ export function DashboardStudentsClient({
   students,
   groups,
   familyUsers,
+  readOnly = false,
 }: DashboardStudentsClientProps) {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -246,12 +259,12 @@ export function DashboardStudentsClient({
       <Card size="sm">
         <CardHeader>
           <CardTitle>Alumnos</CardTitle>
-          <CardAction>
+          {!readOnly ? <CardAction>
             <Button type="button" size="sm" onClick={openCreateDialog}>
               <Plus />
               Nuevo alumno
             </Button>
-          </CardAction>
+          </CardAction> : null}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_220px]">
@@ -272,7 +285,9 @@ export function DashboardStudentsClient({
                 <TableHead>Edad</TableHead>
                 <TableHead>Grupo</TableHead>
                 <TableHead>Docentes</TableHead>
-                <TableHead>Familiares</TableHead>
+                <TableHead>Responsable principal</TableHead>
+                <TableHead>Ficha</TableHead>
+                <TableHead>Actualizada</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
@@ -280,7 +295,7 @@ export function DashboardStudentsClient({
             <TableBody>
               {filteredStudents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-muted-foreground">
+                  <TableCell colSpan={9} className="text-muted-foreground">
                     Todavía no hay alumnos para mostrar.
                   </TableCell>
                 </TableRow>
@@ -298,9 +313,18 @@ export function DashboardStudentsClient({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="max-w-56 truncate text-xs text-muted-foreground">
-                        {student.guardians.map((guardian) => guardian.email).join(", ")}
+                      <div className="max-w-56 text-xs">
+                        <p className="truncate font-medium">{student.guardians[0]?.fullName || student.guardians[0]?.user?.name || "Sin informar"}</p>
+                        <p className="truncate text-muted-foreground">{student.guardians[0]?.phone || student.guardians[0]?.email || "-"}</p>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={student.recordStatus === "NEEDS_CHANGES" ? "destructive" : "secondary"}>
+                        {recordStatusLabels[student.recordStatus]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {new Date(student.updatedAt).toLocaleDateString("es-AR")}
                     </TableCell>
                     <TableCell>
                       <Badge variant={student.status === "ACTIVE" ? "default" : "secondary"}>
@@ -308,9 +332,14 @@ export function DashboardStudentsClient({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button type="button" variant="outline" size="sm" className="h-auto max-w-full whitespace-normal px-2 py-1" onClick={() => editStudent(student)}>
-                        Editar
-                      </Button>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Button nativeButton={false} render={<Link href={`/dashboard/students/${student.id}`} />} variant="outline" size="sm" className="h-auto px-2 py-1">
+                          Ver expediente
+                        </Button>
+                        {!readOnly ? <Button type="button" variant="outline" size="sm" className="h-auto px-2 py-1" onClick={() => editStudent(student)}>
+                          Editar
+                        </Button> : null}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -320,7 +349,7 @@ export function DashboardStudentsClient({
         </CardContent>
       </Card>
 
-      <ResponsiveDialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+      {!readOnly ? <ResponsiveDialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
         <ResponsiveDialogContent className="[font-family:var(--font-montserrat)] [&_*]:[font-family:var(--font-montserrat)]">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>
@@ -585,7 +614,6 @@ export function DashboardStudentsClient({
             </form>
           </Form>
         </ResponsiveDialogContent>
-      </ResponsiveDialog>
-    </div>
+      </ResponsiveDialog> : null}`r`n    </div>
   );
 }

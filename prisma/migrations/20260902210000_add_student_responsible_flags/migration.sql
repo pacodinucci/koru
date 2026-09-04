@@ -1,0 +1,4 @@
+ALTER TABLE "StudentEmergencyContact"
+ADD COLUMN "canPickup" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "emergencyContact" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "isActive" BOOLEAN NOT NULL DEFAULT true;

@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 
@@ -7,7 +7,7 @@ import { studentFormSchema, type StudentFormInput } from "@/modules/students/sch
 import {
   listStudentGroups,
   listStudentsForAdmin,
-  saveStudentForAdmin,
+  updateStudentRecordStatus,
 } from "@/modules/students/server/students.repository";
 
 export async function listStudentsForAdminAction() {
@@ -21,23 +21,18 @@ export async function listStudentGroupsAction() {
 }
 
 export async function saveStudentAction(input: StudentFormInput) {
-  const admin = await requireAdmin();
+  await requireAdmin();
   const parsed = studentFormSchema.safeParse(input);
-
-  if (!parsed.success) {
-    return { ok: false, error: "invalid_input" };
-  }
-
-  try {
-    await saveStudentForAdmin(parsed.data, admin.id);
-    revalidatePath("/dashboard/students");
-    revalidatePath("/dashboard/users");
-    return { ok: true };
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : "unknown_error",
-    };
-  }
+  if (!parsed.success) return { ok: false, error: "invalid_input" };
+  return { ok: false, error: "student_admin_flow_disabled" };
 }
 
+export async function updateStudentRecordStatusAction(formData: FormData) {
+  await requireAdmin();
+  const studentId = formData.get("studentId");
+  const recordStatus = formData.get("recordStatus");
+  if (typeof studentId !== "string" || (recordStatus !== "SUBMITTED" && recordStatus !== "REVIEWED" && recordStatus !== "NEEDS_CHANGES")) return;
+  await updateStudentRecordStatus(studentId, recordStatus);
+  revalidatePath("/dashboard/students");
+  revalidatePath(`/dashboard/students/${studentId}`);
+}

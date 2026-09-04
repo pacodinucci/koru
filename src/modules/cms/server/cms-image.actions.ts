@@ -31,6 +31,9 @@ const imageValueSchema = z.object({
   publicId: z.string().min(1).max(500).startsWith("koru/"),
   cropX: z.number().min(0).max(100),
   cropY: z.number().min(0).max(100),
+  zoom: z.number().min(1).max(3),
+  fitMode: z.enum(["COVER", "CONTAIN"]),
+  frameSize: z.enum(["COMPACT", "NORMAL", "LARGE"]),
 });
 
 const imageMapSchema = z.record(z.string().min(1), imageValueSchema);

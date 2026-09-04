@@ -1,0 +1,1 @@
+ALTER TABLE "PaymentReceipt" ADD COLUMN IF NOT EXISTS "pdfPublicId" TEXT;

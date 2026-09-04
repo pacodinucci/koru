@@ -1,4 +1,4 @@
-﻿import { DashboardStudentsClient } from "@/modules/students/components/dashboard-students-client";
+import { DashboardStudentsClient } from "@/modules/students/components/dashboard-students-client";
 import {
   listFamilyUsersForSelect,
   listStudentGroups,
@@ -22,12 +22,16 @@ export async function DashboardStudentsView() {
         birthDate: student.birthDate.toISOString(),
         groupId: student.groupId,
         status: student.status,
+        recordStatus: student.recordStatus,
+        updatedAt: student.updatedAt.toISOString(),
         notes: student.notes,
         group: student.group,
         teachers: getTeachersFromGroupResponsibilities(student.group.teacherResponsibilities),
         guardians: student.guardians.map((guardian) => ({
           id: guardian.id,
           email: guardian.email,
+          fullName: guardian.fullName,
+          phone: guardian.phone,
           relationship: guardian.relationship,
           isPrimary: guardian.isPrimary,
           canPickup: guardian.canPickup,
@@ -37,6 +41,7 @@ export async function DashboardStudentsView() {
       }))}
       groups={groups}
       familyUsers={familyUsers}
+      readOnly
     />
   );
 }

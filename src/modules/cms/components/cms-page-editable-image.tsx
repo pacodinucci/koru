@@ -6,6 +6,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
   useContext,
+  useEffect,
   useRef,
 } from "react";
 
@@ -55,6 +56,7 @@ export function CmsPageEditableImage({
   selectedContentSlotId,
   onSelectContentSlot,
   style,
+  fill,
   ...imageProps
 }: CmsPageEditableImageProps) {
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -63,6 +65,18 @@ export function CmsPageEditableImage({
   const src = value?.url || defaultSrc;
   const cropX = value?.cropX ?? 50;
   const cropY = value?.cropY ?? 50;
+  const zoom = value?.zoom ?? 1;
+  const fitMode = value?.fitMode ?? "COVER";
+  useEffect(() => {
+    if (!fill || !imageRef.current) return;
+    const frame = imageRef.current.parentElement;
+    if (!frame) return;
+    const previousAspectRatio = frame.style.aspectRatio;
+    if (value?.frameSize === "COMPACT") frame.style.aspectRatio = "1 / 1";
+    if (value?.frameSize === "LARGE") frame.style.aspectRatio = "3 / 5";
+    return () => { frame.style.aspectRatio = previousAspectRatio; };
+  }, [fill, value?.frameSize]);
+
   const selected = previewMode && selectedContentSlotId === slotId;
   const isAdjusting =
     previewMode &&
@@ -92,8 +106,8 @@ export function CmsPageEditableImage({
       rect.width / naturalWidth,
       rect.height / naturalHeight,
     );
-    const overflowX = Math.max(0, naturalWidth * scale - rect.width);
-    const overflowY = Math.max(0, naturalHeight * scale - rect.height);
+    const overflowX = Math.max(0, naturalWidth * scale * zoom - rect.width);
+    const overflowY = Math.max(0, naturalHeight * scale * zoom - rect.height);
     let nextX = cropX;
     let nextY = cropY;
 
@@ -134,7 +148,11 @@ export function CmsPageEditableImage({
         style={{
           ...style,
           objectPosition: `${cropX}% ${cropY}%`,
+          objectFit: fitMode.toLowerCase() as "cover" | "contain",
+          transform: `scale(${zoom})`,
         }}
+        data-cms-frame-size={value?.frameSize ?? "NORMAL"}
+        fill={fill}
         {...imageProps}
       />
       {previewMode ? (

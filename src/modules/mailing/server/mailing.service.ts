@@ -58,15 +58,19 @@ type SendUserInvitationEmailInput = {
   email: string;
   role: UserRole;
   invitationId: string;
+  invitationToken: string;
+  familyName?: string;
 };
 
 export async function sendUserInvitationEmail({
   email,
   role,
   invitationId,
+  invitationToken,
+  familyName,
 }: SendUserInvitationEmailInput) {
   const invitationUrl = new URL("/sign-up", getAppUrl());
-  invitationUrl.searchParams.set("email", email);
+  invitationUrl.searchParams.set("token", invitationToken);
 
   return sendMail({
     type: EmailMessageType.USER_INVITATION,
@@ -76,6 +80,7 @@ export async function sendUserInvitationEmail({
       email,
       role,
       invitationUrl: invitationUrl.toString(),
+      familyName,
     }),
     payload: {
       invitationId,

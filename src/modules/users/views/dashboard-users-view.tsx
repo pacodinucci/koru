@@ -13,12 +13,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  createUserInvitationAction,
+
+  listFamiliesForInvitationAdmin,
   listUserInvitationsForAdmin,
   listUsersForAdmin,
+  resendUserInvitationAction,
   revokeUserInvitationAction,
   updateUserRoleAction,
 } from "@/modules/users/server/user-invitations.actions";
+import { CreateUserInvitationForm } from "@/modules/users/components/create-user-invitation-form";
 import { UserDeleteButton } from "@/modules/users/components/user-delete-button";
 import { isAdminRole } from "@/modules/auth/roles";
 
@@ -75,9 +78,10 @@ type DashboardUsersViewProps = {
 export async function DashboardUsersView({
   currentAdminId,
 }: DashboardUsersViewProps) {
-  const [users, invitations] = await Promise.all([
+  const [users, invitations, families] = await Promise.all([
     listUsersForAdmin(),
     listUserInvitationsForAdmin(),
+    listFamiliesForInvitationAdmin(),
   ]);
 
   return (
@@ -87,32 +91,7 @@ export async function DashboardUsersView({
           <CardTitle className="text-base">Autorizar nuevo email</CardTitle>
         </CardHeader>
         <CardContent>
-          <form
-            action={createUserInvitationAction}
-            className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_auto]"
-          >
-            <input
-              name="email"
-              type="email"
-              required
-              placeholder="familia@ejemplo.com"
-              className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-slate-500"
-            />
-            <select
-              name="role"
-              defaultValue={UserRole.PARENT}
-              className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-slate-500"
-            >
-              {Object.values(UserRole).map((role) => (
-                <option key={role} value={role}>
-                  {roleLabel(role)}
-                </option>
-              ))}
-            </select>
-            <Button type="submit" className="h-9">
-              Crear invitacion
-            </Button>
-          </form>
+          <CreateUserInvitationForm families={families} />
         </CardContent>
       </Card>
 
@@ -228,6 +207,7 @@ export async function DashboardUsersView({
                     </TableCell>
                     <TableCell>
                       <div>{roleLabel(invitation.role)}</div>
+                      {invitation.family ? <div className="mt-1 text-xs text-muted-foreground">Familia: {invitation.family.name}</div> : null}
                       <Badge className="mt-1" variant={invitationStatusVariant(invitation.status)}>
                         {invitationStatusLabel(invitation.status)}
                       </Badge>
@@ -235,21 +215,18 @@ export async function DashboardUsersView({
                     <TableCell className="text-xs">
                       <div>Creada: {formatDate(invitation.createdAt)}</div>
                       <div className="mt-1 text-muted-foreground">
+                        Vence: {formatDate(invitation.expiresAt)}
+                      </div>
+                      <div className="mt-1 text-muted-foreground">
                         Aceptada: {formatDate(invitation.acceptedAt)}
                       </div>
                     </TableCell>
                     <TableCell>
                       {invitation.status === InvitationStatus.PENDING ? (
-                        <form action={revokeUserInvitationAction}>
-                          <input type="hidden" name="id" value={invitation.id} />
-                          <Button
-                            type="submit"
-                            variant="outline"
-                            className="h-8 max-w-full px-2 text-xs"
-                          >
-                            Revocar
-                          </Button>
-                        </form>
+                        <div className="flex gap-2">
+                          <form action={resendUserInvitationAction}><input type="hidden" name="id" value={invitation.id} /><Button type="submit" variant="outline" className="h-8 max-w-full px-2 text-xs">Reenviar</Button></form>
+                          <form action={revokeUserInvitationAction}><input type="hidden" name="id" value={invitation.id} /><Button type="submit" variant="outline" className="h-8 max-w-full px-2 text-xs">Revocar</Button></form>
+                        </div>
                       ) : (
                         "-"
                       )}

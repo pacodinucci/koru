@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 import { UserRole, type InvitationStatus } from "@prisma/client";
 
@@ -71,6 +71,30 @@ export async function listStudentsForAdmin() {
   });
 }
 
+export async function getStudentRecordForAdmin(studentId: string) {
+  return prisma.student.findUnique({
+    where: { id: studentId },
+    include: {
+      group: { select: { id: true, name: true, ageRange: true } },
+      address: true,
+      medicalProfile: true,
+      responsibles: { orderBy: { priority: "asc" } },
+      guardians: {
+        orderBy: [{ isPrimary: "desc" }, { email: "asc" }],
+        include: { user: { select: { id: true, name: true, email: true } } },
+      },
+    },
+  });
+}
+export async function updateStudentRecordStatus(
+  studentId: string,
+  recordStatus: "SUBMITTED" | "REVIEWED" | "NEEDS_CHANGES",
+) {
+  return prisma.student.update({
+    where: { id: studentId },
+    data: { recordStatus },
+  });
+}
 export async function saveStudentForAdmin(
   input: StudentFormInput,
   invitedById: string,

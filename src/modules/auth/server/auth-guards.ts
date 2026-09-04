@@ -16,6 +16,7 @@ export type AuthenticatedUser = {
   name: string;
   email: string;
   role: AppUserRole;
+  familyId: string | null;
 };
 
 function normalizeEmail(email: unknown) {
@@ -53,6 +54,7 @@ export async function getAuthenticatedUser() {
       name: true,
       email: true,
       role: true,
+      familyId: true,
     },
   });
 

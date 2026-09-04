@@ -11,16 +11,11 @@ import {
   FileText,
   Handshake,
   Home,
-  Images,
-  LifeBuoy,
   LogOut,
-  MessageSquare,
-  Newspaper,
-  Sprout,
   Settings2,
   TrendingUp,
+  WalletCards,
   User2,
-  Users,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -48,57 +43,31 @@ import {
 import { signOutAction } from "@/modules/auth/server/auth-actions";
 
 const mainItems = [
-  { title: "Inicio", href: "/family-dashboard", icon: Home },
+  { title: "Inicio", href: "/family-dashboard?view=dashboard", icon: Home },
   { title: "Calendario", href: "/family-dashboard/calendario", icon: CalendarDays },
-  { title: "Mensajes", href: "/family-dashboard/mensajes", icon: MessageSquare },
+  { title: "Mi cuenta", href: "/family-dashboard/mi-cuenta", icon: WalletCards },
 ];
 
 const studentItems = [
   { title: "Expediente de cada niñ@", href: "/family-dashboard/expediente", icon: FileText },
   { title: "Avances de tu hij@", href: "/family-dashboard/avances", icon: TrendingUp },
-  { title: "Ecociclos", href: "/family-dashboard/ecociclos", icon: Sprout },
   {
     title: "Acuerdos de seguimiento",
     href: "/family-dashboard/acuerdos-seguimiento",
     icon: Handshake,
   },
   { title: "Reportes", href: "/family-dashboard/reportes", icon: ClipboardList },
-  {
-    title: "Evidencias de avance",
-    href: "/family-dashboard/evidencias",
-    icon: Images,
-  },
 ];
 
 const communityItems = [
   {
     title: "Blog interno de proyectos",
-    href: "/family-dashboard/blog-interno",
+    href: "/blog",
     icon: BookOpen,
-  },
-  {
-    title: "Boletín de unidades",
-    href: "/family-dashboard/boletin-unidades",
-    icon: Newspaper,
-  },
-  {
-    title: "Fotos comunidad",
-    href: "/family-dashboard/fotos-comunidad",
-    icon: Users,
-  },
-  {
-    title: "Fotos de proyectos personales",
-    href: "/family-dashboard/proyectos-personales",
-    icon: Images,
   },
 ];
 
 const sidebarMenuButtonClass = "hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
-
-const supportItems = [
-  { title: "Soporte", href: "/family-dashboard/soporte", icon: LifeBuoy },
-  { title: "Configuracion", href: "/family-dashboard/configuracion", icon: Settings2 },
-];
 
 type FamilySidebarProps = {
   userName: string;
@@ -117,7 +86,8 @@ function getInitials(name: string) {
 }
 
 function isActivePath(pathname: string, href: string) {
-  return pathname === href || (href !== "/family-dashboard" && pathname.startsWith(`${href}/`));
+  const baseHref = href.split("?")[0] ?? href;
+  return pathname === baseHref || (baseHref !== "/family-dashboard" && pathname.startsWith(`${baseHref}/`));
 }
 
 export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
@@ -208,27 +178,6 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Gestion</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {supportItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    render={
-                      <Link href={item.href}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    }
-                    isActive={isActivePath(pathname, item.href)}
-                    className={sidebarMenuButtonClass}
-                  />
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>

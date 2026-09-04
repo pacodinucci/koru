@@ -7,6 +7,9 @@ export type CmsImageValue = {
   publicId: string;
   cropX: number;
   cropY: number;
+  zoom: number;
+  fitMode: "COVER" | "CONTAIN";
+  frameSize: "COMPACT" | "NORMAL" | "LARGE";
 };
 
 export type CmsImageMap = Record<string, CmsImageValue>;
@@ -22,8 +25,14 @@ function entriesToMap(
     publishedPublicId: string | null;
     draftCropX: number;
     draftCropY: number;
+    draftZoom: number;
+    draftFitMode: string;
+    draftFrameSize: string;
     publishedCropX: number | null;
     publishedCropY: number | null;
+    publishedZoom: number | null;
+    publishedFitMode: string | null;
+    publishedFrameSize: string | null;
   }>,
   mode: "draft" | "published",
 ): CmsImageMap {
@@ -37,6 +46,9 @@ function entriesToMap(
             publicId: entry.draftPublicId,
             cropX: entry.draftCropX,
             cropY: entry.draftCropY,
+            zoom: entry.draftZoom,
+            fitMode: entry.draftFitMode === "CONTAIN" ? "CONTAIN" : "COVER",
+            frameSize: entry.draftFrameSize === "COMPACT" ? "COMPACT" : entry.draftFrameSize === "LARGE" ? "LARGE" : "NORMAL",
           },
         ]];
       }
@@ -51,6 +63,9 @@ function entriesToMap(
               publicId,
               cropX: entry.publishedCropX ?? 50,
               cropY: entry.publishedCropY ?? 50,
+              zoom: entry.publishedZoom ?? 1,
+              fitMode: entry.publishedFitMode === "CONTAIN" ? "CONTAIN" : "COVER",
+              frameSize: entry.publishedFrameSize === "COMPACT" ? "COMPACT" : entry.publishedFrameSize === "LARGE" ? "LARGE" : "NORMAL",
             },
           ]]
         : [];
@@ -94,12 +109,18 @@ export async function saveCmsDraftImage(
       draftPublicId: image.publicId,
       draftCropX: image.cropX,
       draftCropY: image.cropY,
+      draftZoom: image.zoom,
+      draftFitMode: image.fitMode,
+      draftFrameSize: image.frameSize,
     },
     update: {
       draftUrl: image.url,
       draftPublicId: image.publicId,
       draftCropX: image.cropX,
       draftCropY: image.cropY,
+      draftZoom: image.zoom,
+      draftFitMode: image.fitMode,
+      draftFrameSize: image.frameSize,
     },
   });
 }
@@ -119,12 +140,24 @@ export async function saveCmsDraftImageMap(
           draftPublicId: image.publicId,
           draftCropX: image.cropX,
           draftCropY: image.cropY,
+          draftZoom: image.zoom,
+          draftFitMode: image.fitMode,
+          draftFrameSize: image.frameSize,
+      draftZoom: image.zoom,
+      draftFitMode: image.fitMode,
+      draftFrameSize: image.frameSize,
         },
         update: {
           draftUrl: image.url,
           draftPublicId: image.publicId,
           draftCropX: image.cropX,
           draftCropY: image.cropY,
+          draftZoom: image.zoom,
+          draftFitMode: image.fitMode,
+          draftFrameSize: image.frameSize,
+      draftZoom: image.zoom,
+      draftFitMode: image.fitMode,
+      draftFrameSize: image.frameSize,
         },
       }),
     ),
@@ -156,20 +189,38 @@ export async function publishCmsImageMapWithClient(
           draftPublicId: image.publicId,
           draftCropX: image.cropX,
           draftCropY: image.cropY,
+          draftZoom: image.zoom,
+          draftFitMode: image.fitMode,
+          draftFrameSize: image.frameSize,
+      draftZoom: image.zoom,
+      draftFitMode: image.fitMode,
+      draftFrameSize: image.frameSize,
           publishedUrl: image.url,
           publishedPublicId: image.publicId,
           publishedCropX: image.cropX,
           publishedCropY: image.cropY,
+          publishedZoom: image.zoom,
+          publishedFitMode: image.fitMode,
+          publishedFrameSize: image.frameSize,
         },
         update: {
           draftUrl: image.url,
           draftPublicId: image.publicId,
           draftCropX: image.cropX,
           draftCropY: image.cropY,
+          draftZoom: image.zoom,
+          draftFitMode: image.fitMode,
+          draftFrameSize: image.frameSize,
+      draftZoom: image.zoom,
+      draftFitMode: image.fitMode,
+      draftFrameSize: image.frameSize,
           publishedUrl: image.url,
           publishedPublicId: image.publicId,
           publishedCropX: image.cropX,
           publishedCropY: image.cropY,
+          publishedZoom: image.zoom,
+          publishedFitMode: image.fitMode,
+          publishedFrameSize: image.frameSize,
         },
       }),
     ),
@@ -184,6 +235,9 @@ export async function publishAllCmsDraftImages() {
       "publishedPublicId" = "draftPublicId",
       "publishedCropX" = "draftCropX",
       "publishedCropY" = "draftCropY",
+      "publishedZoom" = "draftZoom",
+      "publishedFitMode" = "draftFitMode",
+      "publishedFrameSize" = "draftFrameSize",
       "updatedAt" = NOW()
   `;
 }
