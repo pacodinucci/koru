@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import {
+  columnFilteringFeature,
   createColumnHelper,
   createFilteredRowModel,
   createPaginatedRowModel,
@@ -41,6 +42,7 @@ const labels = {
   INACTIVE: "Inactiva",
 } as const;
 const features = tableFeatures({
+  columnFilteringFeature,
   globalFilteringFeature,
   filteredRowModel: createFilteredRowModel(),
   rowPaginationFeature,
@@ -58,9 +60,11 @@ function currency(value: string) {
 export function FamiliesDataTable({
   families,
   initialSearch = "",
+  onManage,
 }: {
   families: FamilyListItem[];
   initialSearch?: string;
+  onManage?: (familyId: string) => void;
 }) {
   const [globalFilter, setGlobalFilter] = useState(initialSearch);
   const columns = useMemo(
@@ -93,8 +97,13 @@ export function FamiliesDataTable({
           },
           enableGlobalFilter: false,
         }),
+        columnHelper.display({
+          id: "manage",
+          header: "",
+          cell: ({ row }) => onManage ? <Button type="button" size="sm" variant="outline" onClick={() => onManage(row.original.id)}>Gestionar</Button> : null,
+        }),
       ]),
-    [],
+    [onManage],
   );
   const table = useTable({
     columns,
