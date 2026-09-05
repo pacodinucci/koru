@@ -86,6 +86,8 @@ export function CmsPageEditableImage({
       overflow: frame.style.overflow,
       transform: frame.style.transform,
       transformOrigin: frame.style.transformOrigin,
+      marginTop: frame.style.marginTop,
+      marginBottom: frame.style.marginBottom,
     };
     const frameShape = lockFrame ? "RECTANGULAR" : value?.frameShape ?? "RECTANGULAR";
 
@@ -121,19 +123,64 @@ if (frameShape === "RECTANGLE_HORIZONTAL") {
       if (value?.frameRounded === true) frame.style.borderRadius = "2rem";
       if (value?.frameRounded === false) frame.style.borderRadius = "0";
     }
-    const frameScale = lockFrame ? 1 : value?.frameScale ?? 1;
-    if (frameScale !== 1) {
+    const requestedFrameScale = lockFrame ? 1 : value?.frameScale ?? 1;
+
+    /**
+     * A transform does not participate in normal document flow. Reserve the
+     * vertical space that the transformed frame needs, and cap its scale to
+     * the horizontal room in its containing layout cell.
+     */
+    const updateFrameLayout = () => {
+      const container = frame.parentElement;
+      const frameWidth = frame.offsetWidth;
+      const frameHeight = frame.offsetHeight;
+
+      if (!container || !frameWidth || !frameHeight) {
+        frame.style.transform = "";
+        frame.style.marginTop = "";
+        frame.style.marginBottom = "";
+        return;
+      }
+
+      const spaceOnLeft = Math.max(0, frame.offsetLeft);
+      const spaceOnRight = Math.max(
+        0,
+        container.clientWidth - frame.offsetLeft - frameWidth,
+      );
+      const maximumScale = Math.max(
+        1,
+        1 + (2 * Math.min(spaceOnLeft, spaceOnRight)) / frameWidth,
+      );
+      const frameScale = Math.min(
+        Math.max(1, requestedFrameScale),
+        maximumScale,
+      );
+      const verticalOverflow = ((frameScale - 1) * frameHeight) / 2;
+
       frame.style.transformOrigin = "center";
-      frame.style.transform = `scale(${frameScale})`;
-    }
+      frame.style.transform = frameScale === 1 ? "" : `scale(${frameScale})`;
+      frame.style.marginTop = verticalOverflow ? `${verticalOverflow}px` : "";
+      frame.style.marginBottom = verticalOverflow ? `${verticalOverflow}px` : "";
+      frame.dataset.cmsFrameScaleCapped =
+        frameScale < requestedFrameScale ? "true" : "false";
+    };
+
+    updateFrameLayout();
+    const resizeObserver = new ResizeObserver(updateFrameLayout);
+    resizeObserver.observe(frame);
+    if (frame.parentElement) resizeObserver.observe(frame.parentElement);
 
     return () => {
+      resizeObserver.disconnect();
       frame.style.aspectRatio = previous.aspectRatio;
       frame.style.borderRadius = previous.borderRadius;
       frame.style.clipPath = previous.clipPath;
       frame.style.overflow = previous.overflow;
       frame.style.transform = previous.transform;
       frame.style.transformOrigin = previous.transformOrigin;
+      frame.style.marginTop = previous.marginTop;
+      frame.style.marginBottom = previous.marginBottom;
+      delete frame.dataset.cmsFrameScaleCapped;
     };
   }, [lockFrame, value?.frameRounded, value?.frameScale, value?.frameShape, value?.frameSize]);
 

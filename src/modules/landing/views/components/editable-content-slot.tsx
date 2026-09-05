@@ -92,6 +92,7 @@ export function EditableContentSlot({
     <Component
       data-content-slot-id={slot.id}
       className={cn(
+        "min-w-0 max-w-full [overflow-wrap:anywhere] [word-break:break-word]",
         previewMode &&
           "cursor-pointer rounded-sm transition outline-offset-4 hover:outline hover:outline-1 hover:outline-[#3b82f6]",
         selected &&
@@ -230,7 +231,7 @@ function CmsInsertedText({
     <span
       data-content-slot-id={block.id}
       className={cn(
-        "my-2 block w-full whitespace-pre-wrap",
+        "my-2 block w-full min-w-0 max-w-full whitespace-pre-wrap [overflow-wrap:anywhere] [word-break:break-word]",
         previewMode &&
           "cursor-pointer rounded-sm transition outline-offset-4 hover:outline hover:outline-1 hover:outline-[#3b82f6]",
         editor?.selectedSlotId === block.id &&
@@ -260,6 +261,3 @@ function CmsInsertedText({
     element
   );
 }
-
-
-

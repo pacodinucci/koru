@@ -151,6 +151,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     selectorLabel: "Bienvenida / Título",
     defaultValue: "Bienvenidos a Koru",
     defaultSize: 64,
+    responsiveDefaultSizes: { tablet: 52, mobile: 40 },
     styleControls: ["font", "size", "color", "align", "weight"],
   },
   {
@@ -160,6 +161,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     defaultValue:
       "Co-creamos una cultura viva donde niñas, niños, familias y acompañantes asumen un rol activo y corresponsable en los procesos de aprendizaje y desarrollo.",
     defaultSize: 20,
+    responsiveDefaultSizes: { tablet: 19, mobile: 18 },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
@@ -170,6 +172,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     defaultValue:
       "Queremos una comunidad donde cada persona fortalezca su brújula interna, despliegue sus dones y participe conscientemente en la regeneración social y ecológica.",
     defaultSize: 20,
+    responsiveDefaultSizes: { tablet: 19, mobile: 18 },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
@@ -443,8 +446,13 @@ export function getLandingContentSlotStyle(
     ...(lineHeight ? { lineHeight } : null),
     ...(letterSpacing != null ? { letterSpacing: `${letterSpacing}px` } : null),
     ...(color ? { color } : null),
-    ...(align === "left" || align === "center" || align === "right" || align === "justify"
-      ? { textAlign: align }
+    maxWidth: "100%",
+    minWidth: 0,
+    overflowWrap: "anywhere",
+    wordBreak: "break-word",
+    hyphens: "auto",
+    ...((align === "left" || align === "center" || align === "right" || align === "justify")
+      ? { textAlign: responsiveMode === "mobile" && align === "justify" ? "left" : align }
       : null),
   };
 }

@@ -373,6 +373,8 @@ model CmsImageEntry {
   draftFrameScale    Float    @default(1)
   draftRotation      Int      @default(0)
   draftRounded       Boolean?
+  draftMarginX       Float    @default(0)
+  draftMarginY       Float    @default(0)
   publishedCropX     Float?
   publishedCropY     Float?
   publishedZoom      Float?
@@ -382,6 +384,8 @@ model CmsImageEntry {
   publishedFrameScale Float?
   publishedRotation   Int?
   publishedRounded    Boolean?
+  publishedMarginX    Float?
+  publishedMarginY    Float?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

@@ -282,12 +282,20 @@ export function getLandingFieldFontSize(
   const responsiveRaw = textMap[getLandingFieldResponsiveSizeKey(fieldId, mode)];
   const raw = responsiveRaw ?? textMap[getLandingFieldSizeKey(fieldId)];
   const parsed = Number(raw);
+  const size = Number.isFinite(parsed) ? parsed : fallbackPx;
 
-  if (!Number.isFinite(parsed)) {
-    return fallbackPx;
+  if (responsiveRaw != null && responsiveRaw.trim() !== "") {
+    return Math.min(800, Math.max(10, size));
   }
 
-  return Math.min(800, Math.max(10, parsed));
+  const responsiveCeiling =
+    mode === "mobile"
+      ? Math.min(fallbackPx, 48)
+      : mode === "tablet"
+        ? Math.min(fallbackPx, 56)
+        : fallbackPx;
+
+  return Math.min(responsiveCeiling, Math.min(800, Math.max(10, size)));
 }
 
 function getValidHexColor(raw: string | undefined) {

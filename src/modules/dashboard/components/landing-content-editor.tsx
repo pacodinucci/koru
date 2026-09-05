@@ -96,6 +96,14 @@ const PREVIEW_ZOOM_BASE_SCALE = 0.62;
 const PREVIEW_CANVAS_WIDTH = 1440;
 const IMAGE_SAVE_DELAY_MS = 1_000;
 
+const previewDevices = [
+  { id: "desktop", label: "Desktop", width: PREVIEW_CANVAS_WIDTH, responsiveMode: "large" as const },
+  { id: "tablet", label: "768", width: 768, responsiveMode: "tablet" as const },
+  { id: "mobile-wide", label: "390", width: 390, responsiveMode: "mobile" as const },
+  { id: "mobile", label: "375", width: 375, responsiveMode: "mobile" as const },
+  { id: "mobile-compact", label: "320", width: 320, responsiveMode: "mobile" as const },
+] as const;
+
 function isSameCmsImageValue(left: CmsImageValue | undefined, right: CmsImageValue | undefined) {
   return left?.url === right?.url && left?.publicId === right?.publicId && left?.cropX === right?.cropX && left?.cropY === right?.cropY && left?.zoom === right?.zoom && left?.fitMode === right?.fitMode && left?.frameSize === right?.frameSize && left?.frameShape === right?.frameShape && left?.frameScale === right?.frameScale && left?.rotation === right?.rotation && left?.frameRounded === right?.frameRounded;
 }
@@ -132,6 +140,7 @@ export type PageContentEditorProps = {
     imageMap: CmsImageMap;
     selectedSlotId: string;
     onSelectSlot: (slotId: string) => void;
+    responsiveMode: "large" | "tablet" | "mobile";
   }) => ReactNode;
 };
 
@@ -149,6 +158,8 @@ export function PageContentEditor({
     normalizeTextMap(initialTextMap, baseSlots),
   );
   const [imageMap, setImageMap] = useState<CmsImageMap>(initialImageMap);
+  const [previewDeviceId, setPreviewDeviceId] = useState<(typeof previewDevices)[number]["id"]>("desktop");
+  const [overflowingSlotIds, setOverflowingSlotIds] = useState<string[]>([]);
   const imageSaveTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const queuedImageSavesRef = useRef(new Map<string, CmsImageValue>());
   const savedImageMapRef = useRef<CmsImageMap>(initialImageMap);
@@ -192,6 +203,11 @@ export function PageContentEditor({
   const [statusMessage, setStatusMessage] = useState("");
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const { portalTarget } = useDashboardEditorPanel();
+  const previewDevice = previewDevices.find((device) => device.id === previewDeviceId) ?? previewDevices[0];
+  const previewCanvasWidth = previewDevice.width;
+  const effectivePreviewScale = previewCanvasWidth < 768
+    ? Math.max(previewScale, 0.9)
+    : previewScale;
 
   const validSlotIds = useMemo(
     () => new Set(navigationSlots.map((slot) => slot.id)),
@@ -239,6 +255,23 @@ export function PageContentEditor({
       target.scrollIntoView({ block: "center", behavior: "smooth" });
     }
   }, [selectedSlotId]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const root = previewScrollRef.current;
+      if (!root) return;
+      const overflowing = Array.from(
+        root.querySelectorAll<HTMLElement>("[data-content-slot-id]"),
+      ).flatMap((element) => {
+        const slotId = element.dataset.contentSlotId;
+        return slotId && element.scrollWidth > element.clientWidth + 1
+          ? [slotId]
+          : [];
+      });
+      setOverflowingSlotIds([...new Set(overflowing)]);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [imageMap, previewDeviceId, textMap]);
 
   function updateValue(key: string, value: string) {
     setTextMap((previous) => ({ ...previous, [key]: value }));
@@ -426,6 +459,10 @@ export function PageContentEditor({
     imageSaveTimersRef.current.clear();
   }, []);
   async function handlePublish() {
+    if (overflowingSlotIds.length > 0) {
+      setStatusMessage("Hay texto que excede el ancho en esta vista. Ajustalo antes de publicar.");
+      return;
+    }
     const repairedTextMap = Object.fromEntries(
       Object.entries(textMap).map(([key, value]) => [
         key,
@@ -500,6 +537,13 @@ export function PageContentEditor({
               {statusMessage}
             </p>
           ) : null}
+          {overflowingSlotIds.length > 0 ? (
+            <p className="border-b bg-amber-50 px-4 py-2 text-xs text-amber-900">
+              {overflowingSlotIds.length === 1
+                ? "Un texto excede el ancho de esta vista."
+                : `${overflowingSlotIds.length} textos exceden el ancho de esta vista.`}
+            </p>
+          ) : null}
           {selectedTextSlot ? (
             <LandingContentSidePanel
               textMap={textMap}
@@ -537,6 +581,20 @@ export function PageContentEditor({
         scrollRef={previewScrollRef}
         actions={
           <>
+                        <div className="flex items-center rounded-lg border bg-white p-1">
+              {previewDevices.map((device) => (
+                <Button
+                  key={device.id}
+                  type="button"
+                  size="sm"
+                  variant={previewDevice.id === device.id ? "default" : "ghost"}
+                  className="h-7 px-2 text-[11px]"
+                  onClick={() => setPreviewDeviceId(device.id)}
+                >
+                  {device.label}
+                </Button>
+              ))}
+            </div>
             <Link
               href={pageSlug}
               target="_blank"
@@ -555,16 +613,16 @@ export function PageContentEditor({
             <div
               className="pointer-events-none relative h-6 rounded-md border bg-background/95 shadow-sm"
               style={{
-                width: `${PREVIEW_CANVAS_WIDTH * previewScale}px`,
-                minWidth: `${PREVIEW_CANVAS_WIDTH * previewScale}px`,
+                width: `${previewCanvasWidth * effectivePreviewScale}px`,
+                minWidth: `${previewCanvasWidth * effectivePreviewScale}px`,
               }}
               aria-hidden
             />
             <div
               className="origin-top-left bg-white"
               style={{
-                zoom: previewScale,
-                width: `${PREVIEW_CANVAS_WIDTH}px`,
+                zoom: effectivePreviewScale,
+                width: `${previewCanvasWidth}px`,
               }}
             >
               <CmsImageAdjustmentProvider
@@ -586,6 +644,7 @@ export function PageContentEditor({
                     imageMap,
                     selectedSlotId,
                     onSelectSlot: selectSlot,
+                    responsiveMode: previewDevice.responsiveMode,
                   })}
                 </CmsTextEditorProvider>
               </CmsImageAdjustmentProvider>
@@ -613,14 +672,15 @@ export function LandingContentEditor({
       slots={slots}
       imageSlots={landingCmsImageSlots}
       previewLabel="Preview de landing"
-      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot }) => (
-        <LandingPageLayout textMap={textMap} previewMode hideChrome>
+      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot, responsiveMode }) => (
+        <LandingPageLayout textMap={textMap} previewMode hideChrome responsiveMode={responsiveMode}>
           <LandingView
             textMap={textMap}
             imageMap={imageMap}
             previewMode
             selectedFieldId={selectedSlotId}
             onSelectField={onSelectSlot}
+            responsiveMode={responsiveMode}
             selectedContentSlotId={selectedSlotId}
             onSelectContentSlot={onSelectSlot}
           />
@@ -647,8 +707,8 @@ export function QuienesSomosContentEditor({
       imageSlots={quienesSomosCmsImageSlots}
       pageSlug="/quienes-somos"
       previewLabel="Preview de Quienes Somos"
-      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot }) => (
-        <LandingPageLayout textMap={textMap} previewMode hideChrome>
+      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot, responsiveMode }) => (
+        <LandingPageLayout textMap={textMap} previewMode hideChrome responsiveMode={responsiveMode}>
           <QuienesSomosView
             textMap={textMap}
             imageMap={imageMap}
@@ -679,8 +739,8 @@ export function ComoAcompanamosContentEditor({
       imageSlots={comoAcompanamosCmsImageSlots}
       pageSlug="/como-acompanamos"
       previewLabel="Preview de Cómo acompañamos"
-      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot }) => (
-        <LandingPageLayout textMap={textMap} previewMode hideChrome>
+      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot, responsiveMode }) => (
+        <LandingPageLayout textMap={textMap} previewMode hideChrome responsiveMode={responsiveMode}>
           <ComoAcompanamosView
             textMap={textMap}
             imageMap={imageMap}
@@ -917,8 +977,3 @@ export function LandingContentSidePanel({
     </div>
   );
 }
-
-
-
-
-
