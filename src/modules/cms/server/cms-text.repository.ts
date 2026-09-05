@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { BlockType, PageStatus, type Prisma } from "@prisma/client";
+import { BlockType, PageStatus, Prisma, type Prisma as PrismaTypes } from "@prisma/client";
 import {
   CMS_DELETED_TEXT_SLOT_IDS_KEY,
   CMS_INSERTED_TEXT_BLOCKS_KEY,
@@ -13,8 +13,8 @@ import {
 export type CmsTextMap = Record<string, string>;
 
 type CmsTextRepositoryClient = Pick<
-  Prisma.TransactionClient,
-  "cmsTextEntry" | "page" | "pageBlock"
+  PrismaTypes.TransactionClient,
+  "cmsTextEntry" | "page" | "pageBlock" | "$executeRaw"
 >;
 
 async function getEntries(client: CmsTextRepositoryClient = prisma) {
@@ -46,50 +46,72 @@ export async function getCmsPublishedTextMap(): Promise<CmsTextMap> {
   return ensureLandingDefaults(map);
 }
 
-export async function saveCmsDraftTextMap(textMap: CmsTextMap) {
-  const fullPayload = {
+async function saveCmsTextEntries(
+  textMap: CmsTextMap,
+  client: CmsTextRepositoryClient = prisma,
+) {
+  const entries = Object.entries({
     ...getDefaultLandingTextMap(),
     ...textMap,
-  };
+  });
 
-  await Promise.all(
-    Object.entries(fullPayload).map(([key, value]) =>
-      prisma.cmsTextEntry.upsert({
-        where: { key },
-        create: { key, draftValue: value },
-        update: { draftValue: value },
-      }),
-    ),
+  await client.$executeRaw(
+    Prisma.sql`
+      INSERT INTO "CmsTextEntry" ("key", "draftValue", "createdAt", "updatedAt")
+      VALUES ${Prisma.join(
+        entries.map(
+          ([key, value]) => Prisma.sql`(${key}, ${value}, NOW(), NOW())`,
+        ),
+      )}
+      ON CONFLICT ("key") DO UPDATE
+      SET "draftValue" = EXCLUDED."draftValue", "updatedAt" = NOW()
+    `,
   );
+}
+
+async function publishCmsTextEntries(
+  textMap: CmsTextMap,
+  client: CmsTextRepositoryClient = prisma,
+) {
+  const entries = Object.entries({
+    ...getDefaultLandingTextMap(),
+    ...textMap,
+  });
+
+  await client.$executeRaw(
+    Prisma.sql`
+      INSERT INTO "CmsTextEntry" (
+        "key",
+        "draftValue",
+        "publishedValue",
+        "createdAt",
+        "updatedAt"
+      )
+      VALUES ${Prisma.join(
+        entries.map(
+          ([key, value]) =>
+            Prisma.sql`(${key}, ${value}, ${value}, NOW(), NOW())`,
+        ),
+      )}
+      ON CONFLICT ("key") DO UPDATE
+      SET
+        "draftValue" = EXCLUDED."draftValue",
+        "publishedValue" = EXCLUDED."publishedValue",
+        "updatedAt" = NOW()
+    `,
+  );
+}
+
+export async function saveCmsDraftTextMap(textMap: CmsTextMap) {
+  await saveCmsTextEntries(textMap);
 }
 
 export async function publishCmsTextMap(
   textMap: CmsTextMap,
   client: CmsTextRepositoryClient = prisma,
 ) {
-  const fullPayload = {
-    ...getDefaultLandingTextMap(),
-    ...textMap,
-  };
-
-  await Promise.all(
-    Object.entries(fullPayload).map(([key, value]) =>
-      client.cmsTextEntry.upsert({
-        where: { key },
-        create: {
-          key,
-          draftValue: value,
-          publishedValue: value,
-        },
-        update: {
-          draftValue: value,
-          publishedValue: value,
-        },
-      }),
-    ),
-  );
+  await publishCmsTextEntries(textMap, client);
 }
-
 type CmsLandingPageBlockData = {
   cmsLandingDraftOverrides?: Record<string, string>;
   cmsLandingPublishedOverrides?: Record<string, string>;

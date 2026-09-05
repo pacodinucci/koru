@@ -92,14 +92,20 @@ export async function publishCmsPageContentAction(
     return { ok: false as const, message: "Contenido inválido." };
   }
 
-  await prisma.$transaction(async (client) => {
-    await publishCmsPageTextMapWithClient(client, pageSlug, parsedText.data);
-    await publishCmsImageMapWithClient(
-      client,
-      pageSlug,
-      parsedImages.data as CmsImageMap,
-    );
-  });
+  await prisma.$transaction(
+    async (client) => {
+      await publishCmsPageTextMapWithClient(client, pageSlug, parsedText.data);
+      await publishCmsImageMapWithClient(
+        client,
+        pageSlug,
+        parsedImages.data as CmsImageMap,
+      );
+    },
+    {
+      maxWait: 5_000,
+      timeout: 30_000,
+    },
+  );
 
   return { ok: true as const, message: "Contenido publicado." };
 }
