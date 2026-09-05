@@ -139,9 +139,13 @@ export function MethodologyDetailView({
           <CmsPageEditableCopy {...editable} as="h1" slotId="methodology.title" className="text-[clamp(3rem,9vw,6rem)] leading-[0.9] tracking-tight text-black" style={{ fontFamily: "var(--font-roboto-condensed)" }} />
         </header>
         <div className="mt-12 max-w-4xl space-y-6 text-lg leading-relaxed text-black/80 md:text-xl">
+          <div className="relative aspect-[6/5] w-full overflow-hidden rounded-[2.5rem] md:float-right md:mb-6 md:ml-8 md:w-[46%]">
+            <CmsPageEditableImage slotId="methodology.image.hero" defaultSrc={methodology.imageSrc} alt={methodology.imageAlt} imageMap={props.imageMap} previewMode={props.previewMode} selectedContentSlotId={props.selectedContentSlotId} onSelectContentSlot={props.onSelectContentSlot} fill className="object-cover" priority />
+          </div>
           {paragraphs.map((_, index) => (
             <CmsPageEditableCopy key={index} {...editable} as="p" slotId={`methodology.paragraph.${index}`} />
           ))}
+          <div className="clear-both" />
         </div>
       </section>
     </main>

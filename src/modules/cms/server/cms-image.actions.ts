@@ -37,6 +37,7 @@ const imageValueSchema = z.object({
   frameShape: z.enum(["RECTANGULAR", "RECTANGLE_HORIZONTAL", "RECTANGLE_VERTICAL", "SQUARE", "OVAL", "CIRCLE", "IRREGULAR"]),
   frameScale: z.number().min(0.5).max(2.5),
   rotation: z.number().int().min(0).max(270).multipleOf(90),
+  frameRounded: z.boolean().optional(),
 });
 
 const imageMapSchema = z.record(z.string().min(1), imageValueSchema);

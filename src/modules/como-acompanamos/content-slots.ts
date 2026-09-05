@@ -122,6 +122,8 @@ export type Methodology = TextBlock & {
   detailParagraphs?: string[];
   cardHighlight?: string;
   ctaLabel?: string;
+  imageSrc: string;
+  imageAlt: string;
 };
 
 export type AccompanimentExperienceCard = {
@@ -489,6 +491,8 @@ export const methodologies: Methodology[] = [
   {
     title: "1. Fundamentos Antroposóficos",
     slug: "fundamentos-antroposoficos",
+    imageSrc: "https://res.cloudinary.com/trsbzk8f/image/upload/v1788535893/koru/cms/rootcomo-acompanamos--grupo-helechos-2/group-image-card-9.webp",
+    imageAlt: "Imagen de experiencias de aprendizaje en Koru",
     cardHighlight: "El desarrollo no se acelera; se acompaña.",
     paragraphs: [
       "Integramos algunos fundamentos de la pedagogía antroposófica que orientan nuestro modelo educativo y nos ayudan a diseñar experiencias de aprendizaje respetuosas del desarrollo integral de cada niña y niño.",
@@ -504,6 +508,8 @@ export const methodologies: Methodology[] = [
   {
     title: "2. Aprendizaje Transdisciplinario",
     slug: "aprendizaje-transdisciplinario",
+    imageSrc: "https://res.cloudinary.com/trsbzk8f/image/upload/v1788535891/koru/cms/rootcomo-acompanamos--grupo-helechos-2/group-image-card-8.webp",
+    imageAlt: "Imagen de experiencias de aprendizaje en Koru",
     cardHighlight: "El mundo no está dividido en materias.",
     ctaLabel: "Conoce el cómo y el por qué",
     paragraphs: [
@@ -519,6 +525,8 @@ export const methodologies: Methodology[] = [
   {
     title: "3. Desarrollo Socio-Emocional",
     slug: "desarrollo-socioemocional",
+    imageSrc: "https://res.cloudinary.com/trsbzk8f/image/upload/v1788535889/koru/cms/rootcomo-acompanamos--grupo-helechos-2/group-image-card-7.webp",
+    imageAlt: "Imagen de experiencias de aprendizaje en Koru",
     cardHighlight:
       "Creemos que el bienestar individual y el bienestar colectivo están profundamente conectados.",
     ctaLabel: "Conoce el cómo y el por qué",
@@ -538,6 +546,8 @@ export const methodologies: Methodology[] = [
     title:
       "4. Desarrollo de habilidades fundamentales (lectura, escritura y matemáticas)",
     slug: "lectura-escritura-y-matematicas",
+    imageSrc: "https://res.cloudinary.com/trsbzk8f/image/upload/v1788535887/koru/cms/rootcomo-acompanamos--grupo-helechos-2/group-image-card-6.webp",
+    imageAlt: "Imagen de experiencias de aprendizaje en Koru",
     cardHighlight:
       "Las grandes ideas se construyen sobre habilidades fundamentales",
     ctaLabel: "Conoce el cómo y el por qué",
@@ -556,6 +566,8 @@ export const methodologies: Methodology[] = [
   {
     title: "5. Conciencia ecológica",
     slug: "conciencia-ecologica",
+    imageSrc: "https://res.cloudinary.com/trsbzk8f/image/upload/v1788535886/koru/cms/rootcomo-acompanamos--grupo-helechos-2/group-image-card-5.webp",
+    imageAlt: "Imagen de experiencias de aprendizaje en Koru",
     cardHighlight: "La conciencia ecológica nace del vínculo",
     ctaLabel: "Conoce el cómo y el por qué",
     paragraphs: [
@@ -569,52 +581,6 @@ export const methodologies: Methodology[] = [
       "Asimismo, desarrollamos experiencias inspiradas en la Escuela del Bosque, donde niñas y niños fortalecen su autonomía y confianza mediante el aprendizaje al aire libre. A través de caminatas, exploración, orientación y habilidades de supervivencia —como construir refugios, encender fuego de manera responsable, identificar recursos naturales y desenvolverse con seguridad en el bosque— descubren que la naturaleza no es solo un lugar para visitar, sino una comunidad viva de la que formamos parte y con la que aprendemos a relacionarnos de manera respetuosa.",
       "Esta visión también se extiende a la dimensión social. Impulsamos proyectos y programas de impacto comunitario que fortalecen la empatía, el servicio y la corresponsabilidad, ayudando a comprender que el cuidado del entorno y el cuidado de las personas son inseparables.",
       "Más que reducir nuestro impacto, buscamos aprender a generar un impacto positivo en los sistemas vivos de los que formamos parte. Aspiramos a formar personas capaces de observar, cuidar, colaborar y actuar con conciencia, comprendiendo que cada decisión puede contribuir a construir un mundo más humano, regenerativo y sostenible.",
-    ],
-  },
-  {
-    title: "6. Pensamiento crítico y diálogo",
-    slug: "pensamiento-critico-y-dialogo",
-    cardHighlight: "Pensar también es aprender a dialogar.",
-    ctaLabel: "Conoce el cómo y el por qué",
-    paragraphs: [
-      "Creamos espacios de diálogo donde niñas y niños aprenden a escuchar, argumentar, cuestionar y construir conocimiento en comunidad. A través de círculos socráticos, asambleas y conversaciones significativas fortalecen un pensamiento crítico, reflexivo y respetuoso.",
-    ],
-    detailParagraphs: [
-      "En KORU creemos que el pensamiento crítico no consiste únicamente en encontrar respuestas, sino en aprender a formular buenas preguntas, analizar distintas perspectivas y construir ideas con fundamento.",
-      "Por ello, incorporamos de manera cotidiana herramientas como los círculos socráticos, las asambleas y otros espacios de diálogo donde niñas y niños desarrollan la capacidad de escuchar con atención, expresar sus ideas con claridad, argumentar con respeto y enriquecer su pensamiento a partir del intercambio con los demás.",
-      "Los círculos socráticos promueven la reflexión profunda a través de preguntas abiertas que invitan a analizar, relacionar ideas y construir significado de manera colectiva. Las asambleas, por su parte, fortalecen la participación democrática, la corresponsabilidad y la toma de decisiones en comunidad, permitiendo que cada voz sea escuchada y valorada.",
-      "Entendemos el diálogo como una herramienta para aprender, no para convencer. Al compartir diferentes perspectivas, niñas y niños descubren que el conocimiento también se construye en comunidad y que las diferencias de opinión representan oportunidades para ampliar la comprensión del mundo.",
-      "De esta manera fortalecemos la curiosidad, el pensamiento reflexivo, la capacidad de tomar decisiones fundamentadas y la disposición para participar de manera activa, responsable y respetuosa en la vida de su comunidad",
-    ],
-  },
-  {
-    title: "7. Expresión artística",
-    slug: "expresion-artistica",
-    cardHighlight: "El arte también es una forma de comprender el mundo.",
-    ctaLabel: "Conoce el cómo y el por qué",
-    paragraphs: [
-      "En KORU entendemos el arte como un lenguaje esencial para expresar, imaginar, crear y dar sentido a la experiencia humana. A través de diversas disciplinas artísticas, niñas y niños desarrollan su creatividad, sensibilidad y capacidad de comunicar lo que piensan, sienten y descubren.",
-    ],
-    detailParagraphs: [
-      "En KORU creemos que el arte no es una actividad complementaria, sino una forma de aprender, pensar y relacionarse con el mundo. Es un lenguaje que permite explorar la imaginación, desarrollar la sensibilidad y expresar aquello que muchas veces las palabras no alcanzan a comunicar.",
-      "Por ello, integramos de manera cotidiana experiencias artísticas como las artes plásticas, el teatro, la música, la danza y otras formas de expresión creativa, entendiéndolas como parte esencial del proceso de aprendizaje y del desarrollo integral.",
-      "A través del arte, niñas y niños elaboran su mundo interior, fortalecen su creatividad, desarrollan la capacidad de observar con atención, experimentar, crear y expresar sus ideas, emociones y experiencias desde su propia autenticidad.",
-      "Creemos que la experiencia artística no solo forma personas más creativas, sino también más sensibles, curiosas y capaces de apreciar la belleza, conectar con los demás y participar de manera significativa en la construcción de la cultura y la comunidad.",
-    ],
-  },
-  {
-    title: "8. Movimiento y desarrollo corporal",
-    slug: "movimiento-y-desarrollo-corporal",
-    cardHighlight: "El cuerpo también piensa, aprende y se expresa.",
-    ctaLabel: "Conoce el cómo y el por qué",
-    paragraphs: [
-      "En KORU entendemos el movimiento como una dimensión esencial del aprendizaje. A través de experiencias corporales como el circo y el frisbee, niñas y niños desarrollan coordinación, conciencia corporal, trabajo en equipo y la confianza para descubrir nuevas posibilidades en sí mismos.",
-    ],
-    detailParagraphs: [
-      "En KORU creemos que el aprendizaje también ocurre a través del cuerpo. El movimiento favorece la atención, la autorregulación, la coordinación, la percepción, la confianza y el desarrollo integral, convirtiéndose en una parte esencial de la experiencia educativa.",
-      "Por ello, integramos propuestas corporales que responden a las necesidades e intereses de cada etapa del desarrollo, entendiendo que moverse no solo fortalece el cuerpo, sino también la manera en que aprendemos, nos relacionamos y habitamos el mundo.",
-      "Nuestros talleres de circo y frisbee fueron elegidos porque promueven habilidades que van mucho más allá de la técnica deportiva. El circo fortalece el equilibrio, la coordinación, la motricidad, la creatividad, la perseverancia y la confianza para afrontar nuevos desafíos. El frisbee, por su parte, desarrolla la coordinación óculo-manual, la percepción espacial, la toma de decisiones, la comunicación, la cooperación y el trabajo en equipo, privilegiando el juego limpio y el respeto por los demás.",
-      "Más que formar deportistas, buscamos que niñas y niños descubran el movimiento como una herramienta para conocerse, cuidar su cuerpo, colaborar con otros y desarrollar habilidades que los acompañarán durante toda la vida.",
     ],
   },
 ];

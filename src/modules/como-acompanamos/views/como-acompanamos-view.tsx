@@ -286,12 +286,12 @@ function MethodologiesCarousel({
         })}
       </div>
 
-      <div className="mx-auto mt-5 flex w-full justify-center gap-5 md:justify-end">
+      <div className="mx-auto mt-5 flex w-full justify-center gap-5">
         <button
           type="button"
           onClick={() => move("previous")}
           disabled={activeIndex === 0}
-          className="text-3xl font-bold leading-none text-black transition hover:text-[var(--orange-500)] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+          className="text-5xl font-black leading-none text-black transition hover:text-[var(--orange-500)] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
           aria-label="Ver metodologia anterior"
         >
           &larr;
@@ -300,7 +300,7 @@ function MethodologiesCarousel({
           type="button"
           onClick={() => move("next")}
           disabled={activeIndex === methodologies.length - 1}
-          className="text-3xl font-bold leading-none text-black transition hover:text-[var(--orange-500)] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+          className="text-5xl font-black leading-none text-black transition hover:text-[var(--orange-500)] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
           aria-label="Ver siguiente metodologia"
         >
           &rarr;

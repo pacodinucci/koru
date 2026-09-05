@@ -82,7 +82,7 @@ export function AdditionalPageContentEditor({
             {page.slug === "/unete-al-equipo" ? <TeamApplicationView pageKey={pageKey} {...bindings} /> : null}
             {page.slug === "/evaluaciones" ? <EvaluacionesView {...bindings} imageMap={imageMap} /> : null}
             {group ? <GroupDetailView pageKey={pageKey} group={group} {...bindings} imageMap={imageMap} /> : null}
-            {methodology ? <MethodologyDetailView pageKey={pageKey} methodology={methodology} {...bindings} /> : null}
+            {methodology ? <MethodologyDetailView pageKey={pageKey} methodology={methodology} {...bindings} imageMap={imageMap} /> : null}
           </LandingPageLayout>
         );
       }}

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { MethodologyDetailView } from "@/modules/cms/components/child-page-content-views";
 import { cmsRouteKey } from "@/modules/cms/child-content-config";
+import { getCmsPublishedImageMapBySlug } from "@/modules/cms/server/cms-image.repository";
 import { getCmsPublishedTextMapBySlug } from "@/modules/cms/server/cms-text.repository";
 import { methodologies } from "@/modules/como-acompanamos/content-slots";
 
@@ -22,6 +23,9 @@ export default async function MethodologyPage({ params }: MethodologyPageProps) 
   const methodology = methodologies.find((item) => item.slug === metodologia);
   if (!methodology) notFound();
   const slug = `/como-acompanamos/metodologias/${metodologia}`;
-  const textMap = await getCmsPublishedTextMapBySlug(slug);
-  return <MethodologyDetailView methodology={methodology} pageKey={cmsRouteKey(slug)} textMap={textMap} />;
+  const [textMap, imageMap] = await Promise.all([
+    getCmsPublishedTextMapBySlug(slug),
+    getCmsPublishedImageMapBySlug(slug),
+  ]);
+  return <MethodologyDetailView methodology={methodology} pageKey={cmsRouteKey(slug)} textMap={textMap} imageMap={imageMap} />;
 }

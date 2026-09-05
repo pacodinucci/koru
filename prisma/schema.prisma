@@ -372,6 +372,7 @@ model CmsImageEntry {
   draftFrameShape    String   @default("RECTANGULAR")
   draftFrameScale    Float    @default(1)
   draftRotation      Int      @default(0)
+  draftRounded       Boolean?
   publishedCropX     Float?
   publishedCropY     Float?
   publishedZoom      Float?
@@ -380,6 +381,7 @@ model CmsImageEntry {
   publishedFrameShape String?
   publishedFrameScale Float?
   publishedRotation   Int?
+  publishedRounded    Boolean?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

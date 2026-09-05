@@ -143,6 +143,9 @@ const methodologyPages = Object.fromEntries(methodologies.map((methodology) => {
       { key: "methodology.title", label: "Título", defaultValue: methodology.title },
       ...paragraphs.map((value, index) => ({ key: `methodology.paragraph.${index}`, label: `Párrafo ${index + 1}`, defaultValue: value, multiline: true })),
     ],
+    images: [
+      { key: "methodology.image.hero", label: "Imagen principal", defaultSrc: methodology.imageSrc, alt: methodology.imageAlt },
+    ],
   } satisfies ChildCmsPage];
 }));
 

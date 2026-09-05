@@ -13,6 +13,7 @@ export type CmsImageValue = {
   frameShape: "RECTANGULAR" | "RECTANGLE_HORIZONTAL" | "RECTANGLE_VERTICAL" | "SQUARE" | "OVAL" | "CIRCLE" | "IRREGULAR";
   frameScale: number;
   rotation: number;
+  frameRounded?: boolean;
 };
 
 export type CmsImageMap = Record<string, CmsImageValue>;
@@ -40,6 +41,7 @@ function entriesToMap(
     draftFrameShape: string;
     draftFrameScale: number;
     draftRotation: number;
+    draftRounded: boolean | null;
     publishedCropX: number | null;
     publishedCropY: number | null;
     publishedZoom: number | null;
@@ -48,6 +50,7 @@ function entriesToMap(
     publishedFrameShape: string | null;
     publishedFrameScale: number | null;
     publishedRotation: number | null;
+    publishedRounded: boolean | null;
   }>,
   mode: "draft" | "published",
 ): CmsImageMap {
@@ -67,6 +70,7 @@ function entriesToMap(
             frameShape: normalizeFrameShape(entry.draftFrameShape),
             frameScale: entry.draftFrameScale,
             rotation: entry.draftRotation,
+            frameRounded: entry.draftRounded ?? undefined,
           },
         ]];
       }
@@ -87,6 +91,7 @@ function entriesToMap(
               frameShape: normalizeFrameShape(entry.publishedFrameShape),
               frameScale: entry.publishedFrameScale ?? 1,
               rotation: entry.publishedRotation ?? 0,
+              frameRounded: entry.publishedRounded ?? undefined,
             },
           ]]
         : [];
@@ -136,6 +141,7 @@ export async function saveCmsDraftImage(
       draftFrameShape: image.frameShape,
       draftFrameScale: image.frameScale,
       draftRotation: image.rotation,
+      draftRounded: image.frameRounded,
     },
     update: {
       draftUrl: image.url,
@@ -148,6 +154,7 @@ export async function saveCmsDraftImage(
       draftFrameShape: image.frameShape,
       draftFrameScale: image.frameScale,
       draftRotation: image.rotation,
+      draftRounded: image.frameRounded,
     },
   });
 }
@@ -173,6 +180,7 @@ export async function saveCmsDraftImageMap(
           draftFrameShape: image.frameShape,
           draftFrameScale: image.frameScale,
           draftRotation: image.rotation,
+          draftRounded: image.frameRounded,
 
         },
         update: {
@@ -186,6 +194,7 @@ export async function saveCmsDraftImageMap(
           draftFrameShape: image.frameShape,
           draftFrameScale: image.frameScale,
           draftRotation: image.rotation,
+          draftRounded: image.frameRounded,
 
         },
       }),
@@ -224,6 +233,7 @@ export async function publishCmsImageMapWithClient(
           draftFrameShape: image.frameShape,
           draftFrameScale: image.frameScale,
           draftRotation: image.rotation,
+          draftRounded: image.frameRounded,
 
           publishedUrl: image.url,
           publishedPublicId: image.publicId,
@@ -235,6 +245,7 @@ export async function publishCmsImageMapWithClient(
           publishedFrameShape: image.frameShape,
           publishedFrameScale: image.frameScale,
           publishedRotation: image.rotation,
+          publishedRounded: image.frameRounded,
         },
         update: {
           draftUrl: image.url,
@@ -247,6 +258,7 @@ export async function publishCmsImageMapWithClient(
           draftFrameShape: image.frameShape,
           draftFrameScale: image.frameScale,
           draftRotation: image.rotation,
+          draftRounded: image.frameRounded,
 
           publishedUrl: image.url,
           publishedPublicId: image.publicId,
@@ -258,6 +270,7 @@ export async function publishCmsImageMapWithClient(
           publishedFrameShape: image.frameShape,
           publishedFrameScale: image.frameScale,
           publishedRotation: image.rotation,
+          publishedRounded: image.frameRounded,
         },
       }),
     ),
@@ -278,6 +291,7 @@ export async function publishAllCmsDraftImages() {
       "publishedFrameShape" = "draftFrameShape",
       "publishedFrameScale" = "draftFrameScale",
       "publishedRotation" = "draftRotation",
+      "publishedRounded" = "draftRounded",
       "updatedAt" = NOW()
   `;
 }

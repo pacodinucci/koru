@@ -94,10 +94,10 @@ function getLandingEditorFontFamilyValue(value: string | undefined) {
 
 const PREVIEW_ZOOM_BASE_SCALE = 0.62;
 const PREVIEW_CANVAS_WIDTH = 1440;
-const IMAGE_SAVE_DELAY_MS = 600;
+const IMAGE_SAVE_DELAY_MS = 1_000;
 
 function isSameCmsImageValue(left: CmsImageValue | undefined, right: CmsImageValue | undefined) {
-  return left?.url === right?.url && left?.publicId === right?.publicId && left?.cropX === right?.cropX && left?.cropY === right?.cropY && left?.zoom === right?.zoom && left?.fitMode === right?.fitMode && left?.frameSize === right?.frameSize && left?.frameShape === right?.frameShape && left?.frameScale === right?.frameScale && left?.rotation === right?.rotation;
+  return left?.url === right?.url && left?.publicId === right?.publicId && left?.cropX === right?.cropX && left?.cropY === right?.cropY && left?.zoom === right?.zoom && left?.fitMode === right?.fitMode && left?.frameSize === right?.frameSize && left?.frameShape === right?.frameShape && left?.frameScale === right?.frameScale && left?.rotation === right?.rotation && left?.frameRounded === right?.frameRounded;
 }
 
 function normalizeTextMap(textMap: LandingTextMap, slots: LandingContentSlot[]) {

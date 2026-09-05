@@ -1,6 +1,6 @@
 "use client";
 
-import { Images, Loader2, Move, RotateCcw, RotateCw, Upload, ZoomIn, ZoomOut } from "lucide-react";
+import { CircleDashed, Images, Loader2, Move, RotateCcw, RotateCw, SquareDashed, Upload, ZoomIn, ZoomOut } from "lucide-react";
 import Image from "next/image";
 import { useId, useState } from "react";
 
@@ -227,22 +227,30 @@ export function CmsImageField({
                   disabled={!value}
                   onClick={() => value && void commitImage({ ...value, frameShape: shape.id })}
                   className={cn(
-                    "flex size-11 shrink-0 items-center justify-center rounded-md border p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-700 disabled:cursor-not-allowed disabled:opacity-45",
+                    "flex size-10 shrink-0 items-center justify-center rounded-xl p-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-700 disabled:cursor-not-allowed disabled:opacity-45",
                     selected
-                      ? "border-2 border-primary bg-slate-100"
-                      : "border-slate-200 bg-white hover:border-slate-400",
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-slate-50 text-slate-600 hover:bg-slate-100",
                   )}
                 >
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "block w-7 bg-slate-300",
+                      "block w-6 bg-current/55",
                       shape.previewClassName,
                     )}
                   />
                 </button>
               );
             })}
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-slate-600">Bordes</p>
+            <div className="flex gap-2">
+              <Button type="button" size="icon" variant="ghost" aria-label="Bordes redondeados" title="Bordes redondeados" className={cn("size-10 rounded-xl", value?.frameRounded === true ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-slate-50 text-slate-600 hover:bg-slate-100")} disabled={!value} onClick={() => value && void commitImage({ ...value, frameRounded: true })}><CircleDashed className="size-5" /></Button>
+              <Button type="button" size="icon" variant="ghost" aria-label="Bordes rectos" title="Bordes rectos" className={cn("size-10 rounded-xl", value?.frameRounded === false ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-slate-50 text-slate-600 hover:bg-slate-100")} disabled={!value} onClick={() => value && void commitImage({ ...value, frameRounded: false })}><SquareDashed className="size-5" /></Button>
+            </div>
           </div>
 
         <div className="grid grid-cols-2 gap-2"><Button type="button" size="sm" variant={(value?.fitMode ?? "COVER") === "COVER" ? "default" : "outline"} disabled={!value} onClick={() => value && void commitImage({ ...value, fitMode: "COVER" })}>Recortar</Button><Button type="button" size="sm" variant={value?.fitMode === "CONTAIN" ? "default" : "outline"} disabled={!value} onClick={() => value && void commitImage({ ...value, fitMode: "CONTAIN", zoom: 1 })}>Completa</Button></div>

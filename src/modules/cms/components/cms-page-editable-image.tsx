@@ -84,13 +84,15 @@ export function CmsPageEditableImage({
       borderRadius: frame.style.borderRadius,
       clipPath: frame.style.clipPath,
       overflow: frame.style.overflow,
+      transform: frame.style.transform,
+      transformOrigin: frame.style.transformOrigin,
     };
     const frameShape = lockFrame ? "RECTANGULAR" : value?.frameShape ?? "RECTANGULAR";
 
     if (!lockFrame && value?.frameSize === "COMPACT") frame.style.aspectRatio = "1 / 1";
     if (!lockFrame && value?.frameSize === "LARGE") frame.style.aspectRatio = "3 / 5";
 
-    if (frameShape === "RECTANGLE_HORIZONTAL") {
+if (frameShape === "RECTANGLE_HORIZONTAL") {
       frame.style.aspectRatio = "4 / 3";
       frame.style.borderRadius = "0";
     }
@@ -115,14 +117,25 @@ export function CmsPageEditableImage({
       frame.style.borderRadius = "44% 56% 47% 53% / 53% 45% 55% 47%";
     }
     if (frameShape !== "RECTANGULAR") frame.style.overflow = "hidden";
+    if (["RECTANGULAR", "RECTANGLE_HORIZONTAL", "RECTANGLE_VERTICAL", "SQUARE"].includes(frameShape)) {
+      if (value?.frameRounded === true) frame.style.borderRadius = "2rem";
+      if (value?.frameRounded === false) frame.style.borderRadius = "0";
+    }
+    const frameScale = lockFrame ? 1 : value?.frameScale ?? 1;
+    if (frameScale !== 1) {
+      frame.style.transformOrigin = "center";
+      frame.style.transform = `scale(${frameScale})`;
+    }
 
     return () => {
       frame.style.aspectRatio = previous.aspectRatio;
       frame.style.borderRadius = previous.borderRadius;
       frame.style.clipPath = previous.clipPath;
       frame.style.overflow = previous.overflow;
+      frame.style.transform = previous.transform;
+      frame.style.transformOrigin = previous.transformOrigin;
     };
-  }, [value?.frameShape, value?.frameSize]);
+  }, [lockFrame, value?.frameRounded, value?.frameScale, value?.frameShape, value?.frameSize]);
 
   useEffect(() => () => panCleanupRef.current?.(), []);
 
