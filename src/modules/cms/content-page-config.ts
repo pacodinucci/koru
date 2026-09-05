@@ -76,6 +76,10 @@ export const quienesSomosCmsImageSlots: CmsImageSlot[] = [
 
 export const comoAcompanamosCmsImageSlots: CmsImageSlot[] = [
   { key: "accompaniment.image.hero", label: "Hero", defaultSrc: "/assets/images/DSC01280.png", alt: "Acompañantes y niñez compartiendo un espacio de aprendizaje" },
+  { key: "accompaniment.image.group.0", label: "Grupos · Esporas", defaultSrc: "/assets/images/DSC01338.png", alt: "Niñas y niños pequeños explorando en la naturaleza", frameLocked: true },
+  { key: "accompaniment.image.group.1", label: "Grupos · Koru", defaultSrc: "/assets/images/DSC01384.png", alt: "Niñas y niños en una etapa de transición de aprendizaje", frameLocked: true },
+  { key: "accompaniment.image.group.2", label: "Grupos · Helechos 1", defaultSrc: "/assets/images/DSC01379.png", alt: "Grupo escolar en actividades colaborativas", frameLocked: true },
+  { key: "accompaniment.image.group.3", label: "Grupos · Helechos 2", defaultSrc: "/assets/images/DSC01443.png", alt: "Niñas y niños en experiencias de aprendizaje", frameLocked: true },
   { key: "accompaniment.image.evaluation", label: "Evaluación", defaultSrc: "/assets/images/DSC01386.png", alt: "Acompañante registrando procesos de aprendizaje en comunidad" },
 ];
 

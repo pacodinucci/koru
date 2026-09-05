@@ -206,6 +206,55 @@ export function CmsImageField({
           )}
         </div>
 
+        <input
+          id={inputId}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/avif"
+          className="sr-only"
+          disabled={isUploading}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (file) {
+              void upload(file);
+            }
+          }}
+        />
+
+        <div className="grid gap-2">
+          <label
+            htmlFor={inputId}
+            aria-disabled={isUploading}
+            className={cn(
+              buttonVariants(),
+              "cursor-pointer",
+              isUploading && "pointer-events-none opacity-50",
+            )}
+          >
+            {isUploading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
+            {isUploading ? "Optimizando y subiendo..." : "Subir nueva imagen"}
+          </label>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void openLibrary()}
+          >
+            <Images className="mr-2 h-4 w-4" />
+            Elegir de Koru
+          </Button>
+        </div>
+
+        <p className="text-xs leading-relaxed text-slate-500">
+          Las imágenes nuevas se convierten a WebP, se ajustan a un máximo de
+          2400 px y se comprimen antes de subir.
+        </p>
+
+        {error ? <p className="text-xs text-rose-700">{error}</p> : null}
+
         <div className="space-y-3 rounded-xl border border-slate-200 p-3">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-600"><span>Zoom</span><span>{(value?.zoom ?? 1).toFixed(1)}×</span></div>
           <div className="flex items-center gap-2"><ZoomOut className="h-4 w-4 text-slate-500" /><input type="range" min="1" max="3" step="0.1" value={value?.zoom ?? 1} disabled={!value} onChange={(event) => value && onChange({ ...value, zoom: Number(event.target.value) })} onPointerUp={(event) => value && void onCommit({ ...value, zoom: Number(event.currentTarget.value) })} onBlur={(event) => value && void onCommit({ ...value, zoom: Number(event.currentTarget.value) })} className="w-full" /><ZoomIn className="h-4 w-4 text-slate-500" /></div>          <div
@@ -290,54 +339,7 @@ export function CmsImageField({
           </p>
         ) : null}
 
-        <input
-          id={inputId}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/avif"
-          className="sr-only"
-          disabled={isUploading}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            event.target.value = "";
-            if (file) {
-              void upload(file);
-            }
-          }}
-        />
 
-        <div className="grid gap-2">
-          <label
-            htmlFor={inputId}
-            aria-disabled={isUploading}
-            className={cn(
-              buttonVariants(),
-              "cursor-pointer",
-              isUploading && "pointer-events-none opacity-50",
-            )}
-          >
-            {isUploading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Upload className="mr-2 h-4 w-4" />
-            )}
-            {isUploading ? "Optimizando y subiendo..." : "Subir nueva imagen"}
-          </label>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void openLibrary()}
-          >
-            <Images className="mr-2 h-4 w-4" />
-            Elegir de Koru
-          </Button>
-        </div>
-
-        <p className="text-xs leading-relaxed text-slate-500">
-          Las imágenes nuevas se convierten a WebP, se ajustan a un máximo de
-          2400 px y se comprimen antes de subir.
-        </p>
-
-        {error ? <p className="text-xs text-rose-700">{error}</p> : null}
 
         {showLibrary ? (
           <div className="space-y-3 border-t pt-4">

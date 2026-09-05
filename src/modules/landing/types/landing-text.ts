@@ -284,18 +284,7 @@ export function getLandingFieldFontSize(
   const parsed = Number(raw);
   const size = Number.isFinite(parsed) ? parsed : fallbackPx;
 
-  if (responsiveRaw != null && responsiveRaw.trim() !== "") {
-    return Math.min(800, Math.max(10, size));
-  }
-
-  const responsiveCeiling =
-    mode === "mobile"
-      ? Math.min(fallbackPx, 48)
-      : mode === "tablet"
-        ? Math.min(fallbackPx, 56)
-        : fallbackPx;
-
-  return Math.min(responsiveCeiling, Math.min(800, Math.max(10, size)));
+  return Math.max(10, size);
 }
 
 function getValidHexColor(raw: string | undefined) {

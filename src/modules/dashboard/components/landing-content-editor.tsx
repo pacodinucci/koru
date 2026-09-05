@@ -902,6 +902,7 @@ export function LandingContentSidePanel({
             <Input
               className="w-20"
               type="number"
+              min="10"
               value={textMap[styleKeys.size] ?? String(selectedSlot.defaultSize)}
               onChange={(event) => onChange(styleKeys.size, event.target.value)}
             />

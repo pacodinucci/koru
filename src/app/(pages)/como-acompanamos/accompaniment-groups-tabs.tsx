@@ -2,9 +2,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
 import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
 import { getComoAcompanamosContentSlots, groupSlotId } from "@/modules/como-acompanamos/content-slots";
@@ -24,6 +25,7 @@ type AccompanimentGroup = {
 type AccompanimentGroupsTabsProps = {
   groups: AccompanimentGroup[];
   textMap?: LandingTextMap;
+  imageMap?: CmsImageMap;
 } & Pick<
   LandingPreviewBindings,
   "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
@@ -117,6 +119,7 @@ function groupSlug(title: string) {
 export function AccompanimentGroupsTabs({
   groups,
   textMap = {},
+  imageMap,
   previewMode,
   selectedContentSlotId,
   onSelectContentSlot,
@@ -293,7 +296,18 @@ export function AccompanimentGroupsTabs({
             </div>
             <div className="relative mx-auto w-full max-w-[22rem]">
               <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-                <Image src={group.imageSrc} alt={group.imageAlt} fill className="object-cover" />
+                <CmsPageEditableImage
+                  slotId={`accompaniment.image.group.${index}`}
+                  defaultSrc={group.imageSrc}
+                  alt={group.imageAlt}
+                  imageMap={imageMap}
+                  previewMode={previewMode}
+                  selectedContentSlotId={selectedContentSlotId}
+                  onSelectContentSlot={onSelectContentSlot}
+                  fill
+                  className="object-cover"
+                  lockFrame
+                />
               </div>
             </div>
           </div>

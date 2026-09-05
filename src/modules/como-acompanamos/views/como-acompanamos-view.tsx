@@ -468,6 +468,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
           </SectionHeading>
           <AccompanimentGroupsTabs
             groups={resolvedAccompanimentGroups}
+            imageMap={imageMap}
             {...slotBindingProps}
           />
         </div>
