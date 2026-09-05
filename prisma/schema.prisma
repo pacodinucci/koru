@@ -24,6 +24,7 @@ model User {
   calendarEventAttendances   CalendarEventAttendance[]
   googleCalendarConnection   GoogleCalendarConnection?
   uploadedMediaAssets        MediaAsset[]
+  uploadedDocuments          Document[]
   createdInvitations         UserInvitation[]            @relation("UserInvitationsCreated")
   teacherProfile             TeacherProfile?
   studentGuardianLinks       StudentGuardian[]
@@ -124,6 +125,11 @@ enum BlogPostVisibility {
 enum BlogTagType {
   GROUP
   CUSTOM
+}
+
+enum DocumentStatus {
+  DRAFT
+  PUBLISHED
 }
 
 enum ContactMessageStatus {
@@ -850,6 +856,25 @@ model MediaAsset {
   @@index([calendarEventId])
 }
 
+model Document {
+  id                 String         @id @default(cuid())
+  title              String
+  slug               String         @unique
+  originalFileName   String
+  mimeType           String
+  sizeBytes          Int
+  cloudinaryUrl      String         @unique
+  cloudinaryPublicId String         @unique
+  status             DocumentStatus @default(DRAFT)
+  uploadedById       String
+  uploadedBy         User           @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  publishedAt        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([uploadedById])
+}
 model CalendarEventAudience {
   id        String        @id @default(cuid())
   eventId   String

@@ -10,6 +10,7 @@ import {
   ChevronUp,
   LayoutDashboard,
   FileText,
+  FolderOpen,
   NotebookPen,
   CalendarDays,
   ClipboardList,
@@ -131,6 +132,7 @@ export function DashboardShell({
   const isExamsActive = pathname.startsWith("/dashboard/exams");
   const isLayoutActive = pathname.startsWith("/dashboard/diseno");
   const isContentActive = pathname.startsWith("/dashboard/content");
+  const isDocumentsActive = pathname.startsWith("/dashboard/documentos");
   const isPageEditorActive =
     pathname.startsWith("/dashboard/pages/edit") ||
     /^\/dashboard\/pages\/[^/]+$/.test(pathname);
@@ -298,6 +300,19 @@ export function DashboardShell({
                     ) : null}
                   </SidebarMenuItem>
                 ) : null}
+                {isAdmin ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isDocumentsActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/documentos" />}
+                    >
+                      <FolderOpen />
+                      <span>Documentos</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
+
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={isCalendarActive}

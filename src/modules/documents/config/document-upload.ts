@@ -1,0 +1,3 @@
+export const DOCUMENT_UPLOAD_MAX_SIZE_MB = 20;
+export const DOCUMENT_UPLOAD_MAX_SIZE_BYTES = DOCUMENT_UPLOAD_MAX_SIZE_MB * 1024 * 1024;
+export const DOCUMENT_UPLOAD_ACCEPTED_TYPES = ["application/pdf"] as const;

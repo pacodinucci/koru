@@ -1,6 +1,8 @@
 import { CmsPageEditableCopy } from "@/modules/cms/components/cms-page-editable-copy";
-import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
-
+import type {
+  LandingPreviewBindings,
+  LandingTextMap,
+} from "@/modules/landing/types/landing-text";
 
 const admissionSteps = [
   {
@@ -53,28 +55,59 @@ const admissionSteps = [
 
 type AdmisionesViewProps = {
   textMap: LandingTextMap;
-} & Pick<LandingPreviewBindings, "previewMode" | "selectedContentSlotId" | "onSelectContentSlot">;
+} & Pick<
+  LandingPreviewBindings,
+  "previewMode" | "selectedContentSlotId" | "onSelectContentSlot"
+>;
 
-export function AdmisionesView({ textMap, previewMode, selectedContentSlotId, onSelectContentSlot }: AdmisionesViewProps) {
-  const editable = { page: "admisiones" as const, textMap, previewMode, selectedContentSlotId, onSelectContentSlot };
+export function AdmisionesView({
+  textMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
+}: AdmisionesViewProps) {
+  const editable = {
+    page: "admisiones" as const,
+    textMap,
+    previewMode,
+    selectedContentSlotId,
+    onSelectContentSlot,
+  };
   return (
-    <main className="bg-white pb-16" style={{ fontFamily: "var(--font-montserrat)" }}>
+    <main
+      className="bg-white pb-16"
+      style={{ fontFamily: "var(--font-montserrat)" }}
+    >
       <section className="mx-auto w-full max-w-7xl space-y-10 px-6 pt-16 md:px-10 lg:space-y-12 lg:px-14 lg:pt-24">
         <header className="space-y-6">
-          <p className="text-sm font-medium tracking-[0.18em] text-[#6d7e96]"><CmsPageEditableCopy as="span" slotId="admissions.eyebrow" {...editable} /></p>
+          <p className="text-sm font-medium tracking-[0.18em] text-[#6d7e96]">
+            <CmsPageEditableCopy
+              as="span"
+              slotId="admissions.eyebrow"
+              {...editable}
+            />
+          </p>
 
           <h1 className="space-y-1 text-5xl leading-[0.95] tracking-tight text-black md:text-6xl lg:text-7xl">
             <span
               className="block font-light"
               style={{ fontFamily: "var(--font-roboto-condensed)" }}
             >
-              <CmsPageEditableCopy as="span" slotId="admissions.hero.first" {...editable} />
+              <CmsPageEditableCopy
+                as="span"
+                slotId="admissions.hero.first"
+                {...editable}
+              />
             </span>
             <span
               className="block italic"
               style={{ fontFamily: "var(--font-indie-flower)" }}
             >
-              <CmsPageEditableCopy as="span" slotId="admissions.hero.second" {...editable} />
+              <CmsPageEditableCopy
+                as="span"
+                slotId="admissions.hero.second"
+                {...editable}
+              />
             </span>
           </h1>
         </header>
@@ -86,7 +119,11 @@ export function AdmisionesView({ textMap, previewMode, selectedContentSlotId, on
             className="max-w-5xl text-2xl leading-[1.3] text-black md:text-3xl"
             style={{ fontFamily: "var(--font-roboto-condensed)" }}
           >
-            <CmsPageEditableCopy as="span" slotId="admissions.intro" {...editable} />
+            <CmsPageEditableCopy
+              as="span"
+              slotId="admissions.intro"
+              {...editable}
+            />
           </p>
         </div>
       </section>
@@ -95,13 +132,21 @@ export function AdmisionesView({ textMap, previewMode, selectedContentSlotId, on
         <div className="rounded-[2rem] bg-[#f8ead8] px-5 py-10 shadow-sm md:px-8 lg:px-10 lg:py-14">
           <header className="max-w-3xl space-y-3 text-left">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#6d7e45]">
-              <CmsPageEditableCopy as="span" slotId="admissions.timeline.eyebrow" {...editable} />
+              <CmsPageEditableCopy
+                as="span"
+                slotId="admissions.timeline.eyebrow"
+                {...editable}
+              />
             </p>
             <h2
               className="text-4xl font-semibold leading-tight text-[#55764d] md:text-5xl"
               style={{ fontFamily: "var(--font-roboto-condensed)" }}
             >
-              <CmsPageEditableCopy as="span" slotId="admissions.timeline.title" {...editable} />
+              <CmsPageEditableCopy
+                as="span"
+                slotId="admissions.timeline.title"
+                {...editable}
+              />
             </h2>
           </header>
 
@@ -121,17 +166,27 @@ export function AdmisionesView({ textMap, previewMode, selectedContentSlotId, on
                 >
                   <div
                     className={`rounded-2xl border border-[#55764d]/15 bg-white/70 p-5 shadow-sm md:p-6 ${
-                    index % 2 === 0 ? "md:col-start-3" : "md:col-start-1 md:text-right"
+                      index % 2 === 0
+                        ? "md:col-start-3"
+                        : "md:col-start-1 md:text-right"
                     }`}
                   >
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9f9b35]">
-                      <CmsPageEditableCopy as="span" slotId={`admissions.step.${index}.eyebrow`} {...editable} />
+                      <CmsPageEditableCopy
+                        as="span"
+                        slotId={`admissions.step.${index}.eyebrow`}
+                        {...editable}
+                      />
                     </p>
                     <h3
                       className="mt-2 text-3xl font-semibold leading-none text-[#55764d]"
                       style={{ fontFamily: "var(--font-roboto-condensed)" }}
                     >
-                      <CmsPageEditableCopy as="span" slotId={`admissions.step.${index}.title`} {...editable} />
+                      <CmsPageEditableCopy
+                        as="span"
+                        slotId={`admissions.step.${index}.title`}
+                        {...editable}
+                      />
                     </h3>
                     <ul className="mt-4 space-y-2 text-sm leading-6 text-[#486141] md:text-base">
                       {item.items.map((text, itemIndex) => (
@@ -142,7 +197,13 @@ export function AdmisionesView({ textMap, previewMode, selectedContentSlotId, on
                           }`}
                         >
                           <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#55764d]" />
-                          <span><CmsPageEditableCopy as="span" slotId={`admissions.step.${index}.item.${itemIndex}`} {...editable} /></span>
+                          <span>
+                            <CmsPageEditableCopy
+                              as="span"
+                              slotId={`admissions.step.${index}.item.${itemIndex}`}
+                              {...editable}
+                            />
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -168,11 +229,15 @@ export function AdmisionesView({ textMap, previewMode, selectedContentSlotId, on
 
         <div className="mt-8 text-center md:mt-10">
           <a
-            href="/assets/docs/contrato-de-colaboracion.pdf"
+            href="/documentos/convenio-ingreso"
             download
             className="text-base font-medium text-[#55764d] underline decoration-[#55764d]/70 underline-offset-4 transition hover:text-[#3f5d38] hover:decoration-[#3f5d38] md:text-lg"
           >
-            <CmsPageEditableCopy as="span" slotId="admissions.contract" {...editable} />
+            <CmsPageEditableCopy
+              as="span"
+              slotId="admissions.contract"
+              {...editable}
+            />
           </a>
         </div>
       </section>
