@@ -98,7 +98,7 @@ export function GroupDetailView({
             ))}
           </div>
         </div>
-        <div className="relative mx-auto aspect-[4/5] w-full max-w-[24rem] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-[24rem] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%] lg:sticky lg:top-28 lg:self-start">
           <CmsPageEditableImage slotId="group.image.hero" defaultSrc={group.imageSrc} alt={group.imageAlt} imageMap={props.imageMap} previewMode={props.previewMode} selectedContentSlotId={props.selectedContentSlotId} onSelectContentSlot={props.onSelectContentSlot} fill className="object-cover" priority />
         </div>
       </section>
