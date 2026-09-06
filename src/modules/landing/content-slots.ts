@@ -182,6 +182,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     selectorLabel: "Diferentes / Título",
     defaultValue: "Qué nos hace diferentes",
     defaultSize: 42,
+    responsiveDefaultSizes: { tablet: 36, mobile: 30 },
     styleControls: ["font", "size", "color", "align", "weight"],
   },
   {
@@ -191,6 +192,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     defaultValue:
       "Creemos que la educación es un proceso compartido. Niñas, niños, familias y colaboradores formamos un mismo organismo, donde cada parte influye en el desarrollo individual y colectivo.",
     defaultSize: 20,
+    responsiveDefaultSizes: { tablet: 18, mobile: 16 },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
@@ -201,6 +203,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     defaultValue:
       "Por eso, el acompañamiento no ocurre sólo dentro del espacio educativo, sino también en casa y en la relación cotidiana.",
     defaultSize: 28,
+    responsiveDefaultSizes: { tablet: 24, mobile: 22 },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "weight", "lineHeight"],
   },
@@ -211,6 +214,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     defaultValue:
       "Ser parte de esta comunidad implica una participación activa y comprometida. Ser parte de este espacio implica formar parte de una comunidad que aprende, se cuestiona y evoluciona.",
     defaultSize: 18,
+    responsiveDefaultSizes: { tablet: 17, mobile: 16 },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
@@ -220,6 +224,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     selectorLabel: "Enfoque / Título",
     defaultValue: "Breve explicación del enfoque",
     defaultSize: 42,
+    responsiveDefaultSizes: { tablet: 36, mobile: 30 },
     styleControls: ["font", "size", "color", "align", "weight"],
   },
   {
@@ -229,6 +234,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     defaultValue:
       "Koru propone un enfoque pedagógico integral que combina mirada antroposófica, inteligencia socioemocional, aprendizaje transdisciplinario por proyectos y habilidades del siglo XXI.",
     defaultSize: 20,
+    responsiveDefaultSizes: { tablet: 18, mobile: 16 },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
@@ -239,6 +245,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     defaultValue:
       "Las niñas y los niños aprenden a partir de experiencias significativas conectadas con sus intereses.",
     defaultSize: 28,
+    responsiveDefaultSizes: { tablet: 24, mobile: 22 },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "weight", "lineHeight"],
   },
@@ -249,6 +256,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     defaultValue:
       "Acompañamos cada proceso de forma personalizada, cultivando capacidades cognitivas, emocionales, sociales y prácticas en comunidad y en vínculo con la naturaleza.",
     defaultSize: 18,
+    responsiveDefaultSizes: { tablet: 17, mobile: 16 },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
@@ -258,6 +266,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     selectorLabel: "Diferentes / Imagen texto",
     defaultValue: "Una comunidad que aprende unida, crece unida.",
     defaultSize: 18,
+    responsiveDefaultSizes: { tablet: 17, mobile: 16 },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
@@ -267,6 +276,7 @@ export const hardcodedLandingContentSlots: LandingContentSlot[] = [
     selectorLabel: "Enfoque / Imagen texto",
     defaultValue: "Cada experiencia abre una nueva forma de aprender.",
     defaultSize: 18,
+    responsiveDefaultSizes: { tablet: 17, mobile: 16 },
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },

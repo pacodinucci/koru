@@ -80,7 +80,7 @@ export function NonCmsEditorialSection({
   const legacyFrameSizeScale = frameSize === "COMPACT" ? 0.8 : frameSize === "LARGE" ? 1.25 : 1;
   const frameScale = imageSlotId ? imageMap?.[imageSlotId]?.frameScale ?? 1 : 1;
   const frameStyle = {
-    width: `calc(${imageFrameWidth} * ${imageScale} * ${legacyFrameSizeScale} * ${frameScale})`,
+    width: `min(100%, calc(${imageFrameWidth} * ${imageScale} * ${legacyFrameSizeScale} * ${frameScale}))`,
     height: imageFrameHeight
       ? `calc(${imageFrameHeight} * ${imageScale} * ${legacyFrameSizeScale} * ${frameScale})`
       : undefined,
