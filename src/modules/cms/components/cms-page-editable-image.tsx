@@ -46,6 +46,8 @@ type CmsPageEditableImageProps = Omit<ImageProps, "src" | "alt" | "ref"> & {
   selectedContentSlotId?: string | null;
   onSelectContentSlot?: (slotId: string) => void;
   lockFrame?: boolean;
+  /** Technical scale applied before the editable zoom to preserve frame coverage. */
+  baseScale?: number;
 };
 
 export function CmsPageEditableImage({
@@ -57,6 +59,7 @@ export function CmsPageEditableImage({
   selectedContentSlotId,
   onSelectContentSlot,
   lockFrame = false,
+  baseScale = 1,
   style,
   fill,
   ...imageProps
@@ -71,7 +74,8 @@ export function CmsPageEditableImage({
   const zoom = value?.zoom ?? 1;
   const fitMode = value?.fitMode ?? "COVER";
   const rotation = value?.rotation ?? 0;
-  const panFactor = (zoom - 1) / zoom;
+  const effectiveZoom = baseScale * zoom;
+  const panFactor = (effectiveZoom - 1) / effectiveZoom;
   const translateX = ((50 - cropX) / 100) * panFactor * 100;
   const translateY = ((50 - cropY) / 100) * panFactor * 100;
   useEffect(() => {
@@ -265,7 +269,7 @@ if (frameShape === "RECTANGLE_HORIZONTAL") {
           ...style,
           objectPosition: `${cropX}% ${cropY}%`,
           objectFit: fitMode.toLowerCase() as "cover" | "contain",
-          transform: `translate3d(${translateX}%, ${translateY}%, 0) scale(${zoom}) rotate(${rotation}deg)`,
+          transform: `translate3d(${translateX}%, ${translateY}%, 0) scale(${effectiveZoom}) rotate(${rotation}deg)`,
         }}
         data-cms-frame-size={value?.frameSize ?? "NORMAL"}
         fill={fill}

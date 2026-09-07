@@ -288,6 +288,9 @@ export function ImageGridSection({
               const isVisibleOnMobile =
                 isMobile && visibleTopCardIndexes.has(index);
               const fixedHref = fixedHoverHrefs[index];
+              const imageAdjustment = imageMap?.[`landing.image.grid.${index}`];
+              const rotation = imageAdjustment?.rotation ?? 0;
+              const baseScale = Math.abs(rotation % 180) === 90 ? 1.25 : 1;
 
               return (
                 <article
@@ -327,12 +330,11 @@ export function ImageGridSection({
                     fill
                     sizes="(min-width: 768px) 25vw, 100vw"
                     quality={70}
+                    baseScale={baseScale}
+                    lockFrame
                     className={cn(
                       "h-full w-full object-cover opacity-65 grayscale transition duration-300 md:group-hover:opacity-100 md:group-hover:grayscale-0 md:group-focus-visible:opacity-100 md:group-focus-visible:grayscale-0",
                       isVisibleOnMobile && "opacity-100 grayscale-0",
-                      index < 3 && index !== 0 && index !== 2
-                        ? "rotate-90 scale-[1.55] group-hover:scale-[1.45] group-focus-visible:scale-[1.45]"
-                        : "scale-110 group-hover:scale-100 group-focus-visible:scale-100",
                     )}
                   />
                   <div
