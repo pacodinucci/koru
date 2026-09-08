@@ -245,14 +245,20 @@ export function ImageGridSection({
         ...sectionBorderStyle,
         ...sectionMarginStyle,
       };
+  const usesCompactHorizontalPadding =
+    responsiveMode === "medium" || responsiveMode === "tablet";
   const bodyPaddingStyle = {
     ...sectionPaddingStyle,
-    paddingLeft: imageGridUseBodyPadding && !isMobile
-      ? "var(--landing-body-padding-x, 24px)"
-      : "0px",
-    paddingRight: imageGridUseBodyPadding && !isMobile
-      ? "var(--landing-body-padding-x, 24px)"
-      : "0px",
+    paddingLeft: usesCompactHorizontalPadding
+      ? "24px"
+      : imageGridUseBodyPadding && !isMobile
+        ? "var(--landing-body-padding-x, 24px)"
+        : "0px",
+    paddingRight: usesCompactHorizontalPadding
+      ? "24px"
+      : imageGridUseBodyPadding && !isMobile
+        ? "var(--landing-body-padding-x, 24px)"
+        : "0px",
   };
   return (
     <section
@@ -387,7 +393,7 @@ export function ImageGridSection({
 
         {remainingCards.length > 0 ? (
           <div
-            className="hidden md:grid"
+            className="hidden lg:grid"
             style={{
               gridTemplateColumns: `repeat(${imageGridColumns}, ${imageGridImageSize}px)`,
               justifyContent: "center",

@@ -458,9 +458,9 @@ export function getLandingContentSlotStyle(
     ...(color ? { color } : null),
     maxWidth: "100%",
     minWidth: 0,
-    overflowWrap: "anywhere",
-    wordBreak: "break-word",
-    hyphens: "auto",
+    overflowWrap: "normal",
+    wordBreak: "normal",
+    hyphens: "manual",
     ...((align === "left" || align === "center" || align === "right" || align === "justify")
       ? { textAlign: responsiveMode === "mobile" && align === "justify" ? "left" : align }
       : null),
