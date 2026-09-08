@@ -133,6 +133,7 @@ export function DashboardShell({
   const isLayoutActive = pathname.startsWith("/dashboard/diseno");
   const isContentActive = pathname.startsWith("/dashboard/content");
   const isDocumentsActive = pathname.startsWith("/dashboard/documentos");
+  const isOperationsActive = pathname.startsWith("/dashboard/operaciones");
   const isPageEditorActive =
     pathname.startsWith("/dashboard/pages/edit") ||
     /^\/dashboard\/pages\/[^/]+$/.test(pathname);
@@ -300,6 +301,17 @@ export function DashboardShell({
                     ) : null}
                   </SidebarMenuItem>
                 ) : null}
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={isOperationsActive}
+                    className={sidebarMenuButtonClass}
+                    render={<Link href="/dashboard/operaciones" />}
+                  >
+                    <HandCoins />
+                    <span>Operaciones</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
                 {isAdmin ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton

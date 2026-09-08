@@ -1,5 +1,6 @@
 export const dashboardRoles = [
   "ADMIN",
+  "ADMIN_OPERATOR",
   "ADMIN_TEACHER",
   "SUPERADMIN",
   "TEACHER",
@@ -7,17 +8,18 @@ export const dashboardRoles = [
 
 export type AppUserRole =
   | "ADMIN"
+  | "ADMIN_OPERATOR"
   | "ADMIN_TEACHER"
   | "SUPERADMIN"
   | "TEACHER"
   | "PARENT";
 
 export function isAdminRole(role: AppUserRole | string) {
-  return role === "ADMIN" || role === "ADMIN_TEACHER" || role === "SUPERADMIN";
+  return role === "ADMIN" || role === "ADMIN_OPERATOR" || role === "ADMIN_TEACHER" || role === "SUPERADMIN";
 }
 
 export function isTeacherRole(role: AppUserRole | string) {
-  return role === "TEACHER" || role === "ADMIN_TEACHER";
+  return role === "TEACHER" || role === "ADMIN_TEACHER" || role === "ADMIN" || role === "ADMIN_OPERATOR";
 }
 
 export function isDashboardRole(role: AppUserRole | string) {

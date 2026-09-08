@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { createPortal } from "react-dom";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 import { BlogPostStatus, BlogPostVisibility } from "@prisma/client";
 import {
   AlignCenterIcon,
@@ -18,6 +18,7 @@ import {
   PilcrowIcon,
   QuoteIcon,
   VideoIcon,
+  XIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
 } from "@/modules/blog/components/novel-blog-editor";
 import {
   createBlogPostAction,
+  deleteCustomBlogTagAction,
   updateBlogPostAction,
 } from "@/modules/blog/server/blog.actions";
 
@@ -51,8 +53,6 @@ const groupTagColorClasses = [
     inactive: "bg-sky-50 text-sky-700 hover:bg-sky-100",
   },
 ];
-
-const suggestedCustomTags = ["Talleres"];
 
 type DashboardBlogComposerProps = {
   tagOptions: {
@@ -97,12 +97,27 @@ export function DashboardBlogComposer({
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(
     initialSelectedGroupIds,
   );
-  const customTagValue =
+  const initialCustomTags =
     editingPost?.tags
       .filter((postTag) => postTag.tag.type === "CUSTOM")
       .map((postTag) => postTag.tag.name)
-      .join(", ") ?? "";
-  const [customTags, setCustomTags] = useState(customTagValue);
+      ?? [];
+  const [customTags, setCustomTags] = useState(initialCustomTags);
+  const [customTagOptions, setCustomTagOptions] = useState(() => {
+    const tags = [...tagOptions.customTags];
+    for (const name of initialCustomTags) {
+      if (
+        !tags.some(
+          (tag) => tag.name.localeCompare(name, "es", { sensitivity: "base" }) === 0,
+        )
+      ) {
+        tags.push({ id: "", name, slug: "" });
+      }
+    }
+    return tags;
+  });
+  const [customTagName, setCustomTagName] = useState("");
+  const [isDeletingCustomTag, startDeletingCustomTag] = useTransition();
 
   useEffect(() => {
     setOpen(true);
@@ -120,34 +135,78 @@ export function DashboardBlogComposer({
     });
   }
 
-  function toggleSuggestedCustomTag(tagName: string) {
+  function toggleCustomTag(tagName: string) {
     setCustomTags((current) => {
-      const tags = current
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean);
-      const hasTag = tags.some(
+      const hasTag = current.some(
         (tag) => tag.localeCompare(tagName, "es", { sensitivity: "base" }) === 0,
       );
 
       return hasTag
-        ? tags
-            .filter(
-              (tag) =>
-                tag.localeCompare(tagName, "es", { sensitivity: "base" }) !== 0,
-            )
-            .join(", ")
-        : [...tags, tagName].join(", ");
+        ? current.filter(
+            (tag) =>
+              tag.localeCompare(tagName, "es", { sensitivity: "base" }) !== 0,
+          )
+        : [...current, tagName];
     });
   }
 
   function hasCustomTag(tagName: string) {
-    return customTags
-      .split(",")
-      .map((tag) => tag.trim())
-      .some(
-        (tag) => tag.localeCompare(tagName, "es", { sensitivity: "base" }) === 0,
+    return customTags.some(
+      (tag) => tag.localeCompare(tagName, "es", { sensitivity: "base" }) === 0,
+    );
+  }
+
+  function createCustomTag() {
+    const name = customTagName.trim().slice(0, 48);
+    if (!name) {
+      return;
+    }
+
+    setCustomTagOptions((current) =>
+      current.some(
+        (tag) => tag.name.localeCompare(name, "es", { sensitivity: "base" }) === 0,
+      )
+        ? current
+        : [...current, { id: "", name, slug: "" }].sort((a, b) =>
+            a.name.localeCompare(b.name, "es"),
+          ),
+    );
+    setCustomTags((current) =>
+      current.some(
+        (tag) => tag.localeCompare(name, "es", { sensitivity: "base" }) === 0,
+      )
+        ? current
+        : [...current, name],
+    );
+    setCustomTagName("");
+  }
+
+  function removeCustomTag(tag: { id: string; name: string }) {
+    const removeFromEditor = () => {
+      setCustomTagOptions((current) =>
+        current.filter(
+          (option) =>
+            option.name.localeCompare(tag.name, "es", { sensitivity: "base" }) !== 0,
+        ),
       );
+      setCustomTags((current) =>
+        current.filter(
+          (name) => name.localeCompare(tag.name, "es", { sensitivity: "base" }) !== 0,
+        ),
+      );
+    };
+
+    if (!tag.id) {
+      removeFromEditor();
+      return;
+    }
+
+    startDeletingCustomTag(async () => {
+      const wasDeleted = await deleteCustomBlogTagAction(tag.id);
+      if (wasDeleted) {
+        removeFromEditor();
+      }
+    });
   }
 
   const panel = portalTarget
@@ -232,25 +291,9 @@ export function DashboardBlogComposer({
                 Imagenes
               </p>
               <div className="grid grid-cols-2 gap-1.5">
-                <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertMosaic3()}>
+                <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertImage()}>
                   <ImagesIcon className="h-3.5 w-3.5" />
-                  Masonry x3
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertMosaic4()}>
-                  <ImagesIcon className="h-3.5 w-3.5" />
-                  Masonry x4
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertImageOriginal()}>
-                  <ImagesIcon className="h-3.5 w-3.5" />
-                  Original
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertImageFixedWidth()}>
-                  <ImagesIcon className="h-3.5 w-3.5" />
-                  Ancho fijo
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertImageFixedHeight()}>
-                  <ImagesIcon className="h-3.5 w-3.5" />
-                  Alto fijo
+                  Imagen
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertGallery2()}>
                   <ImagesIcon className="h-3.5 w-3.5" />
@@ -405,7 +448,7 @@ export function DashboardBlogComposer({
               <div>
                 <p className="text-sm font-medium text-slate-700">Etiquetas</p>
                 <p className="text-xs text-slate-500">
-                  Usá grupos activos y etiquetas custom separadas por coma.
+                  Usá grupos activos o creá etiquetas custom.
                 </p>
               </div>
 
@@ -435,7 +478,7 @@ export function DashboardBlogComposer({
                           type="button"
                           aria-pressed={isSelected}
                           onClick={() => toggleGroupTag(group.id)}
-                          className={`inline-flex h-7 items-center rounded-md px-2.5 text-xs font-medium transition-colors ${
+                          className={`inline-flex h-8 items-center rounded-md px-3 text-sm font-medium transition-colors ${
                             isSelected
                               ? color.selected
                               : color.inactive
@@ -456,40 +499,59 @@ export function DashboardBlogComposer({
                 >
                   Custom
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  {suggestedCustomTags.map((tag) => {
-                    const isSelected = hasCustomTag(tag);
+                <input type="hidden" name="customTags" value={customTags.join(", ")} />
+                {customTagOptions.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {customTagOptions.map((tag) => {
+                      const isSelected = hasCustomTag(tag.name);
 
-                    return (
-                      <button
-                        key={tag}
-                        type="button"
-                        aria-pressed={isSelected}
-                        onClick={() => toggleSuggestedCustomTag(tag)}
-                        className={`inline-flex h-7 items-center rounded-md px-2.5 text-xs font-medium transition-colors ${
-                          isSelected
-                            ? "bg-slate-800 text-white"
-                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    );
-                  })}
+                      return (
+                        <div key={tag.id || tag.name} className="relative">
+                          <button
+                            type="button"
+                            aria-pressed={isSelected}
+                            onClick={() => toggleCustomTag(tag.name)}
+                            className={`inline-flex h-8 items-center rounded-md px-3 text-sm font-medium transition-colors ${
+                              isSelected
+                                ? "bg-slate-800 text-white"
+                                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                            }`}
+                          >
+                            {tag.name}
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={"Eliminar etiqueta " + tag.name}
+                            title="Eliminar etiqueta"
+                            disabled={isDeletingCustomTag}
+                            onClick={() => removeCustomTag(tag)}
+                            className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-slate-500 text-white shadow-sm transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <XIcon className="h-3 w-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+                <div className="flex gap-2">
+                  <Input
+                    id={`${formId}-custom-tags`}
+                    value={customTagName}
+                    onChange={(event) => setCustomTagName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        createCustomTag();
+                      }
+                    }}
+                    placeholder="Nueva etiqueta"
+                    maxLength={48}
+                  />
+                  <Button type="button" onClick={createCustomTag} disabled={!customTagName.trim()}>
+                    Crear
+                  </Button>
                 </div>
-                <Input
-                  id={`${formId}-custom-tags`}
-                  name="customTags"
-                  value={customTags}
-                  onChange={(event) => setCustomTags(event.target.value)}
-                  placeholder="Ej: Novedades, Familias, Talleres"
-                  list={`${formId}-custom-tags-options`}
-                />
-                <datalist id={`${formId}-custom-tags-options`}>
-                  {tagOptions.customTags.map((tag) => (
-                    <option key={tag.id} value={tag.name} />
-                  ))}
-                </datalist>
               </div>
             </div>
 

@@ -194,10 +194,11 @@
 }
 
 .blog-editor-content p:has(> img:not([data-gallery-cols])) {
-  width: 100%;
+  width: min(100%, 64rem);
   aspect-ratio: 25 / 18;
-  margin: 1.2rem 0;
+  margin: 1.2rem auto;
   overflow: hidden;
+  border-radius: 0.75rem;
 }
 
 .blog-editor-content p:has(> img:not([data-gallery-cols])) > img {
@@ -215,6 +216,7 @@
   padding-top: 100%;
   max-width: 100%;
   overflow: hidden;
+  border-radius: 0.75rem;
 }
 
 .blog-image-hover-wrap > img {

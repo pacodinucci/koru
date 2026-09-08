@@ -40,6 +40,7 @@ function formatDate(date: Date | null) {
 function roleLabel(role: UserRole) {
   const labels: Record<UserRole, string> = {
     ADMIN: "Admin",
+    ADMIN_OPERATOR: "Admin operador",
     ADMIN_TEACHER: "Admin docente",
     SUPERADMIN: "Superadmin",
     TEACHER: "Docente",

@@ -12,6 +12,7 @@ import {
 import { sendWithResend } from "@/modules/mailing/server/resend-mail-provider";
 import { CalendarEventInvitationEmail } from "@/modules/mailing/templates/calendar-event-invitation-email";
 import { UserInvitationEmail } from "@/modules/mailing/templates/user-invitation-email";
+import { OperationDecisionEmail } from "@/modules/mailing/templates/operation-decision-email";
 import type { SendMailInput } from "@/modules/mailing/types/mailing";
 
 const defaultFrom = "Koru <onboarding@resend.dev>";
@@ -127,4 +128,9 @@ export async function sendCalendarEventInvitationEmail({
     payload: { attendanceId, eventId: event.id, email },
     idempotencyKey: `calendar-attendance-${attendanceId}`,
   });
+}
+type SendOperationDecisionEmailInput = { email: string; recipientName: string; title: string; status: string; detail: string; reason?: string | null; idempotencyKey: string };
+
+export async function sendOperationDecisionEmail(input: SendOperationDecisionEmailInput) {
+  return sendMail({ type: EmailMessageType.MANUAL, to: [{ email: input.email, name: input.recipientName }], subject: `Koru · ${input.title}: ${input.status.toLowerCase()}`, react: createElement(OperationDecisionEmail, input), payload: { title: input.title, status: input.status, detail: input.detail, reason: input.reason }, idempotencyKey: input.idempotencyKey });
 }

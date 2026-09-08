@@ -20,6 +20,7 @@ type UserInvitationEmailProps = {
 
 const roleLabels: Record<UserRole, string> = {
   ADMIN: "administrador",
+  ADMIN_OPERATOR: "administrador operador",
   ADMIN_TEACHER: "administrador docente",
   SUPERADMIN: "superadministrador",
   TEACHER: "docente",

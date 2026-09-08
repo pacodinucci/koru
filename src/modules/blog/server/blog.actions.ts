@@ -510,3 +510,22 @@ export async function toggleBlogPostLikeAction(formData: FormData) {
   redirect(safeRedirectPath);
 }
 
+
+export async function deleteCustomBlogTagAction(tagId: string) {
+  await requireAdmin();
+
+  const deleted = await prisma.blogTag.deleteMany({
+    where: {
+      id: tagId,
+      type: "CUSTOM",
+    },
+  });
+
+  if (deleted.count === 0) {
+    return false;
+  }
+
+  revalidatePath("/blog");
+  revalidatePath("/dashboard/blog");
+  return true;
+}

@@ -10,7 +10,7 @@ import { createUserInvitationAction } from "@/modules/users/server/user-invitati
 
 type Props = { families: Array<{ id: string; name: string }> };
 
-const roleLabels: Record<UserRole, string> = { ADMIN: "Admin", ADMIN_TEACHER: "Admin docente", SUPERADMIN: "Superadmin", TEACHER: "Docente", PARENT: "Familia" };
+const roleLabels: Record<UserRole, string> = { ADMIN: "Admin", ADMIN_OPERATOR: "Admin operador", ADMIN_TEACHER: "Admin docente", SUPERADMIN: "Superadmin", TEACHER: "Docente", PARENT: "Familia" };
 
 function SubmitButton() {
   const { pending } = useFormStatus();

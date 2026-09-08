@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/monthly-family-charges",
       "schedule": "5 3 1 * *"
+    },
+    {
+      "path": "/api/cron/monthly-cash-fund-allocations",
+      "schedule": "10 3 1 * *"
     }
   ]
 }

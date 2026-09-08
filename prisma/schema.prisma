@@ -159,6 +159,7 @@ enum EmailDeliveryStatus {
 
 enum UserRole {
   ADMIN
+  ADMIN_OPERATOR
   ADMIN_TEACHER
   SUPERADMIN
   TEACHER
@@ -654,6 +655,10 @@ model TeacherProfile {
   isActive              Boolean               @default(true)
   groupResponsibilities StudentGroupTeacher[]
   exams                 Exam[]
+    cashFundBudget        CashFundBudget?
+    cashFundEntries       CashFundEntry[]
+    cashExpenseReports    CashExpenseReport[]
+    inventoryRequests     InventoryRequest[]
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
 
@@ -961,4 +966,186 @@ model GoogleCalendarEventSync {
   @@unique([connectionId, eventId])
   @@index([eventId, status])
   @@index([googleEventId])
+}
+
+enum CashExpenseReportStatus {
+  PENDING
+  APPROVED
+  PARTIALLY_APPROVED
+  REJECTED
+  CANCELED
+}
+
+enum CashFundEntryType {
+  MONTHLY_ALLOCATION
+  INITIAL_ALLOCATION
+  EXTRA_ALLOCATION
+  ADMIN_DEBIT
+  EXPENSE_APPROVAL
+  REVERSAL
+}
+
+enum InventoryRequestStatus {
+  PENDING
+  APPROVED
+  PARTIALLY_APPROVED
+  REJECTED
+  CANCELED
+}
+
+enum InventoryMovementType {
+  STOCK_IN
+  REQUEST_FULFILLMENT
+  MANUAL_ADJUSTMENT
+  REVERSAL
+}
+
+model CashFundSettings {
+  id                   String   @id @default("default")
+  defaultMonthlyAmount Decimal  @db.Decimal(12, 2)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model CashFundBudget {
+  id            String         @id @default(cuid())
+  teacherId     String         @unique
+  teacher       TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  monthlyAmount Decimal        @db.Decimal(12, 2)
+  effectiveFrom DateTime
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([effectiveFrom])
+}
+
+model CashFundCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reports   CashExpenseReport[]
+}
+
+model CashExpenseReport {
+  id              String                  @id @default(cuid())
+  teacherId       String
+  teacher         TeacherProfile          @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  categoryId      String
+  category        CashFundCategory        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  requestedAmount Decimal                 @db.Decimal(12, 2)
+  approvedAmount  Decimal?                @db.Decimal(12, 2)
+  concept         String
+  justification   String
+  expenseDate     DateTime
+  status          CashExpenseReportStatus @default(PENDING)
+  rejectionReason String?
+  decisionReason  String?
+  submittedAt     DateTime                @default(now())
+  decidedAt       DateTime?
+  decidedById     String?
+  canceledAt      DateTime?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  attachments     CashExpenseAttachment[]
+  entries         CashFundEntry[]
+
+  @@index([teacherId, status, submittedAt])
+  @@index([categoryId, expenseDate])
+}
+
+model CashExpenseAttachment {
+  id        String            @id @default(cuid())
+  reportId  String
+  report    CashExpenseReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  url       String
+  fileName  String
+  mimeType  String
+  createdAt DateTime          @default(now())
+
+  @@index([reportId])
+}
+
+model CashFundEntry {
+  id          String         @id @default(cuid())
+  teacherId   String
+  teacher     TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  type        CashFundEntryType
+  amount      Decimal        @db.Decimal(12, 2)
+  description String
+  occurredAt  DateTime       @default(now())
+  allocationPeriod DateTime? @db.Date
+  createdById String?
+  reportId    String?
+  report      CashExpenseReport? @relation(fields: [reportId], references: [id], onDelete: Restrict)
+  reversesId  String?        @unique
+  createdAt   DateTime       @default(now())
+
+  @@index([teacherId, occurredAt])
+  @@unique([teacherId, allocationPeriod])
+  @@index([type, occurredAt])
+}
+
+model InventoryProduct {
+  id           String              @id @default(cuid())
+  name         String
+  unit          String
+  minimumStock  Decimal             @default(0) @db.Decimal(12, 3)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  requestLines  InventoryRequestLine[]
+  movements     InventoryMovement[]
+
+  @@unique([name, unit])
+}
+
+model InventoryRequest {
+  id          String                 @id @default(cuid())
+  teacherId   String
+  teacher     TeacherProfile         @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  status      InventoryRequestStatus @default(PENDING)
+  decisionReason String?
+  decidedById String?
+  submittedAt DateTime               @default(now())
+  decidedAt   DateTime?
+  canceledAt  DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  lines       InventoryRequestLine[]
+
+  @@index([teacherId, status, submittedAt])
+}
+
+model InventoryRequestLine {
+  id                String           @id @default(cuid())
+  requestId         String
+  request           InventoryRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  productId         String
+  product           InventoryProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+  requestedQuantity Decimal          @db.Decimal(12, 3)
+  approvedQuantity  Decimal?         @db.Decimal(12, 3)
+  createdAt         DateTime         @default(now())
+  movements         InventoryMovement[]
+
+  @@unique([requestId, productId])
+  @@index([productId])
+}
+
+model InventoryMovement {
+  id          String                @id @default(cuid())
+  productId   String
+  product     InventoryProduct      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  type        InventoryMovementType
+  quantity    Decimal               @db.Decimal(12, 3)
+  unitCost    Decimal?              @db.Decimal(12, 2)
+  reason      String?
+  occurredAt  DateTime              @default(now())
+  createdById String?
+  requestLineId String?
+  requestLine InventoryRequestLine? @relation(fields: [requestLineId], references: [id], onDelete: Restrict)
+  reversesId  String?               @unique
+  createdAt   DateTime              @default(now())
+
+  @@index([productId, occurredAt])
+  @@index([type, occurredAt])
 }

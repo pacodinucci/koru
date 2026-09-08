@@ -81,17 +81,12 @@ export type NovelBlogEditorActions = {
   alignCenter: () => void;
   alignRight: () => void;
   alignJustify: () => void;
-  insertImageOriginal: () => void;
-  insertImageFixedWidth: () => void;
-  insertImageFixedHeight: () => void;
+  insertImage: () => void;
   insertGallery2: () => void;
   insertGallery3: () => void;
   insertGallery4: () => void;
-  insertMosaic3: () => boolean;
-  insertMosaic4: () => boolean;
 };
 
-type ImageInsertMode = "original" | "preset-width" | "preset-height";
 type MasonryLayout = "masonry-3" | "masonry-4";
 type MasonryItem = {
   slot: number;
@@ -99,9 +94,6 @@ type MasonryItem = {
   alt?: string;
 };
 
-const PRESET_WIDTH = 960;
-const PRESET_HEIGHT = 520;
-const MASONRY_PLACEHOLDER = "/blog-placeholder.svg";
 
 const MasonryGalleryNode = Node.create({
   name: "masonryGallery",
@@ -378,42 +370,6 @@ function SelectedImagePanel() {
           Derecha
         </button>
 
-        <button
-          type="button"
-          className="inline-flex h-7 items-center rounded-md border bg-background px-2 text-xs"
-          onClick={() =>
-            editor.chain().focus().updateAttributes("image", { width: null, height: null }).run()
-          }
-        >
-          Original
-        </button>
-        <button
-          type="button"
-          className="inline-flex h-7 items-center rounded-md border bg-background px-2 text-xs"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .updateAttributes("image", { width: PRESET_WIDTH, height: null })
-              .run()
-          }
-        >
-          Ancho predeterminado
-        </button>
-        <button
-          type="button"
-          className="inline-flex h-7 items-center rounded-md border bg-background px-2 text-xs"
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .updateAttributes("image", { width: null, height: PRESET_HEIGHT })
-              .run()
-          }
-        >
-          Alto predeterminado
-        </button>
-
         <div className="flex items-center gap-1 text-xs">
           <span className="text-muted-foreground">W</span>
           <input
@@ -526,7 +482,6 @@ export function NovelBlogEditor({
   const [htmlValue, setHtmlValue] = useState<string>(initialHtmlValue);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadNotice, setUploadNotice] = useState<string>("");
-  const [singleImageMode, setSingleImageMode] = useState<ImageInsertMode>("original");
   const [pendingPlaceholderNode, setPendingPlaceholderNode] = useState<{
     nodePos: number;
     cols: number;
@@ -678,7 +633,7 @@ export function NovelBlogEditor({
     insertGalleryPlaceholders(editorRef.current, cols, layout);
   }, []);
 
-  const handleInsertSingleImage = useCallback((mode: ImageInsertMode) => {
+  const handleInsertSingleImage = useCallback(() => {
     if (!editorRef.current) {
       setUploadNotice("Haz click dentro del editor antes de insertar una imagen.");
       return;
@@ -687,46 +642,10 @@ export function NovelBlogEditor({
     setUploadNotice("");
     setPendingPlaceholderNode(null);
     setPendingMasonrySlot(null);
-    setSingleImageMode(mode);
     imageFileInputRef.current?.click();
   }, []);
 
-  const handleInsertMasonryLayout = useCallback((layout: MasonryLayout) => {
-    if (!editorRef.current) {
-      setUploadNotice("Haz click dentro del editor antes de insertar el mosaico.");
-      return false;
-    }
 
-    const total = layout === "masonry-3" ? 3 : 4;
-    const items: MasonryItem[] = Array.from({ length: total }).map((_, index) => ({
-      slot: index + 1,
-      src: `${MASONRY_PLACEHOLDER}?slot=${index + 1}`,
-      alt: `Imagen ${index + 1}`,
-    }));
-
-    setUploadNotice("");
-    const editor = editorRef.current;
-    const endPos = editor.state.doc.content.size;
-    const inserted = editor.commands.insertContentAt(endPos, {
-      type: "masonryGallery",
-      attrs: {
-        layout,
-        items,
-      },
-    });
-
-    if (!inserted) {
-      setUploadNotice("No pudimos insertar el bloque masonry en esa posicion.");
-      return false;
-    }
-
-    editor.commands.insertContentAt(editor.state.doc.content.size, {
-      type: "paragraph",
-    });
-
-    editor.chain().focus("end").run();
-    return true;
-  }, []);
 
   function runEditorCommand(command: (editor: EditorInstance) => void) {
     if (!editorRef.current) {
@@ -829,16 +748,12 @@ export function NovelBlogEditor({
         runEditorCommand((editor) => {
           editor.chain().focus().setTextAlign("justify").run();
         }),
-      insertImageOriginal: () => handleInsertSingleImage("original"),
-      insertImageFixedWidth: () => handleInsertSingleImage("preset-width"),
-      insertImageFixedHeight: () => handleInsertSingleImage("preset-height"),
+      insertImage: () => handleInsertSingleImage(),
       insertGallery2: () => handleInsertGalleryStrip(2),
       insertGallery3: () => handleInsertGalleryStrip(3),
       insertGallery4: () => handleInsertGalleryStrip(4),
-      insertMosaic3: () => handleInsertMasonryLayout("masonry-3"),
-      insertMosaic4: () => handleInsertMasonryLayout("masonry-4"),
     }),
-    [handleInsertGalleryStrip, handleInsertMasonryLayout, handleInsertSingleImage],
+    [handleInsertGalleryStrip, handleInsertSingleImage],
   );
 
   useEffect(() => {
@@ -1081,16 +996,8 @@ export function NovelBlogEditor({
                 imgAlign?: string;
               } = { src: url };
 
-              if (singleImageMode === "preset-width") {
-                attrs.width = PRESET_WIDTH;
-                attrs.height = null;
-              } else if (singleImageMode === "preset-height") {
-                attrs.width = null;
-                attrs.height = PRESET_HEIGHT;
-              } else {
-                attrs.width = null;
-                attrs.height = null;
-              }
+              attrs.width = null;
+              attrs.height = null;
 
               attrs.imgAlign = "center";
               (attrs as typeof attrs & { cropX: number; cropY: number }).cropX = 50;
@@ -1318,27 +1225,11 @@ export function NovelBlogEditor({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => handleInsertSingleImage("original")}
+              onClick={handleInsertSingleImage}
               className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
             >
               <ImagesIcon className="h-3.5 w-3.5" />
-              Imagen original
-            </button>
-            <button
-              type="button"
-              onClick={() => handleInsertSingleImage("preset-width")}
-              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
-            >
-              <ImagesIcon className="h-3.5 w-3.5" />
-              Imagen ancho fijo
-            </button>
-            <button
-              type="button"
-              onClick={() => handleInsertSingleImage("preset-height")}
-              className="inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted"
-            >
-              <ImagesIcon className="h-3.5 w-3.5" />
-              Imagen alto fijo
+              Imagen
             </button>
             <button
               type="button"
