@@ -174,21 +174,25 @@ const protocolDefinitions = [
     id: "resolucion-de-conflictos",
     title: "Resolución de conflictos",
     text: "Los conflictos son oportunidades de aprendizaje. Los acompañamos con presencia, límites claros, escucha y reparación.",
+    documentSlug: "resolucion-de-conflictos",
   },
   {
     id: "prevencion-y-manejo-de-enfermedades",
     title: "Prevención y manejo de enfermedades",
     text: "Sostenemos criterios claros para cuidar la salud individual y colectiva, con comunicación oportuna entre casa y comunidad.",
+    documentSlug: "prevencion-y-manejo-de-enfermedades",
   },
   {
     id: "protocolos-de-higiene",
     title: "Protocolos de higiene",
     text: "Incluyen prácticas preventivas como cuidado cotidiano de espacios, hábitos de limpieza y prevención de piojos.",
+    documentSlug: "protocolos-de-higiene",
   },
   {
     id: "atencion-a-emergencias",
     title: "Atención a emergencias",
     text: "Definen cómo actuar ante situaciones imprevistas para brindar claridad, seguridad y confianza a todas las familias.",
+    documentSlug: "atencion-a-emergencias",
   },
 ];
 

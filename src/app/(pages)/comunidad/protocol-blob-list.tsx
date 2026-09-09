@@ -1,11 +1,13 @@
 "use client";
 
+import { Download } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type Protocol = {
   id: string;
   title: ReactNode;
   text: ReactNode;
+  documentSlug: string;
 };
 
 type ProtocolBlobListProps = {
@@ -89,6 +91,10 @@ export function ProtocolBlobList({ protocols }: ProtocolBlobListProps) {
     });
   }
 
+  function documentHref(protocol: Protocol) {
+    return `/documentos/${protocol.documentSlug}`;
+  }
+
   return (
     <>
       <div
@@ -170,6 +176,13 @@ export function ProtocolBlobList({ protocols }: ProtocolBlobListProps) {
                   <p className="max-w-[18.5rem] break-words text-base leading-relaxed text-black/75 [overflow-wrap:anywhere] sm:text-lg">
                     {protocol.text}
                   </p>
+                  <a
+                    href={documentHref(protocol)}
+                    className="inline-flex items-center gap-2 rounded-full border border-[var(--complement-800)] px-4 py-2 text-sm font-medium text-[var(--complement-900)] transition hover:bg-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--complement-800)]"
+                  >
+                    <Download className="size-4" aria-hidden="true" />
+                    Descargar protocolo
+                  </a>
                 </div>
               </div>
             );
@@ -191,9 +204,7 @@ export function ProtocolBlobList({ protocols }: ProtocolBlobListProps) {
             const isExpanded = overlay.expanded;
 
             return (
-              <button
-                type="button"
-                onClick={() => setOverlay(null)}
+              <div
                 className={`fixed z-10 flex flex-col items-center justify-center overflow-hidden border text-center text-[var(--complement-900)] shadow-xl outline-none transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:ring-2 focus-visible:ring-[var(--complement-800)] ${style.color} ${style.border} ${style.shape}`}
                 style={{
                   left: isExpanded ? "50%" : overlay.rect.left,
@@ -205,7 +216,6 @@ export function ProtocolBlobList({ protocols }: ProtocolBlobListProps) {
                     ? "translate(-50%, -50%)"
                     : "translate(0, 0)",
                 }}
-                aria-label="Cerrar protocolo expandido"
               >
                 <span
                   className={`pointer-events-none absolute z-0 border border-white/70 transition-opacity duration-500 ${style.innerInset} ${style.innerShape}`}
@@ -234,7 +244,18 @@ export function ProtocolBlobList({ protocols }: ProtocolBlobListProps) {
                 >
                   {overlay.protocol.text}
                 </span>
-              </button>
+                <a
+                  href={documentHref(overlay.protocol)}
+                  className={`relative z-10 inline-flex items-center gap-2 rounded-full border border-[var(--complement-800)] px-4 py-2 text-sm font-medium text-[var(--complement-900)] transition hover:bg-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--complement-800)] ${
+                    isExpanded
+                      ? "mt-5 translate-y-0 opacity-100 delay-100"
+                      : "pointer-events-none mt-0 translate-y-3 opacity-0"
+                  }`}
+                >
+                  <Download className="size-4" aria-hidden="true" />
+                  Descargar protocolo
+                </a>
+              </div>
             );
           })()}
         </div>
