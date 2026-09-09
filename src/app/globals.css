@@ -234,6 +234,11 @@
   margin: 1.2rem 0;
 }
 
+.blog-post-content p:empty,
+.blog-post-content p:has(> br:only-child) {
+  display: none;
+}
+
 .blog-post-content img:not([data-gallery-cols]) {
   width: 100% !important;
   height: 100% !important;

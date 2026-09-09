@@ -19,7 +19,6 @@ import {
   ImagesIcon,
   ListIcon,
   ListOrderedIcon,
-  PilcrowIcon,
   QuoteIcon,
 } from "lucide-react";
 import {
@@ -43,6 +42,7 @@ import {
   type EditorInstance,
   type JSONContent,
   type SuggestionItem,
+  TiptapLink,
 } from "novel";
 import TextAlign from "@tiptap/extension-text-align";
 import { Node } from "@tiptap/core";
@@ -77,6 +77,7 @@ export type NovelBlogEditorActions = {
   insertBulletList: () => void;
   insertOrderedList: () => void;
   insertQuote: () => void;
+  insertLink: (href: string) => void;
   alignLeft: () => void;
   alignCenter: () => void;
   alignRight: () => void;
@@ -732,6 +733,24 @@ export function NovelBlogEditor({
             })
             .run();
         }),
+      insertLink: (href) =>
+        runEditorCommand((editor) => {
+          const selection = editor.state.selection;
+          if (selection.empty) {
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "text",
+                text: href,
+                marks: [{ type: "link", attrs: { href } }],
+              })
+              .run();
+            return;
+          }
+
+          editor.chain().focus().setLink({ href }).run();
+        }),
       alignLeft: () =>
         runEditorCommand((editor) => {
           editor.chain().focus().setTextAlign("left").run();
@@ -824,15 +843,6 @@ export function NovelBlogEditor({
     () =>
       createSuggestionItems([
         {
-          title: "Texto",
-          description: "Parrafo normal",
-          searchTerms: ["texto", "parrafo", "p"],
-          icon: <PilcrowIcon className="h-3.5 w-3.5" />,
-          command: ({ editor, range }) => {
-            editor.chain().focus().deleteRange(range).setParagraph().run();
-          },
-        },
-        {
           title: "Titulo grande",
           description: "Heading 1",
           searchTerms: ["h1", "titulo"],
@@ -893,6 +903,12 @@ export function NovelBlogEditor({
   const extensions = useMemo(
     () => [
       StarterKit,
+      TiptapLink.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: { target: null, rel: null },
+      }),
       MasonryGalleryNode,
       BlogImage.configure({
         inline: true,

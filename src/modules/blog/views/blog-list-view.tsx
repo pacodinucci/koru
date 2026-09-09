@@ -6,7 +6,6 @@ import {
   MapPinIcon,
   MessageCircleIcon,
 } from "lucide-react";
-import { BlogPostVisibility } from "@prisma/client";
 
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import { BlogLikeButton } from "@/modules/blog/components/blog-like-button";
@@ -235,11 +234,6 @@ export async function BlogListView({ tagSlug, textMap = {} }: BlogListViewProps)
                     </h2>
 
                     <div className="flex flex-wrap gap-1.5">
-                      {post.visibility === BlogPostVisibility.MEMBERS ? (
-                        <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                          Solo miembros
-                        </span>
-                      ) : null}
                       {post.tags.map(({ tag }) => (
                         <Link
                           key={tag.id}

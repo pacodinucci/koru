@@ -14,14 +14,23 @@ import {
   ImagesIcon,
   ListIcon,
   ListOrderedIcon,
+  LinkIcon,
   PenLineIcon,
-  PilcrowIcon,
   QuoteIcon,
-  VideoIcon,
   XIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogClose,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useDashboardEditorPanel } from "@/modules/dashboard/components/dashboard-editor-panel";
@@ -85,6 +94,8 @@ export function DashboardBlogComposer({
   const formId = useId();
   const { portalTarget, setOpen } = useDashboardEditorPanel();
   const [editorActions, setEditorActions] = useState<NovelBlogEditorActions | null>(null);
+  const [isLinkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkHref, setLinkHref] = useState("");
   const isEditing = Boolean(editingPost);
   const [visibility, setVisibility] = useState<BlogPostVisibility>(
     editingPost?.visibility ?? BlogPostVisibility.PUBLIC,
@@ -227,10 +238,6 @@ export function DashboardBlogComposer({
                 Insertar contenido
               </p>
               <div className="grid grid-cols-2 gap-1.5">
-                <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertParagraph()}>
-                  <PilcrowIcon className="h-3.5 w-3.5" />
-                  Texto
-                </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => editorActions?.insertHeading1()}>
                   <Heading1Icon className="h-3.5 w-3.5" />
                   H1
@@ -255,9 +262,14 @@ export function DashboardBlogComposer({
                   <QuoteIcon className="h-3.5 w-3.5" />
                   Cita
                 </Button>
-                <Button type="button" variant="outline" size="sm" disabled>
-                  <VideoIcon className="h-3.5 w-3.5" />
-                  Video
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLinkDialogOpen(true)}
+                >
+                  <LinkIcon className="h-3.5 w-3.5" />
+                  Link
                 </Button>
               </div>
             </div>
@@ -569,6 +581,62 @@ export function DashboardBlogComposer({
         </section>
       </form>
       {panel}
+      <ResponsiveDialog
+        open={isLinkDialogOpen}
+        onOpenChange={(open) => {
+          setLinkDialogOpen(open);
+          if (!open) {
+            setLinkHref("");
+          }
+        }}
+      >
+        <ResponsiveDialogContent className="md:w-[min(calc(100vw-2rem),28rem)] [font-family:var(--font-montserrat)] [&_*]:[font-family:var(--font-montserrat)]">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Agregar link</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Pegá una ruta interna, un ancla de la página o la URL de un evento.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              const href = linkHref.trim();
+              if (!href) {
+                return;
+              }
+
+              editorActions?.insertLink(href);
+              setLinkDialogOpen(false);
+              setLinkHref("");
+            }}
+          >
+            <ResponsiveDialogBody>
+              <label htmlFor={`${formId}-link`} className="text-sm font-medium text-slate-700">
+                Destino
+              </label>
+              <Input
+                id={`${formId}-link`}
+                value={linkHref}
+                onChange={(event) => setLinkHref(event.target.value)}
+                placeholder="/calendario, #contacto o /calendario/eventos/..."
+                autoFocus
+              />
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter>
+              <ResponsiveDialogClose
+                render={
+                  <Button type="button" variant="outline">
+                    Cancelar
+                  </Button>
+                }
+              />
+              <Button type="submit" disabled={!linkHref.trim()}>
+                Agregar link
+              </Button>
+            </ResponsiveDialogFooter>
+          </form>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </>
   );
 }

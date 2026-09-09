@@ -1,6 +1,6 @@
 "use server";
 
-import { CashExpenseReportStatus, CashFundEntryType } from "@prisma/client";
+import { CashExpenseReportStatus, CashFundEntryType, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -19,7 +19,7 @@ export async function submitCashExpenseReportAction(formData: FormData) {
   if (!parsed.success) return { ok: false, message: "Revisá los datos de la rendición." };
 
   await prisma.cashExpenseReport.create({ data: { teacherId: teacher.id, categoryId: parsed.data.categoryId, requestedAmount: parsed.data.amount, concept: parsed.data.concept, justification: parsed.data.justification, expenseDate: parsed.data.expenseDate } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/caja-chica");
   return { ok: true, message: "Rendición enviada." };
 }
 
@@ -34,14 +34,16 @@ export async function decideCashExpenseReportAction(formData: FormData) {
     if (parsed.data.approvedAmount > Number(report.requestedAmount)) throw new Error("El monto aprobado no puede superar lo solicitado.");
     const status = parsed.data.approvedAmount === 0 ? CashExpenseReportStatus.REJECTED : parsed.data.approvedAmount === Number(report.requestedAmount) ? CashExpenseReportStatus.APPROVED : CashExpenseReportStatus.PARTIALLY_APPROVED;
     if (status !== CashExpenseReportStatus.APPROVED && !parsed.data.reason) throw new Error("Indicá el motivo de la diferencia.");
+    const balance = await tx.cashFundEntry.aggregate({ where: { teacherId: report.teacherId }, _sum: { amount: true } });
+    if (parsed.data.approvedAmount > Number(balance._sum.amount?.toString() ?? 0)) throw new Error("El saldo disponible no alcanza para aprobar esta rendición.");
     await tx.cashExpenseReport.update({ where: { id: report.id }, data: { status, approvedAmount: parsed.data.approvedAmount, decisionReason: parsed.data.reason, rejectionReason: status === CashExpenseReportStatus.REJECTED ? parsed.data.reason : null, decidedAt: new Date(), decidedById: operator.id } });
     if (parsed.data.approvedAmount > 0) await tx.cashFundEntry.create({ data: { teacherId: report.teacherId, type: CashFundEntryType.EXPENSE_APPROVAL, amount: -parsed.data.approvedAmount, description: `Rendición aprobada: ${report.concept}`, reportId: report.id, createdById: operator.id } });
     return status;
-  });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   if (!result) return { ok: false, message: "La rendición ya fue resuelta." };
   const notification = await prisma.cashExpenseReport.findUnique({ where: { id: parsed.data.reportId }, include: { teacher: { include: { user: { select: { email: true, name: true } } } } } });
   if (notification?.teacher.user) await sendOperationDecisionEmail({ email: notification.teacher.user.email, recipientName: notification.teacher.user.name, title: "rendición", status: result, detail: `${notification.concept} · solicitado $${Number(notification.requestedAmount).toFixed(2)} · aprobado $${parsed.data.approvedAmount.toFixed(2)}`, reason: parsed.data.reason, idempotencyKey: `cash-expense-decision-${notification.id}-${result}` });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/caja-chica");
   return { ok: true, message: "Rendición resuelta." };
 }
 
@@ -52,7 +54,7 @@ export async function createCashFundCategoryAction(formData: FormData) {
   const parsed = categorySchema.safeParse({ name: value(formData, "name") });
   if (!parsed.success) return { ok: false, message: "Indicá una categoría válida." };
   try { await prisma.cashFundCategory.create({ data: parsed.data }); } catch { return { ok: false, message: "La categoría ya existe." }; }
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/caja-chica");
   return { ok: true, message: "Categoría creada." };
 }
 
@@ -63,7 +65,7 @@ export async function setDefaultCashFundMonthlyAmountAction(formData: FormData) 
   const parsed = monthlyAmountSchema.safeParse({ amount: value(formData, "amount") });
   if (!parsed.success) return { ok: false, message: "Indicá un monto mensual válido." };
   await prisma.cashFundSettings.upsert({ where: { id: "default" }, create: { id: "default", defaultMonthlyAmount: parsed.data.amount }, update: { defaultMonthlyAmount: parsed.data.amount } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/caja-chica");
   return { ok: true, message: "Monto mensual actualizado para futuras acreditaciones." };
 }
 
@@ -74,7 +76,7 @@ export async function createExtraCashFundAllocationAction(formData: FormData) {
   const parsed = allocationSchema.safeParse({ teacherId: value(formData, "teacherId"), amount: value(formData, "amount"), description: value(formData, "description") });
   if (!parsed.success) return { ok: false, message: "Revisá la asignación." };
   await prisma.cashFundEntry.create({ data: { teacherId: parsed.data.teacherId, type: CashFundEntryType.EXTRA_ALLOCATION, amount: parsed.data.amount, description: parsed.data.description, createdById: admin.id } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/caja-chica");
   return { ok: true, message: "Asignación extraordinaria registrada." };
 }
 
@@ -85,7 +87,7 @@ export async function reverseCashFundEntryAction(entryId: string) {
   const reversed = await prisma.cashFundEntry.findUnique({ where: { reversesId: entryId } });
   if (reversed) return { ok: false, message: "El movimiento ya fue revertido." };
   await prisma.cashFundEntry.create({ data: { teacherId: entry.teacherId, type: CashFundEntryType.REVERSAL, amount: -Number(entry.amount), description: `Reversión de ${entry.id}`, createdById: admin.id, reversesId: entry.id } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/caja-chica");
   return { ok: true, message: "Movimiento revertido." };
 }
 
@@ -94,7 +96,7 @@ export async function createCashFundAdminDebitAction(formData: FormData) {
   const parsed = allocationSchema.safeParse({ teacherId: value(formData, "teacherId"), amount: value(formData, "amount"), description: value(formData, "description") });
   if (!parsed.success) return { ok: false, message: "Revisá el débito." };
   await prisma.cashFundEntry.create({ data: { teacherId: parsed.data.teacherId, type: CashFundEntryType.ADMIN_DEBIT, amount: -parsed.data.amount, description: parsed.data.description, createdById: admin.id } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/caja-chica");
   return { ok: true, message: "Débito administrativo registrado." };
 }
 
@@ -109,7 +111,7 @@ export async function setTeacherCashFundBudgetAction(formData: FormData) {
     create: { teacherId: parsed.data.teacherId, monthlyAmount: parsed.data.monthlyAmount, effectiveFrom: new Date() },
     update: { monthlyAmount: parsed.data.monthlyAmount, effectiveFrom: new Date() },
   });
-  revalidatePath("/dashboard/operaciones");
+  revalidatePath("/dashboard/caja-chica");
   return { ok: true, message: "Presupuesto mensual actualizado." };
 }
 
@@ -117,6 +119,6 @@ export async function cancelCashExpenseReportAction(reportId: string) {
   const { teacher } = await requireOperationsTeacher();
   const result = await prisma.cashExpenseReport.updateMany({ where: { id: reportId, teacherId: teacher.id, status: CashExpenseReportStatus.PENDING }, data: { status: CashExpenseReportStatus.CANCELED, canceledAt: new Date() } });
   if (result.count === 0) return { ok: false, message: "La rendición no puede cancelarse." };
-  revalidatePath("/dashboard/operaciones");
+  revalidatePath("/dashboard/caja-chica");
   return { ok: true, message: "Rendición cancelada." };
 }

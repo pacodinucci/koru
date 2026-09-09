@@ -17,6 +17,7 @@ import {
   Mail,
   Users,
   HandCoins,
+  PackageSearch,
   ShieldCheck,
   Settings,
   User2,
@@ -133,7 +134,8 @@ export function DashboardShell({
   const isLayoutActive = pathname.startsWith("/dashboard/diseno");
   const isContentActive = pathname.startsWith("/dashboard/content");
   const isDocumentsActive = pathname.startsWith("/dashboard/documentos");
-  const isOperationsActive = pathname.startsWith("/dashboard/operaciones");
+  const isCashFundActive = pathname.startsWith("/dashboard/caja-chica");
+  const isInventoryActive = pathname.startsWith("/dashboard/inventario");
   const isPageEditorActive =
     pathname.startsWith("/dashboard/pages/edit") ||
     /^\/dashboard\/pages\/[^/]+$/.test(pathname);
@@ -303,12 +305,22 @@ export function DashboardShell({
                 ) : null}
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    isActive={isOperationsActive}
+                    isActive={isCashFundActive}
                     className={sidebarMenuButtonClass}
-                    render={<Link href="/dashboard/operaciones" />}
+                    render={<Link href="/dashboard/caja-chica" />}
                   >
                     <HandCoins />
-                    <span>Operaciones</span>
+                    <span>Caja chica</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={isInventoryActive}
+                    className={sidebarMenuButtonClass}
+                    render={<Link href="/dashboard/inventario" />}
+                  >
+                    <PackageSearch />
+                    <span>Inventario</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 

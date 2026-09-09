@@ -1,6 +1,6 @@
 "use server";
 
-import { InventoryMovementType, InventoryRequestStatus } from "@prisma/client";
+import { InventoryMovementType, InventoryRequestStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -17,7 +17,7 @@ export async function submitInventoryRequestAction(formData: FormData) {
   const parsed = requestSchema.safeParse({ productId: value(formData, "productId"), quantity: value(formData, "quantity") });
   if (!parsed.success) return { ok: false, message: "Revisá el producto y la cantidad." };
   await prisma.inventoryRequest.create({ data: { teacherId: teacher.id, lines: { create: { productId: parsed.data.productId, requestedQuantity: parsed.data.quantity } } } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Solicitud enviada." };
 }
 
@@ -35,10 +35,10 @@ export async function decideInventoryRequestLineAction(formData: FormData) {
     await tx.inventoryRequestLine.update({ where: { id: line.id }, data: { approvedQuantity: parsed.data.approvedQuantity } });
     await tx.inventoryRequest.update({ where: { id: line.requestId }, data: { status: parsed.data.approvedQuantity === Number(line.requestedQuantity) ? InventoryRequestStatus.APPROVED : parsed.data.approvedQuantity === 0 ? InventoryRequestStatus.REJECTED : InventoryRequestStatus.PARTIALLY_APPROVED, decisionReason: parsed.data.reason, decidedById: operator.id, decidedAt: new Date() } });
     if (parsed.data.approvedQuantity > 0) await tx.inventoryMovement.create({ data: { productId: line.productId, requestLineId: line.id, type: InventoryMovementType.REQUEST_FULFILLMENT, quantity: -parsed.data.approvedQuantity, reason: parsed.data.reason, createdById: operator.id } });
-  });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   const notification = await prisma.inventoryRequestLine.findUnique({ where: { id: parsed.data.lineId }, include: { product: true, request: { include: { teacher: { include: { user: { select: { email: true, name: true } } } } } } } });
   if (notification?.request.teacher.user) await sendOperationDecisionEmail({ email: notification.request.teacher.user.email, recipientName: notification.request.teacher.user.name, title: "pedido de inventario", status: notification.request.status, detail: `${notification.product.name}: ${Number(notification.approvedQuantity ?? 0)} de ${Number(notification.requestedQuantity)}`, reason: parsed.data.reason, idempotencyKey: `inventory-request-decision-${notification.requestId}-${notification.request.status}` });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Solicitud resuelta." };
 }
 
@@ -53,7 +53,7 @@ export async function submitMultiItemInventoryRequestAction(lines: Array<{ produ
   const products = await prisma.inventoryProduct.count({ where: { id: { in: productIds } } });
   if (products !== productIds.length) return { ok: false, message: "Uno de los productos ya no existe." };
   await prisma.inventoryRequest.create({ data: { teacherId: teacher.id, lines: { create: parsed.data.map((line) => ({ productId: line.productId, requestedQuantity: line.quantity })) } } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Solicitud enviada." };
 }
 
@@ -78,10 +78,10 @@ export async function decideWholeInventoryRequestAction(requestId: string, decis
     const status = approved === 0 ? "REJECTED" : approved === requested ? "APPROVED" : "PARTIALLY_APPROVED";
     for (const line of request.lines) { const decision = decisionByLine.get(line.id)!; await tx.inventoryRequestLine.update({ where: { id: line.id }, data: { approvedQuantity: decision.approvedQuantity } }); if (decision.approvedQuantity > 0) await tx.inventoryMovement.create({ data: { productId: line.productId, requestLineId: line.id, type: "REQUEST_FULFILLMENT", quantity: -decision.approvedQuantity, reason: decision.reason, createdById: operator.id } }); }
     await tx.inventoryRequest.update({ where: { id: request.id }, data: { status, decidedById: operator.id, decidedAt: new Date() } });
-  });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   const notification = await prisma.inventoryRequest.findUnique({ where: { id: requestId }, include: { teacher: { include: { user: { select: { email: true, name: true } } } }, lines: { include: { product: true } } } });
   if (notification?.teacher.user) await sendOperationDecisionEmail({ email: notification.teacher.user.email, recipientName: notification.teacher.user.name, title: "pedido de inventario", status: notification.status, detail: notification.lines.map((line) => `${line.product.name}: ${Number(line.approvedQuantity ?? 0)} de ${Number(line.requestedQuantity)}`).join(" · "), idempotencyKey: `inventory-request-decision-${notification.id}-${notification.status}` });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Solicitud resuelta." };
 }
 
@@ -92,7 +92,7 @@ export async function registerInventoryStockMovementAction(formData: FormData) {
   const parsed = stockMovementSchema.safeParse({ productId: value(formData, "productId"), quantity: value(formData, "quantity"), unitCost: value(formData, "unitCost") || undefined, reason: value(formData, "reason") });
   if (!parsed.success) return { ok: false, message: "Revisá los datos del movimiento." };
   await prisma.inventoryMovement.create({ data: { productId: parsed.data.productId, type: InventoryMovementType.STOCK_IN, quantity: parsed.data.quantity, unitCost: parsed.data.unitCost, reason: parsed.data.reason, createdById: operator.id } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Ingreso de stock registrado." };
 }
 
@@ -105,7 +105,7 @@ export async function adjustInventoryStockAction(formData: FormData) {
   const current = await prisma.inventoryMovement.aggregate({ where: { productId: parsed.data.productId }, _sum: { quantity: true } });
   if (Number(current._sum.quantity?.toString() ?? 0) + parsed.data.quantity < 0) return { ok: false, message: "El ajuste no puede dejar el stock negativo." };
   await prisma.inventoryMovement.create({ data: { productId: parsed.data.productId, type: InventoryMovementType.MANUAL_ADJUSTMENT, quantity: parsed.data.quantity, reason: parsed.data.reason, createdById: operator.id } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Ajuste de stock registrado." };
 }
 
@@ -118,7 +118,7 @@ export async function reverseInventoryMovementAction(movementId: string) {
   const balance = await prisma.inventoryMovement.aggregate({ where: { productId: movement.productId }, _sum: { quantity: true } });
   if (Number(balance._sum.quantity?.toString() ?? 0) - Number(movement.quantity) < 0) return { ok: false, message: "La reversión dejaría el stock negativo." };
   await prisma.inventoryMovement.create({ data: { productId: movement.productId, type: InventoryMovementType.REVERSAL, quantity: -Number(movement.quantity), reason: `Reversión de ${movement.id}`, createdById: operator.id, reversesId: movement.id } });
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Movimiento revertido." };
 }
 
@@ -129,7 +129,7 @@ export async function createInventoryProductAction(formData: FormData) {
   const parsed = productSchema.safeParse({ name: value(formData, "name"), unit: value(formData, "unit"), minimumStock: value(formData, "minimumStock") });
   if (!parsed.success) return { ok: false, message: "Revisá los datos del producto." };
   try { await prisma.inventoryProduct.create({ data: parsed.data }); } catch { return { ok: false, message: "Ya existe un producto con esa unidad." }; }
-  revalidatePath("/dashboard/operaciones");
+  revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Producto creado." };
 }
 
@@ -140,7 +140,7 @@ export async function setInventoryMinimumStockAction(formData: FormData) {
   const parsed = minimumStockSchema.safeParse({ productId: value(formData, "productId"), minimumStock: value(formData, "minimumStock") });
   if (!parsed.success) return { ok: false, message: "Indicá un stock mínimo válido." };
   await prisma.inventoryProduct.update({ where: { id: parsed.data.productId }, data: { minimumStock: parsed.data.minimumStock } });
-  revalidatePath("/dashboard/operaciones");
+  revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Stock mínimo actualizado." };
 }
 
@@ -148,6 +148,6 @@ export async function cancelInventoryRequestAction(requestId: string) {
   const { teacher } = await requireOperationsTeacher();
   const result = await prisma.inventoryRequest.updateMany({ where: { id: requestId, teacherId: teacher.id, status: InventoryRequestStatus.PENDING }, data: { status: InventoryRequestStatus.CANCELED, canceledAt: new Date() } });
   if (result.count === 0) return { ok: false, message: "La solicitud no puede cancelarse." };
-  revalidatePath("/dashboard/operaciones");
+  revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Solicitud cancelada." };
 }

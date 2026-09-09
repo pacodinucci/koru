@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { MessageCircleIcon } from "lucide-react";
 import { headers } from "next/headers";
-import { BlogPostVisibility } from "@prisma/client";
 
 import { auth } from "@/lib/auth";
 import { BlogEventToast } from "@/modules/blog/components/blog-event-toast";
@@ -101,11 +100,6 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
             </h1>
 
             <div className="flex flex-wrap gap-1.5">
-              {post.visibility === BlogPostVisibility.MEMBERS ? (
-                <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                  Solo miembros
-                </span>
-              ) : null}
               {post.tags.map(({ tag }) => (
                 <Link
                   key={tag.id}
