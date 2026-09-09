@@ -867,3 +867,8 @@
   height: 0;
   background: transparent;
 }
+
+
+.font-montserrat {
+  font-family: var(--font-montserrat), sans-serif;
+}

@@ -120,3 +120,65 @@ export async function getFamilyDetailAction(familyId: string) {
     })),
   };
 }
+type FamilyImportRowActionInput = {
+  rowNumber: number;
+  familyName: string;
+  motherEmail?: string;
+  fatherEmail?: string;
+};
+
+function isFamilyImportRow(value: unknown): value is FamilyImportRowActionInput {
+  if (!value || typeof value !== "object") return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.rowNumber === "number"
+    && typeof row.familyName === "string"
+    && (row.motherEmail === undefined || typeof row.motherEmail === "string")
+    && (row.fatherEmail === undefined || typeof row.fatherEmail === "string");
+}
+
+export async function previewFamilyImportAction(rows: FamilyImportRowActionInput[]) {
+  await requireAdmin();
+  if (!Array.isArray(rows) || !rows.every(isFamilyImportRow)) {
+    return { validRows: [], issues: [{ rowNumber: 0, message: "La planilla no tiene un formato válido." }], familiesCount: 0, invitationsCount: 0 };
+  }
+  const { previewFamilyImport } = await import("@/modules/families/server/family-import.service");
+  return previewFamilyImport(rows);
+}
+
+export async function confirmFamilyImportAction(rows: FamilyImportRowActionInput[]) {
+  const admin = await requireAdmin();
+  if (!Array.isArray(rows) || !rows.every(isFamilyImportRow)) {
+    return { status: "error" as const, message: "La planilla no tiene un formato válido." };
+  }
+
+  try {
+    const { confirmFamilyImport } = await import("@/modules/families/server/family-import.service");
+    const result = await confirmFamilyImport(rows, admin.id);
+    if (!result.ok) {
+      return { status: "error" as const, message: "La información cambió desde la previsualización. Revisá los conflictos y volvé a confirmar.", preview: result.preview };
+    }
+
+    const { sendUserInvitationEmail } = await import("@/modules/mailing/server/mailing.service");
+    const deliveries = await Promise.allSettled(result.invitations.map((invitation) =>
+      sendUserInvitationEmail({
+        email: invitation.email,
+        role: invitation.role,
+        invitationId: invitation.invitationId,
+        invitationToken: invitation.token,
+        familyName: invitation.familyName,
+      }),
+    ));
+    const failedDeliveries = deliveries.filter((delivery) => delivery.status === "rejected" || (delivery.status === "fulfilled" && delivery.value.status === "failed")).length;
+    revalidatePath("/dashboard/families");
+    revalidatePath("/dashboard/users");
+    revalidatePath("/dashboard/mailing");
+    return {
+      status: failedDeliveries ? "warning" as const : "success" as const,
+      message: failedDeliveries
+        ? `Se crearon ${result.familiesCount} familias. ${failedDeliveries} invitaciones no pudieron enviarse; podés reenviarlas desde Usuarios.`
+        : `Se crearon ${result.familiesCount} familias y se enviaron ${result.invitations.length} invitaciones.`,
+    };
+  } catch {
+    return { status: "error" as const, message: "No pudimos confirmar la importación. Revisá la planilla e intentá nuevamente." };
+  }
+}
