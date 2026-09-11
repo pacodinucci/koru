@@ -5,6 +5,10 @@ import type { TeacherFormInput } from "@/modules/teachers/schemas/teacher.schema
 
 export async function listTeacherProfilesForAdmin() {
   return prisma.teacherProfile.findMany({
+    where: {
+      isActive: true,
+      user: { is: { role: { in: ["TEACHER", "ADMIN_TEACHER"] } } },
+    },
     orderBy: [{ isActive: "desc" }, { displayName: "asc" }],
     include: {
       user: { select: { id: true, name: true, email: true, role: true } },

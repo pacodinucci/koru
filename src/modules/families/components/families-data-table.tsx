@@ -30,7 +30,7 @@ export type FamilyListItem = {
   id: string;
   name: string;
   status: "ACTIVE" | "SUSPENDED" | "INACTIVE";
-  plan: { id: string; name: string; monthlyFee: unknown; isActive: boolean } | null;
+  plan: { id: string; name: string; basicMonthlyFee: unknown; isActive: boolean } | null;
   balance: string;
   usersCount: number;
   studentsCount: number;

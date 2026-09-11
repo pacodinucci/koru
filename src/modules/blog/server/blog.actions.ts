@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { sanitizeBlogHtml } from "@/modules/blog/lib/sanitize-blog-html";
 
@@ -188,7 +188,7 @@ async function syncBlogPostTags(
 
 export async function createBlogPostAction(formData: FormData) {
   const dashboardPath = resolveDashboardPath(formData);
-  const user = await requireAdmin();
+  const user = await requirePermission("blog.manage");
 
   const rawTitle = String(formData.get("title") ?? "").trim();
   const rawSlug = String(formData.get("slug") ?? "").trim();
@@ -281,7 +281,7 @@ export async function createBlogPostAction(formData: FormData) {
 
 export async function updateBlogPostAction(formData: FormData) {
   const dashboardPath = resolveDashboardPath(formData);
-  await requireAdmin();
+  await requirePermission("blog.manage");
 
   const postId = String(formData.get("postId") ?? "").trim();
   const rawTitle = String(formData.get("title") ?? "").trim();
@@ -384,7 +384,7 @@ export async function updateBlogPostAction(formData: FormData) {
 }
 
 export async function deleteBlogPostAction(formData: FormData) {
-  await requireAdmin();
+  await requirePermission("blog.manage");
 
   const postId = String(formData.get("postId") ?? "").trim();
   if (!postId) {
@@ -512,7 +512,7 @@ export async function toggleBlogPostLikeAction(formData: FormData) {
 
 
 export async function deleteCustomBlogTagAction(tagId: string) {
-  await requireAdmin();
+  await requirePermission("blog.manage");
 
   const deleted = await prisma.blogTag.deleteMany({
     where: {

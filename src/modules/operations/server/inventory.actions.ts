@@ -13,7 +13,7 @@ const decisionSchema = z.object({ lineId: z.string().min(1), approvedQuantity: z
 const value = (formData: FormData, name: string) => formData.get(name) ?? "";
 
 export async function submitInventoryRequestAction(formData: FormData) {
-  const { teacher } = await requireOperationsTeacher();
+  const { teacher } = await requireOperationsTeacher("inventory.view");
   const parsed = requestSchema.safeParse({ productId: value(formData, "productId"), quantity: value(formData, "quantity") });
   if (!parsed.success) return { ok: false, message: "Revisá el producto y la cantidad." };
   await prisma.inventoryRequest.create({ data: { teacherId: teacher.id, lines: { create: { productId: parsed.data.productId, requestedQuantity: parsed.data.quantity } } } });
@@ -22,7 +22,7 @@ export async function submitInventoryRequestAction(formData: FormData) {
 }
 
 export async function decideInventoryRequestLineAction(formData: FormData) {
-  const operator = await requireOperationsOperator();
+  const operator = await requireOperationsOperator("inventory.operate");
   const parsed = decisionSchema.safeParse({ lineId: value(formData, "lineId"), approvedQuantity: value(formData, "approvedQuantity"), reason: value(formData, "reason") || undefined });
   if (!parsed.success) return { ok: false, message: "Revisá la decisión." };
   await prisma.$transaction(async (tx) => {
@@ -45,7 +45,7 @@ export async function decideInventoryRequestLineAction(formData: FormData) {
 const requestLinesSchema = z.array(z.object({ productId: z.string().min(1), quantity: z.coerce.number().positive() })).min(1).max(50);
 
 export async function submitMultiItemInventoryRequestAction(lines: Array<{ productId: string; quantity: number }>) {
-  const { teacher } = await requireOperationsTeacher();
+  const { teacher } = await requireOperationsTeacher("inventory.view");
   const parsed = requestLinesSchema.safeParse(lines);
   if (!parsed.success) return { ok: false, message: "Revisá los productos y las cantidades." };
   const productIds = parsed.data.map((line) => line.productId);
@@ -60,7 +60,7 @@ export async function submitMultiItemInventoryRequestAction(lines: Array<{ produ
 const requestDecisionLinesSchema = z.array(z.object({ lineId: z.string().min(1), approvedQuantity: z.coerce.number().nonnegative(), reason: z.string().trim().max(500).optional() })).min(1);
 
 export async function decideWholeInventoryRequestAction(requestId: string, decisions: Array<{ lineId: string; approvedQuantity: number; reason?: string }>) {
-  const operator = await requireOperationsOperator();
+  const operator = await requireOperationsOperator("inventory.operate");
   const parsed = requestDecisionLinesSchema.safeParse(decisions);
   if (!parsed.success) return { ok: false, message: "Revisá las cantidades aprobadas." };
   await prisma.$transaction(async (tx) => {
@@ -88,7 +88,7 @@ export async function decideWholeInventoryRequestAction(requestId: string, decis
 const stockMovementSchema = z.object({ productId: z.string().min(1), quantity: z.coerce.number().positive(), unitCost: z.coerce.number().nonnegative().optional(), reason: z.string().trim().min(2).max(500) });
 
 export async function registerInventoryStockMovementAction(formData: FormData) {
-  const operator = await requireOperationsOperator();
+  const operator = await requireOperationsOperator("inventory.operate");
   const parsed = stockMovementSchema.safeParse({ productId: value(formData, "productId"), quantity: value(formData, "quantity"), unitCost: value(formData, "unitCost") || undefined, reason: value(formData, "reason") });
   if (!parsed.success) return { ok: false, message: "Revisá los datos del movimiento." };
   await prisma.inventoryMovement.create({ data: { productId: parsed.data.productId, type: InventoryMovementType.STOCK_IN, quantity: parsed.data.quantity, unitCost: parsed.data.unitCost, reason: parsed.data.reason, createdById: operator.id } });
@@ -99,7 +99,7 @@ export async function registerInventoryStockMovementAction(formData: FormData) {
 const adjustmentSchema = z.object({ productId: z.string().min(1), quantity: z.coerce.number().refine((value) => value !== 0), reason: z.string().trim().min(2).max(500) });
 
 export async function adjustInventoryStockAction(formData: FormData) {
-  const operator = await requireOperationsOperator();
+  const operator = await requireOperationsOperator("inventory.operate");
   const parsed = adjustmentSchema.safeParse({ productId: value(formData, "productId"), quantity: value(formData, "quantity"), reason: value(formData, "reason") });
   if (!parsed.success) return { ok: false, message: "Indicá un ajuste y su motivo." };
   const current = await prisma.inventoryMovement.aggregate({ where: { productId: parsed.data.productId }, _sum: { quantity: true } });
@@ -110,7 +110,7 @@ export async function adjustInventoryStockAction(formData: FormData) {
 }
 
 export async function reverseInventoryMovementAction(movementId: string) {
-  const operator = await requireOperationsOperator();
+  const operator = await requireOperationsOperator("inventory.operate");
   const movement = await prisma.inventoryMovement.findUnique({ where: { id: movementId } });
   if (!movement) return { ok: false, message: "Movimiento inexistente." };
   const existing = await prisma.inventoryMovement.findUnique({ where: { reversesId: movementId } });
@@ -125,7 +125,7 @@ export async function reverseInventoryMovementAction(movementId: string) {
 const productSchema = z.object({ name: z.string().trim().min(2).max(120), unit: z.string().trim().min(1).max(30), minimumStock: z.coerce.number().nonnegative() });
 
 export async function createInventoryProductAction(formData: FormData) {
-  await requireOperationsSuperAdmin();
+  await requireOperationsSuperAdmin("inventory.configure");
   const parsed = productSchema.safeParse({ name: value(formData, "name"), unit: value(formData, "unit"), minimumStock: value(formData, "minimumStock") });
   if (!parsed.success) return { ok: false, message: "Revisá los datos del producto." };
   try { await prisma.inventoryProduct.create({ data: parsed.data }); } catch { return { ok: false, message: "Ya existe un producto con esa unidad." }; }
@@ -136,7 +136,7 @@ export async function createInventoryProductAction(formData: FormData) {
 const minimumStockSchema = z.object({ productId: z.string().min(1), minimumStock: z.coerce.number().nonnegative() });
 
 export async function setInventoryMinimumStockAction(formData: FormData) {
-  await requireOperationsSuperAdmin();
+  await requireOperationsSuperAdmin("inventory.configure");
   const parsed = minimumStockSchema.safeParse({ productId: value(formData, "productId"), minimumStock: value(formData, "minimumStock") });
   if (!parsed.success) return { ok: false, message: "Indicá un stock mínimo válido." };
   await prisma.inventoryProduct.update({ where: { id: parsed.data.productId }, data: { minimumStock: parsed.data.minimumStock } });
@@ -144,10 +144,23 @@ export async function setInventoryMinimumStockAction(formData: FormData) {
   return { ok: true, message: "Stock mínimo actualizado." };
 }
 
+export async function updateInventoryProductAction(formData: FormData) {
+  await requireOperationsSuperAdmin("inventory.configure");
+  const parsed = productSchema.extend({ productId: z.string().min(1) }).safeParse({ productId: value(formData, "productId"), name: value(formData, "name"), unit: value(formData, "unit"), minimumStock: value(formData, "minimumStock") });
+  if (!parsed.success) return { ok: false, message: "Revisá los datos del producto." };
+  try {
+    await prisma.inventoryProduct.update({ where: { id: parsed.data.productId }, data: { name: parsed.data.name, unit: parsed.data.unit, minimumStock: parsed.data.minimumStock } });
+  } catch {
+    return { ok: false, message: "Ya existe un producto con ese nombre y unidad." };
+  }
+  revalidatePath("/dashboard/inventario");
+  return { ok: true, message: "Producto actualizado." };
+}
 export async function cancelInventoryRequestAction(requestId: string) {
-  const { teacher } = await requireOperationsTeacher();
+  const { teacher } = await requireOperationsTeacher("inventory.view");
   const result = await prisma.inventoryRequest.updateMany({ where: { id: requestId, teacherId: teacher.id, status: InventoryRequestStatus.PENDING }, data: { status: InventoryRequestStatus.CANCELED, canceledAt: new Date() } });
   if (result.count === 0) return { ok: false, message: "La solicitud no puede cancelarse." };
   revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Solicitud cancelada." };
 }
+

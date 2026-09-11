@@ -29,7 +29,7 @@ export function sanitizeBlogHtml(value: string) {
   return sanitizeHtml(value, {
     allowedTags,
     allowedAttributes: {
-      "*": ["class", "data-*"],
+      "*": ["class", "data-*", "style"],
       a: ["href", "target", "rel", "title"],
       img: [
         "src",
@@ -43,6 +43,9 @@ export function sanitizeBlogHtml(value: string) {
       ],
     },
     allowedStyles: {
+      "*": {
+        "text-align": [/^(left|right|center|justify)$/],
+      },
       img: {
         "object-position": [/^\d{1,3}%\s+\d{1,3}%$/],
       },

@@ -1,6 +1,6 @@
 ﻿import Link from "next/link";
 
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { discoverPagesGroupRoutes, getEditableCmsPage } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { saveDashboardPageAction } from "@/modules/dashboard/server/dashboard-pages.actions";
@@ -15,7 +15,7 @@ type DashboardPagesEditPageProps = {
 export default async function DashboardPagesEditPage({
   searchParams,
 }: DashboardPagesEditPageProps) {
-  const user = await requireAdmin();
+  const user = await requirePermission("content.view");
 
   const resolved = searchParams ? await searchParams : undefined;
   const slug = resolved?.slug ?? "/";
@@ -26,6 +26,8 @@ export default async function DashboardPagesEditPage({
   return (
     <DashboardShell
       userEmail={user.email}
+      userRole={user.role}
+      userPermissions={user.permissionKeys}
       cmsPages={cmsPages}
       breadcrumbPage={`Pages / ${slug}`}
       showPanelToggle

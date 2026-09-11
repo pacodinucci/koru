@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import {
@@ -26,7 +26,7 @@ type DashboardCalendarPageProps = {
 export default async function DashboardCalendarPage({
   searchParams,
 }: DashboardCalendarPageProps) {
-  const user = await requireAdmin();
+  const user = await requirePermission("calendar.view");
 
   const { ok, error, date, view, edit } = await searchParams;
   const parsedDate = date ? new Date(`${date}T00:00:00`) : new Date();
@@ -52,6 +52,8 @@ export default async function DashboardCalendarPage({
     >
       <DashboardShell
         userEmail={user.email}
+      userRole={user.role}
+      userPermissions={user.permissionKeys}
         cmsPages={cmsPages.filter((page) => !page.isDynamic)}
         breadcrumbPage="Calendario"
         showPanelToggle

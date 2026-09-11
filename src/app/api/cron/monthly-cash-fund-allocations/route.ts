@@ -6,5 +6,5 @@ import { generateMonthlyCashFundAllocations } from "@/modules/operations/server/
 export async function GET(request: Request) {
   if (!env.CRON_SECRET || request.headers.get("authorization") !== `Bearer ${env.CRON_SECRET}`) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   const result = await generateMonthlyCashFundAllocations();
-  return NextResponse.json({ ok: true, period: result.allocationPeriod.toISOString().slice(0, 10), eligible: result.eligible, created: result.created, skipped: result.skipped });
+  return NextResponse.json({ ok: true, period: result.allocationPeriod.toISOString().slice(0, 10), eligible: result.eligible, frequency: result.frequency, created: result.created, skipped: result.skipped });
 }

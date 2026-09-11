@@ -1,3 +1,4 @@
+import { BlogPostVisibility } from "@prisma/client";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { MessageCircleIcon } from "lucide-react";

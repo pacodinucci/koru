@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { teacherFormSchema, type TeacherFormInput } from "@/modules/teachers/schemas/teacher.schema";
 import {
   listTeacherProfilesForAdmin,
@@ -10,12 +10,12 @@ import {
 } from "@/modules/teachers/server/teachers.repository";
 
 export async function listTeacherProfilesForAdminAction() {
-  await requireAdmin();
+  await requirePermission("teachers.manage");
   return listTeacherProfilesForAdmin();
 }
 
 export async function updateTeacherProfileAction(input: TeacherFormInput) {
-  await requireAdmin();
+  await requirePermission("teachers.manage");
   const parsed = teacherFormSchema.safeParse(input);
 
   if (!parsed.success) {

@@ -4,12 +4,13 @@ import { v2 as cloudinary } from "cloudinary";
 
 import { env } from "@/lib/env";
 
-export type MediaPurpose = "BLOG" | "CALENDAR" | "CMS";
+export type MediaPurpose = "BLOG" | "CALENDAR" | "CMS" | "CASH_FUND";
 
 const folders: Record<MediaPurpose, string> = {
   BLOG: "koru/blog",
   CALENDAR: "koru/calendar",
   CMS: "koru/cms",
+  CASH_FUND: "koru/caja-chica",
 };
 
 function configure() {

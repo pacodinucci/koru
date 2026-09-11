@@ -1,11 +1,10 @@
 "use server";
 
-import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { isAdminRole } from "@/modules/auth/roles";
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
+import { prisma } from "@/lib/prisma";
 import { sendUserInvitationEmail } from "@/modules/mailing/server/mailing.service";
 import {
   invitationErrorState,
@@ -24,13 +23,13 @@ import {
 
 const createInvitationSchema = z.object({
   email: z.string().email(),
-  role: z.nativeEnum(UserRole),
+  accessRoleId: z.string().min(1),
   familyId: z.string().min(1).optional(),
 });
 const invitationIdSchema = z.object({ id: z.string().min(1) });
 const updateUserRoleSchema = z.object({
   userId: z.string().min(1),
-  role: z.nativeEnum(UserRole),
+  accessRoleId: z.string().min(1),
 });
 const deleteUserSchema = z.object({ userId: z.string().min(1) });
 
@@ -39,16 +38,36 @@ function getString(formData: FormData, key: string) {
   return typeof value === "string" ? value : "";
 }
 
+async function canAssignAccessRole(
+  actor: Awaited<ReturnType<typeof requirePermission>>,
+  accessRoleId: string,
+) {
+  const role = await prisma.role.findFirst({
+    where: { id: accessRoleId, isActive: true },
+    select: {
+      baseRole: true,
+      permissions: { select: { permission: { select: { key: true } } } },
+    },
+  });
+  if (!role) return null;
+  if (actor.accessRoleKey === "SUPERADMIN") return role;
+  if (role.baseRole === "SUPERADMIN") return null;
+  const actorPermissions = new Set<string>(actor.permissionKeys);
+  return role.permissions.every(({ permission }) => actorPermissions.has(permission.key))
+    ? role
+    : null;
+}
+
 export async function listUsersForAdmin() {
-  await requireAdmin();
+  await requirePermission("users.view");
   return listUsers();
 }
 export async function listUserInvitationsForAdmin() {
-  await requireAdmin();
+  await requirePermission("users.view");
   return listUserInvitations();
 }
 export async function listFamiliesForInvitationAdmin() {
-  await requireAdmin();
+  await requirePermission("users.view");
   return listFamiliesForInvitation();
 }
 
@@ -73,10 +92,10 @@ export async function createUserInvitationAction(
   _previousState: UserInvitationActionState,
   formData: FormData,
 ): Promise<UserInvitationActionState> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("users.manage");
   const parsed = createInvitationSchema.safeParse({
     email: getString(formData, "email"),
-    role: getString(formData, "role"),
+    accessRoleId: getString(formData, "accessRoleId"),
     familyId: getString(formData, "familyId") || undefined,
   });
 
@@ -84,6 +103,12 @@ export async function createUserInvitationAction(
     return {
       status: "error",
       message: "Completá un email válido y los datos requeridos.",
+    };
+  }
+  if (!(await canAssignAccessRole(admin, parsed.data.accessRoleId))) {
+    return {
+      status: "error",
+      message: "No podés asignar un rol con permisos superiores a los tuyos.",
     };
   }
 
@@ -124,7 +149,7 @@ export async function createUserInvitationAction(
 }
 
 export async function resendUserInvitationAction(formData: FormData): Promise<void> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("users.manage");
   const parsed = invitationIdSchema.safeParse({ id: getString(formData, "id") });
   if (!parsed.success) return;
 
@@ -137,7 +162,7 @@ export async function resendUserInvitationAction(formData: FormData): Promise<vo
 }
 
 export async function revokeUserInvitationAction(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requirePermission("users.manage");
   const parsed = invitationIdSchema.safeParse({ id: getString(formData, "id") });
   if (!parsed.success) return;
 
@@ -150,12 +175,20 @@ export async function revokeUserInvitationAction(formData: FormData): Promise<vo
 }
 
 export async function updateUserRoleAction(formData: FormData): Promise<void> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("users.manage");
   const parsed = updateUserRoleSchema.safeParse({
     userId: getString(formData, "userId"),
-    role: getString(formData, "role"),
+    accessRoleId: getString(formData, "accessRoleId"),
   });
-  if (!parsed.success || (parsed.data.userId === admin.id && !isAdminRole(parsed.data.role))) return;
+  if (!parsed.success) return;
+  const nextRole = await canAssignAccessRole(admin, parsed.data.accessRoleId);
+  if (!nextRole) return;
+  if (
+    parsed.data.userId === admin.id &&
+    !nextRole.permissions.some(({ permission }) => permission.key === "users.manage")
+  ) {
+    return;
+  }
 
   try {
     await updateUserRole(parsed.data);
@@ -168,7 +201,7 @@ export async function updateUserRoleAction(formData: FormData): Promise<void> {
 }
 
 export async function deleteUserAction(formData: FormData): Promise<void> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("users.manage");
   const parsed = deleteUserSchema.safeParse({ userId: getString(formData, "userId") });
   if (!parsed.success) return;
 

@@ -1,4 +1,4 @@
-import { InvitationStatus, UserRole } from "@prisma/client";
+import { InvitationStatus } from "@prisma/client";
 import { SaveIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,7 @@ import {
 } from "@/modules/users/server/user-invitations.actions";
 import { CreateUserInvitationForm } from "@/modules/users/components/create-user-invitation-form";
 import { UserDeleteButton } from "@/modules/users/components/user-delete-button";
-import { isAdminRole } from "@/modules/auth/roles";
+import { listAssignableRoles } from "@/modules/roles/server/role.repository";
 
 function formatDate(date: Date | null) {
   if (!date) {
@@ -35,19 +35,6 @@ function formatDate(date: Date | null) {
     month: "2-digit",
     year: "numeric",
   });
-}
-
-function roleLabel(role: UserRole) {
-  const labels: Record<UserRole, string> = {
-    ADMIN: "Admin",
-    ADMIN_OPERATOR: "Admin operador",
-    ADMIN_TEACHER: "Admin docente",
-    SUPERADMIN: "Superadmin",
-    TEACHER: "Docente",
-    PARENT: "Familia",
-  };
-
-  return labels[role];
 }
 
 function invitationStatusLabel(status: InvitationStatus) {
@@ -74,27 +61,44 @@ function invitationStatusVariant(status: InvitationStatus) {
 
 type DashboardUsersViewProps = {
   currentAdminId: string;
+  canManage: boolean;
+  actorPermissions: string[];
+  currentRoleKey: string | null;
 };
 
 export async function DashboardUsersView({
   currentAdminId,
+  canManage,
+  actorPermissions,
+  currentRoleKey,
 }: DashboardUsersViewProps) {
-  const [users, invitations, families] = await Promise.all([
+  const [users, invitations, families, availableRoles] = await Promise.all([
     listUsersForAdmin(),
     listUserInvitationsForAdmin(),
     listFamiliesForInvitationAdmin(),
+    listAssignableRoles(),
   ]);
+  const actorPermissionSet = new Set(actorPermissions);
+  const roles = currentRoleKey === "SUPERADMIN"
+    ? availableRoles
+    : availableRoles.filter(
+        (role) =>
+          role.baseRole !== "SUPERADMIN" &&
+          role.permissions.every(({ permission }) => actorPermissionSet.has(permission.key)),
+      );
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Autorizar nuevo email</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CreateUserInvitationForm families={families} />
-        </CardContent>
-      </Card>
+      {canManage ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Autorizar nuevo email</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CreateUserInvitationForm families={families} roles={roles} />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card className="min-w-0">
         <CardHeader>
@@ -127,8 +131,8 @@ export async function DashboardUsersView({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={isAdminRole(user.role) ? "default" : "secondary"}>
-                        {roleLabel(user.role)}
+                      <Badge variant={user.accessRole?.baseRole === "SUPERADMIN" ? "default" : "secondary"}>
+                        {user.accessRole?.name ?? user.role}
                       </Badge>
                       <div className="mt-1 text-xs text-muted-foreground">
                         {formatDate(user.createdAt)}
@@ -141,13 +145,13 @@ export async function DashboardUsersView({
                       >
                         <input type="hidden" name="userId" value={user.id} />
                         <select
-                          name="role"
-                          defaultValue={user.role}
+                          name="accessRoleId"
+                          defaultValue={user.accessRoleId ?? ""}
                           className="h-8 min-w-0 max-w-full rounded-lg border border-slate-300 bg-white px-2 text-xs outline-none focus:border-slate-500"
                         >
-                          {Object.values(UserRole).map((role) => (
-                            <option key={role} value={role}>
-                              {roleLabel(role)}
+                          {roles.map((role) => (
+                            <option key={role.id} value={role.id}>
+                              {role.name}
                             </option>
                           ))}
                         </select>
@@ -155,6 +159,7 @@ export async function DashboardUsersView({
                           type="submit"
                           variant="outline"
                           size="icon-sm"
+                          disabled={!canManage}
                           aria-label={`Guardar rol de ${user.email}`}
                         >
                           <SaveIcon className="h-4 w-4" />
@@ -165,7 +170,7 @@ export async function DashboardUsersView({
                       <UserDeleteButton
                         userId={user.id}
                         userEmail={user.email}
-                        disabled={user.id === currentAdminId}
+                        disabled={!canManage || user.id === currentAdminId}
                       />
                     </TableCell>
                   </TableRow>
@@ -207,7 +212,7 @@ export async function DashboardUsersView({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>{roleLabel(invitation.role)}</div>
+                      <div>{invitation.accessRole?.name ?? invitation.role}</div>
                       {invitation.family ? <div className="mt-1 text-xs text-muted-foreground">Familia: {invitation.family.name}</div> : null}
                       <Badge className="mt-1" variant={invitationStatusVariant(invitation.status)}>
                         {invitationStatusLabel(invitation.status)}
@@ -223,7 +228,7 @@ export async function DashboardUsersView({
                       </div>
                     </TableCell>
                     <TableCell>
-                      {invitation.status === InvitationStatus.PENDING ? (
+                      {canManage && invitation.status === InvitationStatus.PENDING ? (
                         <div className="flex gap-2">
                           <form action={resendUserInvitationAction}><input type="hidden" name="id" value={invitation.id} /><Button type="submit" variant="outline" className="h-8 max-w-full px-2 text-xs">Reenviar</Button></form>
                           <form action={revokeUserInvitationAction}><input type="hidden" name="id" value={invitation.id} /><Button type="submit" variant="outline" className="h-8 max-w-full px-2 text-xs">Revocar</Button></form>

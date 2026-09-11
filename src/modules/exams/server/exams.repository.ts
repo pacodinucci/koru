@@ -3,7 +3,6 @@ import "server-only";
 import { UserRole, type ExamStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { isAdminRole } from "@/modules/auth/roles";
 import type { AuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import type { ExamFormInput } from "@/modules/exams/schemas/exam.schema";
 
@@ -17,6 +16,10 @@ function parseExamDate(value: string) {
   return date;
 }
 
+function isScopedTeacherRole(role: AuthenticatedUser["role"]) {
+  return role === "TEACHER" || role === "ADMIN_TEACHER";
+}
+
 async function getTeacherProfileForUser(userId: string) {
   return prisma.teacherProfile.findFirst({
     where: { userId, isActive: true, user: { role: { in: [UserRole.TEACHER, UserRole.ADMIN_TEACHER] } } },
@@ -26,10 +29,10 @@ async function getTeacherProfileForUser(userId: string) {
 
 export async function listExamsDashboardData(user: AuthenticatedUser) {
   const teacherProfile =
-    user.role === "TEACHER" ? await getTeacherProfileForUser(user.id) : null;
+    isScopedTeacherRole(user.role) ? await getTeacherProfileForUser(user.id) : null;
 
   const groupWhere =
-    user.role === "TEACHER"
+    isScopedTeacherRole(user.role)
       ? {
           isActive: true,
           teacherResponsibilities: { some: { teacherId: teacherProfile?.id ?? "" } },
@@ -37,7 +40,7 @@ export async function listExamsDashboardData(user: AuthenticatedUser) {
       : { isActive: true };
 
   const examWhere =
-    user.role === "TEACHER"
+    isScopedTeacherRole(user.role)
       ? {
           group: {
             teacherResponsibilities: { some: { teacherId: teacherProfile?.id ?? "" } },
@@ -81,7 +84,7 @@ export async function listExamsDashboardData(user: AuthenticatedUser) {
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       select: { id: true, firstName: true, lastName: true, groupId: true },
     }),
-    isAdminRole(user.role)
+    !isScopedTeacherRole(user.role)
       ? prisma.teacherProfile.findMany({
           where: { isActive: true, user: { role: { in: [UserRole.TEACHER, UserRole.ADMIN_TEACHER] } } },
           orderBy: [{ displayName: "asc" }],
@@ -96,8 +99,8 @@ export async function listExamsDashboardData(user: AuthenticatedUser) {
 export async function saveExamForDashboard(user: AuthenticatedUser, input: ExamFormInput) {
   const examDate = parseExamDate(input.examDate);
   const teacherProfile =
-    user.role === "TEACHER" ? await getTeacherProfileForUser(user.id) : null;
-  const resolvedTeacherId = user.role === "TEACHER" ? teacherProfile?.id : input.teacherId;
+    isScopedTeacherRole(user.role) ? await getTeacherProfileForUser(user.id) : null;
+  const resolvedTeacherId = isScopedTeacherRole(user.role) ? teacherProfile?.id : input.teacherId;
 
   if (!resolvedTeacherId) {
     throw new Error("missing_teacher");
@@ -130,7 +133,7 @@ export async function saveExamForDashboard(user: AuthenticatedUser, input: ExamF
       throw new Error("teacher_not_found");
     }
 
-    if (user.role === "TEACHER") {
+    if (isScopedTeacherRole(user.role)) {
       const responsibility = await tx.studentGroupTeacher.findUnique({
         where: { groupId_teacherId: { groupId: input.groupId, teacherId: resolvedTeacherId } },
         select: { id: true },
@@ -171,7 +174,7 @@ export async function saveExamForDashboard(user: AuthenticatedUser, input: ExamF
         throw new Error("exam_not_found");
       }
 
-      if (user.role === "TEACHER") {
+      if (isScopedTeacherRole(user.role)) {
         const existingResponsibility = await tx.studentGroupTeacher.findUnique({
           where: {
             groupId_teacherId: {

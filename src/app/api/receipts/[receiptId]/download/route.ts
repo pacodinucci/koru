@@ -19,7 +19,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ rec
     return NextResponse.json({ ok: false, error: "Recibo no disponible" }, { status: 404 });
   }
 
-  if (!canAccessReceipt({ role: user.role, userFamilyId: user.familyId, receiptFamilyId: receipt.payment.familyId })) {
+  if (!canAccessReceipt({ canManagePayments: user.permissionKeys.includes("families.payments"), userFamilyId: user.familyId, receiptFamilyId: receipt.payment.familyId })) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

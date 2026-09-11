@@ -4,13 +4,23 @@ import { FamilyStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { getFamilyDetailForAdmin } from "@/modules/families/server/families.repository";
 
 const familySchema = z.object({ name: z.string().trim().min(2).max(120) });
-const planSchema = z.object({ name: z.string().trim().min(2).max(120), monthlyFee: z.coerce.number().positive() });
-const updatePlanSchema = z.object({ planId: z.string().min(1), name: z.string().trim().min(2).max(120), monthlyFee: z.coerce.number().positive(), isActive: z.enum(["true", "false"]) });
+const eventualItemDraftSchema = z.object({ name: z.string().trim().min(2).max(120), suggestedAmount: z.coerce.number().positive() });
+const planSchema = z.object({ name: z.string().trim().min(2).max(120), basicMonthlyFee: z.coerce.number().positive(), eventualItems: z.array(eventualItemDraftSchema).max(30) }).superRefine((plan, context) => {
+  const names = new Set<string>();
+  plan.eventualItems.forEach((item, index) => {
+    const key = item.name.toLocaleLowerCase("es-AR");
+    if (names.has(key)) context.addIssue({ code: "custom", message: "Los rubros deben tener nombres distintos.", path: ["eventualItems", index, "name"] });
+    names.add(key);
+  });
+});
+const updatePlanSchema = z.object({ planId: z.string().min(1), name: z.string().trim().min(2).max(120), basicMonthlyFee: z.coerce.number().positive(), isActive: z.enum(["true", "false"]) });
+const eventualChargeItemSchema = z.object({ planId: z.string().min(1), name: z.string().trim().min(2).max(120), suggestedAmount: z.coerce.number().positive() });
+const updateEventualChargeItemSchema = eventualChargeItemSchema.extend({ itemId: z.string().min(1), isActive: z.enum(["true", "false"]) });
 const planAssignmentSchema = z.object({ familyId: z.string().min(1), planId: z.string().min(1) });
 const statusSchema = z.object({ familyId: z.string().min(1), status: z.nativeEnum(FamilyStatus) });
 const membershipSchema = z.object({ familyId: z.string().min(1), memberId: z.string().min(1) });
@@ -22,7 +32,7 @@ function value(formData: FormData, key: string) {
 }
 
 export async function createFamilyAction(formData: FormData) {
-  await requireAdmin();
+  await requirePermission("families.manage");
   const parsed = familySchema.safeParse({ name: value(formData, "name") });
   if (!parsed.success) return;
   await prisma.family.create({ data: { name: parsed.data.name } });
@@ -30,24 +40,43 @@ export async function createFamilyAction(formData: FormData) {
 }
 
 export async function createPlanAction(formData: FormData) {
-  await requireAdmin();
-  const parsed = planSchema.safeParse({ name: value(formData, "name"), monthlyFee: value(formData, "monthlyFee") });
+  await requirePermission("families.manage");
+  let eventualItems: unknown;
+  try { eventualItems = JSON.parse(value(formData, "eventualItems") || "[]"); } catch { return; }
+  const parsed = planSchema.safeParse({ name: value(formData, "name"), basicMonthlyFee: value(formData, "basicMonthlyFee"), eventualItems });
   if (!parsed.success) return;
-  await prisma.plan.create({ data: parsed.data });
+  await prisma.plan.create({ data: { name: parsed.data.name, basicMonthlyFee: parsed.data.basicMonthlyFee, eventualChargeItems: { create: parsed.data.eventualItems } } });
   revalidatePath("/dashboard/families");
+  revalidatePath("/dashboard/families/plans");
 }
-
 export async function updatePlanAction(formData: FormData) {
-  await requireAdmin();
-  const parsed = updatePlanSchema.safeParse({ planId: value(formData, "planId"), name: value(formData, "name"), monthlyFee: value(formData, "monthlyFee"), isActive: value(formData, "isActive") });
+  await requirePermission("families.manage");
+  const parsed = updatePlanSchema.safeParse({ planId: value(formData, "planId"), name: value(formData, "name"), basicMonthlyFee: value(formData, "basicMonthlyFee"), isActive: value(formData, "isActive") });
   if (!parsed.success) return;
-  await prisma.plan.update({ where: { id: parsed.data.planId }, data: { name: parsed.data.name, monthlyFee: parsed.data.monthlyFee, isActive: parsed.data.isActive === "true" } });
+  await prisma.plan.update({ where: { id: parsed.data.planId }, data: { name: parsed.data.name, basicMonthlyFee: parsed.data.basicMonthlyFee, isActive: parsed.data.isActive === "true" } });
   revalidatePath("/dashboard/families");
   revalidatePath("/dashboard/families/plans");
 }
 
+export async function createPlanEventualChargeItemAction(formData: FormData) {
+  await requirePermission("families.manage");
+  const parsed = eventualChargeItemSchema.safeParse({ planId: value(formData, "planId"), name: value(formData, "name"), suggestedAmount: value(formData, "suggestedAmount") });
+  if (!parsed.success) return;
+  await prisma.planEventualChargeItem.create({ data: parsed.data });
+  revalidatePath("/dashboard/families/plans");
+}
+
+export async function updatePlanEventualChargeItemAction(formData: FormData) {
+  await requirePermission("families.manage");
+  const parsed = updateEventualChargeItemSchema.safeParse({ itemId: value(formData, "itemId"), planId: value(formData, "planId"), name: value(formData, "name"), suggestedAmount: value(formData, "suggestedAmount"), isActive: value(formData, "isActive") });
+  if (!parsed.success) return;
+  const item = await prisma.planEventualChargeItem.findUnique({ where: { id: parsed.data.itemId }, select: { planId: true } });
+  if (!item || item.planId !== parsed.data.planId) return;
+  await prisma.planEventualChargeItem.update({ where: { id: parsed.data.itemId }, data: { name: parsed.data.name, suggestedAmount: parsed.data.suggestedAmount, isActive: parsed.data.isActive === "true" } });
+  revalidatePath("/dashboard/families/plans");
+}
 export async function assignPlanToFamilyAction(formData: FormData) {
-  await requireAdmin();
+  await requirePermission("families.manage");
   const parsed = planAssignmentSchema.safeParse({ familyId: value(formData, "familyId"), planId: value(formData, "planId") });
   if (!parsed.success) return;
   await prisma.family.update({ where: { id: parsed.data.familyId }, data: { planId: parsed.data.planId } });
@@ -55,7 +84,7 @@ export async function assignPlanToFamilyAction(formData: FormData) {
 }
 
 export async function changeFamilyStatusAction(formData: FormData) {
-  await requireAdmin();
+  await requirePermission("families.manage");
   const parsed = statusSchema.safeParse({ familyId: value(formData, "familyId"), status: value(formData, "status") });
   if (!parsed.success) return;
   await prisma.family.update({ where: { id: parsed.data.familyId }, data: { status: parsed.data.status } });
@@ -63,7 +92,7 @@ export async function changeFamilyStatusAction(formData: FormData) {
 }
 
 export async function assignFamilyUserAction(formData: FormData) {
-  await requireAdmin();
+  await requirePermission("families.manage");
   const parsed = membershipSchema.safeParse({ familyId: value(formData, "familyId"), memberId: value(formData, "userId") });
   if (!parsed.success) return;
   await prisma.user.update({ where: { id: parsed.data.memberId }, data: { familyId: parsed.data.familyId } });
@@ -71,7 +100,7 @@ export async function assignFamilyUserAction(formData: FormData) {
 }
 
 export async function assignFamilyStudentAction(formData: FormData) {
-  await requireAdmin();
+  await requirePermission("families.manage");
   const parsed = membershipSchema.safeParse({ familyId: value(formData, "familyId"), memberId: value(formData, "studentId") });
   if (!parsed.success) return;
   await prisma.student.update({ where: { id: parsed.data.memberId }, data: { familyId: parsed.data.familyId } });
@@ -79,7 +108,7 @@ export async function assignFamilyStudentAction(formData: FormData) {
 }
 
 export async function getFamilyDetailAction(familyId: string) {
-  await requireAdmin();
+  await requirePermission("families.manage");
   const parsed = familyIdSchema.safeParse(familyId);
   if (!parsed.success) return null;
 
@@ -137,7 +166,7 @@ function isFamilyImportRow(value: unknown): value is FamilyImportRowActionInput 
 }
 
 export async function previewFamilyImportAction(rows: FamilyImportRowActionInput[]) {
-  await requireAdmin();
+  await requirePermission("families.manage");
   if (!Array.isArray(rows) || !rows.every(isFamilyImportRow)) {
     return { validRows: [], issues: [{ rowNumber: 0, message: "La planilla no tiene un formato válido." }], familiesCount: 0, invitationsCount: 0 };
   }
@@ -146,7 +175,7 @@ export async function previewFamilyImportAction(rows: FamilyImportRowActionInput
 }
 
 export async function confirmFamilyImportAction(rows: FamilyImportRowActionInput[]) {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("families.manage");
   if (!Array.isArray(rows) || !rows.every(isFamilyImportRow)) {
     return { status: "error" as const, message: "La planilla no tiene un formato válido." };
   }

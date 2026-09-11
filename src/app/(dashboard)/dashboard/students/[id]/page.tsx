@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { updateStudentRecordStatusAction } from "@/modules/students/server/student.actions";
@@ -24,7 +24,7 @@ function Value({ label, value }: { label: string; value?: string | null }) {
 }
 
 export default async function DashboardStudentRecordPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requireAdmin();
+  const user = await requirePermission("students.view");
   const { id } = await params;
   const [student, cmsPages] = await Promise.all([
     getStudentRecordForAdmin(id),
@@ -34,7 +34,9 @@ export default async function DashboardStudentRecordPage({ params }: { params: P
 
   const guardian = student.guardians[0];
   return (
-    <DashboardShell userEmail={user.email} cmsPages={cmsPages.filter((page) => !page.isDynamic)} breadcrumbPage="Expediente del alumno">
+    <DashboardShell userEmail={user.email}
+      userRole={user.role}
+      userPermissions={user.permissionKeys} cmsPages={cmsPages.filter((page) => !page.isDynamic)} breadcrumbPage="Expediente del alumno">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button nativeButton={false} render={<Link href="/dashboard/students" />} variant="ghost" size="sm"><ArrowLeft /> Volver a alumnos</Button>

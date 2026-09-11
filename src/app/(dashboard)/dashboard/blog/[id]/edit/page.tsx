@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { BlogEventToast } from "@/modules/blog/components/blog-event-toast";
@@ -24,7 +24,7 @@ export default async function EditBlogPostPage({
   params,
   searchParams,
 }: EditBlogPostPageProps) {
-  const user = await requireAdmin();
+  const user = await requirePermission("blog.manage");
   const { id } = await params;
   const { ok, error } = await searchParams;
   const [post, tagOptions] = await Promise.all([
@@ -43,6 +43,8 @@ export default async function EditBlogPostPage({
   return (
     <DashboardShell
       userEmail={user.email}
+      userRole={user.role}
+      userPermissions={user.permissionKeys}
       cmsPages={cmsPages}
       breadcrumbPage="Editar blog"
       showPanelToggle

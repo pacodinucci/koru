@@ -9,7 +9,7 @@ import {
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { sendPendingCalendarEventInvitations } from "@/modules/calendar/server/calendar-invitation.service";
 import {
   removeEventFromGoogleCalendars,
@@ -55,7 +55,7 @@ function combineDateAndTime(dateValue: string, timeValue: string) {
 }
 
 export async function saveCalendarEventAction(formData: FormData) {
-  const user = await requireAdmin("/dashboard/calendar?error=forbidden");
+  const user = await requirePermission("calendar.manage", "/dashboard/calendar?error=forbidden");
   let savedEventId: string;
   let shouldNotify = false;
 
@@ -125,7 +125,7 @@ export async function saveCalendarEventAction(formData: FormData) {
 }
 
 export async function cancelCalendarEventAction(formData: FormData) {
-  await requireAdmin("/dashboard/calendar?error=forbidden");
+  await requirePermission("calendar.manage", "/dashboard/calendar?error=forbidden");
   const id = getString(formData, "id").trim();
   if (!id) redirect("/dashboard/calendar?error=missing_event_id");
 
@@ -137,7 +137,7 @@ export async function cancelCalendarEventAction(formData: FormData) {
 }
 
 export async function retryCalendarEventInvitationsAction(formData: FormData) {
-  await requireAdmin("/dashboard/calendar?error=forbidden");
+  await requirePermission("calendar.manage", "/dashboard/calendar?error=forbidden");
   const id = getString(formData, "id").trim();
   if (!id) redirect("/dashboard/calendar?error=missing_event_id");
 

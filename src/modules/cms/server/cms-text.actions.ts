@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { publishAllCmsDraftImages } from "@/modules/cms/server/cms-image.repository";
 import {
@@ -17,7 +17,7 @@ import {
 const cmsTextMapSchema = z.record(z.string(), z.string());
 
 export async function saveCmsDraftAction(payload: unknown) {
-  await requireAdmin();
+  await requirePermission("content.manage");
 
   const parsed = cmsTextMapSchema.safeParse(payload);
 
@@ -31,7 +31,7 @@ export async function saveCmsDraftAction(payload: unknown) {
 }
 
 export async function publishCmsAction(payload: unknown) {
-  await requireAdmin();
+  await requirePermission("content.manage");
 
   const parsed = cmsTextMapSchema.safeParse(payload);
 
@@ -45,7 +45,7 @@ export async function publishCmsAction(payload: unknown) {
 }
 
 export async function saveCmsPageDraftAction(slug: string, payload: unknown) {
-  await requireAdmin();
+  await requirePermission("content.manage");
 
   const parsed = cmsTextMapSchema.safeParse(payload);
 
@@ -59,7 +59,7 @@ export async function saveCmsPageDraftAction(slug: string, payload: unknown) {
 }
 
 export async function publishCmsPageAction(slug: string, payload: unknown) {
-  await requireAdmin();
+  await requirePermission("content.manage");
 
   const parsed = cmsTextMapSchema.safeParse(payload);
 
@@ -73,7 +73,7 @@ export async function publishCmsPageAction(slug: string, payload: unknown) {
 }
 
 export async function publishAllCmsPagesAction() {
-  await requireAdmin();
+  await requirePermission("content.manage");
 
   const baseDraft = await getCmsDraftTextMap();
   await publishCmsTextMap(baseDraft);

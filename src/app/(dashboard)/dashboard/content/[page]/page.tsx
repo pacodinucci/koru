@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import {
   getCmsContentPage,
   type CmsContentPageKey,
@@ -16,7 +16,7 @@ export default async function DashboardContentPage({
 }: {
   params: Promise<{ page: string }>;
 }) {
-  const user = await requireAdmin();
+  const user = await requirePermission("content.view");
   const { page: pageKey } = await params;
   const page = getCmsContentPage(pageKey);
   if (!page) {
@@ -32,6 +32,8 @@ export default async function DashboardContentPage({
   return (
     <DashboardShell
       userEmail={user.email}
+      userRole={user.role}
+      userPermissions={user.permissionKeys}
       cmsPages={cmsPages.filter((item) => !item.isDynamic)}
       breadcrumbPage={`Contenido / ${page.label}`}
       contentNoPadding

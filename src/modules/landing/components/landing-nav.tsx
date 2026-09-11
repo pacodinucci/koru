@@ -8,7 +8,6 @@ import { createPortal } from "react-dom";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { isAdminRole, type AppUserRole } from "@/modules/auth/roles";
 import {
   Drawer,
   DrawerContent,
@@ -80,7 +79,7 @@ type LandingNavProps = {
   user?: {
     name: string;
     email: string;
-    role?: AppUserRole;
+    canAccessDashboard: boolean;
   } | null;
   onSignOut?: (formData: FormData) => void;
 };
@@ -304,7 +303,7 @@ export function LandingNav({
 
   const userDisplay = user?.name?.trim() || user?.email || "Usuario";
   const userInitials = getInitials(userDisplay);
-  const isAdmin = user?.role ? isAdminRole(user.role) : false;
+  const canAccessDashboard = user?.canAccessDashboard ?? false;
   const activeSubmenu = navLinksWithSubmenu.find(
     (item, index) => (item.id?.trim() || `nav-${index}`) === activeSubmenuId,
   )?.submenu;
@@ -382,7 +381,7 @@ export function LandingNav({
                 <Users />
                 Family dashboard
               </DropdownMenuItem>
-              {isAdmin ? (
+              {canAccessDashboard ? (
                 <DropdownMenuItem
                   render={<Link href="/dashboard" />}
                   className="h-12 rounded-md px-4 text-sm font-medium text-slate-950 focus:bg-slate-100 focus:text-slate-950"
@@ -456,7 +455,7 @@ export function LandingNav({
               <Users className="h-4 w-4" />
               Family dashboard
             </Link>
-            {isAdmin ? (
+            {canAccessDashboard ? (
               <Link
                 href="/dashboard"
                 onClick={() => setIsMobileUserDrawerOpen(false)}

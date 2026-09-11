@@ -7,7 +7,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
-import { isDashboardRole } from "@/modules/auth/roles";
+import { legacyRolePermissions } from "@/modules/auth/permissions/permission-catalog";
 import { GOOGLE_INVITATION_COOKIE, GOOGLE_INVITATION_COOKIE_MAX_AGE_SECONDS } from "@/modules/auth/lib/google-invitation-flow";
 import { hashInvitationToken } from "@/modules/users/server/user-invitation-token";
 import {
@@ -49,12 +49,30 @@ async function getPostAuthRedirect(email: string) {
   const normalizedEmail = normalizeInvitationEmail(email);
   const user = await prisma.user.findUnique({
     where: { email: normalizedEmail },
-    select: { role: true },
+    select: {
+      role: true,
+      accessRoleId: true,
+      accessRole: {
+        select: {
+          isActive: true,
+          permissions: {
+            where: { permission: { key: "dashboard.access" } },
+            select: { permissionId: true },
+          },
+        },
+      },
+    },
   });
 
-  if (user && isDashboardRole(user.role)) {
-    return "/dashboard";
-  }
+  const canAccessDashboard = user
+    ? user.accessRole?.isActive
+      ? user.accessRole.permissions.length > 0
+      : user.accessRoleId
+        ? false
+        : legacyRolePermissions[user.role].includes("dashboard.access")
+    : false;
+
+  if (canAccessDashboard) return "/dashboard";
 
   return "/family-dashboard";
 }

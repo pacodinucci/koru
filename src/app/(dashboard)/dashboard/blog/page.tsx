@@ -1,5 +1,5 @@
 import { DashboardBlogView } from "@/modules/blog/views/dashboard-blog-view";
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 
@@ -13,7 +13,7 @@ type DashboardBlogPageProps = {
 export default async function DashboardBlogPage({
   searchParams,
 }: DashboardBlogPageProps) {
-  const user = await requireAdmin();
+  const user = await requirePermission("blog.view");
   const { ok, error } = await searchParams;
   const cmsPages = (await discoverPagesGroupRoutes()).filter(
     (page) => !page.isDynamic,
@@ -22,6 +22,8 @@ export default async function DashboardBlogPage({
   return (
     <DashboardShell
       userEmail={user.email}
+      userRole={user.role}
+      userPermissions={user.permissionKeys}
       cmsPages={cmsPages}
       breadcrumbPage="Blog"
       showPanelToggle

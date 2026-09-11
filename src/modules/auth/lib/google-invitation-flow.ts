@@ -1,6 +1,6 @@
 import { InvitationStatus, UserRole } from "@prisma/client";
 
-import { validateInvitationFamily } from "@/modules/users/lib/user-invitation-policy";
+import { validateInvitationFamily } from "../../users/lib/user-invitation-policy";
 
 export const GOOGLE_INVITATION_COOKIE = "koru_google_invitation";
 export const GOOGLE_INVITATION_COOKIE_MAX_AGE_SECONDS = 10 * 60;

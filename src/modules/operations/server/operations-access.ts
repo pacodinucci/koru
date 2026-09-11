@@ -3,32 +3,29 @@ import "server-only";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/modules/auth/server/auth-guards";
+import type { PermissionKey } from "@/modules/auth/permissions/permission-catalog";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 
-const operatorRoles = new Set(["ADMIN", "ADMIN_OPERATOR", "SUPERADMIN"]);
+export function requireOperationsOperator(
+  permission: "cash-fund.operate" | "inventory.operate",
+) {
+  return requirePermission(permission);
+}
 
-export async function requireOperationsOperator() {
-  const user = await requireUser();
+export function requireOperationsSuperAdmin(
+  permission: "cash-fund.configure" | "inventory.configure",
+) {
+  return requirePermission(permission);
+}
 
-  if (!operatorRoles.has(user.role)) {
+export async function requireOperationsTeacher(
+  permission: "cash-fund.view" | "inventory.view",
+) {
+  const user = await requirePermission(permission);
+  if (user.role !== "TEACHER" && user.role !== "ADMIN_TEACHER") {
     redirect("/dashboard?error=forbidden");
   }
 
-  return user;
-}
-
-export async function requireOperationsSuperAdmin() {
-  const user = await requireUser();
-
-  if (user.role !== "SUPERADMIN") {
-    redirect("/dashboard?error=forbidden");
-  }
-
-  return user;
-}
-
-export async function requireOperationsTeacher() {
-  const user = await requireUser();
   const teacher = await prisma.teacherProfile.findUnique({
     where: { userId: user.id },
     select: { id: true, isActive: true },
@@ -40,3 +37,5 @@ export async function requireOperationsTeacher() {
 
   return { user, teacher };
 }
+
+export type OperationsPermission = PermissionKey;

@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { getCmsImageSlotsBySlug } from "@/modules/cms/content-page-config";
 import {
   publishCmsImageMapWithClient,
@@ -63,7 +63,7 @@ export async function saveCmsPageDraftImageAction(
   key: string,
   payload: unknown,
 ) {
-  await requireAdmin();
+  await requirePermission("content.manage");
 
   const parsed = imageValueSchema.safeParse(payload);
   const allowedKeys = getAllowedImageKeys(pageSlug);
@@ -80,7 +80,7 @@ export async function publishCmsPageContentAction(
   textPayload: unknown,
   imagePayload: unknown,
 ) {
-  await requireAdmin();
+  await requirePermission("content.manage");
 
   const parsedText = textMapSchema.safeParse(textPayload);
   const parsedImages = imageMapSchema.safeParse(imagePayload);

@@ -8,9 +8,8 @@ test("el saldo suma cargos, pagos, reversas y condonaciones", () => {
   assert.equal(balance, 80);
 });
 
-test("sólo superadmin puede condonar hasta el saldo pendiente", () => {
-  assert.equal(canWaiveFamilyBalance({ role: "SUPERADMIN", outstanding: 100, amount: 100 }), true);
-  assert.equal(canWaiveFamilyBalance({ role: "ADMIN", outstanding: 100, amount: 50 }), false);
-  assert.equal(canWaiveFamilyBalance({ role: "SUPERADMIN", outstanding: 100, amount: 101 }), false);
-  assert.equal(canWaiveFamilyBalance({ role: "SUPERADMIN", outstanding: 0, amount: 1 }), false);
+test("una condonación autorizada no puede superar el saldo pendiente", () => {
+  assert.equal(canWaiveFamilyBalance({ outstanding: 100, amount: 100 }), true);
+  assert.equal(canWaiveFamilyBalance({ outstanding: 100, amount: 101 }), false);
+  assert.equal(canWaiveFamilyBalance({ outstanding: 0, amount: 1 }), false);
 });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { requireAdmin } from "@/modules/auth/server/auth-guards";
+import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { getCalendarEventAttendanceForAdmin } from "@/modules/dashboard/server/calendar.repository";
@@ -28,7 +28,7 @@ function formatTime(date: Date) {
 export default async function DashboardCalendarAttendancePage({ params }: Props) {
   const [{ id }, user, cmsPages] = await Promise.all([
     params,
-    requireAdmin(),
+    requirePermission("calendar.manage"),
     discoverPagesGroupRoutes(),
   ]);
   const event = await getCalendarEventAttendanceForAdmin(id);
@@ -43,6 +43,8 @@ export default async function DashboardCalendarAttendancePage({ params }: Props)
   return (
     <DashboardShell
       userEmail={user.email}
+      userRole={user.role}
+      userPermissions={user.permissionKeys}
       cmsPages={cmsPages.filter((page) => !page.isDynamic)}
       breadcrumbPage="Asistencia del evento"
     >

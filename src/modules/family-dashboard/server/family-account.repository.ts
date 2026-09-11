@@ -11,7 +11,7 @@ export async function getFamilyAccountForUser(userId: string) {
         select: {
           id: true,
           name: true,
-          plan: { select: { name: true, monthlyFee: true } },
+          plan: { select: { name: true, basicMonthlyFee: true } },
           accountEntries: {
             orderBy: { occurredAt: "desc" },
             include: {

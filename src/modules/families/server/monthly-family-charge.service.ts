@@ -9,7 +9,7 @@ export async function generateMonthlyFamilyCharges(now = new Date()) {
   const billingPeriod = getBillingPeriod(now);
   const families = await prisma.family.findMany({
     where: { status: FamilyStatus.ACTIVE, plan: { is: { isActive: true } } },
-    select: { id: true, plan: { select: { name: true, monthlyFee: true } } },
+    select: { id: true, plan: { select: { name: true, basicMonthlyFee: true } } },
   });
 
   const eligibleFamilies = families.filter((family): family is typeof family & { plan: NonNullable<typeof family.plan> } => Boolean(family.plan));
@@ -17,8 +17,8 @@ export async function generateMonthlyFamilyCharges(now = new Date()) {
     data: eligibleFamilies.map((family) => ({
       familyId: family.id,
       type: AccountEntryType.MONTHLY_CHARGE,
-      amount: family.plan.monthlyFee,
-      description: `Cuota mensual · ${family.plan.name} · ${formatBillingPeriod(billingPeriod)}`,
+      amount: family.plan.basicMonthlyFee,
+      description: `Cuota básica mensual · ${family.plan.name} · ${formatBillingPeriod(billingPeriod)}`,
       occurredAt: now,
       billingPeriod,
     })),

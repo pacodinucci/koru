@@ -67,7 +67,8 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import type { LandingTextMap } from "@/modules/landing/types/landing-text";
-import { isAdminRole, type AppUserRole } from "@/modules/auth/roles";
+import { isAdminRole, isSuperAdminRole, type AppUserRole } from "@/modules/auth/roles";
+import type { PermissionKey } from "@/modules/auth/permissions/permission-catalog";
 
 const contentNavigationItems = [
   { key: "landing", label: "Landing", parent: undefined },
@@ -87,6 +88,7 @@ const contentNavigationItems = [
 type DashboardShellProps = {
   userEmail: string;
   userRole?: AppUserRole;
+  userPermissions?: readonly PermissionKey[];
   cmsPages?: Array<{
     slug: string;
     isDynamic?: boolean;
@@ -107,6 +109,7 @@ type DashboardShellProps = {
 export function DashboardShell({
   userEmail,
   userRole = "ADMIN",
+  userPermissions,
   cmsPages = [],
   initialTextMap,
   cmsPageSlug = "/",
@@ -126,6 +129,7 @@ export function DashboardShell({
   const isBlogActive = pathname.startsWith("/dashboard/blog");
   const isCalendarActive = pathname.startsWith("/dashboard/calendar");
   const isUsersActive = pathname.startsWith("/dashboard/users");
+  const isRolesActive = pathname.startsWith("/dashboard/roles");
   const isMailingActive = pathname.startsWith("/dashboard/mailing");
   const isStudentsActive = pathname.startsWith("/dashboard/students");
   const isFamiliesActive = pathname.startsWith("/dashboard/families");
@@ -136,6 +140,7 @@ export function DashboardShell({
   const isDocumentsActive = pathname.startsWith("/dashboard/documentos");
   const isCashFundActive = pathname.startsWith("/dashboard/caja-chica");
   const isInventoryActive = pathname.startsWith("/dashboard/inventario");
+  const isAdministrationActive = pathname.startsWith("/dashboard/administracion");
   const isPageEditorActive =
     pathname.startsWith("/dashboard/pages/edit") ||
     /^\/dashboard\/pages\/[^/]+$/.test(pathname);
@@ -152,6 +157,10 @@ export function DashboardShell({
   const [pagesOpen, setPagesOpen] = useState(isLandingActive);
   const [contentOpen, setContentOpen] = useState(isContentActive);
   const isAdmin = isAdminRole(userRole);
+  const isSuperAdmin = isSuperAdminRole(userRole);
+  const permissionSet = new Set(userPermissions);
+  const can = (permission: PermissionKey) =>
+    userPermissions ? permissionSet.has(permission) : isAdmin;
   const sidebarMenuButtonClass = "h-10 rounded-xl px-3 text-slate-600 hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
 
 
@@ -182,6 +191,7 @@ export function DashboardShell({
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
+                    hidden={!can("blog.view")}
                     isActive={isBlogActive}
                     className={sidebarMenuButtonClass}
                     render={<Link href="/dashboard/blog" />}
@@ -191,7 +201,7 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                {isAdmin ? (
+                {can("content.view") ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isCmsActive}
@@ -259,7 +269,7 @@ export function DashboardShell({
                   </SidebarMenuItem>
                 ) : null}
 
-                {isAdmin ? (
+                {can("content.view") ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isContentActive}
@@ -303,8 +313,21 @@ export function DashboardShell({
                     ) : null}
                   </SidebarMenuItem>
                 ) : null}
+                {isSuperAdmin ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isAdministrationActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/administracion" />}
+                    >
+                      <SlidersHorizontal />
+                      <span>Administración</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
                 <SidebarMenuItem>
                   <SidebarMenuButton
+                    hidden={!can("cash-fund.view")}
                     isActive={isCashFundActive}
                     className={sidebarMenuButtonClass}
                     render={<Link href="/dashboard/caja-chica" />}
@@ -315,6 +338,7 @@ export function DashboardShell({
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton
+                    hidden={!can("inventory.view")}
                     isActive={isInventoryActive}
                     className={sidebarMenuButtonClass}
                     render={<Link href="/dashboard/inventario" />}
@@ -324,7 +348,7 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                {isAdmin ? (
+                {can("documents.view") ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isDocumentsActive}
@@ -339,6 +363,7 @@ export function DashboardShell({
 
                 <SidebarMenuItem>
                   <SidebarMenuButton
+                    hidden={!can("calendar.view")}
                     isActive={isCalendarActive}
                     className={sidebarMenuButtonClass}
                     render={<Link href="/dashboard/calendar" />}
@@ -348,7 +373,7 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                {isAdmin ? (
+                {can("users.view") ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isUsersActive}
@@ -361,7 +386,20 @@ export function DashboardShell({
                   </SidebarMenuItem>
                 ) : null}
 
-                {isAdmin ? (
+                {can("roles.view") ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isRolesActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/roles" />}
+                    >
+                      <ShieldCheck />
+                      <span>Roles</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
+
+                {can("mailing.view") ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isMailingActive}
@@ -374,7 +412,7 @@ export function DashboardShell({
                   </SidebarMenuItem>
                 ) : null}
 
-                {isAdmin ? (
+                {can("families.view") ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isFamiliesActive}
@@ -389,6 +427,7 @@ export function DashboardShell({
 
                 <SidebarMenuItem>
                   <SidebarMenuButton
+                    hidden={!can("students.view")}
                     isActive={isStudentsActive}
                     className={sidebarMenuButtonClass}
                     render={<Link href="/dashboard/students" />}
@@ -400,6 +439,7 @@ export function DashboardShell({
 
                 <SidebarMenuItem>
                   <SidebarMenuButton
+                    hidden={!can("exams.view")}
                     isActive={isExamsActive}
                     className={sidebarMenuButtonClass}
                     render={<Link href="/dashboard/exams" />}
@@ -409,7 +449,7 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                {isAdmin ? (
+                {can("teachers.view") ? (
                   <>
                     <SidebarMenuItem>
                       <SidebarMenuButton
@@ -419,15 +459,6 @@ export function DashboardShell({
                       >
                         <User2 />
                         <span>Docentes</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        className={sidebarMenuButtonClass}
-                        render={<Link href="#" />}
-                      >
-                        <HandCoins />
-                        <span>Donaciones</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>

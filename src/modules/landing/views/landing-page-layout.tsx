@@ -11,7 +11,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { LandingNav } from "@/modules/landing/components/landing-nav";
-import type { AppUserRole } from "@/modules/auth/roles";
 import {
   ensureLandingDefaults,
   LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY,
@@ -43,7 +42,7 @@ type LandingPageLayoutProps = {
   user?: {
     name: string;
     email: string;
-    role?: AppUserRole;
+    canAccessDashboard: boolean;
   } | null;
   onSignOut?: (formData: FormData) => void;
   hideChrome?: boolean;

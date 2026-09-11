@@ -20,7 +20,7 @@ export default async function PublicPagesLayout({
     ? {
         name: authenticatedUser.name?.trim() || "Usuario",
         email: authenticatedUser.email,
-        role: authenticatedUser.role,
+        canAccessDashboard: authenticatedUser.permissionKeys.includes("dashboard.access"),
       }
     : null;
 

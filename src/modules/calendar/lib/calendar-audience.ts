@@ -26,6 +26,7 @@ export function canViewCalendarAudience(
 ) {
   if (
     role === UserRole.ADMIN ||
+    role === UserRole.ADMIN_OPERATOR ||
     role === UserRole.SUPERADMIN
   ) {
     return true;
@@ -42,7 +43,7 @@ export function canViewCalendarAudience(
   return false;
 }
 export function getAudienceTypesForViewer(role: UserRole) {
-  if (role === UserRole.ADMIN || role === UserRole.SUPERADMIN) {
+  if (role === UserRole.ADMIN || role === UserRole.ADMIN_OPERATOR || role === UserRole.SUPERADMIN) {
     return [
       CalendarAudienceType.ALL,
       CalendarAudienceType.TEACHERS,

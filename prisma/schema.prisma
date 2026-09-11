@@ -11,6 +11,8 @@ model User {
   name                       String
   email                      String
   role                       UserRole                    @default(PARENT)
+  accessRoleId               String?
+  accessRole                 Role?                       @relation(fields: [accessRoleId], references: [id], onDelete: SetNull)
   emailVerified              Boolean                     @default(false)
   image                      String?
   createdAt                  DateTime                    @default(now())
@@ -33,6 +35,7 @@ model User {
   family                     Family?                     @relation(fields: [familyId], references: [id], onDelete: SetNull)
 
   @@unique([email])
+  @@index([accessRoleId])
   @@map("user")
 }
 
@@ -196,19 +199,36 @@ model Family {
 }
 
 model Plan {
-  id         String   @id @default(cuid())
-  name       String   @unique
-  monthlyFee Decimal  @db.Decimal(12, 2)
-  isActive   Boolean  @default(true)
-  families   Family[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                  String                    @id @default(cuid())
+  name                String                    @unique
+  basicMonthlyFee     Decimal                   @map("monthlyFee") @db.Decimal(12, 2)
+  isActive            Boolean                   @default(true)
+  families            Family[]
+  eventualChargeItems PlanEventualChargeItem[]
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
 
   @@index([isActive])
 }
 
+model PlanEventualChargeItem {
+  id              String   @id @default(cuid())
+  planId          String
+  plan            Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name            String
+  suggestedAmount Decimal  @db.Decimal(12, 2)
+  isActive        Boolean  @default(true)
+  accountEntries   FamilyAccountEntry[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([planId, name])
+  @@index([planId, isActive])
+}
+
 enum AccountEntryType {
   MONTHLY_CHARGE
+  EVENTUAL_CHARGE
   PAYMENT
   PAYMENT_REVERSAL
   BALANCE_WAIVER
@@ -492,6 +512,8 @@ model UserInvitation {
   id          String           @id @default(cuid())
   email       String
   role        UserRole         @default(PARENT)
+  accessRoleId String?
+  accessRole   Role?            @relation(fields: [accessRoleId], references: [id], onDelete: SetNull)
   familyId    String?
   family      Family?          @relation(fields: [familyId], references: [id], onDelete: SetNull)
   status      InvitationStatus @default(PENDING)
@@ -509,6 +531,50 @@ model UserInvitation {
   @@index([invitedById])
   @@index([familyId, status])
   @@index([expiresAt])
+  @@index([accessRoleId])
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  key         String           @unique
+  name        String
+  description String?
+  baseRole    UserRole         @default(ADMIN)
+  isSystem    Boolean          @default(false)
+  isProtected Boolean          @default(false)
+  isActive    Boolean          @default(true)
+  permissions RolePermission[]
+  users       User[]
+  invitations UserInvitation[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([isActive, name])
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  key         String           @unique
+  section     String
+  action      String
+  label       String
+  description String?
+  roles       RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([section, action])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
 }
 
 model EmailMessage {
@@ -569,12 +635,15 @@ model FamilyAccountEntry {
   description String
   occurredAt  DateTime         @default(now())
   billingPeriod DateTime?       @db.Date
+  eventualChargeItemId String?
+  eventualChargeItem   PlanEventualChargeItem? @relation(fields: [eventualChargeItemId], references: [id], onDelete: SetNull)
   paymentId   String?          @unique
   payment     FamilyPayment?   @relation(fields: [paymentId], references: [id], onDelete: SetNull)
   createdById String?
   createdAt   DateTime         @default(now())
 
   @@index([familyId, occurredAt])
+  @@index([eventualChargeItemId])
   @@unique([familyId, billingPeriod])
 }
 
@@ -636,6 +705,9 @@ model StudentGroup {
   isActive                Boolean               @default(true)
   students                Student[]
   teacherResponsibilities StudentGroupTeacher[]
+  cashFundBudget          CashFundGroupBudget?
+  cashFundEntries         CashFundEntry[]
+  cashExpenseReports      CashExpenseReport[]
   exams                   Exam[]
   blogTags                BlogTag[]
   createdAt               DateTime              @default(now())
@@ -655,8 +727,8 @@ model TeacherProfile {
   isActive              Boolean               @default(true)
   groupResponsibilities StudentGroupTeacher[]
   exams                 Exam[]
-    cashFundBudget        CashFundBudget?
-    cashFundEntries       CashFundEntry[]
+  cashFundBudget          CashFundBudget?
+  cashFundEntries         CashFundEntry[] @relation("LegacyCashFundEntries")
     cashExpenseReports    CashExpenseReport[]
     inventoryRequests     InventoryRequest[]
   createdAt             DateTime              @default(now())
@@ -758,8 +830,8 @@ model Exam {
   id          String         @id @default(cuid())
   groupId     String
   group       StudentGroup   @relation(fields: [groupId], references: [id], onDelete: Restrict)
-  teacherId   String
-  teacher     TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  teacherId   String?
+  teacher     TeacherProfile? @relation(fields: [teacherId], references: [id], onDelete: Restrict)
   title       String
   subject     String?
   examDate    DateTime
@@ -976,8 +1048,14 @@ enum CashExpenseReportStatus {
   CANCELED
 }
 
+enum CashFundRenewalFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
 enum CashFundEntryType {
   MONTHLY_ALLOCATION
+  PERIODIC_ALLOCATION
   INITIAL_ALLOCATION
   EXTRA_ALLOCATION
   ADMIN_DEBIT
@@ -1002,7 +1080,8 @@ enum InventoryMovementType {
 
 model CashFundSettings {
   id                   String   @id @default("default")
-  defaultMonthlyAmount Decimal  @db.Decimal(12, 2)
+  defaultMonthlyAmount Decimal                  @default(0) @db.Decimal(12, 2)
+  renewalFrequency    CashFundRenewalFrequency @default(MONTHLY)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
@@ -1019,6 +1098,18 @@ model CashFundBudget {
   @@index([effectiveFrom])
 }
 
+model CashFundGroupBudget {
+  id              String       @id @default(cuid())
+  groupId         String       @unique
+  group           StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  amountPerPeriod Decimal      @db.Decimal(12, 2)
+  effectiveFrom   DateTime
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([effectiveFrom])
+}
+
 model CashFundCategory {
   id        String   @id @default(cuid())
   name      String   @unique
@@ -1031,6 +1122,8 @@ model CashExpenseReport {
   id              String                  @id @default(cuid())
   teacherId       String
   teacher         TeacherProfile          @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  groupId         String?
+  group           StudentGroup?           @relation(fields: [groupId], references: [id], onDelete: Restrict)
   categoryId      String
   category        CashFundCategory        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   requestedAmount Decimal                 @db.Decimal(12, 2)
@@ -1051,6 +1144,7 @@ model CashExpenseReport {
   entries         CashFundEntry[]
 
   @@index([teacherId, status, submittedAt])
+  @@index([groupId, status, submittedAt])
   @@index([categoryId, expenseDate])
 }
 
@@ -1068,11 +1162,15 @@ model CashExpenseAttachment {
 
 model CashFundEntry {
   id          String         @id @default(cuid())
-  teacherId   String
-  teacher     TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  teacherId   String?
+  teacher     TeacherProfile? @relation("LegacyCashFundEntries", fields: [teacherId], references: [id], onDelete: Restrict)
+  groupId     String?
+  group       StudentGroup?  @relation(fields: [groupId], references: [id], onDelete: Restrict)
   type        CashFundEntryType
   amount      Decimal        @db.Decimal(12, 2)
   description String
+  receiptImageUrl String?
+  receiptImagePublicId String?
   occurredAt  DateTime       @default(now())
   allocationPeriod DateTime? @db.Date
   createdById String?
@@ -1082,7 +1180,8 @@ model CashFundEntry {
   createdAt   DateTime       @default(now())
 
   @@index([teacherId, occurredAt])
-  @@unique([teacherId, allocationPeriod])
+  @@index([groupId, occurredAt])
+  @@unique([groupId, allocationPeriod])
   @@index([type, occurredAt])
 }
 

@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/monthly-cash-fund-allocations",
-      "schedule": "10 3 1 * *"
+      "schedule": "10 3 * * *"
     }
   ]
 }
