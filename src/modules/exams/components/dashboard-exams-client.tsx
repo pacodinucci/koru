@@ -46,14 +46,14 @@ type StudentOption = {
 type Exam = {
   id: string;
   groupId: string;
-  teacherId: string;
+  teacherId: string | null;
   title: string;
   subject: string | null;
   examDate: string;
   description: string | null;
   status: ExamStatusValue;
   group: { id: string; name: string };
-  teacher: TeacherOption;
+  teacher: TeacherOption | null;
   grades: Array<{
     studentId: string;
     score: string;
@@ -145,7 +145,7 @@ export function DashboardExamsClient({ userRole, groups, students, teachers, exa
     setValues({
       id: exam.id,
       groupId: exam.groupId,
-      teacherId: exam.teacherId,
+      teacherId: exam.teacherId ?? "",
       title: exam.title,
       subject: exam.subject ?? "",
       examDate: dateForInput(exam.examDate),
@@ -254,7 +254,7 @@ export function DashboardExamsClient({ userRole, groups, students, teachers, exa
                       {exam.subject ? <div className="text-xs text-muted-foreground">{exam.subject}</div> : null}
                     </TableCell>
                     <TableCell>{exam.group.name}</TableCell>
-                    <TableCell>{exam.teacher.displayName}</TableCell>
+                    <TableCell>{exam.teacher?.displayName ?? "Sin docente asignado"}</TableCell>
                     <TableCell>{dateForInput(exam.examDate)}</TableCell>
                     <TableCell>{exam.grades.length}</TableCell>
                     <TableCell>
