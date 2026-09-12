@@ -114,7 +114,7 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
           </header>
 
           <div
-            className="blog-post-content prose prose-neutral max-w-none"
+            className="blog-post-content prose prose-neutral max-w-none [&>*+*]:mt-6"
             dangerouslySetInnerHTML={{ __html: contentWithImageOverlay }}
           />
         </article>
