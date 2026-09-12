@@ -108,7 +108,7 @@ export async function assignFamilyStudentAction(formData: FormData) {
 }
 
 export async function getFamilyDetailAction(familyId: string) {
-  await requirePermission("families.manage");
+  const user = await requirePermission("families.manage");
   const parsed = familyIdSchema.safeParse(familyId);
   if (!parsed.success) return null;
 
@@ -119,11 +119,23 @@ export async function getFamilyDetailAction(familyId: string) {
     (total, entry) => total + Number(entry.amount),
     0,
   );
-
+  const eventualChargeItems = family.planId
+    ? await prisma.planEventualChargeItem.findMany({
+        where: { planId: family.planId, isActive: true },
+        select: { id: true, name: true, suggestedAmount: true },
+        orderBy: { name: "asc" },
+      })
+    : [];
   return {
     id: family.id,
     name: family.name,
     balance: balance.toFixed(2),
+    eventualChargeItems: eventualChargeItems.map((item) => ({
+      id: item.id,
+      name: item.name,
+      suggestedAmount: item.suggestedAmount.toString(),
+    })),
+    canManagePayments: user.permissionKeys.includes("families.payments"),
     entries: family.accountEntries.map((entry) => ({
       id: entry.id,
       type: entry.type,

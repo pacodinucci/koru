@@ -120,7 +120,7 @@ export function ManageFamilyDialog({
                   <Button type="submit" variant="outline">Guardar</Button>
                 </form>
               </section>
-              <FamilyFinancialCard family={detail} canWaive={canWaive} />
+              <FamilyFinancialCard family={detail} eventualChargeItems={detail.eventualChargeItems} canManagePayments={detail.canManagePayments} canWaive={canWaive} />
             </div>
           ) : null}
         </ResponsiveDialogBody>
