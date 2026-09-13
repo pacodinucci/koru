@@ -161,12 +161,13 @@ export function DashboardShell({
   const permissionSet = new Set(userPermissions);
   const can = (permission: PermissionKey) =>
     userPermissions ? permissionSet.has(permission) : isAdmin;
+  const showCmsNavigation = false;
   const sidebarMenuButtonClass = "h-10 rounded-xl px-3 text-slate-600 hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
 
 
   return (
     <SidebarProvider>
-      <Sidebar variant="inset" collapsible="icon">
+      <Sidebar variant="inset" collapsible="icon" className="[font-family:var(--font-montserrat)]">
         <SidebarHeader>
           <div className="flex items-center justify-center px-3 py-3 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-2">
             <Link href="/" aria-label="Volver al inicio">
@@ -189,7 +190,7 @@ export function DashboardShell({
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
+                <SidebarMenuItem className="hidden md:block">
                   <SidebarMenuButton
                     hidden={!can("blog.view")}
                     isActive={isBlogActive}
@@ -201,7 +202,7 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                {can("content.view") ? (
+                {showCmsNavigation && can("content.view") ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isCmsActive}
@@ -270,7 +271,7 @@ export function DashboardShell({
                 ) : null}
 
                 {can("content.view") ? (
-                  <SidebarMenuItem>
+                  <SidebarMenuItem className="hidden md:block">
                     <SidebarMenuButton
                       isActive={isContentActive}
                       className={sidebarMenuButtonClass}

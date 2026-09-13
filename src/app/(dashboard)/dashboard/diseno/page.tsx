@@ -1,9 +1,11 @@
+import { redirect } from "next/navigation";
 import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { getCmsDraftTextMap } from "@/modules/cms/server/cms-text.repository";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 
 export default async function DashboardLayoutPage() {
+  redirect("/dashboard");
   const user = await requirePermission("content.view");
   const initialTextMap = await getCmsDraftTextMap();
   const cmsPages = (await discoverPagesGroupRoutes()).filter(
