@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireRole } from "@/modules/auth/server/auth-guards";
+import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/family-dashboard-access";
 import {
   familyStudentAddressSchema,
   familyStudentContactsSchema,
@@ -28,7 +28,7 @@ function failure(error: unknown) {
 }
 
 export async function saveFamilyStudentIdentityAction(input: FamilyStudentIdentityInput) {
-  const user = await requireRole(["PARENT"], "/family-dashboard?error=forbidden");
+  const user = (await requireFamilyDashboardAccess("/family-dashboard?error=forbidden")).familyUser;
   const parsed = familyStudentIdentitySchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "invalid_input" };
   try {
@@ -41,7 +41,7 @@ export async function saveFamilyStudentIdentityAction(input: FamilyStudentIdenti
 }
 
 export async function saveFamilyStudentAddressAction(input: FamilyStudentAddressInput) {
-  const user = await requireRole(["PARENT"], "/family-dashboard?error=forbidden");
+  const user = (await requireFamilyDashboardAccess("/family-dashboard?error=forbidden")).familyUser;
   const parsed = familyStudentAddressSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "invalid_input" };
   try {
@@ -53,7 +53,7 @@ export async function saveFamilyStudentAddressAction(input: FamilyStudentAddress
 }
 
 export async function saveFamilyStudentMedicalAction(input: FamilyStudentMedicalInput) {
-  const user = await requireRole(["PARENT"], "/family-dashboard?error=forbidden");
+  const user = (await requireFamilyDashboardAccess("/family-dashboard?error=forbidden")).familyUser;
   const parsed = familyStudentMedicalSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "invalid_input" };
   try {
@@ -65,7 +65,7 @@ export async function saveFamilyStudentMedicalAction(input: FamilyStudentMedical
 }
 
 export async function completeFamilyStudentRecordAction(input: FamilyStudentContactsInput) {
-  const user = await requireRole(["PARENT"], "/family-dashboard?error=forbidden");
+  const user = (await requireFamilyDashboardAccess("/family-dashboard?error=forbidden")).familyUser;
   const parsed = familyStudentContactsSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "invalid_input" };
   try {
@@ -79,7 +79,7 @@ export async function completeFamilyStudentRecordAction(input: FamilyStudentCont
   }
 }
 export async function createFamilyStudentResponsibleAction(input: FamilyStudentResponsibleInput) {
-  const user = await requireRole(["PARENT"], "/family-dashboard?error=forbidden");
+  const user = (await requireFamilyDashboardAccess("/family-dashboard?error=forbidden")).familyUser;
   const parsed = familyStudentResponsibleSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "invalid_input" };
   try {

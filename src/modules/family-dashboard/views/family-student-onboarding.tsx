@@ -1,13 +1,16 @@
 "use client";
 
-import { CheckCircle2, Plus } from "lucide-react";
+import { CheckCircle2, Plus, Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -161,6 +164,44 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function FamilyActionsMenu({ onRegisterAnotherStudent }: { onRegisterAnotherStudent: () => void }) {
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
+  const trigger = (
+    <Button type="button" variant="ghost" size="icon" className="shrink-0" aria-label="Opciones de familia">
+      <Settings2 />
+    </Button>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Opciones de familia</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 pt-0">
+            <Button type="button" variant="outline" className="w-full justify-start" onClick={() => { setIsOpen(false); onRegisterAnotherStudent(); }}>
+              <Plus /> Registrar otro hijo/a
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={trigger} />
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onRegisterAnotherStudent}>
+          <Plus /> Registrar otro hijo/a
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 export function FamilyStudentOnboarding({
   students,
   groups,
@@ -269,11 +310,6 @@ export function FamilyStudentOnboarding({
     router.push("/family-dashboard?view=dashboard");
   }
 
-  function resumeDraft() {
-    setCompletedStudentName(null);
-    setShowWizard(true);
-  }
-
   function startAnotherStudent() {
     setStudentId(null);
     setStep(1);
@@ -306,12 +342,10 @@ export function FamilyStudentOnboarding({
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Tu familia</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{["Familia", familyLastName].filter(Boolean).join(" ")}</h1>
             <p className="text-sm text-muted-foreground">Consultá el estado de las fichas registradas.</p>
           </div>
-          <Button type="button" onClick={initialDraft ? resumeDraft : startAnotherStudent}>
-            <Plus /> {initialDraft ? "Continuar registro" : "Registrar otro hijo/a"}
-          </Button>
+          <FamilyActionsMenu onRegisterAnotherStudent={startAnotherStudent} />
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {students.map((student) => (

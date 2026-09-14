@@ -2,7 +2,6 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { requireUser } from "@/modules/auth/server/auth-guards";
 import { GoogleCalendarConnectionCard } from "@/modules/calendar/components/google-calendar-connection-card";
 import { getGoogleCalendarConnectionState } from "@/modules/calendar/server/google-calendar/google-calendar.repository";
 import { type CalendarViewMode } from "@/modules/dashboard/lib/calendar-range";
@@ -12,6 +11,7 @@ import {
 } from "@/modules/dashboard/server/calendar.repository";
 import { FamilyDashboardHeader } from "@/modules/family-dashboard/components/family-dashboard-header";
 import { FamilySidebar } from "@/modules/family-dashboard/components/family-sidebar";
+import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/family-dashboard-access";
 import {
   FamilyCalendarClientProvider,
   FamilyCalendarGridClient,
@@ -35,20 +35,20 @@ function parseView(view?: string): CalendarViewMode {
 export default async function FamilyCalendarPage({
   searchParams,
 }: FamilyCalendarPageProps) {
-  const user = await requireUser();
+  const { viewer, familyUser } = await requireFamilyDashboardAccess();
   const { date, view, event, ok, error } = await searchParams;
   const parsedDate = date ? new Date(`${date}T00:00:00`) : new Date();
   const dateCursor = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
   const viewMode = parseView(view);
   const [events, upcomingEvents, googleConnection] = await Promise.all([
-    listVisibleEventsForUserByRange(user.id, user.role, dateCursor, viewMode),
-    listUpcomingVisibleEventsForUser(user.id, user.role, 6),
-    getGoogleCalendarConnectionState(user.id),
+    listVisibleEventsForUserByRange(familyUser.id, familyUser.role, dateCursor, viewMode),
+    listUpcomingVisibleEventsForUser(familyUser.id, familyUser.role, 6),
+    getGoogleCalendarConnectionState(familyUser.id),
   ]);
 
   return (
     <SidebarProvider>
-      <FamilySidebar userName={user.name} userEmail={user.email} />
+      <FamilySidebar userName={viewer.name} userEmail={viewer.email} />
       <SidebarInset>
         <FamilyDashboardHeader title="Calendario" />
         <FamilyCalendarClientProvider
@@ -58,7 +58,7 @@ export default async function FamilyCalendarPage({
           initialViewMode={viewMode}
           initialSelectedEventId={event}
           initialFeedback={{ ok, error }}
-          viewer={{ name: user.name, email: user.email }}
+          viewer={{ name: viewer.name, email: viewer.email }}
         >
           <main className="grid min-h-0 flex-1 grid-cols-1 gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0 overflow-hidden rounded-xl border bg-white">

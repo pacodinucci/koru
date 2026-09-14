@@ -386,7 +386,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
           className="bg-[#f3f2ef]"
           aria-labelledby="acompanamiento-conectado-title"
         >
-          <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 lg:px-14 lg:py-20">
+          <div className="mx-auto grid w-full max-w-7xl min-w-0 items-center gap-8 px-6 py-14 md:px-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10 lg:px-14 lg:py-20">
             <div className="max-w-4xl min-w-0">
               <h2
                 id="acompanamiento-conectado-title"
@@ -406,6 +406,21 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
                 className="mt-6 max-w-4xl text-justify text-lg leading-relaxed text-black/85 md:text-xl"
                 {...slotBindingProps}
               />
+            </div>
+            <div className="relative mx-auto w-full max-w-[22rem]">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
+                <CmsPageEditableImage
+                  slotId="accompaniment.image.evaluation"
+                  defaultSrc="/assets/images/DSC01386.png"
+                  alt="Acompañante compartiendo un proceso de aprendizaje en comunidad"
+                  imageMap={imageMap}
+                  previewMode={previewMode}
+                  selectedContentSlotId={selectedContentSlotId}
+                  onSelectContentSlot={onSelectContentSlot}
+                  fill
+                  className="object-cover"
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -514,7 +529,7 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
       </section>
 
       <section id="evaluacion" className="scroll-mt-28 bg-[#f7f6f1]">
-        <div className="mx-auto grid w-full max-w-7xl min-w-0 items-start gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10 lg:px-14 lg:py-14">
+        <div className="mx-auto grid w-full max-w-7xl min-w-0 items-center gap-8 px-6 py-10 md:px-10 md:py-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10 lg:px-14 lg:py-14">
           <div>
             <SectionHeading
               title={
@@ -557,21 +572,6 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
                 />
               </a>
             </SectionHeading>
-          </div>
-          <div className="relative mx-auto w-full max-w-[22rem]">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
-              <CmsPageEditableImage
-                slotId="accompaniment.image.evaluation"
-                defaultSrc="/assets/images/DSC01386.png"
-                alt="Acompañante registrando procesos de aprendizaje en comunidad"
-                imageMap={imageMap}
-                previewMode={previewMode}
-                selectedContentSlotId={selectedContentSlotId}
-                onSelectContentSlot={onSelectContentSlot}
-                fill
-                className="object-cover"
-              />
-            </div>
           </div>
         </div>
       </section>

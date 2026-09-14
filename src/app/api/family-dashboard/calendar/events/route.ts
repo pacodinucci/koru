@@ -2,18 +2,14 @@ import { NextResponse } from "next/server";
 
 import { type CalendarViewMode } from "@/modules/dashboard/lib/calendar-range";
 import { listVisibleEventsForUserByRange } from "@/modules/dashboard/server/calendar.repository";
-import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
+import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/family-dashboard-access";
 
 function parseView(view: string | null): CalendarViewMode {
   return view === "day" || view === "month" ? view : "week";
 }
 
 export async function GET(request: Request) {
-  const user = await getAuthenticatedUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const { familyUser } = await requireFamilyDashboardAccess();
 
   const { searchParams } = new URL(request.url);
   const rawDate = searchParams.get("date");
@@ -21,8 +17,7 @@ export async function GET(request: Request) {
   const parsedDate = rawDate ? new Date(`${rawDate}T00:00:00`) : new Date();
   const dateCursor = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
   const events = await listVisibleEventsForUserByRange(
-    user.id,
-    user.role,
+    familyUser.id,`r`n    familyUser.role,
     dateCursor,
     viewMode,
   );

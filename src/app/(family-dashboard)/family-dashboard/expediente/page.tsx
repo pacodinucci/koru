@@ -2,9 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { requireRole } from "@/modules/auth/server/auth-guards";
 import { FamilyDashboardHeader } from "@/modules/family-dashboard/components/family-dashboard-header";
 import { FamilySidebar } from "@/modules/family-dashboard/components/family-sidebar";
+import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/family-dashboard-access";
 import { listFamilyStudentRecords } from "@/modules/family-dashboard/server/family-student-record.repository";
 
 const statusLabels = {
@@ -19,12 +19,11 @@ function Value({ label, value }: { label: string; value?: string | null }) {
 }
 
 export default async function FamilyStudentRecordPage() {
-  const user = await requireRole(["PARENT"], "/dashboard?error=forbidden");
-  const students = await listFamilyStudentRecords(user.id);
+  const { viewer, familyUser } = await requireFamilyDashboardAccess();`r`n  const students = familyUser.familyId ? await listFamilyStudentRecords(familyUser.familyId) : [];
 
   return (
     <SidebarProvider>
-      <FamilySidebar userName={user.name} userEmail={user.email} />
+      <FamilySidebar userName={viewer.name} userEmail={viewer.email} />
       <SidebarInset>
         <FamilyDashboardHeader title="Expedientes" />
         <main className="space-y-4 p-4 sm:p-6">

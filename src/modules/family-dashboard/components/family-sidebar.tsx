@@ -95,7 +95,11 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
   const userInitials = getInitials(userName);
 
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar
+      collapsible="icon"
+      variant="inset"
+      className="[font-family:var(--font-montserrat)]"
+    >
       <SidebarHeader>
         <div className="flex items-center justify-center px-3 py-3 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-2">
           <Link href="/" aria-label="Volver al inicio">

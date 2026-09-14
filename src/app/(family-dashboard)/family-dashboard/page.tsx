@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { requireRole } from "@/modules/auth/server/auth-guards";
 import { FamilyDashboardHeader } from "@/modules/family-dashboard/components/family-dashboard-header";
 import { FamilySidebar } from "@/modules/family-dashboard/components/family-sidebar";
+import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/family-dashboard-access";
 import { getFamilyProfile } from "@/modules/family-dashboard/server/family-profile.repository";
 import { listFamilyStudentRecords } from "@/modules/family-dashboard/server/family-student-record.repository";
 import { FamilyResponsiblesPanel } from "@/modules/family-dashboard/views/family-responsibles-panel";
@@ -20,12 +21,13 @@ export default async function FamilyDashboardPage({
   searchParams: Promise<{ view?: string }>;
 }) {
   const { view } = await searchParams;
-  const user = await requireRole(["PARENT"], "/dashboard?error=forbidden");
-  const [students, upcomingEvents, groups, familyProfile] = await Promise.all([
-    user.familyId ? listFamilyStudentRecords(user.familyId) : Promise.resolve([]),
-    listUpcomingVisibleEventsForUser(user.id, user.role),
+  const { viewer, familyUser } = await requireFamilyDashboardAccess();
+  const [students, upcomingEvents, groups, familyProfile, family] = await Promise.all([
+    familyUser.familyId ? listFamilyStudentRecords(familyUser.familyId) : Promise.resolve([]),
+    listUpcomingVisibleEventsForUser(familyUser.id, familyUser.role),
     listStudentGroups(),
-    getFamilyProfile(user.id),
+    getFamilyProfile(familyUser.id),
+    familyUser.familyId ? prisma.family.findUnique({ where: { id: familyUser.familyId }, select: { name: true } }) : null,
   ]);
 
   const studentItems = students.map((student) => ({
@@ -84,7 +86,7 @@ export default async function FamilyDashboardPage({
         canPickup: guardian.canPickup,
         emergencyContact: guardian.emergencyContact,
         hasUser: Boolean(guardian.userId),
-        isCurrentUser: guardian.userId === user.id,
+        isCurrentUser: guardian.userId === familyUser.id,
       });
     }
   }
@@ -119,7 +121,7 @@ export default async function FamilyDashboardPage({
 
   return (
     <SidebarProvider>
-      <FamilySidebar userName={user.name} userEmail={user.email} />
+      <FamilySidebar userName={viewer.name} userEmail={viewer.email} />
       <SidebarInset>
         <FamilyDashboardHeader title="Inicio" />
         <main className="space-y-6 p-4 sm:p-6">
@@ -140,7 +142,7 @@ export default async function FamilyDashboardPage({
           ) : (
             <FamilyStudentOnboarding
               key={view === "dashboard" ? "dashboard" : "onboarding"}
-              userName={user.name} familyLastName=""
+              userName={viewer.name} familyLastName={family?.name ?? ""}
               groups={groups.map((group) => ({
                 id: group.id,
                 name: group.name,

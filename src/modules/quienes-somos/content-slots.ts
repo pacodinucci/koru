@@ -152,6 +152,7 @@ export const hardcodedQuienesSomosContentSlots: LandingContentSlot[] = [
   ].flatMap(([name, role], index) => [
     { id: `content.quienes-somos.team.member.${index}.name`, label: `Equipo / Integrante ${index + 1} / Nombre`, selectorLabel: `Equipo ${index + 1} / Nombre`, defaultValue: name, defaultSize: 30, styleControls: ["font", "size", "color", "align", "weight", "lineHeight"] },
     { id: `content.quienes-somos.team.member.${index}.role`, label: `Equipo / Integrante ${index + 1} / Rol`, selectorLabel: `Equipo ${index + 1} / Rol`, defaultValue: role, defaultSize: 14, styleControls: ["font", "size", "color", "align", "weight", "letterSpacing", "lineHeight"] },
+    { id: `content.quienes-somos.team.member.${index}.detail`, label: `Equipo / Integrante ${index + 1} / Detalle`, selectorLabel: `Equipo ${index + 1} / Detalle`, defaultValue: "Conocé más sobre su recorrido y su forma de acompañar en Koru.", defaultSize: 16, multiline: true, styleControls: ["font", "size", "color", "align", "weight", "lineHeight"] },
   ] satisfies LandingContentSlot[]),  {
     id: quienesSomosContentSlotIds.facilitiesEyebrow,
     label: "Instalaciones / Volanta",

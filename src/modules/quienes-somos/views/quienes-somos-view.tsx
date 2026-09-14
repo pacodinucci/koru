@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ElementType } from "react";
+import { useState, type CSSProperties, type ElementType } from "react";
 
 import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
 import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
@@ -307,10 +307,11 @@ function TeamSection({
   selectedContentSlotId,
   onSelectContentSlot,
 }: QuienesSomosViewProps) {
+  const [selectedMemberIndex, setSelectedMemberIndex] = useState<number | null>(null);
   return (
     <section
       id="equipo"
-      className="bg-[#caa27d] px-6 py-16 md:px-10 lg:px-14 lg:py-24"
+      className="relative bg-[#caa27d] px-6 py-16 md:px-10 lg:px-14 lg:py-24"
     >
       <div className="mx-auto w-full max-w-7xl">
         <div className="mb-10 max-w-3xl">
@@ -326,11 +327,26 @@ function TeamSection({
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4">
-          {teamMembers.map((member, index) => (
+          {teamMembers.map((member, index) => {
+            const isSelected = selectedMemberIndex === index;
+            const hasSelectedMember = selectedMemberIndex !== null;
+            return (
             <article
               key={`${member.name}-${member.role}-${index}`}
-              tabIndex={0}
-              className="group relative aspect-[4/5] overflow-hidden bg-black outline-none transition-transform duration-300 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110"
+              tabIndex={previewMode ? -1 : 0}
+              role={previewMode ? undefined : "button"}
+              aria-expanded={isSelected}
+              onClickCapture={(event) => {
+                if (!previewMode) return;
+                const target = event.target as HTMLElement;
+                if (target.closest('[data-content-slot-id^="content.quienes-somos.team.member."]')) return;
+                event.preventDefault();
+                event.stopPropagation();
+                setSelectedMemberIndex(isSelected ? null : index);
+              }}
+              onClick={() => { if (!previewMode) setSelectedMemberIndex(isSelected ? null : index); }}
+              onKeyDown={(event) => { if (!previewMode && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); setSelectedMemberIndex(isSelected ? null : index); } }}
+              className={["group relative aspect-[4/5] overflow-hidden bg-black outline-none transition-[transform,opacity,filter] duration-500 ease-out motion-reduce:transition-none", isSelected ? "z-20 scale-[1.08] shadow-2xl" : hasSelectedMember ? "z-0 scale-[0.96] opacity-45 saturate-50" : "z-0 hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110", previewMode ? "cursor-default" : "cursor-pointer"].join(" ")}
             >
               {member.imageSrc || imageMap?.[`about.image.team.${index}`] ? (
                 <CmsPageEditableImage
@@ -383,10 +399,34 @@ function TeamSection({
                   onSelectContentSlot={onSelectContentSlot}
                   className="mt-2 text-sm font-medium uppercase tracking-[0.14em] text-white/80"
                 />
+                {isSelected ? (
+                  <p className="mt-4 border-t border-white/30 pt-4 text-sm leading-relaxed text-white/90">
+                    Conocé más sobre su recorrido y su forma de acompañar en Koru.
+                  </p>
+                ) : null}
               </div>
             </article>
-          ))}
+          );
+          })}
         </div>
+        {selectedMemberIndex !== null ? (
+          <div className={previewMode ? "absolute inset-0 z-50 flex items-center justify-center p-6 md:p-10" : "fixed inset-0 z-50 flex items-center justify-center p-6 md:p-10"} role="dialog" aria-modal="true">
+            <button type="button" className={previewMode ? "absolute inset-0 bg-black/60" : "absolute inset-0 bg-black/70 backdrop-blur-sm"} aria-label="Cerrar perfil" onClick={() => setSelectedMemberIndex(null)} />
+            <article className="relative z-10 aspect-[4/5] w-full max-w-md overflow-hidden bg-black shadow-2xl animate-in fade-in zoom-in-75 duration-500">
+              {teamMembers[selectedMemberIndex].imageSrc || imageMap?.["about.image.team." + selectedMemberIndex] ? (
+                <CmsPageEditableImage slotId={"about.image.team." + selectedMemberIndex} defaultSrc={teamMembers[selectedMemberIndex].imageSrc ?? ""} alt={teamMembers[selectedMemberIndex].name + ", " + teamMembers[selectedMemberIndex].role} imageMap={imageMap} previewMode={false} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} fill sizes="(min-width: 768px) 90vw, 448px" className="object-cover" lockFrame />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-[#f3d889] text-8xl font-semibold text-slate-950/80">{getInitials(teamMembers[selectedMemberIndex].name)}</div>
+              )}
+              <button type="button" onClick={() => setSelectedMemberIndex(null)} className="absolute top-5 z-20 flex h-10 w-10 items-center justify-center text-3xl leading-none text-white transition-opacity hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" style={{ right: "1.25rem", left: "auto" }} aria-label="Cerrar perfil">×</button>
+              <div className="absolute inset-x-0 bottom-0 z-10 p-7 text-white" style={{ background: "linear-gradient(to top, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.82) 48%, rgba(0, 0, 0, 0) 100%)" }}>
+                <EditableCopy as="h3" slotId={"content.quienes-somos.team.member." + selectedMemberIndex + ".name"} textMap={textMap} previewMode={previewMode} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} className="text-5xl leading-none" style={{ fontFamily: "var(--font-roboto-condensed)" }} />
+                <EditableCopy as="p" slotId={"content.quienes-somos.team.member." + selectedMemberIndex + ".role"} textMap={textMap} previewMode={previewMode} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} className="mt-3 text-sm font-medium uppercase tracking-[0.14em] text-white/80" />
+                <EditableCopy as="p" slotId={"content.quienes-somos.team.member." + selectedMemberIndex + ".detail"} textMap={textMap} previewMode={previewMode} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} className="mt-5 border-t border-white/30 pt-5 text-base leading-relaxed text-white/90" />
+              </div>
+            </article>
+          </div>
+        ) : null}
       </div>
     </section>
   );
