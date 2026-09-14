@@ -8,9 +8,11 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { LandingNav } from "@/modules/landing/components/landing-nav";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
+import { getSiteChromeNavLinks } from "@/modules/cms/site-chrome-content";
+import { SiteFooter } from "@/modules/landing/components/site-footer";
 import {
   ensureLandingDefaults,
   LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY,
@@ -22,7 +24,6 @@ import {
   LANDING_LAYOUT_NAV_TEXT_KEY,
   LANDING_LAYOUT_PADDING_X_KEY,
   landingLayoutContainerRules,
-  parseLandingLayoutNavLinks,
   type LayoutContainerArrangement,
 } from "@/modules/landing/config/landing-sections";
 import type {
@@ -37,6 +38,7 @@ import {
 
 type LandingPageLayoutProps = {
   textMap: LandingTextMap;
+  imageMap?: CmsImageMap;
   previewViewportHeight?: number;
   children: React.ReactNode;
   user?: {
@@ -266,11 +268,14 @@ function parseFooterContainerChildren(
 
 export function LandingPageLayout({
   textMap,
+  imageMap,
   previewViewportHeight,
   user = null,
   onSignOut,
   hideChrome = false,
   previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
   selectedLayoutSectionId,
   onSelectLayoutSection,
   onLayoutBodyPaddingXChange,
@@ -306,10 +311,7 @@ export function LandingPageLayout({
   const navLogoSrc =
     completeMap[LANDING_LAYOUT_NAV_LOGO_SRC_KEY] ?? "/branding/koru-logo.png";
   const navLogoAlt = completeMap[LANDING_LAYOUT_NAV_LOGO_ALT_KEY] ?? "Koru";
-  const navLinks = parseLandingLayoutNavLinks(completeMap).map((item) => ({
-    label: item.label,
-    href: item.href,
-  }));
+  const navLinks = getSiteChromeNavLinks(completeMap);
   const containerStyles = {
     "navbar-logo": {
       width: getNumeric(
@@ -738,6 +740,11 @@ export function LandingPageLayout({
             logoSrc={navLogoSrc}
             logoAlt={navLogoAlt}
             links={navLinks}
+            textMap={completeMap}
+            imageMap={imageMap}
+            previewMode={previewMode}
+            selectedContentSlotId={selectedContentSlotId}
+            onSelectContentSlot={onSelectContentSlot}
             fixed={true}
             disableScrollBackgroundChange={previewMode}
             user={user}
@@ -823,113 +830,7 @@ export function LandingPageLayout({
               )}
             </div>
           ) : (
-            <div
-              className="w-full px-2 py-10"
-              style={{ fontFamily: "var(--font-montserrat)" }}
-            >
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.15fr] lg:gap-10">
-                <section>
-                  <Image
-                    src="/branding/koru-logo-white.png"
-                    alt={navLogoAlt}
-                    width={1536}
-                    height={1024}
-                    className="h-20 w-[120px] object-contain"
-                  />
-                  <p className="mt-5 max-w-[36ch] text-base leading-relaxed text-white/85">
-                    Koru es una comunidad viva de aprendizaje donde acompañamos
-                    procesos con presencia, cuidado y vínculo auténtico.
-                  </p>
-                  <div className="mt-6 flex items-center gap-3">
-                    {["f", "x", "▶", "◎", "in"].map((item) => (
-                      <a
-                        key={item}
-                        href="#"
-                        className="flex h-10 w-10 items-center justify-center rounded-full border border-white text-lg font-semibold text-white"
-                      >
-                        {item}
-                      </a>
-                    ))}
-                  </div>
-                </section>
-
-                <section>
-                  <h4
-                    className="text-lg font-semibold uppercase tracking-tight text-white"
-                    style={{ fontFamily: "var(--font-roboto-condensed)" }}
-                  >
-                    Links
-                  </h4>
-                  <nav className="mt-4 space-y-2.5 text-lg text-white/90">
-                    <Link href="/" className="block">
-                      Home
-                    </Link>
-                    <Link href="/quienes-somos" className="block">
-                      Quiénes somos
-                    </Link>
-                    <Link href="/como-acompanamos" className="block">
-                      Cómo acompañamos
-                    </Link>
-                    <Link href="/comunidad" className="block">
-                      Comunidad
-                    </Link>
-                    <Link href="/blog" className="block">
-                      Blog
-                    </Link>
-                  </nav>
-                </section>
-
-                <section>
-                  <h4
-                    className="text-lg font-semibold uppercase tracking-tight text-white"
-                    style={{ fontFamily: "var(--font-roboto-condensed)" }}
-                  >
-                    Comunidad
-                  </h4>
-                  <ul className="mt-4 space-y-2.5 text-lg text-white/90">
-                    <li>Acompañamiento integral</li>
-                    <li>Comunidad de familias</li>
-                    <li>Programas por etapas</li>
-                    <li>Experiencias vivenciales</li>
-                    <li>Orientación personalizada</li>
-                  </ul>
-                </section>
-
-                <section>
-                  <h4
-                    className="text-lg font-semibold uppercase tracking-tight text-white"
-                    style={{ fontFamily: "var(--font-roboto-condensed)" }}
-                  >
-                    Contacto
-                  </h4>
-                  <ul className="mt-4 space-y-3 text-lg text-white/90">
-                    <li className="flex items-start gap-3">
-                      <span className="mt-0.5">✉</span>
-                      <span>contacto@koruosa.com</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="mt-0.5">☎</span>
-                      <span>+52 81 0000 0000</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="mt-0.5">⌖</span>
-                      <span>Tepoztlán, Morelos, México</span>
-                    </li>
-                  </ul>
-                </section>
-              </div>
-
-              <div className="mt-8 border-t border-white/30 pt-5">
-                <div className="flex flex-col gap-3 text-base text-white/90 md:flex-row md:items-center md:justify-between">
-                  <p>Copyright © 2026 Koru OSA. All Rights Reserved.</p>
-                  <nav className="flex items-center gap-4">
-                    <a href="#">Terminos y condiciones</a>
-                    <span>|</span>
-                    <a href="#">Privacidad</a>
-                  </nav>
-                </div>
-              </div>
-            </div>
+            <SiteFooter textMap={completeMap} imageMap={imageMap} navLinks={navLinks} previewMode={previewMode} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} />
           )}
         </footer>
                 ) : null}

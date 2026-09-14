@@ -1,5 +1,6 @@
 import type { LandingContentSlot } from "@/modules/landing/content-slots";
 import { childCmsContentPages } from "@/modules/cms/child-content-config";
+import { siteChromeImageSlots } from "@/modules/cms/site-chrome-content";
 
 export type CmsContentField = {
   key: string;
@@ -84,7 +85,7 @@ export const comoAcompanamosCmsImageSlots: CmsImageSlot[] = [
 ];
 
 const cmsImageSlotsBySlug: Record<string, CmsImageSlot[]> = {
-  "/": landingCmsImageSlots,
+  "/": [...landingCmsImageSlots, ...siteChromeImageSlots],
   "/quienes-somos": quienesSomosCmsImageSlots,
   "/como-acompanamos": comoAcompanamosCmsImageSlots,
 };

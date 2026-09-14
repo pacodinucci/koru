@@ -1,3 +1,4 @@
+import { getSiteChromeSlotDefaults, siteChromeNavEntries } from "@/modules/cms/site-chrome-content";
 import {
   getLandingFieldSizeKey,
   type LandingTextMap,
@@ -29,6 +30,30 @@ export const LANDING_LAYOUT_FOOTER_TEXT_KEY = "__landing_layout_footer_text";
 export const LANDING_LAYOUT_FOOTER_HEIGHT_KEY = "__landing_layout_footer_height";
 export const LANDING_LAYOUT_FOOTER_CONTAINERS_LAYOUT_KEY =
   "__landing_layout_footer_containers_layout";
+export const LANDING_LAYOUT_FOOTER_DESCRIPTION_KEY =
+  "__landing_layout_footer_description";
+export const LANDING_LAYOUT_FOOTER_COMMUNITY_TITLE_KEY =
+  "__landing_layout_footer_community_title";
+export const LANDING_LAYOUT_FOOTER_COMMUNITY_ITEMS_KEY =
+  "__landing_layout_footer_community_items";
+export const LANDING_LAYOUT_FOOTER_CONTACT_TITLE_KEY =
+  "__landing_layout_footer_contact_title";
+export const LANDING_LAYOUT_FOOTER_CONTACT_EMAIL_KEY =
+  "__landing_layout_footer_contact_email";
+export const LANDING_LAYOUT_FOOTER_CONTACT_PHONE_KEY =
+  "__landing_layout_footer_contact_phone";
+export const LANDING_LAYOUT_FOOTER_CONTACT_ADDRESS_KEY =
+  "__landing_layout_footer_contact_address";
+export const LANDING_LAYOUT_FOOTER_COPYRIGHT_KEY =
+  "__landing_layout_footer_copyright";
+export const LANDING_LAYOUT_FOOTER_TERMS_LABEL_KEY =
+  "__landing_layout_footer_terms_label";
+export const LANDING_LAYOUT_FOOTER_TERMS_HREF_KEY =
+  "__landing_layout_footer_terms_href";
+export const LANDING_LAYOUT_FOOTER_PRIVACY_LABEL_KEY =
+  "__landing_layout_footer_privacy_label";
+export const LANDING_LAYOUT_FOOTER_PRIVACY_HREF_KEY =
+  "__landing_layout_footer_privacy_href";
 
 export type LandingLayoutNavLink = {
   id: string;
@@ -1283,7 +1308,21 @@ export function getDefaultLandingTextMap(
     [LANDING_LAYOUT_FOOTER_BG_KEY]: "#d8cfb6",
     [LANDING_LAYOUT_FOOTER_TEXT_KEY]: "Koru OSA",
     [LANDING_LAYOUT_FOOTER_HEIGHT_KEY]: "220",
+    [LANDING_LAYOUT_FOOTER_DESCRIPTION_KEY]: "Koru es una comunidad viva de aprendizaje donde acompañamos procesos con presencia, cuidado y vínculo auténtico.",
+    [LANDING_LAYOUT_FOOTER_COMMUNITY_TITLE_KEY]: "Comunidad",
+    [LANDING_LAYOUT_FOOTER_COMMUNITY_ITEMS_KEY]: JSON.stringify(["Acompañamiento integral", "Comunidad de familias", "Programas por etapas", "Experiencias vivenciales", "Orientación personalizada"]),
+    [LANDING_LAYOUT_FOOTER_CONTACT_TITLE_KEY]: "Contacto",
+    [LANDING_LAYOUT_FOOTER_CONTACT_EMAIL_KEY]: "contacto@koruosa.com",
+    [LANDING_LAYOUT_FOOTER_CONTACT_PHONE_KEY]: "+52 81 0000 0000",
+    [LANDING_LAYOUT_FOOTER_CONTACT_ADDRESS_KEY]: "Tepoztlán, Morelos, México",
+    [LANDING_LAYOUT_FOOTER_COPYRIGHT_KEY]: "Copyright © 2026 Koru OSA. All Rights Reserved.",
+    [LANDING_LAYOUT_FOOTER_TERMS_LABEL_KEY]: "Términos y condiciones",
+    [LANDING_LAYOUT_FOOTER_TERMS_HREF_KEY]: "#",
+    [LANDING_LAYOUT_FOOTER_PRIVACY_LABEL_KEY]: "Privacidad",
+    [LANDING_LAYOUT_FOOTER_PRIVACY_HREF_KEY]: "#",
   };
+
+  Object.assign(textMap, getSiteChromeSlotDefaults());
 
   for (const section of normalizedStructure) {
     const def = landingSectionCatalog[section.type];
@@ -1342,6 +1381,39 @@ export function ensureLandingDefaults(textMap: LandingTextMap): LandingTextMap {
     [LANDING_STRUCTURE_KEY]: JSON.stringify(structure),
   };
 
+  const legacyNavLinks = parseLandingLayoutNavLinks(textMap);
+  for (const [index, [id]] of siteChromeNavEntries.entries()) {
+    const legacy = legacyNavLinks[index];
+    if (!legacy) continue;
+    const labelKey = `site-chrome.navbar.${id}.label`;
+    const hrefKey = `site-chrome.navbar.${id}.href`;
+    if (textMap[labelKey] == null) next[labelKey] = legacy.label;
+    if (textMap[hrefKey] == null) next[hrefKey] = legacy.href;
+  }
+  const legacyFooter = {
+    "site-chrome.navbar.logo.alt": textMap[LANDING_LAYOUT_NAV_LOGO_ALT_KEY],
+    "site-chrome.footer.description": textMap[LANDING_LAYOUT_FOOTER_DESCRIPTION_KEY],
+    "site-chrome.footer.community.title": textMap[LANDING_LAYOUT_FOOTER_COMMUNITY_TITLE_KEY],
+    "site-chrome.footer.contact.title": textMap[LANDING_LAYOUT_FOOTER_CONTACT_TITLE_KEY],
+    "site-chrome.footer.contact.email": textMap[LANDING_LAYOUT_FOOTER_CONTACT_EMAIL_KEY],
+    "site-chrome.footer.contact.phone": textMap[LANDING_LAYOUT_FOOTER_CONTACT_PHONE_KEY],
+    "site-chrome.footer.contact.address": textMap[LANDING_LAYOUT_FOOTER_CONTACT_ADDRESS_KEY],
+    "site-chrome.footer.copyright": textMap[LANDING_LAYOUT_FOOTER_COPYRIGHT_KEY],
+    "site-chrome.footer.terms.label": textMap[LANDING_LAYOUT_FOOTER_TERMS_LABEL_KEY],
+    "site-chrome.footer.terms.href": textMap[LANDING_LAYOUT_FOOTER_TERMS_HREF_KEY],
+    "site-chrome.footer.privacy.label": textMap[LANDING_LAYOUT_FOOTER_PRIVACY_LABEL_KEY],
+    "site-chrome.footer.privacy.href": textMap[LANDING_LAYOUT_FOOTER_PRIVACY_HREF_KEY],
+  };
+  for (const [key, value] of Object.entries(legacyFooter)) {
+    if (textMap[key] == null && value != null) next[key] = value;
+  }
+  if (textMap["site-chrome.footer.community.item.1"] == null) {
+    try {
+      const items = JSON.parse(textMap[LANDING_LAYOUT_FOOTER_COMMUNITY_ITEMS_KEY] ?? "[]");
+      if (Array.isArray(items)) items.slice(0, 5).forEach((item, index) => { if (typeof item === "string") next[`site-chrome.footer.community.item.${index + 1}`] = item; });
+    } catch { /* Existing malformed drafts keep the slot defaults. */ }
+  }
+
   const editorialSections = structure.filter(
     (section) => section.type === "editorial-feature",
   );
@@ -1364,4 +1436,3 @@ export function ensureLandingDefaults(textMap: LandingTextMap): LandingTextMap {
 
   return next;
 }
-

@@ -71,6 +71,8 @@ import { isAdminRole, isSuperAdminRole, type AppUserRole } from "@/modules/auth/
 import type { PermissionKey } from "@/modules/auth/permissions/permission-catalog";
 
 const contentNavigationItems = [
+  { key: "navbar", label: "Navbar", parent: undefined },
+  { key: "footer", label: "Footer", parent: undefined },
   { key: "landing", label: "Landing", parent: undefined },
   { key: "quienes-somos", label: "Quienes Somos", parent: undefined },
   { key: "como-acompanamos", label: "Cómo acompañamos", parent: undefined },

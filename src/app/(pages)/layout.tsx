@@ -1,6 +1,7 @@
 import { signOutAction } from "@/modules/auth/server/auth-actions";
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import { getCmsPublishedTextMap } from "@/modules/cms/server/cms-text.repository";
+import { getCmsPublishedImageMapBySlug } from "@/modules/cms/server/cms-image.repository";
 import { getDefaultLandingTextMap } from "@/modules/landing/config/landing-sections";
 import { LandingPageLayout } from "@/modules/landing/views/landing-page-layout";
 
@@ -10,8 +11,9 @@ export default async function PublicPagesLayout({
   children: React.ReactNode;
 }) {
   let textMap = getDefaultLandingTextMap();
+  let imageMap = {};
   try {
-    textMap = await getCmsPublishedTextMap();
+    [textMap, imageMap] = await Promise.all([getCmsPublishedTextMap(), getCmsPublishedImageMapBySlug("/")]);
   } catch (error) {
     console.error("[PublicPagesLayout] Failed to load CMS text map, using defaults.", error);
   }
@@ -25,7 +27,7 @@ export default async function PublicPagesLayout({
     : null;
 
   return (
-    <LandingPageLayout textMap={textMap} user={user} onSignOut={signOutAction}>
+    <LandingPageLayout textMap={textMap} imageMap={imageMap} user={user} onSignOut={signOutAction}>
       {children}
     </LandingPageLayout>
   );

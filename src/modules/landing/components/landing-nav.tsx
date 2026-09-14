@@ -7,6 +7,11 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
+import { siteChromeImageSlots, siteChromeNavbarSlots, siteChromeSlotIds } from "@/modules/cms/site-chrome-content";
+import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
+import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
+import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -82,7 +87,9 @@ type LandingNavProps = {
     canAccessDashboard: boolean;
   } | null;
   onSignOut?: (formData: FormData) => void;
-};
+  textMap?: LandingTextMap;
+  imageMap?: CmsImageMap;
+} & LandingPreviewBindings;
 
 function getInitials(nameOrEmail: string) {
   const parts = nameOrEmail.trim().split(/\s+/).filter(Boolean);
@@ -183,6 +190,11 @@ export function LandingNav({
   containerStyles = {},
   user = null,
   onSignOut,
+  textMap,
+  imageMap,
+  previewMode,
+  selectedContentSlotId,
+  onSelectContentSlot,
   links = [
     { label: "Quiénes somos", href: "/quienes-somos" },
     { label: "Cómo acompañamos", href: "/como-acompanamos" },
@@ -300,6 +312,13 @@ export function LandingNav({
     ...item,
     submenu: item.submenu ?? getDefaultSubmenuByLabel(item.label),
   }));
+
+  const navSlotById = new Map(siteChromeNavbarSlots.map((slot) => [slot.id, slot]));
+  const navbarLogo = siteChromeImageSlots.find((slot) => slot.key === "site-chrome.navbar.logo");
+  const renderNavLabel = (item: LandingNavLink) => {
+    const slot = item.labelSlotId ? navSlotById.get(item.labelSlotId) : undefined;
+    return slot && textMap ? <EditableContentSlot slot={slot} textMap={textMap} previewMode={previewMode} selected={selectedContentSlotId === slot.id} onSelect={onSelectContentSlot} /> : item.label;
+  };
 
   const userDisplay = user?.name?.trim() || user?.email || "Usuario";
   const userInitials = getInitials(userDisplay);
@@ -537,16 +556,22 @@ export function LandingNav({
             href="/"
             className="relative inline-flex h-20 w-[120px] items-center"
           >
-            <Image
-              src={logoSrc}
-              alt={logoAlt}
-              width={1536}
-              height={1024}
-              className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${
-                shouldUseTransparentLogo ? "opacity-0" : "opacity-100"
-              }`}
-              priority
-            />
+            {navbarLogo && textMap ? (
+              <CmsPageEditableImage
+                slotId={navbarLogo.key}
+                defaultSrc={navbarLogo.defaultSrc}
+                alt={textMap[siteChromeSlotIds.navbarLogoAlt] ?? logoAlt}
+                imageMap={imageMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
+                fill
+                className={`object-contain transition-opacity duration-300 ${shouldUseTransparentLogo ? "opacity-0" : "opacity-100"}`}
+                priority
+              />
+            ) : (
+              <Image src={logoSrc} alt={logoAlt} width={1536} height={1024} className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${shouldUseTransparentLogo ? "opacity-0" : "opacity-100"}`} priority />
+            )}
             <Image
               src="/branding/koru-logo-white.png"
               alt=""
@@ -606,9 +631,14 @@ export function LandingNav({
                     <a
                       href={item.href || "#"}
                       className="transition-colors duration-300 hover:text-[var(--complement-800)]"
-                      onClick={() => setActiveSubmenuId(null)}
+                      onClick={(event) => {
+                        if (previewMode) {
+                          event.preventDefault();
+                        }
+                        setActiveSubmenuId(null);
+                      }}
                     >
-                      {item.label}
+                      {renderNavLabel(item)}
                     </a>
                   </div>
                 );
@@ -680,10 +710,10 @@ export function LandingNav({
                     <a
                       key={`${item.label}-${index}`}
                       href={item.href || "#"}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={(event) => { if (previewMode) event.preventDefault(); setIsMobileMenuOpen(false); }}
                       className="transition-colors duration-200 hover:text-white/80"
                     >
-                      {item.label}
+                      {renderNavLabel(item)}
                     </a>
                   ))}
                 </nav>
@@ -691,7 +721,7 @@ export function LandingNav({
                   <div className="pt-8 text-center">
                     <a
                       href={authLink.href || "#"}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={(event) => { if (previewMode) event.preventDefault(); setIsMobileMenuOpen(false); }}
                       className="font-['Roboto_Condensed'] text-lg font-semibold tracking-wider text-white transition-colors duration-200 hover:text-white/80"
                     >
                       {authLink.label}
