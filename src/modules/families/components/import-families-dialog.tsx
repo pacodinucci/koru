@@ -77,7 +77,7 @@ export function ImportFamiliesDialog() {
       const result = await confirmFamilyImportAction(rows);
       setMessage(result.message);
       if ("preview" in result && result.preview) setPreview(result.preview);
-      if (result.status === "success" || result.status === "warning") {
+      if (result.status === "success") {
         setRows([]);
         setPreview(null);
       }
