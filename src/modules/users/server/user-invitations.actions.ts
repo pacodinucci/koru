@@ -5,7 +5,6 @@ import { z } from "zod";
 
 import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { prisma } from "@/lib/prisma";
-import { sendUserInvitationEmail } from "@/modules/mailing/server/mailing.service";
 import {
   invitationErrorState,
   type UserInvitationActionState,
@@ -71,18 +70,6 @@ export async function listFamiliesForInvitationAdmin() {
   return listFamiliesForInvitation();
 }
 
-async function deliverInvitation(
-  created: Awaited<ReturnType<typeof createUserInvitation>>,
-) {
-  return sendUserInvitationEmail({
-    email: created.invitation.email,
-    role: created.invitation.role,
-    invitationId: created.invitation.id,
-    invitationToken: created.token,
-    familyName: created.invitation.family?.name,
-  });
-}
-
 function revalidateInvitations() {
   revalidatePath("/dashboard/users");
   revalidatePath("/dashboard/mailing");
@@ -112,9 +99,8 @@ export async function createUserInvitationAction(
     };
   }
 
-  let created: Awaited<ReturnType<typeof createUserInvitation>>;
   try {
-    created = await createUserInvitation({
+    await createUserInvitation({
       ...parsed.data,
       invitedById: admin.id,
     });
@@ -122,29 +108,11 @@ export async function createUserInvitationAction(
     return invitationErrorState(error instanceof Error ? error.message : "");
   }
 
-  try {
-    const delivery = await deliverInvitation(created);
-    revalidateInvitations();
-
-    if (delivery.status === "failed") {
-      return {
-        status: "warning",
-        message:
-          "La invitación fue creada, pero el email no pudo enviarse. Podés reenviarla desde la lista.",
-      };
-    }
-  } catch {
-    revalidateInvitations();
-    return {
-      status: "warning",
-      message:
-        "La invitación fue creada, pero el email no pudo enviarse. Podés reenviarla desde la lista.",
-    };
-  }
+  revalidateInvitations();
 
   return {
     status: "success",
-    message: "Invitación creada y enviada correctamente.",
+    message: "Invitación creada y encolada para su envío.",
   };
 }
 
@@ -154,7 +122,7 @@ export async function resendUserInvitationAction(formData: FormData): Promise<vo
   if (!parsed.success) return;
 
   try {
-    await deliverInvitation(await resendUserInvitation(parsed.data.id, admin.id));
+    await resendUserInvitation(parsed.data.id, admin.id);
     revalidateInvitations();
   } catch (error) {
     resolveInvitationError(error instanceof Error ? error.message : "");

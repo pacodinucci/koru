@@ -160,6 +160,15 @@ enum EmailDeliveryStatus {
   FAILED
 }
 
+enum InvitationDeliveryJobStatus {
+  PENDING
+  PROCESSING
+  RETRY_SCHEDULED
+  SENT
+  FAILED
+  CANCELLED
+}
+
 enum UserRole {
   ADMIN
   ADMIN_OPERATOR
@@ -518,11 +527,15 @@ model UserInvitation {
   family      Family?          @relation(fields: [familyId], references: [id], onDelete: SetNull)
   status      InvitationStatus @default(PENDING)
   tokenHash   String?
+  tokenVersion Int            @default(1)
+  tokenCiphertext String?
+  tokenEncryptionKeyVersion Int @default(1)
   expiresAt   DateTime?
   lastSentAt  DateTime?
   invitedById String?
   invitedBy   User?            @relation("UserInvitationsCreated", fields: [invitedById], references: [id], onDelete: SetNull)
   acceptedAt  DateTime?
+  deliveryJobs InvitationDeliveryJob[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -534,6 +547,30 @@ model UserInvitation {
   @@index([accessRoleId])
 }
 
+model InvitationDeliveryJob {
+  id                String                      @id @default(cuid())
+  invitationId      String
+  invitation        UserInvitation              @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  tokenVersion      Int
+  status            InvitationDeliveryJobStatus @default(PENDING)
+  attemptCount      Int                         @default(0)
+  nextAttemptAt     DateTime                    @default(now())
+  lockedAt          DateTime?
+  lockedBy          String?
+  lastError         String?
+  lastErrorCode     String?
+  idempotencyKey    String                      @unique
+  providerMessageId String?
+  sentAt            DateTime?
+  failedAt          DateTime?
+  cancelledAt       DateTime?
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt
+
+  @@unique([invitationId, tokenVersion])
+  @@index([status, nextAttemptAt, createdAt])
+  @@index([status, lockedAt])
+}
 model Role {
   id          String           @id @default(cuid())
   key         String           @unique

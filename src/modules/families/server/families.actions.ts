@@ -199,25 +199,12 @@ export async function confirmFamilyImportAction(rows: FamilyImportRowActionInput
       return { status: "error" as const, message: "La información cambió desde la previsualización. Revisá los conflictos y volvé a confirmar.", preview: result.preview };
     }
 
-    const { sendUserInvitationEmail } = await import("@/modules/mailing/server/mailing.service");
-    const deliveries = await Promise.allSettled(result.invitations.map((invitation) =>
-      sendUserInvitationEmail({
-        email: invitation.email,
-        role: invitation.role,
-        invitationId: invitation.invitationId,
-        invitationToken: invitation.token,
-        familyName: invitation.familyName,
-      }),
-    ));
-    const failedDeliveries = deliveries.filter((delivery) => delivery.status === "rejected" || (delivery.status === "fulfilled" && delivery.value.status === "failed")).length;
     revalidatePath("/dashboard/families");
     revalidatePath("/dashboard/users");
     revalidatePath("/dashboard/mailing");
     return {
-      status: failedDeliveries ? "warning" as const : "success" as const,
-      message: failedDeliveries
-        ? `Se crearon ${result.familiesCount} familias. ${failedDeliveries} invitaciones no pudieron enviarse; podés reenviarlas desde Usuarios.`
-        : `Se crearon ${result.familiesCount} familias y se enviaron ${result.invitations.length} invitaciones.`,
+      status: "success" as const,
+      message: `Se crearon ${result.familiesCount} familias y se prepararon ${result.invitationsCount} invitaciones para enviar.`,
     };
   } catch {
     return { status: "error" as const, message: "No pudimos confirmar la importación. Revisá la planilla e intentá nuevamente." };

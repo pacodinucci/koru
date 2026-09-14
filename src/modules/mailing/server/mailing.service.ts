@@ -45,7 +45,7 @@ export async function sendMail(input: SendMailInput) {
     });
 
     await markEmailMessageSent(message.id, result.providerMessageId);
-    return { id: message.id, status: "sent" as const };
+    return { id: message.id, status: "sent" as const, providerMessageId: result.providerMessageId };
   } catch (error) {
     await markEmailMessageFailed(
       message.id,
@@ -61,6 +61,7 @@ type SendUserInvitationEmailInput = {
   invitationId: string;
   invitationToken: string;
   familyName?: string;
+  idempotencyKey?: string;
 };
 
 export async function sendUserInvitationEmail({
@@ -69,6 +70,7 @@ export async function sendUserInvitationEmail({
   invitationId,
   invitationToken,
   familyName,
+  idempotencyKey,
 }: SendUserInvitationEmailInput) {
   const invitationUrl = new URL("/sign-up", getAppUrl());
   invitationUrl.searchParams.set("token", invitationToken);
@@ -88,6 +90,7 @@ export async function sendUserInvitationEmail({
       email,
       role,
     },
+    idempotencyKey,
   });
 }
 

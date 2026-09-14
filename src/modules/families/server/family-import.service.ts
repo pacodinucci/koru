@@ -3,6 +3,11 @@ import "server-only";
 import { InvitationStatus, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import {
+  cancelStaleInvitationDeliveryJobs,
+  createInvitationDeliveryJob,
+} from "@/modules/mailing/server/invitation-delivery-job.repository";
+import { encryptInvitationToken } from "@/modules/users/server/invitation-token-cipher";
 import { createInvitationToken } from "@/modules/users/server/user-invitation-token";
 
 export type FamilyImportRowInput = {
@@ -21,7 +26,6 @@ export type FamilyImportPreview = {
 };
 
 type NormalizedRow = { rowNumber: number; familyName: string; familyKey: string; emails: string[] };
-type CreatedInvitation = { email: string; role: UserRole; invitationId: string; token: string; familyName: string };
 
 const emailSchema = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -119,8 +123,8 @@ export async function confirmFamilyImport(rows: FamilyImportRowInput[], invitedB
   const preview = await previewFamilyImport(rows);
   if (preview.issues.length) return { ok: false as const, preview };
 
-  const created = await prisma.$transaction(async (tx) => {
-    const invitations: CreatedInvitation[] = [];
+  const invitationsCount = await prisma.$transaction(async (tx) => {
+    let invitationsCount = 0;
     for (const row of preview.validRows) {
       // The schema has no normalized unique key. Checking again inside the transaction protects
       // the normal path; a future data migration can add a database uniqueness constraint.
@@ -131,19 +135,40 @@ export async function confirmFamilyImport(rows: FamilyImportRowInput[], invitedB
       for (const email of row.emails) {
         const [user, invitation] = await Promise.all([
           tx.user.findUnique({ where: { email }, select: { id: true } }),
-          tx.userInvitation.findUnique({ where: { email }, select: { id: true } }),
+          tx.userInvitation.findUnique({ where: { email }, select: { id: true, tokenVersion: true } }),
         ]);
         if (user) throw new Error("family_import_conflict");
         const tokenData = createInvitationToken();
-        const invitationData = { email, role: UserRole.PARENT, familyId: family.id, status: InvitationStatus.PENDING, tokenHash: tokenData.tokenHash, expiresAt: tokenData.expiresAt, lastSentAt: new Date(), invitedById };
+        const tokenVersion = (invitation?.tokenVersion ?? 0) + 1;
+        const invitationData = {
+          email,
+          role: UserRole.PARENT,
+          familyId: family.id,
+          status: InvitationStatus.PENDING,
+          tokenHash: tokenData.tokenHash,
+          tokenCiphertext: encryptInvitationToken(tokenData.token),
+          tokenVersion,
+          expiresAt: tokenData.expiresAt,
+          // Set only after Resend accepts the queued delivery.
+          lastSentAt: null,
+          invitedById,
+        };
         const savedInvitation = invitation
           ? await tx.userInvitation.update({ where: { id: invitation.id }, data: invitationData, select: { id: true } })
           : await tx.userInvitation.create({ data: invitationData, select: { id: true } });
-        invitations.push({ email, role: UserRole.PARENT, invitationId: savedInvitation.id, token: tokenData.token, familyName: family.name });
+        if (invitation) {
+          await cancelStaleInvitationDeliveryJobs(tx, savedInvitation.id, tokenVersion);
+        }
+        await createInvitationDeliveryJob(tx, {
+          invitationId: savedInvitation.id,
+          tokenVersion,
+          idempotencyKey: `invitation-delivery-${savedInvitation.id}-${tokenVersion}`,
+        });
+        invitationsCount += 1;
       }
     }
-    return invitations;
+    return invitationsCount;
   }, { isolationLevel: "Serializable" });
 
-  return { ok: true as const, invitations: created, familiesCount: preview.familiesCount };
+  return { ok: true as const, invitationsCount, familiesCount: preview.familiesCount };
 }

@@ -4,7 +4,12 @@ import { InvitationStatus, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { isTeacherRole } from "@/modules/auth/roles";
+import {
+  cancelStaleInvitationDeliveryJobs,
+  createInvitationDeliveryJob,
+} from "@/modules/mailing/server/invitation-delivery-job.repository";
 import { validateInvitationFamily } from "@/modules/users/lib/user-invitation-policy";
+import { encryptInvitationToken } from "@/modules/users/server/invitation-token-cipher";
 import { createInvitationToken, hashInvitationToken } from "@/modules/users/server/user-invitation-token";
 
 export type CreateUserInvitationInput = {
@@ -128,25 +133,41 @@ export async function createUserInvitation({ email, accessRoleId, familyId, invi
 
   const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail }, select: { id: true } });
   if (existingUser) throw new Error("user_already_exists");
-  const existing = await prisma.userInvitation.findUnique({ where: { email: normalizedEmail }, select: { id: true } });
-  const { token, tokenHash, expiresAt } = createInvitationToken();
-  const data = {
-    role,
-    accessRoleId,
-    familyId: role === UserRole.PARENT ? familyId : null,
-    status: InvitationStatus.PENDING,
-    tokenHash,
-    expiresAt,
-    lastSentAt: new Date(),
-    invitedById,
-    acceptedAt: null,
-  };
-  const invitation = existing
-    ? await prisma.userInvitation.update({ where: { id: existing.id }, data, include: { family: { select: { name: true } } } })
-    : await prisma.userInvitation.create({ data: { email: normalizedEmail, ...data }, include: { family: { select: { name: true } } } });
-  return { invitation, token };
-}
 
+  const tokenData = createInvitationToken();
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.userInvitation.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true, tokenVersion: true },
+    });
+    const tokenVersion = (existing?.tokenVersion ?? 0) + 1;
+    const data = {
+      role,
+      accessRoleId,
+      familyId: role === UserRole.PARENT ? familyId : null,
+      status: InvitationStatus.PENDING,
+      tokenHash: tokenData.tokenHash,
+      tokenCiphertext: encryptInvitationToken(tokenData.token),
+      tokenVersion,
+      expiresAt: tokenData.expiresAt,
+      // This reflects Resend acceptance, never queue creation or a retry attempt.
+      lastSentAt: null,
+      invitedById,
+      acceptedAt: null,
+    };
+    const invitation = existing
+      ? await tx.userInvitation.update({ where: { id: existing.id }, data, include: { family: { select: { name: true } } } })
+      : await tx.userInvitation.create({ data: { email: normalizedEmail, ...data }, include: { family: { select: { name: true } } } });
+
+    if (existing) await cancelStaleInvitationDeliveryJobs(tx, invitation.id, tokenVersion);
+    await createInvitationDeliveryJob(tx, {
+      invitationId: invitation.id,
+      tokenVersion,
+      idempotencyKey: `invitation-delivery-${invitation.id}-${tokenVersion}`,
+    });
+    return { invitation, token: tokenData.token };
+  });
+}
 export async function resendUserInvitation(id: string, invitedById: string) {
   const existing = await prisma.userInvitation.findUnique({
     where: { id },
