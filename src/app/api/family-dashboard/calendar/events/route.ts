@@ -17,7 +17,8 @@ export async function GET(request: Request) {
   const parsedDate = rawDate ? new Date(`${rawDate}T00:00:00`) : new Date();
   const dateCursor = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
   const events = await listVisibleEventsForUserByRange(
-    familyUser.id,`r`n    familyUser.role,
+    familyUser.id,
+    familyUser.role,
     dateCursor,
     viewMode,
   );

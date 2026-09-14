@@ -19,7 +19,10 @@ function Value({ label, value }: { label: string; value?: string | null }) {
 }
 
 export default async function FamilyStudentRecordPage() {
-  const { viewer, familyUser } = await requireFamilyDashboardAccess();`r`n  const students = familyUser.familyId ? await listFamilyStudentRecords(familyUser.familyId) : [];
+  const { viewer, familyUser } = await requireFamilyDashboardAccess();
+  const students = familyUser.familyId
+    ? await listFamilyStudentRecords(familyUser.familyId)
+    : [];
 
   return (
     <SidebarProvider>
