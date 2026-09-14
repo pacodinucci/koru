@@ -54,6 +54,7 @@ type LandingSubmenu = {
 
 type LandingNavLink = {
   id?: string;
+  labelSlotId?: string;
   label: string;
   href: string;
   submenu?: LandingSubmenu;

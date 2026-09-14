@@ -26,7 +26,7 @@ function FooterText({ slotId, textMap, previewMode, selectedContentSlotId, onSel
   slotId: string;
   textMap: LandingTextMap;
   previewMode?: boolean;
-  selectedContentSlotId?: string;
+  selectedContentSlotId?: string | null;
   onSelectContentSlot?: (slotId: string) => void;
   className?: string;
   as?: "span" | "p" | "h4" | "li";
