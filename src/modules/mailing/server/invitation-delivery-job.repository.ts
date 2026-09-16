@@ -200,6 +200,7 @@ export function cancelClaimedInvitationDeliveryJob(jobId: string, workerId: stri
 }
 const invitationDeliveryDashboardSelect = {
   id: true,
+  tokenVersion: true,
   status: true,
   attemptCount: true,
   nextAttemptAt: true,
