@@ -7,6 +7,7 @@ import { z } from "zod";
 import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { getFamilyDetailForAdmin } from "@/modules/families/server/families.repository";
+import { runInvitationDeliveryWorker } from "@/modules/mailing/server/invitation-delivery-worker.service";
 
 const familySchema = z.object({ name: z.string().trim().min(2).max(120) });
 const eventualItemDraftSchema = z.object({ name: z.string().trim().min(2).max(120), suggestedAmount: z.coerce.number().positive() });
@@ -199,14 +200,32 @@ export async function confirmFamilyImportAction(rows: FamilyImportRowActionInput
       return { status: "error" as const, message: "La información cambió desde la previsualización. Revisá los conflictos y volvé a confirmar.", preview: result.preview };
     }
 
+    let deliveryError = false;
+    try {
+      await runInvitationDeliveryWorker();
+    } catch (error) {
+      deliveryError = true;
+      console.error("family_import_delivery_trigger_failed", error);
+    }
+
     revalidatePath("/dashboard/families");
     revalidatePath("/dashboard/users");
     revalidatePath("/dashboard/mailing");
     return {
       status: "success" as const,
-      message: `Se crearon ${result.familiesCount} familias y se prepararon ${result.invitationsCount} invitaciones para enviar.`,
+      message: deliveryError
+          ? `Se crearon ${result.familiesCount} familias y se prepararon ${result.invitationsCount} invitaciones. El envío quedó pendiente y podés revisarlo en Mailing.`
+          : `Se crearon ${result.familiesCount} familias y se prepararon ${result.invitationsCount} invitaciones para enviar.`,
     };
-  } catch {
+  } catch (error) {
+    console.error("family_import_failed", error);
+    const code = error instanceof Error ? error.message : "";
+    if (code === "invitation_token_encryption_key_missing" || code === "invitation_token_encryption_key_invalid") {
+      return { status: "error" as const, message: "No se pudieron preparar las invitaciones porque falta una configuración segura de envío. Contactá al administrador." };
+    }
+    if (code === "family_import_conflict") {
+      return { status: "error" as const, message: "La información cambió desde la previsualización. Revisá los conflictos y volvé a confirmar." };
+    }
     return { status: "error" as const, message: "No pudimos confirmar la importación. Revisá la planilla e intentá nuevamente." };
   }
 }

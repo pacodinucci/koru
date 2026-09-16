@@ -70,6 +70,23 @@ export async function reconcileUserInvitationAfterSignup(email: string, token: s
         familyId: invitation.role === UserRole.PARENT ? invitation.familyId : null,
       },
     });
+    if (invitation.role === UserRole.PARENT && invitation.familyId) {
+      const familyStudents = await tx.student.findMany({
+        where: { familyId: invitation.familyId },
+        select: { id: true },
+      });
+      await tx.studentGuardian.createMany({
+        data: familyStudents.map((student) => ({
+          studentId: student.id,
+          userId: user.id,
+          email: normalizedEmail,
+          fullName: user.name || user.email,
+          relationship: "GUARDIAN",
+        })),
+        skipDuplicates: true,
+      });
+    }
+
     if (isTeacherRole(invitation.role)) {
       await tx.teacherProfile.upsert({
         where: { userId: user.id },
@@ -81,7 +98,7 @@ export async function reconcileUserInvitationAfterSignup(email: string, token: s
       where: { id: invitation.id },
       data: { status: InvitationStatus.ACCEPTED, acceptedAt: invitation.acceptedAt ?? new Date(), tokenHash: null },
     });
-    await tx.studentGuardian.updateMany({ where: { email: normalizedEmail, userId: null }, data: { userId: user.id } });
+    await tx.studentGuardian.updateMany({ where: { email: normalizedEmail, userId: null }, data: { userId: user.id, canPickup: true } });
   });
 }
 

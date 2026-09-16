@@ -198,3 +198,69 @@ export function cancelClaimedInvitationDeliveryJob(jobId: string, workerId: stri
     },
   });
 }
+const invitationDeliveryDashboardSelect = {
+  id: true,
+  status: true,
+  attemptCount: true,
+  nextAttemptAt: true,
+  lockedAt: true,
+  lockedBy: true,
+  lastError: true,
+  lastErrorCode: true,
+  providerMessageId: true,
+  sentAt: true,
+  failedAt: true,
+  createdAt: true,
+  invitation: {
+    select: {
+      id: true,
+      email: true,
+      tokenVersion: true,
+      status: true,
+      family: { select: { name: true } },
+    },
+  },
+} satisfies Prisma.InvitationDeliveryJobSelect;
+
+/** Gives operators a bounded, auditable view of invitation delivery work. */
+export function listInvitationDeliveryJobsForDashboard() {
+  return prisma.invitationDeliveryJob.findMany({
+    orderBy: [{ createdAt: "desc" }],
+    take: 100,
+    select: invitationDeliveryDashboardSelect,
+  });
+}
+
+/** Requeues only a definitive failure and only while its invitation/token remains current. */
+export async function requeueFailedInvitationDeliveryJob(jobId: string) {
+  const job = await prisma.invitationDeliveryJob.findUnique({
+    where: { id: jobId },
+    select: { invitationId: true, tokenVersion: true, status: true },
+  });
+  if (!job || job.status !== InvitationDeliveryJobStatus.FAILED) {
+    throw new Error("invitation_delivery_job_not_requeueable");
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const invitation = await tx.userInvitation.findFirst({
+      where: {
+        id: job.invitationId,
+        status: "PENDING",
+        tokenVersion: job.tokenVersion,
+      },
+      select: { id: true },
+    });
+    if (!invitation) throw new Error("invitation_delivery_job_not_requeueable");
+
+    return tx.invitationDeliveryJob.updateMany({
+      where: { id: jobId, status: InvitationDeliveryJobStatus.FAILED },
+      data: {
+        status: InvitationDeliveryJobStatus.PENDING,
+        nextAttemptAt: new Date(),
+        lockedAt: null,
+        lockedBy: null,
+      },
+    });
+  });
+  if (!result.count) throw new Error("invitation_delivery_job_not_requeueable");
+}

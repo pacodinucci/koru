@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { runInvitationDeliveryWorker } from "@/modules/mailing/server/invitation-delivery-worker.service";
 import {
   invitationErrorState,
   type UserInvitationActionState,
@@ -104,6 +105,11 @@ export async function createUserInvitationAction(
       ...parsed.data,
       invitedById: admin.id,
     });
+    try {
+      await runInvitationDeliveryWorker();
+    } catch (error) {
+      console.error("user_invitation_delivery_trigger_failed", error);
+    }
   } catch (error) {
     return invitationErrorState(error instanceof Error ? error.message : "");
   }
@@ -123,6 +129,11 @@ export async function resendUserInvitationAction(formData: FormData): Promise<vo
 
   try {
     await resendUserInvitation(parsed.data.id, admin.id);
+    try {
+      await runInvitationDeliveryWorker();
+    } catch (error) {
+      console.error("user_invitation_delivery_trigger_failed", error);
+    }
     revalidateInvitations();
   } catch (error) {
     resolveInvitationError(error instanceof Error ? error.message : "");

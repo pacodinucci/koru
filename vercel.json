@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/monthly-cash-fund-allocations",
       "schedule": "10 3 * * *"
+    },
+    {
+      "path": "/api/cron/invitation-delivery",
+      "schedule": "0 4 * * *"
     }
   ]
 }

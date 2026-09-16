@@ -5,19 +5,22 @@ import { revalidatePath } from "next/cache";
 import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/family-dashboard-access";
 import {
   familyStudentAddressSchema,
-  familyStudentContactsSchema,
+  familyStudentCompletionSchema,
   familyStudentIdentitySchema,
   familyStudentMedicalSchema,
   familyStudentResponsibleSchema,
+  familyResponsibleUpdateSchema,
   type FamilyStudentAddressInput,
-  type FamilyStudentContactsInput,
+  type FamilyStudentCompletionInput,
   type FamilyStudentIdentityInput,
   type FamilyStudentMedicalInput,
   type FamilyStudentResponsibleInput,
+  type FamilyResponsibleUpdateInput,
 } from "@/modules/family-dashboard/schemas/family-student-record.schema";
 import {
   completeFamilyStudentRecord,
   createFamilyStudentResponsible,
+  updateFamilyResponsible,
   saveFamilyStudentAddress,
   saveFamilyStudentIdentity,
   saveFamilyStudentMedical,
@@ -64,9 +67,9 @@ export async function saveFamilyStudentMedicalAction(input: FamilyStudentMedical
   }
 }
 
-export async function completeFamilyStudentRecordAction(input: FamilyStudentContactsInput) {
+export async function completeFamilyStudentRecordAction(input: FamilyStudentCompletionInput) {
   const user = (await requireFamilyDashboardAccess("/family-dashboard?error=forbidden")).familyUser;
-  const parsed = familyStudentContactsSchema.safeParse(input);
+  const parsed = familyStudentCompletionSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "invalid_input" };
   try {
     await completeFamilyStudentRecord(parsed.data, user);
@@ -84,6 +87,20 @@ export async function createFamilyStudentResponsibleAction(input: FamilyStudentR
   if (!parsed.success) return { ok: false as const, error: "invalid_input" };
   try {
     await createFamilyStudentResponsible(parsed.data, user);
+    revalidatePath("/family-dashboard");
+    revalidatePath("/family-dashboard/expediente");
+    return { ok: true as const };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function updateFamilyResponsibleAction(input: FamilyResponsibleUpdateInput) {
+  const user = (await requireFamilyDashboardAccess("/family-dashboard?error=forbidden")).familyUser;
+  const parsed = familyResponsibleUpdateSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "invalid_input" };
+  try {
+    await updateFamilyResponsible(parsed.data, user);
     revalidatePath("/family-dashboard");
     revalidatePath("/family-dashboard/expediente");
     return { ok: true as const };

@@ -794,6 +794,7 @@ model Student {
   lastName          String
   documentType      String?
   documentNumber    String?
+  identityKey       String?
   birthDate         DateTime
   groupId           String
   group             StudentGroup           @relation(fields: [groupId], references: [id], onDelete: Restrict)
@@ -817,6 +818,7 @@ model Student {
   @@index([recordStatus, updatedAt])
   @@index([lastName, firstName])
   @@index([familyId])
+  @@unique([familyId, identityKey])
 }
 
 model StudentAddress {

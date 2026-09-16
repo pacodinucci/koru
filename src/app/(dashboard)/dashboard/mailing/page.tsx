@@ -17,7 +17,7 @@ export default async function DashboardMailingPage() {
       cmsPages={cmsPages}
       breadcrumbPage="Mailing"
     >
-      <DashboardMailingView />
+      <DashboardMailingView canManage={user.permissionKeys.includes("mailing.send")} />
     </DashboardShell>
   );
 }

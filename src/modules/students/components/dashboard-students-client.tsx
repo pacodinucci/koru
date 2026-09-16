@@ -9,8 +9,21 @@ import { useFieldArray, useForm } from "react-hook-form";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   ResponsiveDialog,
@@ -21,7 +34,14 @@ import {
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
 } from "@/components/ui/responsive-dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
   studentFormSchema,
@@ -250,7 +270,9 @@ export function DashboardStudentsClient({
         router.refresh();
         return;
       }
-      setMessage("No pudimos guardar el alumno. Revisá los datos e intentá de nuevo.");
+      setMessage(
+        "No pudimos guardar el alumno. Revisá los datos e intentá de nuevo.",
+      );
     });
   }
 
@@ -259,17 +281,27 @@ export function DashboardStudentsClient({
       <Card size="sm">
         <CardHeader>
           <CardTitle>Alumnos</CardTitle>
-          {!readOnly ? <CardAction>
-            <Button type="button" size="sm" onClick={openCreateDialog}>
-              <Plus />
-              Nuevo alumno
-            </Button>
-          </CardAction> : null}
+          {!readOnly ? (
+            <CardAction>
+              <Button type="button" size="sm" onClick={openCreateDialog}>
+                <Plus />
+                Nuevo alumno
+              </Button>
+            </CardAction>
+          ) : null}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_220px]">
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nombre o apellido" />
-            <select className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm" value={groupFilter} onChange={(event) => setGroupFilter(event.target.value)}>
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar por nombre o apellido"
+            />
+            <select
+              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+              value={groupFilter}
+              onChange={(event) => setGroupFilter(event.target.value)}
+            >
               <option value="">Todos los grupos</option>
               {groups.map((group) => (
                 <option key={group.id} value={group.id}>
@@ -302,24 +334,42 @@ export function DashboardStudentsClient({
               ) : (
                 filteredStudents.map((student) => (
                   <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.lastName}, {student.firstName}</TableCell>
+                    <TableCell className="font-medium">
+                      {student.lastName}, {student.firstName}
+                    </TableCell>
                     <TableCell>{calculateAge(student.birthDate)}</TableCell>
                     <TableCell>{student.group.name}</TableCell>
                     <TableCell>
                       <div className="max-w-56 truncate text-xs text-muted-foreground">
                         {student.teachers.length > 0
-                          ? student.teachers.map((teacher) => teacher.displayName).join(", ")
+                          ? student.teachers
+                              .map((teacher) => teacher.displayName)
+                              .join(", ")
                           : "-"}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="max-w-56 text-xs">
-                        <p className="truncate font-medium">{student.guardians[0]?.fullName || student.guardians[0]?.user?.name || "Sin informar"}</p>
-                        <p className="truncate text-muted-foreground">{student.guardians[0]?.phone || student.guardians[0]?.email || "-"}</p>
+                        <p className="truncate font-medium">
+                          {student.guardians[0]?.fullName ||
+                            student.guardians[0]?.user?.name ||
+                            "Sin informar"}
+                        </p>
+                        <p className="truncate text-muted-foreground">
+                          {student.guardians[0]?.phone ||
+                            student.guardians[0]?.email ||
+                            "-"}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={student.recordStatus === "NEEDS_CHANGES" ? "destructive" : "secondary"}>
+                      <Badge
+                        variant={
+                          student.recordStatus === "NEEDS_CHANGES"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                      >
                         {recordStatusLabels[student.recordStatus]}
                       </Badge>
                     </TableCell>
@@ -327,18 +377,38 @@ export function DashboardStudentsClient({
                       {new Date(student.updatedAt).toLocaleDateString("es-AR")}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={student.status === "ACTIVE" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          student.status === "ACTIVE" ? "default" : "secondary"
+                        }
+                      >
                         {statusLabels[student.status]}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1.5">
-                        <Button nativeButton={false} render={<Link href={`/dashboard/students/${student.id}`} />} variant="outline" size="sm" className="h-auto px-2 py-1">
+                        <Button
+                          nativeButton={false}
+                          render={
+                            <Link href={`/dashboard/students/${student.id}`} />
+                          }
+                          variant="outline"
+                          size="sm"
+                          className="h-auto px-2 py-1"
+                        >
                           Ver expediente
                         </Button>
-                        {!readOnly ? <Button type="button" variant="outline" size="sm" className="h-auto px-2 py-1" onClick={() => editStudent(student)}>
-                          Editar
-                        </Button> : null}
+                        {!readOnly ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-auto px-2 py-1"
+                            onClick={() => editStudent(student)}
+                          >
+                            Editar
+                          </Button>
+                        ) : null}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -348,272 +418,326 @@ export function DashboardStudentsClient({
           </Table>
         </CardContent>
       </Card>
-
-      {!readOnly ? <ResponsiveDialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-        <ResponsiveDialogContent className="[font-family:var(--font-montserrat)] [&_*]:[font-family:var(--font-montserrat)]">
-          <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>
-              {editingStudent ? "Editar alumno" : "Nuevo alumno"}
-            </ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>
-              Cargá los datos escolares y los familiares vinculados al alumno.
-            </ResponsiveDialogDescription>
-          </ResponsiveDialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <ResponsiveDialogBody className="space-y-4">
-                <div className="grid gap-3 lg:grid-cols-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nombre</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nombre" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Apellido</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Apellido" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="birthDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Fecha de nacimiento</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="groupId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Grupo</FormLabel>
-                        <FormControl>
-                          <select className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm" {...field}>
-                            <option value="">Seleccionar</option>
-                            {groups.map((group) => (
-                              <option key={group.id} value={group.id}>
-                                {group.name} · {group.ageRange}
-                              </option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Estado</FormLabel>
-                        <FormControl>
-                          <select className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm" {...field}>
-                            {Object.entries(statusLabels).map(([value, label]) => (
-                              <option key={value} value={value}>
-                                {label}
-                              </option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem className="lg:col-span-2">
-                        <FormLabel>Notas</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            rows={1}
-                            placeholder="Opcional"
-                            className="h-8 min-h-8 resize-none py-1"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-
-
-                <div className="space-y-3 rounded-xl border border-slate-200 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-medium">Familiares vinculados</p>
-                      <p className="text-xs text-muted-foreground">
-                        Si el email no tiene usuario, se deja el vínculo pendiente y se crea invitación familiar.
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => guardians.append({ email: "", relationship: "GUARDIAN", isPrimary: false, canPickup: false, emergencyContact: false })}
-                    >
-                      <Plus />
-                      Agregar
-                    </Button>
-                  </div>
-                  {guardians.fields.map((guardian, index) => (
-                    <div key={guardian.id} className="grid gap-2 rounded-lg bg-slate-50 p-2 lg:grid-cols-[minmax(0,1fr)_160px_repeat(3,auto)_auto] lg:items-end">
-                      <FormField
-                        control={form.control}
-                        name={`guardians.${index}.email`}
-                        render={({ field }) => {
-                          const matches = getMatchingFamilyUsers(
-                            familyUsers,
-                            field.value,
-                          );
-                          const exactMatch = familyUsers.some(
-                            (user) =>
-                              user.email.toLowerCase() ===
-                              field.value.trim().toLowerCase(),
-                          );
-
-                          return (
-                            <FormItem>
-                              <FormLabel>Buscar familiar o cargar email</FormLabel>
-                              <FormControl>
-                                <div className="space-y-1.5">
-                                  <Input
-                                    type="text"
-                                    placeholder="Buscar por nombre, apellido o email"
-                                    {...field}
-                                  />
-                                  {matches.length > 0 && !exactMatch ? (
-                                    <div className="max-h-32 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
-                                      {matches.map((user) => (
-                                        <button
-                                          key={user.id}
-                                          type="button"
-                                          className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left text-xs hover:bg-slate-100"
-                                          onClick={() => field.onChange(user.email)}
-                                        >
-                                          <span className="min-w-0">
-                                            <span className="block truncate font-medium">
-                                              {user.name || user.email}
-                                            </span>
-                                            <span className="block truncate text-muted-foreground">
-                                              {user.email}
-                                            </span>
-                                          </span>
-                                          <span className="shrink-0 text-muted-foreground">
-                                            Usar
-                                          </span>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  ) : null}
-                                  {field.value.trim().length >= 2 && matches.length === 0 ? (
-                                    <p className="text-xs text-muted-foreground">
-                                      No existe ese familiar. Escribí el email completo para crear la invitación.
-                                    </p>
-                                  ) : null}
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          );
-                        }}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`guardians.${index}.relationship`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Vínculo</FormLabel>
-                            <FormControl>
-                              <select className="h-8 w-full rounded-lg border border-input bg-white px-2.5 text-sm" {...field}>
-                                {Object.entries(relationshipLabels).map(([value, label]) => (
+      {!readOnly ? (
+        <ResponsiveDialog
+          open={dialogOpen}
+          onOpenChange={handleDialogOpenChange}
+        >
+          <ResponsiveDialogContent className="[font-family:var(--font-montserrat)] [&_*]:[font-family:var(--font-montserrat)]">
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>
+                {editingStudent ? "Editar alumno" : "Nuevo alumno"}
+              </ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
+                Cargá los datos escolares y los familiares vinculados al alumno.
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="flex min-h-0 flex-1 flex-col overflow-hidden"
+              >
+                <ResponsiveDialogBody className="space-y-4">
+                  <div className="grid gap-3 lg:grid-cols-4">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nombre" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Apellido</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Apellido" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="birthDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fecha de nacimiento</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="groupId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Grupo</FormLabel>
+                          <FormControl>
+                            <select
+                              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+                              {...field}
+                            >
+                              <option value="">Seleccionar</option>
+                              {groups.map((group) => (
+                                <option key={group.id} value={group.id}>
+                                  {group.name} · {group.ageRange}
+                                </option>
+                              ))}
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Estado</FormLabel>
+                          <FormControl>
+                            <select
+                              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+                              {...field}
+                            >
+                              {Object.entries(statusLabels).map(
+                                ([value, label]) => (
                                   <option key={value} value={value}>
                                     {label}
                                   </option>
-                                ))}
-                              </select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      {(["isPrimary", "canPickup", "emergencyContact"] as const).map((name) => (
-                        <FormField
-                          key={name}
-                          control={form.control}
-                          name={`guardians.${index}.${name}`}
-                          render={({ field }) => (
-                            <FormItem className="flex items-center gap-2 space-y-0 pb-1">
-                              <FormControl>
-                                <input
-                                  type="checkbox"
-                                  className="size-4 rounded border-slate-300"
-                                  checked={Boolean(field.value)}
-                                  onChange={(event) => field.onChange(event.target.checked)}
-                                />
-                              </FormControl>
-                              <FormLabel className="text-xs">
-                                {name === "isPrimary"
-                                  ? "Principal"
-                                  : name === "canPickup"
-                                    ? "Retira"
-                                    : "Emergencia"}
-                              </FormLabel>
-                            </FormItem>
-                          )}
-                        />
-                      ))}
+                                ),
+                              )}
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem className="lg:col-span-2">
+                          <FormLabel>Notas</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              rows={1}
+                              placeholder="Opcional"
+                              className="h-8 min-h-8 resize-none py-1"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-3 rounded-xl border border-slate-200 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium">
+                          Familiares vinculados
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Si el email no tiene usuario, se deja el vínculo
+                          pendiente y se crea invitación familiar.
+                        </p>
+                      </div>
                       <Button
                         type="button"
                         variant="outline"
-                        size="icon-sm"
-                        onClick={() => guardians.remove(index)}
-                        disabled={guardians.fields.length === 1}
+                        size="sm"
+                        onClick={() =>
+                          guardians.append({
+                            email: "",
+                            relationship: "GUARDIAN",
+                            isPrimary: false,
+                            canPickup: false,
+                            emergencyContact: false,
+                          })
+                        }
                       >
-                        <Trash2 />
-                        <span className="sr-only">Quitar familiar</span>
+                        <Plus />
+                        Agregar
                       </Button>
                     </div>
-                  ))}
-                </div>
-                {message ? <p className="text-sm text-destructive">{message}</p> : null}
-              </ResponsiveDialogBody>
-              <ResponsiveDialogFooter>
-                <Button type="button" variant="outline" onClick={closeDialog} disabled={isPending}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Guardando..." : "Guardar alumno"}
-                </Button>
-              </ResponsiveDialogFooter>
-            </form>
-          </Form>
-        </ResponsiveDialogContent>
-      </ResponsiveDialog> : null}`r`n    </div>
+                    {guardians.fields.map((guardian, index) => (
+                      <div
+                        key={guardian.id}
+                        className="grid gap-2 rounded-lg bg-slate-50 p-2 lg:grid-cols-[minmax(0,1fr)_160px_repeat(3,auto)_auto] lg:items-end"
+                      >
+                        <FormField
+                          control={form.control}
+                          name={`guardians.${index}.email`}
+                          render={({ field }) => {
+                            const matches = getMatchingFamilyUsers(
+                              familyUsers,
+                              field.value,
+                            );
+                            const exactMatch = familyUsers.some(
+                              (user) =>
+                                user.email.toLowerCase() ===
+                                field.value.trim().toLowerCase(),
+                            );
+
+                            return (
+                              <FormItem>
+                                <FormLabel>
+                                  Buscar familiar o cargar email
+                                </FormLabel>
+                                <FormControl>
+                                  <div className="space-y-1.5">
+                                    <Input
+                                      type="text"
+                                      placeholder="Buscar por nombre, apellido o email"
+                                      {...field}
+                                    />
+                                    {matches.length > 0 && !exactMatch ? (
+                                      <div className="max-h-32 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+                                        {matches.map((user) => (
+                                          <button
+                                            key={user.id}
+                                            type="button"
+                                            className="flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 text-left text-xs hover:bg-slate-100"
+                                            onClick={() =>
+                                              field.onChange(user.email)
+                                            }
+                                          >
+                                            <span className="min-w-0">
+                                              <span className="block truncate font-medium">
+                                                {user.name || user.email}
+                                              </span>
+                                              <span className="block truncate text-muted-foreground">
+                                                {user.email}
+                                              </span>
+                                            </span>
+                                            <span className="shrink-0 text-muted-foreground">
+                                              Usar
+                                            </span>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    ) : null}
+                                    {field.value.trim().length >= 2 &&
+                                    matches.length === 0 ? (
+                                      <p className="text-xs text-muted-foreground">
+                                        No existe ese familiar. Escribí el email
+                                        completo para crear la invitación.
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`guardians.${index}.relationship`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Vínculo</FormLabel>
+                              <FormControl>
+                                <select
+                                  className="h-8 w-full rounded-lg border border-input bg-white px-2.5 text-sm"
+                                  {...field}
+                                >
+                                  {Object.entries(relationshipLabels).map(
+                                    ([value, label]) => (
+                                      <option key={value} value={value}>
+                                        {label}
+                                      </option>
+                                    ),
+                                  )}
+                                </select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {(
+                          [
+                            "isPrimary",
+                            "canPickup",
+                            "emergencyContact",
+                          ] as const
+                        ).map((name) => (
+                          <FormField
+                            key={name}
+                            control={form.control}
+                            name={`guardians.${index}.${name}`}
+                            render={({ field }) => (
+                              <FormItem className="flex items-center gap-2 space-y-0 pb-1">
+                                <FormControl>
+                                  <input
+                                    type="checkbox"
+                                    className="size-4 rounded border-slate-300"
+                                    checked={Boolean(field.value)}
+                                    onChange={(event) =>
+                                      field.onChange(event.target.checked)
+                                    }
+                                  />
+                                </FormControl>
+                                <FormLabel className="text-xs">
+                                  {name === "isPrimary"
+                                    ? "Principal"
+                                    : name === "canPickup"
+                                      ? "Retira"
+                                      : "Emergencia"}
+                                </FormLabel>
+                              </FormItem>
+                            )}
+                          />
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon-sm"
+                          onClick={() => guardians.remove(index)}
+                          disabled={guardians.fields.length === 1}
+                        >
+                          <Trash2 />
+                          <span className="sr-only">Quitar familiar</span>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  {message ? (
+                    <p className="text-sm text-destructive">{message}</p>
+                  ) : null}
+                </ResponsiveDialogBody>
+                <ResponsiveDialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={closeDialog}
+                    disabled={isPending}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={isPending}>
+                    {isPending ? "Guardando..." : "Guardar alumno"}
+                  </Button>
+                </ResponsiveDialogFooter>
+              </form>
+            </Form>
+          </ResponsiveDialogContent>
+        </ResponsiveDialog>
+      ) : null}{" "}
+    </div>
   );
 }

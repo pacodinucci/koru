@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, Plus, Settings2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -15,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   completeFamilyStudentRecordAction,
-  saveFamilyStudentAddressAction,
   saveFamilyStudentIdentityAction,
   saveFamilyStudentMedicalAction,
 } from "@/modules/family-dashboard/server/family-student-record.actions";
@@ -224,7 +224,7 @@ export function FamilyStudentOnboarding({
   const [showWizard, setShowWizard] = useState(
     students.length === 0 || (Boolean(initialDraft) && !startOnDashboard),
   );
-  const [step, setStep] = useState(() => initialDraft ? Math.min(4, Math.max(1, initialDraft.recordStep)) : 1);
+  const [step, setStep] = useState(() => initialDraft ? Math.min(2, Math.max(1, initialDraft.recordStep)) : 1);
   const [studentId, setStudentId] = useState<string | null>(initialDraft?.id ?? null);
   const [form, setForm] = useState<FormState>(() =>
     initialDraft ? formFromStudent(initialDraft, userName, familyLastName, familyAddress) : emptyForm(userName, familyLastName, undefined, familyAddress),
@@ -250,7 +250,7 @@ export function FamilyStudentOnboarding({
           birthDate: form.birthDate,
           groupId: form.groupId,
         });
-        if (!result.ok) return setMessage("Revisá los datos personales antes de continuar.");
+        if (!result.ok) return setMessage(result.error === "student_identity_conflict" ? "Ya existe una ficha de este/a aprendiz en la familia. Revisá los datos o continuá esa ficha." : "Revisá los datos personales antes de continuar.");
         setStudentId(result.studentId);
         setStep(2);
         return;
@@ -258,43 +258,19 @@ export function FamilyStudentOnboarding({
 
       if (!studentId) return setMessage("No pudimos identificar el expediente.");
 
-      if (step === 2) {
-        const result = await saveFamilyStudentAddressAction({
-          studentId,
-          streetAndNumber: form.streetAndNumber,
-          neighborhood: form.neighborhood,
-          cityAndState: form.cityAndState,
-          postalCode: form.postalCode,
-        });
-        if (!result.ok) return setMessage("Revisá el domicilio antes de continuar.");
-        setStep(3);
-        return;
-      }
-
-      if (step === 3) {
-        const result = await saveFamilyStudentMedicalAction({
-          studentId,
-          bloodType: form.bloodType,
-          knownAllergies: form.knownAllergies,
-          medicalConditions: form.medicalConditions,
-          regularMedications: form.regularMedications,
-          hasHealthInsurance: form.hasHealthInsurance,
-          insuranceProviderAndPolicy: form.insuranceProviderAndPolicy,
-        });
-        if (!result.ok) return setMessage("Revisá los datos de salud antes de continuar.");
-        setStep(4);
-        return;
-      }
-
-      const result = await completeFamilyStudentRecordAction({
+      const result = await saveFamilyStudentMedicalAction({
         studentId,
-        primaryContact: {
-          fullName: form.primaryFullName,
-          relationship: form.primaryRelationship,
-          phone: form.primaryPhone,
-        },
+        bloodType: form.bloodType,
+        knownAllergies: form.knownAllergies,
+        medicalConditions: form.medicalConditions,
+        regularMedications: form.regularMedications,
+        hasHealthInsurance: form.hasHealthInsurance,
+        insuranceProviderAndPolicy: form.insuranceProviderAndPolicy,
       });
-      if (!result.ok) return setMessage("Revisá los contactos antes de finalizar.");
+      if (!result.ok) return setMessage("Revisá los datos de salud antes de finalizar.");
+
+      const completion = await completeFamilyStudentRecordAction({ studentId });
+      if (!completion.ok) return setMessage("No pudimos finalizar la ficha. Intentá nuevamente.");
 
       setMessage(null);
       setCompletedStudentName(`${form.firstName} ${form.lastName}`.trim());
@@ -347,6 +323,20 @@ export function FamilyStudentOnboarding({
           </div>
           <FamilyActionsMenu onRegisterAnotherStudent={startAnotherStudent} />
         </div>
+        <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm">
+          <p className="font-medium">Domicilio</p>
+          {familyAddress?.streetAndNumber && familyAddress.neighborhood && familyAddress.cityAndState && familyAddress.postalCode ? (
+            <p className="mt-1 text-muted-foreground">
+              {familyAddress.streetAndNumber}, {familyAddress.neighborhood}, {familyAddress.cityAndState} · CP {familyAddress.postalCode}
+              <Link href="/family-dashboard/perfil" className="ml-2 font-medium text-[var(--brand-600)] hover:underline">Editar domicilio</Link>
+            </p>
+          ) : (
+            <p className="mt-1 text-muted-foreground">
+              Domicilio no configurado
+              <Link href="/family-dashboard/perfil" className="ml-2 font-medium text-[var(--brand-600)] hover:underline">Agregar domicilio</Link>
+            </p>
+          )}
+        </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {students.map((student) => (
             <Card key={student.id} size="sm">
@@ -377,9 +367,9 @@ export function FamilyStudentOnboarding({
     <section className="w-full max-w-xl space-y-4">
       <div className="border-b border-slate-200 pb-4">
         <h1 className="text-lg font-semibold text-slate-900">Carpeta integral del aprendiz</h1>
-        <p className="mt-1 text-sm text-slate-500">Paso {step} de 4</p>
+        <p className="mt-1 text-sm text-slate-500">Paso {step} de 2</p>
         <div className="mt-3 h-1 overflow-hidden rounded-full bg-slate-200" aria-label={`Paso ${step} de 4`}>
-          <div className="h-full bg-[var(--brand-600)] transition-all" style={{ width: `${step * 25}%` }} />
+          <div className="h-full bg-[var(--brand-600)] transition-all" style={{ width: `${step * 50}%` }} />
         </div>
       </div>
       <div className="space-y-3">
@@ -387,7 +377,7 @@ export function FamilyStudentOnboarding({
           <div className="space-y-3">
             <Field label="Nombre(s) del aprendiz"><Input value={form.firstName} onChange={(event) => update("firstName", event.target.value)} required /></Field>
             <Field label="Apellidos"><Input value={form.lastName} onChange={(event) => update("lastName", event.target.value)} required /></Field>
-            <Field label="CURP / Documento de identidad"><Input value={form.documentNumber} onChange={(event) => update("documentNumber", event.target.value)} placeholder="18 caracteres" maxLength={18} required /></Field>
+            <Field label="CURP / Documento de identidad (opcional)"><Input value={form.documentNumber} onChange={(event) => update("documentNumber", event.target.value)} placeholder="Si no cuenta con documento, validaremos nombre y fecha de nacimiento" maxLength={40} /></Field>
             <Field label="Fecha de nacimiento"><Input type="date" value={form.birthDate} onChange={(event) => update("birthDate", event.target.value)} required /></Field>
             <Field label="Grupo / grado">
               <select className="h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm" value={form.groupId} onChange={(event) => update("groupId", event.target.value)} required>
@@ -399,15 +389,6 @@ export function FamilyStudentOnboarding({
         ) : null}
 
         {step === 2 ? (
-          <div className="space-y-3">
-            <Field label="Calle y número"><Input value={form.streetAndNumber} onChange={(event) => update("streetAndNumber", event.target.value)} required /></Field>
-            <Field label="Barrio / localidad"><Input value={form.neighborhood} onChange={(event) => update("neighborhood", event.target.value)} required /></Field>
-            <Field label="Municipio y provincia"><Input value={form.cityAndState} onChange={(event) => update("cityAndState", event.target.value)} required /></Field>
-            <Field label="Código postal"><Input value={form.postalCode} onChange={(event) => update("postalCode", event.target.value)} required /></Field>
-          </div>
-        ) : null}
-
-        {step === 3 ? (
           <div className="space-y-3">
             <Field label="Tipo de sangre y Rh">
               <select className="h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm" value={form.bloodType} onChange={(event) => update("bloodType", event.target.value)}>
@@ -423,27 +404,13 @@ export function FamilyStudentOnboarding({
           </div>
         ) : null}
 
-        {step === 4 ? (
-          <div className="space-y-3">
-            <fieldset className="space-y-4">
-              <legend className="text-sm font-medium">Contacto principal</legend>
-              <Field label="Nombre completo"><Input value={form.primaryFullName} onChange={(event) => update("primaryFullName", event.target.value)} required /></Field>
-              <Field label="Parentesco">
-                <select className="h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm" value={form.primaryRelationship} onChange={(event) => update("primaryRelationship", event.target.value as Relationship)}>
-                  {Object.entries(relationshipLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                </select>
-              </Field>
-              <div><Field label="Teléfono"><Input type="tel" value={form.primaryPhone} onChange={(event) => update("primaryPhone", event.target.value)} required /></Field></div>
-            </fieldset>
-          </div>
-        ) : null}
 
         {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
         <div className="flex flex-wrap gap-3">
           <Button type="button" variant="outline" onClick={leaveWizard} disabled={isPending}>Salir y continuar después</Button>
           <Button type="button" variant="secondary" className="flex-1" disabled={step === 1 || isPending} onClick={() => setStep((current) => Math.max(1, current - 1))}>Atrás</Button>
           <Button type="button" className="flex-1 bg-[var(--brand-600)] hover:bg-[var(--brand-700)]" disabled={isPending} onClick={next}>
-            {isPending ? "Guardando..." : step === 4 ? <><CheckCircle2 /> Finalizar</> : "Guardar y continuar"}
+            {isPending ? "Guardando..." : step === 2 ? <><CheckCircle2 /> Finalizar</> : "Guardar y continuar"}
           </Button>
         </div>
       </div>

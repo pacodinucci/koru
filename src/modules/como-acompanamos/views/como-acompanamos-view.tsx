@@ -573,6 +573,21 @@ export function ComoAcompanamosView(props: ComoAcompanamosViewProps) {
               </a>
             </SectionHeading>
           </div>
+          <div className="relative mx-auto w-full max-w-[22rem]">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%]">
+              <CmsPageEditableImage
+                slotId="accompaniment.image.evaluation"
+                defaultSrc="/assets/images/DSC01386.png"
+                alt="Acompañante compartiendo un proceso de aprendizaje en comunidad"
+                imageMap={imageMap}
+                previewMode={previewMode}
+                selectedContentSlotId={selectedContentSlotId}
+                onSelectContentSlot={onSelectContentSlot}
+                fill
+                className="object-cover"
+              />
+            </div>
+          </div>
         </div>
       </section>
     </main>

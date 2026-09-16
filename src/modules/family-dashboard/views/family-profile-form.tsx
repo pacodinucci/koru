@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { saveFamilyProfileAction } from "@/modules/family-dashboard/server/famil
 type Profile = { streetAndNumber: string; neighborhood: string; cityAndState: string; postalCode: string };
 
 export function FamilyProfileForm({ initialProfile }: { initialProfile: Profile }) {
+  const router = useRouter();
   const [form, setForm] = useState(initialProfile);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -19,7 +21,11 @@ export function FamilyProfileForm({ initialProfile }: { initialProfile: Profile 
     event.preventDefault();
     startTransition(async () => {
       const result = await saveFamilyProfileAction(form);
-      setMessage(result.ok ? "Datos guardados." : "No pudimos guardar los datos.");
+      if (result.ok) {
+        router.push("/family-dashboard?view=dashboard");
+        return;
+      }
+      setMessage("No pudimos guardar los datos.");
     });
   }
 
