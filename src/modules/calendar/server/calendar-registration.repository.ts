@@ -43,6 +43,7 @@ export async function getCalendarEventForViewer(id: string, viewer?: Viewer) {
       allDay: true,
       location: true,
       registrationsEnabled: true,
+      attendanceConfirmationEnabled: true,
       visibility: true,
     },
   });

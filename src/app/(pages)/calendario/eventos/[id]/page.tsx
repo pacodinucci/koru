@@ -90,6 +90,7 @@ export default async function CalendarEventPage({ params, searchParams }: Props)
             {query.error ? (
               <p className="mt-2 text-sm font-medium text-rose-700">{errors[query.error] ?? "No pudimos guardar tu respuesta."}</p>
             ) : null}
+            {event.attendanceConfirmationEnabled ? (
             <div className="mt-5 flex flex-wrap gap-3">
               <form action={respondToCalendarEventAction}>
                 <input type="hidden" name="eventId" value={event.id} />
@@ -106,6 +107,7 @@ export default async function CalendarEventPage({ params, searchParams }: Props)
                 </button>
               </form>
             </div>
+            ) : null}
           </section>
         ) : null}
 
