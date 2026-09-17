@@ -1,5 +1,5 @@
 export const GOOGLE_CALENDAR_SCOPE =
-  "https://www.googleapis.com/auth/calendar.events";
+  "https://www.googleapis.com/auth/calendar.events.owned";
 export const KORU_TIME_ZONE = "America/Argentina/Buenos_Aires";
 
 type KoruCalendarEvent = {
@@ -87,3 +87,4 @@ export function buildGoogleCalendarEventPayload(
     },
   };
 }
+
