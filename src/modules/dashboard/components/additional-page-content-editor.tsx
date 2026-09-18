@@ -64,7 +64,7 @@ export function AdditionalPageContentEditor({
       pageSlug={page.slug}
       previewLabel={`Preview de ${page.label}`}
       previewScale={0.76}
-      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot }) => {
+      renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot, responsiveMode }) => {
         const bindings = {
           textMap,
           previewMode: true,
@@ -74,7 +74,7 @@ export function AdditionalPageContentEditor({
 
         return (
           <LandingPageLayout textMap={textMap} previewMode hideChrome>
-            {pageKey === "comunidad" ? <ComunidadView {...bindings} imageMap={imageMap} /> : null}
+            {pageKey === "comunidad" ? <ComunidadView {...bindings} imageMap={imageMap} responsiveMode={responsiveMode} /> : null}
             {pageKey === "admisiones" ? <AdmisionesView {...bindings} /> : null}
             {pageKey === "contacto" ? <ContactoView {...bindings} /> : null}
             {pageKey === "blog" ? <BlogContentPreview {...bindings} /> : null}

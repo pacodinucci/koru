@@ -30,6 +30,12 @@ function getHardcodedSlot(slotId: string) {
   return slot;
 }
 
+function isSupportedVideoSource(value: string) {
+  return (
+    /\.mp4(?:[?#].*)?$/i.test(value) ||
+    /^(?:https?:\/\/[^/]+)?\/documentos\/[a-z0-9-]+\/?$/i.test(value)
+  );
+}
 function getVideoOverlayTextFontSize(
   size: number,
   responsiveMode?: LandingResponsiveMode,
@@ -152,7 +158,7 @@ export function VideoSection({
   );
   const videoZoomKey = getSectionFieldKey(section.id, "__video_zoom");
   const configuredVideo = textMap[videoUrlKey]?.trim() ?? "";
-  const videoSrc = /\.mp4$/i.test(configuredVideo)
+  const videoSrc = isSupportedVideoSource(configuredVideo)
     ? configuredVideo
     : "/assets/vid2.mp4";
   const overlayOpacityRaw = Number.parseInt(

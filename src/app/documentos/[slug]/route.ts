@@ -5,8 +5,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 function safeFileName(value: string) { return value.replace(/[\\"\r\n]/g, "_"); }
 export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params; const document = await getPublishedDocumentBySlug(slug);
+  const { slug } = await params;
+  const document = await getPublishedDocumentBySlug(slug);
   if (!document) return new NextResponse("Documento no encontrado.", { status: 404 });
+  if (document.mimeType === "video/mp4") return NextResponse.redirect(document.cloudinaryUrl, 307);
   try {
     const upstream = await fetch(getDocumentDownloadUrl(document.cloudinaryPublicId), { cache: "no-store" });
     if (!upstream.ok || !upstream.body) return new NextResponse("No pudimos descargar el documento.", { status: 502 });

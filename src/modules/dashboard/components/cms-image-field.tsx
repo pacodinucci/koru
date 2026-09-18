@@ -62,6 +62,12 @@ export function CmsImageField({
   onChange: (value: CmsImageValue) => void;
   onCommit: (value: CmsImageValue) => Promise<void>;
 }) {
+  const frameScaleMin = slot.frameScaleMin ?? 0.5;
+  const frameScaleMax = slot.frameScaleMax ?? 2.5;
+  const frameScale = Math.min(
+    frameScaleMax,
+    Math.max(frameScaleMin, value?.frameScale ?? 1),
+  );
   const inputId = useId();
   const [isUploading, setIsUploading] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
@@ -303,7 +309,7 @@ export function CmsImageField({
           </div>
 
         <div className="grid grid-cols-2 gap-2"><Button type="button" size="sm" variant={(value?.fitMode ?? "COVER") === "COVER" ? "default" : "outline"} disabled={!value} onClick={() => value && void commitImage({ ...value, fitMode: "COVER" })}>Recortar</Button><Button type="button" size="sm" variant={value?.fitMode === "CONTAIN" ? "default" : "outline"} disabled={!value} onClick={() => value && void commitImage({ ...value, fitMode: "CONTAIN", zoom: 1 })}>Completa</Button></div>
-          <div className="space-y-1"><div className="flex justify-between text-xs font-semibold text-slate-600"><span>Tamaño</span><span>{slot.frameLocked ? "Fijo en esta grilla" : "100%"}</span></div><input type="range" min="0.5" max="2.5" step="0.05" value={value?.frameScale ?? 1} disabled={!value || slot.frameLocked} onChange={(event) => value && onChange({ ...value, frameScale: Number(event.target.value) })} onPointerUp={(event) => value && void commitImage({ ...value, frameScale: Number(event.currentTarget.value) })} onBlur={(event) => value && void commitImage({ ...value, frameScale: Number(event.currentTarget.value) })} className="w-full" /></div><Button type="button" size="sm" variant="outline" className="w-full" disabled={!value} onClick={() => value && void commitImage({ ...value, rotation: ((value.rotation ?? 0) + 90) % 360 })}><RotateCw className="mr-2 h-4 w-4" />Girar 90°</Button>
+          <div className="space-y-1"><div className="flex justify-between text-xs font-semibold text-slate-600"><span>Tamaño</span><span>{slot.frameLocked ? "Fijo en esta grilla" : String(Math.round(frameScale * 100)) + "%"}</span></div><input type="range" min={frameScaleMin} max={frameScaleMax} step="0.05" value={frameScale} disabled={!value || slot.frameLocked} onChange={(event) => value && onChange({ ...value, frameScale: Number(event.target.value) })} onPointerUp={(event) => value && void commitImage({ ...value, frameScale: Number(event.currentTarget.value) })} onBlur={(event) => value && void commitImage({ ...value, frameScale: Number(event.currentTarget.value) })} className="w-full" />{slot.frameScaleHint ? <p className="text-xs leading-relaxed text-slate-500">{slot.frameScaleHint}</p> : null}</div><Button type="button" size="sm" variant="outline" className="w-full" disabled={!value} onClick={() => value && void commitImage({ ...value, rotation: ((value.rotation ?? 0) + 90) % 360 })}><RotateCw className="mr-2 h-4 w-4" />Girar 90°</Button>
         </div>
 
         <div className="grid grid-cols-2 gap-2">

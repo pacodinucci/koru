@@ -17,6 +17,7 @@ type TextImageSectionProps = {
   imageAlt?: string;
   imageSlotId?: string;
   imageMap?: CmsImageMap;
+  responsiveMode?: LandingPreviewBindings["responsiveMode"];
   previewMode?: boolean;
   selectedContentSlotId?: string | null;
   onSelectContentSlot?: (slotId: string) => void;
@@ -76,6 +77,7 @@ function TextImageSection({
   imageAlt,
   imageSlotId,
   imageMap,
+  responsiveMode,
   previewMode,
   selectedContentSlotId,
   onSelectContentSlot,
@@ -134,6 +136,8 @@ function TextImageSection({
                 previewMode={previewMode}
                 selectedContentSlotId={selectedContentSlotId}
                 onSelectContentSlot={onSelectContentSlot}
+                outwardFrameScale={reverse ? "left" : "right"}
+                responsiveMode={responsiveMode}
                 fill
                 className="object-cover"
               />
@@ -246,9 +250,9 @@ const communityCelebrations = [
 type ComunidadViewProps = {
   textMap: LandingTextMap;
   imageMap?: CmsImageMap;
-} & Pick<LandingPreviewBindings, "previewMode" | "selectedContentSlotId" | "onSelectContentSlot">;
+} & Pick<LandingPreviewBindings, "previewMode" | "responsiveMode" | "selectedContentSlotId" | "onSelectContentSlot">;
 
-export function ComunidadView({ textMap, imageMap = {}, previewMode, selectedContentSlotId, onSelectContentSlot }: ComunidadViewProps) {
+export function ComunidadView({ textMap, imageMap = {}, previewMode, responsiveMode, selectedContentSlotId, onSelectContentSlot }: ComunidadViewProps) {
   const editable = { page: "comunidad" as const, textMap, previewMode, selectedContentSlotId, onSelectContentSlot };
   const copy = (slotId: string) => <CmsPageEditableCopy as="span" slotId={slotId} {...editable} />;
   const protocols = protocolDefinitions.map((protocol, index) => ({
@@ -308,6 +312,8 @@ export function ComunidadView({ textMap, imageMap = {}, previewMode, selectedCon
               previewMode={previewMode}
               selectedContentSlotId={selectedContentSlotId}
               onSelectContentSlot={onSelectContentSlot}
+              outwardFrameScale="right"
+              responsiveMode={responsiveMode}
               fill
               className="object-cover"
               priority
@@ -346,6 +352,7 @@ export function ComunidadView({ textMap, imageMap = {}, previewMode, selectedCon
         imageAlt="Encuentros de formación para familias"
         imageSlotId="community.image.school"
         imageMap={imageMap}
+        responsiveMode={responsiveMode}
         previewMode={previewMode}
         selectedContentSlotId={selectedContentSlotId}
         onSelectContentSlot={onSelectContentSlot}
@@ -418,6 +425,7 @@ export function ComunidadView({ textMap, imageMap = {}, previewMode, selectedCon
         imageAlt="Acompañamiento entre familia y comunidad educativa"
         imageSlotId="community.image.support"
         imageMap={imageMap}
+        responsiveMode={responsiveMode}
         previewMode={previewMode}
         selectedContentSlotId={selectedContentSlotId}
         onSelectContentSlot={onSelectContentSlot}
@@ -469,6 +477,8 @@ export function ComunidadView({ textMap, imageMap = {}, previewMode, selectedCon
                 previewMode={previewMode}
                 selectedContentSlotId={selectedContentSlotId}
                 onSelectContentSlot={onSelectContentSlot}
+                outwardFrameScale="right"
+                responsiveMode={responsiveMode}
                 fill
                 className="object-cover"
               />
@@ -523,6 +533,8 @@ export function ComunidadView({ textMap, imageMap = {}, previewMode, selectedCon
                 previewMode={previewMode}
                 selectedContentSlotId={selectedContentSlotId}
                 onSelectContentSlot={onSelectContentSlot}
+                outwardFrameScale="right"
+                responsiveMode={responsiveMode}
                 fill
                 className="object-cover"
               />

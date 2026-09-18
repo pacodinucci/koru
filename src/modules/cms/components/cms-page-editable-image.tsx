@@ -14,6 +14,7 @@ import type {
   CmsImageMap,
   CmsImageValue,
 } from "@/modules/cms/server/cms-image.repository";
+import type { LandingResponsiveMode } from "@/modules/landing/types/landing-text";
 
 type CmsImageAdjustmentContextValue = {
   adjustingSlotId: string | null;
@@ -48,6 +49,9 @@ type CmsPageEditableImageProps = Omit<ImageProps, "src" | "alt" | "ref"> & {
   lockFrame?: boolean;
   /** Technical scale applied before the editable zoom to preserve frame coverage. */
   baseScale?: number;
+  /** Lets an image grow only toward the page edge on large screens. */
+  outwardFrameScale?: "left" | "right";
+  responsiveMode?: LandingResponsiveMode;
 };
 
 export function CmsPageEditableImage({
@@ -60,6 +64,8 @@ export function CmsPageEditableImage({
   onSelectContentSlot,
   lockFrame = false,
   baseScale = 1,
+  outwardFrameScale,
+  responsiveMode,
   style,
   fill,
   ...imageProps
@@ -92,6 +98,9 @@ export function CmsPageEditableImage({
       transformOrigin: frame.style.transformOrigin,
       marginTop: frame.style.marginTop,
       marginBottom: frame.style.marginBottom,
+      marginLeft: frame.style.marginLeft,
+      marginRight: frame.style.marginRight,
+      width: frame.style.width,
     };
     const frameShape = lockFrame ? "RECTANGULAR" : value?.frameShape ?? "RECTANGULAR";
 
@@ -146,6 +155,39 @@ if (frameShape === "RECTANGLE_HORIZONTAL") {
         return;
       }
 
+      if (outwardFrameScale) {
+        const layout = container.parentElement;
+        const containerRect = container.getBoundingClientRect();
+        const layoutRect = layout?.getBoundingClientRect();
+        const baseWidth = containerRect.width;
+        const hasLargeLayout = responsiveMode
+          ? responsiveMode === "large" || responsiveMode === "medium"
+          : window.matchMedia("(min-width: 1024px)").matches;
+        const exteriorSpace = layoutRect
+          ? outwardFrameScale === "right"
+            ? Math.max(0, layoutRect.right - containerRect.right)
+            : Math.max(0, containerRect.left - layoutRect.left)
+          : 0;
+        const maximumScale = baseWidth
+          ? Math.min(1.3, 1 + exteriorSpace / baseWidth)
+          : 1;
+        const frameScale = hasLargeLayout
+          ? Math.min(Math.max(0.8, requestedFrameScale), maximumScale)
+          : 1;
+
+        frame.style.width = String(frameScale * 100) + "%";
+        frame.style.marginLeft = outwardFrameScale === "right" ? "0" : "auto";
+        frame.style.marginRight = outwardFrameScale === "right" ? "auto" : "0";
+        frame.style.transform = "";
+        frame.style.transformOrigin =
+          outwardFrameScale === "right" ? "left center" : "right center";
+        frame.style.marginTop = "";
+        frame.style.marginBottom = "";
+        frame.dataset.cmsFrameScaleCapped =
+          frameScale < requestedFrameScale ? "true" : "false";
+        return;
+      }
+
       const spaceOnLeft = Math.max(0, frame.offsetLeft);
       const spaceOnRight = Math.max(
         0,
@@ -173,6 +215,9 @@ if (frameShape === "RECTANGLE_HORIZONTAL") {
     const resizeObserver = new ResizeObserver(updateFrameLayout);
     resizeObserver.observe(frame);
     if (frame.parentElement) resizeObserver.observe(frame.parentElement);
+    if (outwardFrameScale && frame.parentElement?.parentElement) {
+      resizeObserver.observe(frame.parentElement.parentElement);
+    }
 
     return () => {
       resizeObserver.disconnect();
@@ -184,9 +229,12 @@ if (frameShape === "RECTANGLE_HORIZONTAL") {
       frame.style.transformOrigin = previous.transformOrigin;
       frame.style.marginTop = previous.marginTop;
       frame.style.marginBottom = previous.marginBottom;
+      frame.style.marginLeft = previous.marginLeft;
+      frame.style.marginRight = previous.marginRight;
+      frame.style.width = previous.width;
       delete frame.dataset.cmsFrameScaleCapped;
     };
-  }, [lockFrame, value?.frameRounded, value?.frameScale, value?.frameShape, value?.frameSize]);
+  }, [lockFrame, outwardFrameScale, responsiveMode, value?.frameRounded, value?.frameScale, value?.frameShape, value?.frameSize]);
 
   useEffect(() => () => panCleanupRef.current?.(), []);
 

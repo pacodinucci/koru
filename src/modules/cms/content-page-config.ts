@@ -25,6 +25,11 @@ export type CmsImageSlot = {
   alt: string;
   /** Keeps fixed-grid cards from changing their shared layout. */
   frameLocked?: boolean;
+  /** Editorial limits for the image frame scale. */
+  frameScaleMin?: number;
+  frameScaleMax?: number;
+  /** Explains responsive limits that apply to this image. */
+  frameScaleHint?: string;
 };
 
 export const landingCmsImageSlots: CmsImageSlot[] = [
@@ -165,54 +170,73 @@ export const cmsContentPages: Record<string, CmsContentPageConfig> = {
         label: "Imagen principal",
         defaultSrc: "/assets/images/comu3.png",
         alt: "Comunidad Koru compartiendo actividades",
+        frameScaleMin: 0.8,
+        frameScaleMax: 1.3,
+        frameScaleHint: "En desktop crece hacia afuera; en tablet y móvil se mantiene al 100%.",
       },
       {
         key: "community.image.school",
         label: "Escuela para familias",
         defaultSrc: "/assets/images/comu1.png",
         alt: "Encuentros de formación para familias",
+        frameScaleMin: 0.8,
+        frameScaleMax: 1.3,
+        frameScaleHint: "En desktop crece hacia afuera; en tablet y móvil se mantiene al 100%.",
       },
       {
         key: "community.image.support",
         label: "Acompañamiento conjunto",
         defaultSrc: "/assets/images/comu5.png",
         alt: "Acompañamiento entre familia y comunidad educativa",
+        frameScaleMin: 0.8,
+        frameScaleMax: 1.3,
+        frameScaleHint: "En desktop crece hacia afuera; en tablet y móvil se mantiene al 100%.",
       },
       {
         key: "community.image.protocols",
         label: "Protocolos y cuidado",
         defaultSrc: "/assets/images/comu2.png",
         alt: "Cuidado y seguridad en la comunidad",
+        frameScaleMin: 0.8,
+        frameScaleMax: 1.3,
+        frameScaleHint: "En desktop crece hacia afuera; en tablet y móvil se mantiene al 100%.",
       },
       {
         key: "community.image.daily",
         label: "El día a día en KORU",
         defaultSrc: "/assets/images/comu6.png",
         alt: "Vida cotidiana en la comunidad Koru",
+        frameScaleMin: 0.8,
+        frameScaleMax: 1.3,
+        frameScaleHint: "En desktop crece hacia afuera; en tablet y móvil se mantiene al 100%.",
       },
       {
         key: "community.image.celebration.0",
         label: "Celebración del Maíz",
         defaultSrc: "/assets/images/DSC01273.png",
         alt: "Celebración del Maíz",
+        frameLocked: true,
       },
       {
         key: "community.image.celebration.1",
         label: "Celebración día de muertos",
         defaultSrc: "/assets/images/DSC01338.png",
         alt: "Celebración día de muertos",
+        frameLocked: true,
       },
       {
         key: "community.image.celebration.2",
         label: "Bazar navideño",
         defaultSrc: "/assets/images/DSC01638.png",
         alt: "Bazar navideño",
+        frameLocked: true,
       },
       {
         key: "community.image.celebration.3",
         label: "Kermés de primavera",
         defaultSrc: "/assets/images/DSC02336.png",
         alt: "Kermés de primavera",
+        frameLocked: true,
       },
     ],
   },
