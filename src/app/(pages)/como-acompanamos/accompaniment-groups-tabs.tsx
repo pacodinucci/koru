@@ -8,7 +8,11 @@ import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable
 import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
 import type { LandingPreviewBindings, LandingTextMap } from "@/modules/landing/types/landing-text";
-import { getComoAcompanamosContentSlots, groupSlotId } from "@/modules/como-acompanamos/content-slots";
+import {
+  accompanimentGroupSummaries,
+  getComoAcompanamosContentSlots,
+  groupSlotId,
+} from "@/modules/como-acompanamos/content-slots";
 
 type AccompanimentGroup = {
   title: string;
@@ -36,22 +40,6 @@ const contentSlotMap = new Map(
 );
 
 const responsiveTextClass = "max-w-full break-words [overflow-wrap:anywhere]";
-const groupTabSummaries: Record<string, string[]> = {
-  "grupo-esporas": [
-    "En este grupo se ofrece un espacio estructurado a base de un ritmo que promueve el desarrollo integral y contribuye a una vida equilibrada a lo largo del tiempo, responde a las necesidades vitales de socialización, movimiento y juego, basado en la pedagogía Waldorf.",
-  ],
-  "grupo-koru": [
-    "En Grupo Koru continúa la influencia/inspiración Waldorf y se integra el enfoque transdisciplinario - antroposófico, que organiza el aprendizaje en torno a grandes conceptos vivos. A través de proyectos, experiencias sensoriales, relatos, preguntas colectivas y la observación del entorno, se despierta el interés genuino por comprender el mundo.",
-  ],
-  "grupo-helechos-1": [
-    "En Helechos 1 el enfoque transdisciplinario - antroposófico, es la metodología para aprender las distintas asignaturas y manifestarlas a través de proyectos, A través de estos, se integran habilidades cognitivas (medir, calcular, leer, escribir) en contextos de vida real, favoreciendo así una transferencia significativa del aprendizaje.",
-  ],
-  "grupo-helechos-2": [
-    "En Helechos 2 el enfoque transdisciplinario - antroposófico, es la metodología para aprender las distintas asignaturas y manifestarlas a través de proyectos, A través de estos proyectos, se integran habilidades cognitivas (medir, calcular, leer, escribir) en contextos de vida real, favoreciendo así una transferencia significativa del aprendizaje.",
-    "En esta etapa, las niñas y niños avanzan hacia una mayor autoconciencia, de sus decisiones y de su impacto en el entorno. Por eso, sostenemos espacios donde puedan cuestionar, proponer, colaborar y poner en práctica sus ideas, integrando sus dones en experiencias reales que los conecten con el mundo y su transformación.",
-  ],
-};
-
 function getContentSlot(slotId: string) {
   const slot = contentSlotMap.get(slotId);
 
@@ -283,9 +271,16 @@ export function AccompanimentGroupsTabs({
                 />
               </p>
               <div className="min-w-0 space-y-4 text-base leading-relaxed text-black/85 md:text-lg">
-                {(groupTabSummaries[groupSlug(group.title)] ?? group.paragraphs.slice(0, 1)).map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
+                {(accompanimentGroupSummaries[index] ?? group.paragraphs.slice(0, 1)).map(
+                  (paragraph, paragraphIndex) => (
+                    <p key={paragraph}>
+                      <EditableGroupCopy
+                        slotId={groupSlotId(index, `summary.${paragraphIndex}`)}
+                        {...slotBindingProps}
+                      />
+                    </p>
+                  ),
+                )}
                 <Link
                   href={`/como-acompanamos/${groupSlug(group.title)}`}
                   className="inline-flex w-fit items-center justify-center rounded-full border border-[var(--complement-700)] bg-[var(--complement-700)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--complement-800)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--complement-700)] focus-visible:ring-offset-2"

@@ -122,7 +122,7 @@ export function ImageGridSection({
     ),
   );
   const fixedHoverLabels = [
-    "Grupo de acompañamiento",
+    "Grupos de acompañamiento",
     "Metodologías de acompañamiento",
     "Instalaciones",
     "Equipo",
@@ -327,7 +327,9 @@ export function ImageGridSection({
                 >
                   <CmsPageEditableImage
                     slotId={`landing.image.grid.${index}`}
-                    defaultSrc={imageUrls[index]?.primary ?? imageUrls[index]?.fallback}
+                    defaultSrc={
+                      imageUrls[index]?.primary ?? imageUrls[index]?.fallback
+                    }
                     alt={fixedHoverLabels[index] ?? `Imagen ${index + 1}`}
                     imageMap={imageMap}
                     previewMode={previewMode}
@@ -357,9 +359,9 @@ export function ImageGridSection({
                   >
                     <p
                       className={cn(
-                      previewMode || isVisibleOnMobile
-                        ? "text-white"
-                        : "landing-curtain-rtl text-white",
+                        previewMode || isVisibleOnMobile
+                          ? "text-white"
+                          : "landing-curtain-rtl text-white",
                         selectableClass(
                           selectedFieldId === card.key,
                           previewMode,
@@ -413,7 +415,10 @@ export function ImageGridSection({
                 >
                   <CmsPageEditableImage
                     slotId={`landing.image.grid.${imageIndex}`}
-                    defaultSrc={imageUrls[imageIndex]?.primary ?? imageUrls[imageIndex]?.fallback}
+                    defaultSrc={
+                      imageUrls[imageIndex]?.primary ??
+                      imageUrls[imageIndex]?.fallback
+                    }
                     alt={`Imagen ${imageIndex + 1}`}
                     imageMap={imageMap}
                     previewMode={previewMode}
