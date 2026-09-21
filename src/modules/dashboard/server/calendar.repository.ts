@@ -66,6 +66,7 @@ export async function listCalendarEventsForAdminByRange(
 
   return prisma.calendarEvent.findMany({
     where: {
+      status: { not: CalendarEventStatus.CANCELED },
       startsAt: { lt: end },
       endsAt: { gte: start },
     },
@@ -93,6 +94,7 @@ export async function listCalendarEventsForAdminByRange(
 export async function listUpcomingCalendarEventsForAdmin(limit = 6) {
   return prisma.calendarEvent.findMany({
     where: {
+      status: { not: CalendarEventStatus.CANCELED },
       startsAt: {
         gte: new Date(),
       },
