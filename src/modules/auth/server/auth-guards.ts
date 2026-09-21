@@ -78,12 +78,19 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
 
   if (!user) return null;
 
-  const permissionKeys =
+  const assignedPermissionKeys =
     user.accessRole?.isActive
       ? user.accessRole.permissions.map(({ permission }) => permission.key as PermissionKey)
       : user.accessRoleId
         ? []
         : [...legacyRolePermissions[user.role]];
+  const guaranteedCalendarPermissions: PermissionKey[] =
+    user.role === "ADMIN" || user.role === "SUPERADMIN"
+      ? ["calendar.view", "calendar.manage"]
+      : [];
+  const permissionKeys = Array.from(
+    new Set([...assignedPermissionKeys, ...guaranteedCalendarPermissions]),
+  );
 
   return {
     id: user.id,
