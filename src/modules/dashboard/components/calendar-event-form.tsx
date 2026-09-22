@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import type {
   CalendarAudienceType,
   CalendarEventVisibility,
@@ -12,7 +12,6 @@ import { CalendarEventImageField } from "@/modules/dashboard/components/calendar
 import {
   cancelCalendarEventAction,
   retryCalendarEventInvitationsAction,
-  saveCalendarEventAction,
 } from "@/modules/dashboard/server/calendar.actions";
 
 type EventItem = {
@@ -103,9 +102,32 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
   }, [event]);
 
   const privateDefaults = new Set(event?.audiences?.map((a) => a.userId) ?? []);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  async function handleSubmit(submitEvent: FormEvent<HTMLFormElement>) {
+    const submitter = submitEvent.nativeEvent.submitter as HTMLButtonElement | null;
+    if (submitter?.dataset.serverAction === "true") return;
+
+    submitEvent.preventDefault();
+    setIsSaving(true);
+    setSaveError("");
+
+    try {
+      const response = await fetch(submitEvent.currentTarget.action, {
+        method: "POST",
+        body: new FormData(submitEvent.currentTarget),
+      });
+      if (!response.ok) throw new Error("save_failed");
+      window.location.assign(response.url);
+    } catch {
+      setSaveError("No pudimos guardar los cambios. Probá de nuevo.");
+      setIsSaving(false);
+    }
+  }
 
   return (
-    <form action={saveCalendarEventAction} className="mt-3 space-y-2">
+    <form action="/api/dashboard/calendar/events/save" method="post" onSubmit={handleSubmit} className="mt-3 space-y-2">
       {event ? <input type="hidden" name="id" value={event.id} /> : null}
 
       <input
@@ -223,9 +245,14 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
 
 
       {visibility !== "PUBLIC" && audienceType === "PRIVATE" ? (
-        <select name="privateAudienceUserIds" multiple className="h-24 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+        <select
+          name="privateAudienceUserIds"
+          multiple
+          defaultValue={[...privateDefaults]}
+          className="h-24 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+        >
           {users.map((u) => (
-            <option key={u.id} value={u.id} defaultChecked={privateDefaults.has(u.id)}>
+            <option key={u.id} value={u.id}>
               {u.name} - {roleLabel(u.role)}
             </option>
           ))}
@@ -258,6 +285,7 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
           {event.attendances?.some((item) => !item.invitationSentAt) ? (
             <button
               type="submit"
+              data-server-action="true"
               formAction={retryCalendarEventInvitationsAction}
               className="mt-3 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
             >
@@ -269,11 +297,13 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
 
       {ok ? <p className="text-xs text-emerald-700">Guardado: {ok}</p> : null}
       {error ? <p className="text-xs text-rose-700">Error: {error}</p> : null}
+      {saveError ? <p className="text-xs text-rose-700">{saveError}</p> : null}
 
       <div className="grid grid-cols-2 gap-2">
         {mode === "edit" && event ? (
           <button
             type="submit"
+            data-server-action="true"
             formAction={cancelCalendarEventAction}
             className="rounded-lg border border-rose-200 py-2 text-sm font-semibold text-rose-700"
           >
@@ -284,8 +314,8 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
             Cancelar
           </button>
         )}
-        <button type="submit" className="rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white">
-          {mode === "edit" ? "Guardar cambios" : "Guardar"}
+        <button type="submit" disabled={isSaving} className="rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+          {isSaving ? "Guardando..." : mode === "edit" ? "Guardar cambios" : "Guardar"}
         </button>
       </div>
     </form>

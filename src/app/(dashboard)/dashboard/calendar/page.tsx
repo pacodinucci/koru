@@ -41,6 +41,7 @@ export default async function DashboardCalendarPage({
 
   return (
     <DashboardCalendarClientProvider
+      key={dateCursor.toISOString() + "-" + viewMode + "-" + (ok ?? "") + "-" + (error ?? "")}
       initialEvents={events}
       initialDateCursor={dateCursor}
       initialViewMode={viewMode}

@@ -72,10 +72,10 @@ export const quienesSomosCmsImageSlots: CmsImageSlot[] = [
   { key: "about.image.team.17", label: "Equipo · Integrante 18", defaultSrc: "", alt: "Nuevo integrante", frameLocked: true },
   { key: "about.image.team.18", label: "Equipo · Integrante 19", defaultSrc: "", alt: "Nuevo integrante", frameLocked: true },
   { key: "about.image.team.19", label: "Equipo · Integrante 20", defaultSrc: "", alt: "Nuevo integrante", frameLocked: true },
-  ...Array.from({ length: 8 }, (_, index) => ({
+  ...Array.from({ length: 10 }, (_, index) => ({
     key: `about.image.facility.${index}`,
     label: `Instalaciones · Imagen ${index + 1}`,
-    defaultSrc: `/assets/images/insta${index + 1}.png`,
+    defaultSrc: index < 8 ? `/assets/images/insta${index + 1}.png` : "",
     alt: `Instalaciones de Koru · Imagen ${index + 1}`,
   })),
 ];

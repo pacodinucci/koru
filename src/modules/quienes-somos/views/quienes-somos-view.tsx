@@ -128,43 +128,43 @@ const facilityImages = [
   {
     src: "/assets/images/insta1.png",
     alt: "Instalaciones de Koru preparadas para actividades de aprendizaje",
-    caption: "Instalaciones Koru.",
   },
   {
     src: "/assets/images/insta2.png",
     alt: "Espacio interior de Koru para explorar y convivir",
-    caption: "Espacios para explorar, crear y convivir.",
   },
   {
     src: "/assets/images/insta3.png",
     alt: "Ambiente de aprendizaje dentro de las instalaciones de Koru",
-    caption: "Ambientes pensados para aprender en comunidad.",
     objectPosition: "center bottom",
   },
   {
     src: "/assets/images/insta4.png",
     alt: "?rea de Koru preparada para experiencias educativas",
-    caption: "Rincones vivos para el aprendizaje cotidiano.",
   },
   {
     src: "/assets/images/insta5.png",
     alt: "Instalaci?n de Koru con materiales y espacios de trabajo",
-    caption: "Espacios que acompa?an distintas formas de aprender.",
   },
   {
     src: "/assets/images/insta6.png",
     alt: "Vista de una instalaci?n de Koru",
-    caption: "Entornos c?lidos para compartir y descubrir.",
   },
   {
     src: "/assets/images/insta7.png",
     alt: "Espacio de convivencia en las instalaciones de Koru",
-    caption: "Lugares para el encuentro y la colaboraci?n.",
   },
   {
     src: "/assets/images/insta8.png",
     alt: "Instalaciones de Koru integradas al d?a a d?a de la comunidad",
-    caption: "Instalaciones integradas a la vida de la comunidad.",
+  },
+  {
+    src: "",
+    alt: "Instalaciones de Koru · Imagen 9",
+  },
+  {
+    src: "",
+    alt: "Instalaciones de Koru · Imagen 10",
   },
 ];
 
@@ -468,6 +468,7 @@ function FacilitiesSection({
 
       <FacilitiesCarousel
         images={facilityImages}
+        textMap={textMap}
         imageMap={imageMap}
         previewMode={previewMode}
         selectedContentSlotId={selectedContentSlotId}

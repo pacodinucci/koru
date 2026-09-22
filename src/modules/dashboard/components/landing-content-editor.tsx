@@ -64,7 +64,7 @@ import { LandingPageLayout } from "@/modules/landing/views/landing-page-layout";
 import { LandingView } from "@/modules/landing/views/landing-view";
 import { getComoAcompanamosContentSlots } from "@/modules/como-acompanamos/content-slots";
 import { ComoAcompanamosView } from "@/modules/como-acompanamos/views/como-acompanamos-view";
-import { getQuienesSomosContentSlots } from "@/modules/quienes-somos/content-slots";
+import { facilityCaptionSlotId, getQuienesSomosContentSlots } from "@/modules/quienes-somos/content-slots";
 import { QuienesSomosView } from "@/modules/quienes-somos/views/quienes-somos-view";
 
 const colorOptions = [
@@ -132,6 +132,7 @@ export type PageContentEditorProps = {
   initialImageMap?: CmsImageMap;
   slots: LandingContentSlot[];
   imageSlots?: CmsImageSlot[];
+  facilityShortcuts?: boolean;
   pageSlug?: string;
   previewLabel: string;
   previewScale?: number;
@@ -149,6 +150,7 @@ export function PageContentEditor({
   initialImageMap = {},
   slots: baseSlots,
   imageSlots = [],
+  facilityShortcuts = false,
   pageSlug = "/",
   previewLabel,
   previewScale = PREVIEW_ZOOM_BASE_SCALE,
@@ -537,6 +539,33 @@ export function PageContentEditor({
               {statusMessage}
             </p>
           ) : null}
+          {facilityShortcuts ? (
+            <details className="border-b px-4 py-3">
+              <summary className="cursor-pointer text-sm font-semibold text-slate-900">
+                Editar carrusel de Instalaciones
+              </summary>
+              <p className="mt-2 text-xs text-slate-500">
+                Elegí una imagen o su texto. Después, publicá los cambios.
+              </p>
+              <div className="mt-3 max-h-52 space-y-2 overflow-y-auto">
+                {Array.from({ length: 10 }, (_, index) => {
+                  const imageId = `about.image.facility.${index}`;
+                  const captionId = facilityCaptionSlotId(index);
+                  return (
+                    <div key={imageId} className="grid grid-cols-[2rem_1fr_1fr] items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-500">{index + 1}</span>
+                      <Button type="button" size="sm" variant={selectedSlotId === imageId ? "default" : "outline"} onClick={() => selectSlot(imageId)}>
+                        Imagen
+                      </Button>
+                      <Button type="button" size="sm" variant={selectedSlotId === captionId ? "default" : "outline"} onClick={() => selectSlot(captionId)}>
+                        Texto
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          ) : null}
           {overflowingSlotIds.length > 0 ? (
             <p className="border-b bg-amber-50 px-4 py-2 text-xs text-amber-900">
               {overflowingSlotIds.length === 1
@@ -705,6 +734,7 @@ export function QuienesSomosContentEditor({
       initialImageMap={initialImageMap}
       slots={slots}
       imageSlots={quienesSomosCmsImageSlots}
+      facilityShortcuts
       pageSlug="/quienes-somos"
       previewLabel="Preview de Quienes Somos"
       renderPreview={({ textMap, imageMap, selectedSlotId, onSelectSlot, responsiveMode }) => (

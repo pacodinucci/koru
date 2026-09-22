@@ -21,6 +21,22 @@ export const quienesSomosContentSlotIds = {
   facilitiesBody: "content.quienes-somos.facilities.body",
 } as const;
 
+export const facilityCaptionSlotId = (index: number) =>
+  `content.quienes-somos.facilities.image.${index}.caption`;
+
+const facilityCaptions = [
+  "Instalaciones Koru.",
+  "Espacios para explorar, crear y convivir.",
+  "Ambientes pensados para aprender en comunidad.",
+  "Rincones vivos para el aprendizaje cotidiano.",
+  "Espacios que acompañan distintas formas de aprender.",
+  "Entornos cálidos para compartir y descubrir.",
+  "Lugares para el encuentro y la colaboración.",
+  "Instalaciones integradas a la vida de la comunidad.",
+  "",
+  "",
+];
+
 export const hardcodedQuienesSomosContentSlots: LandingContentSlot[] = [
   {
     id: quienesSomosContentSlotIds.heroEyebrow,
@@ -171,6 +187,14 @@ export const hardcodedQuienesSomosContentSlots: LandingContentSlot[] = [
     multiline: true,
     styleControls: ["font", "size", "color", "align", "lineHeight"],
   },
+  ...facilityCaptions.map((caption, index) => ({
+    id: facilityCaptionSlotId(index),
+    label: `Instalaciones / Imagen ${index + 1} / Texto`,
+    selectorLabel: `Instalaciones ${index + 1} / Texto`,
+    defaultValue: caption,
+    defaultSize: 14,
+    styleControls: ["font", "size", "color", "weight"] as LandingContentSlot["styleControls"],
+  })),
 ];
 
 export function getQuienesSomosContentSlots() {
