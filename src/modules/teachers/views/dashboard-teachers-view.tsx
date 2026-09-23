@@ -1,3 +1,5 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TeacherInvitationImport } from "@/modules/teachers/components/teacher-invitation-import";
 import { DashboardTeachersClient } from "@/modules/teachers/components/dashboard-teachers-client";
 import { listStudentGroups } from "@/modules/students/server/students.repository";
 import { countStudentsFromGroupResponsibilities } from "@/modules/teachers/lib/group-student-count";
@@ -17,6 +19,8 @@ export async function DashboardTeachersView() {
         email: teacher.email,
         phone: teacher.phone,
         bio: teacher.bio,
+        position: teacher.position,
+        organizationGroup: teacher.organizationGroup ?? teacher.pendingOrganizationGroup,
         isActive: teacher.isActive,
         user: teacher.user,
         groups: teacher.groupResponsibilities.map((responsibility) => responsibility.group),

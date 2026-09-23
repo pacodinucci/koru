@@ -15,6 +15,7 @@ import "@fontsource/fira-sans/700.css";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ToastProvider } from "@/components/ui/toast";
+import { WhatsAppFloatingButton } from "@/components/whatsapp-floating-button";
 
 import "./globals.css";
 
@@ -79,9 +80,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ToastProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            {children}
+            <WhatsAppFloatingButton />
+          </TooltipProvider>
         </ToastProvider>
       </body>
     </html>
   );
 }
+

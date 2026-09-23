@@ -56,7 +56,7 @@ export async function reconcileUserInvitationAfterSignup(email: string, token: s
     if (!user) throw new Error("user_not_found");
     const invitation = await tx.userInvitation.findUnique({
       where: { email: normalizedEmail },
-      select: { id: true, role: true, accessRoleId: true, familyId: true, status: true, tokenHash: true, expiresAt: true, acceptedAt: true },
+      select: { id: true, role: true, accessRoleId: true, familyId: true, teacherName: true, teacherPosition: true, teacherGroup: true, teacherGroupMatched: true, status: true, tokenHash: true, expiresAt: true, acceptedAt: true },
     });
     if (!invitation || invitation.status !== InvitationStatus.PENDING || !invitation.tokenHash || !invitation.expiresAt || invitation.expiresAt <= new Date() || invitation.tokenHash !== hashInvitationToken(token)) {
       throw new Error("invitation_not_available");
@@ -141,7 +141,7 @@ async function requireFamilyForInvitation(familyId?: string) {
   if (!family) throw new Error("family_not_found");
 }
 
-export async function createUserInvitation({ email, accessRoleId, familyId, invitedById }: CreateUserInvitationInput) {
+export async function createUserInvitation({ email, accessRoleId, familyId, invitedById, teacherName, teacherPosition, teacherGroup, teacherGroupMatched = false }: CreateUserInvitationInput) {
   const accessRole = await requireActiveRole(accessRoleId);
   const role = accessRole.baseRole;
   const normalizedEmail = normalizeInvitationEmail(email);
@@ -264,4 +264,3 @@ export async function deleteUserForAdmin({ userId, adminId }: DeleteUserForAdmin
   }
   return prisma.user.delete({ where: { id: userId }, select: { id: true } });
 }
-

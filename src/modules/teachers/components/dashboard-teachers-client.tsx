@@ -36,6 +36,8 @@ type Teacher = {
   email: string | null;
   phone: string | null;
   bio: string | null;
+  position: string | null;
+  organizationGroup: string | null;
   isActive: boolean;
   user: { id: string; name: string; email: string; role: string } | null;
   groups: StudentGroup[];
@@ -51,6 +53,8 @@ const emptyValues: TeacherFormInput = {
   id: "",
   phone: "",
   bio: "",
+  position: "",
+  organizationGroup: "",
   isActive: true,
   groupIds: [],
 };
@@ -96,6 +100,8 @@ export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersC
       id: teacher.id,
       phone: teacher.phone ?? "",
       bio: teacher.bio ?? "",
+      position: teacher.position ?? "",
+      organizationGroup: teacher.organizationGroup ?? "",
       isActive: teacher.isActive,
       groupIds: teacher.groups.map((group) => group.id),
     });
@@ -222,6 +228,8 @@ export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersC
                       </FormItem>
                     )}
                   />
+                  <FormField control={form.control} name="position" render={({ field }) => (<FormItem><FormLabel>Puesto</FormLabel><FormControl><Input placeholder="Puesto" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="organizationGroup" render={({ field }) => (<FormItem><FormLabel>Grupo</FormLabel><FormControl><Input placeholder="Asignar grupo" {...field} /></FormControl><FormMessage /></FormItem>)} />
                   <FormField
                     control={form.control}
                     name="bio"

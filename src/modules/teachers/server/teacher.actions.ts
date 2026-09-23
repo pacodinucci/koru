@@ -1,8 +1,8 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 
-import { requirePermission } from "@/modules/auth/server/auth-guards";
+import { requireRole } from "@/modules/auth/server/auth-guards";
 import { teacherFormSchema, type TeacherFormInput } from "@/modules/teachers/schemas/teacher.schema";
 import {
   listTeacherProfilesForAdmin,
@@ -10,12 +10,12 @@ import {
 } from "@/modules/teachers/server/teachers.repository";
 
 export async function listTeacherProfilesForAdminAction() {
-  await requirePermission("teachers.manage");
+  await requireRole(["SUPERADMIN"]);
   return listTeacherProfilesForAdmin();
 }
 
 export async function updateTeacherProfileAction(input: TeacherFormInput) {
-  await requirePermission("teachers.manage");
+  await requireRole(["SUPERADMIN"]);
   const parsed = teacherFormSchema.safeParse(input);
 
   if (!parsed.success) {

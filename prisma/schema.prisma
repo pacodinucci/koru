@@ -524,6 +524,10 @@ model UserInvitation {
   accessRoleId String?
   accessRole   Role?            @relation(fields: [accessRoleId], references: [id], onDelete: SetNull)
   familyId    String?
+  teacherName String?
+  teacherPosition String?
+  teacherGroup String?
+  teacherGroupMatched Boolean @default(false)
   family      Family?          @relation(fields: [familyId], references: [id], onDelete: SetNull)
   status      InvitationStatus @default(PENDING)
   tokenHash   String?
@@ -761,6 +765,9 @@ model TeacherProfile {
   email                 String?
   phone                 String?
   bio                   String?
+  position              String?
+  organizationGroup     String?
+  pendingOrganizationGroup String?
   isActive              Boolean               @default(true)
   groupResponsibilities StudentGroupTeacher[]
   exams                 Exam[]

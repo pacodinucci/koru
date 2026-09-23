@@ -1,10 +1,11 @@
 import "server-only";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { UserRole } from "@prisma/client";
 import {
   legacyRolePermissions,
   type PermissionKey,
@@ -13,6 +14,9 @@ import {
   isAdminRole,
   type AppUserRole,
 } from "@/modules/auth/roles";
+
+export const DEVELOPMENT_VIEW_COOKIE = "koru-development-view";
+const DEVELOPMENT_VIEWER_EMAIL = "franciscoldinucci@gmail.com";
 
 export type AuthenticatedUser = {
   id: string;
@@ -46,7 +50,15 @@ export async function requireSession(redirectTo = "/sign-in") {
   return session;
 }
 
-export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+export function isDevelopmentViewController(user: AuthenticatedUser) {
+  return process.env.NODE_ENV !== "production" && user.email.trim().toLowerCase() === DEVELOPMENT_VIEWER_EMAIL;
+}
+
+export async function getDevelopmentViewTargetId() {
+  return (await cookies()).get(DEVELOPMENT_VIEW_COOKIE)?.value ?? null;
+}
+
+export async function getActualAuthenticatedUser(): Promise<AuthenticatedUser | null> {
   const session = await getSession();
   const email = normalizeEmail(session?.user?.email);
 
@@ -78,6 +90,13 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
 
   if (!user) return null;
 
+  return authenticatedUserFromRecord(user);
+}
+
+function authenticatedUserFromRecord(user: {
+  id: string; name: string; email: string; role: AppUserRole; familyId: string | null; accessRoleId: string | null;
+  accessRole: { name: string; key: string; isActive: boolean; permissions: Array<{ permission: { key: string } }> } | null;
+}): AuthenticatedUser {
   const assignedPermissionKeys =
     user.accessRole?.isActive
       ? user.accessRole.permissions.map(({ permission }) => permission.key as PermissionKey)
@@ -103,6 +122,21 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
     accessRoleKey: user.accessRole?.key ?? null,
     permissionKeys,
   };
+}
+
+export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+  const actualUser = await getActualAuthenticatedUser();
+  if (!actualUser || !isDevelopmentViewController(actualUser)) return actualUser;
+
+  const targetUserId = await getDevelopmentViewTargetId();
+  if (!targetUserId) return actualUser;
+
+  const target = await prisma.user.findFirst({
+    where: { id: targetUserId, OR: [{ role: UserRole.PARENT, familyId: { not: null } }, { role: { in: [UserRole.TEACHER, UserRole.ADMIN_TEACHER] }, teacherProfile: { is: { isActive: true } } }] },
+    select: { id: true, name: true, email: true, role: true, familyId: true, accessRoleId: true, accessRole: { select: { name: true, key: true, isActive: true, permissions: { select: { permission: { select: { key: true } } } } } } },
+  });
+
+  return target ? authenticatedUserFromRecord(target) : actualUser;
 }
 
 export async function requireUser(redirectTo = "/sign-in") {

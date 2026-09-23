@@ -1,7 +1,45 @@
-﻿import "server-only";
+import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import type { TeacherFormInput } from "@/modules/teachers/schemas/teacher.schema";
+export async function listTeacherHomeData(userId: string) {
+  const teacher = await prisma.teacherProfile.findUnique({
+    where: { userId },
+    select: { id: true, isActive: true },
+  });
+
+  if (!teacher?.isActive) return { groups: [], students: [] };
+
+  const groupWhere = {
+    isActive: true,
+    teacherResponsibilities: { some: { teacherId: teacher.id } },
+  };
+
+  const [groups, students] = await Promise.all([
+    prisma.studentGroup.findMany({
+      where: groupWhere,
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        ageRange: true,
+        _count: { select: { students: { where: { status: "ACTIVE" } } } },
+      },
+    }),
+    prisma.student.findMany({
+      where: { status: "ACTIVE", group: groupWhere },
+      orderBy: [{ group: { sortOrder: "asc" } }, { lastName: "asc" }, { firstName: "asc" }],
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        group: { select: { name: true } },
+      },
+    }),
+  ]);
+
+  return { groups, students };
+}
 
 export async function listTeacherProfilesForAdmin() {
   return prisma.teacherProfile.findMany({
@@ -11,6 +49,7 @@ export async function listTeacherProfilesForAdmin() {
     },
     orderBy: [{ isActive: "desc" }, { displayName: "asc" }],
     include: {
+      position: true, organizationGroup: true, pendingOrganizationGroup: true,
       user: { select: { id: true, name: true, email: true, role: true } },
       groupResponsibilities: {
         orderBy: { group: { sortOrder: "asc" } },
@@ -51,6 +90,9 @@ export async function updateTeacherProfileForAdmin(input: TeacherFormInput) {
       data: {
         phone: input.phone || null,
         bio: input.bio || null,
+        position: input.position || null,
+        organizationGroup: input.organizationGroup || null,
+        pendingOrganizationGroup: input.organizationGroup ? null : undefined,
         isActive: input.isActive,
         groupResponsibilities: {
           deleteMany: {},

@@ -1,0 +1,437 @@
+
+> koru@0.1.0 dev
+> next dev
+
+[32m✔[0m [33mConsole Ninja[0m extension is connected to [33mNext.js[0m, see [36mhttps://tinyurl.com/2vt8jxzw[0m
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.7:3000
+- Environments: .env
+✓ Ready in 48s
+Creating turbopack project {
+  dir: 'C:\\Users\\franc\\OneDrive\\Escritorio\\Proyectos\\koru',
+  testMode: true
+}
+
+○ Compiling /dashboard/teachers ...
+
+[2m[0.76ms][22m [@tailwindcss/postcss] node_modules\@fontsource\fira-sans\700.css
+[2m[0.71ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.07ms][22m [@tailwindcss/postcss] node_modules\@fontsource\fira-sans\600.css
+[2m[0.05ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.09ms][22m [@tailwindcss/postcss] node_modules\@fontsource\fira-sans\400.css
+[2m[0.05ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[1.32ms][22m [@tailwindcss/postcss] node_modules\@fontsource\fira-sans\500.css
+[2m[1.14ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.08ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-info-created-at.module.css
+[2m[0.06ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.08ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-media.module.css
+[2m[0.05ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.05ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-container.module.css
+[2m[0.03ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.24ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-media-video.module.css
+[2m[0.13ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.09ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\theme.css
+[2m[0.08ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.09ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-header.module.css
+[2m[0.08ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.03ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\quoted-tweet\quoted-tweet-container.module.css
+[2m[0.02ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.04ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\icons\icons.module.css
+[2m[0.03ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.03ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-link.module.css
+[2m[0.02ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.02ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-skeleton.module.css
+[2m[0.01ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.03ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-info.module.css
+[2m[0.03ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.02ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\quoted-tweet\quoted-tweet-body.module.css
+[2m[0.02ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.05ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\skeleton.module.css
+[2m[0.04ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.02ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-in-reply-to.module.css
+[2m[0.02ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.02ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-body.module.css
+[2m[0.01ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.02ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-not-found.module.css
+[2m[0.01ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.04ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\quoted-tweet\quoted-tweet-header.module.css
+[2m[0.03ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.07ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-actions.module.css
+[2m[0.06ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.02ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\highlighted-label.module.css
+[2m[0.02ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.04ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\tweet-replies.module.css
+[2m[0.03ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[0.02ms][22m [@tailwindcss/postcss] node_modules\react-tweet\dist\twitter-theme\verified-badge.module.css
+[2m[0.02ms][22m  [2m ↳ [22mQuick bail check
+
+
+[2m[6685.17ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[   0.02ms][22m  [2m ↳ [22mQuick bail check
+[2m[1570.56ms][22m  [2m ↳ [22mSetup compiler
+[2m[   1.97ms][22m    [2m ↳ [22mPostCSS AST -> Tailwind CSS AST
+[2m[1568.47ms][22m    [2m ↳ [22mCreate compiler
+[2m[   0.92ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[ 989.01ms][22m  [2m ↳ [22mSetup scanner
+[2m[2535.47ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 337.35ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 938.49ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 192.90ms][22m  [2m ↳ [22mTransform Tailwind CSS AST into PostCSS AST
+[2m[ 118.06ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+
+[2m[1220.44ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[   0.02ms][22m  [2m ↳ [22mQuick bail check
+[2m[   0.73ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[1150.15ms][22m  [2m ↳ [22mScan for candidates
+[2m[  30.21ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[   5.70ms][22m  [2m ↳ [22mBuild utilities
+[2m[  32.84ms][22m  [2m ↳ [22mUpdate PostCSS AST
+
+⨯ Error [PrismaClientValidationError]: 
+Invalid `{imported module ./src/lib/prisma.ts}["prisma"].teacherProfile.findMany()` invocation in
+C:\Users\franc\OneDrive\Escritorio\Proyectos\koru\.next\dev\server\chunks\ssr\_0p4fw3j._.js:3056:154
+
+  3053     };
+  3054 }
+  3055 async function listTeacherProfilesForAdmin() {
+→ 3056     return {imported module ./src/lib/prisma.ts}["prisma"].teacherProfile.findMany({
+             where: {
+               isActive: true,
+               user: {
+                 is: {
+                   role: {
+                     in: [
+                       "TEACHER",
+                       "ADMIN_TEACHER"
+                     ]
+                   }
+                 }
+               }
+             },
+             orderBy: [
+               {
+                 isActive: "desc"
+               },
+               {
+                 displayName: "asc"
+               }
+             ],
+             include: {
+               position: true,
+               ~~~~~~~~
+               organizationGroup: true,
+               pendingOrganizationGroup: true,
+               user: {
+                 select: {
+                   id: true,
+                   name: true,
+                   email: true,
+                   role: true
+                 }
+               },
+               groupResponsibilities: {
+                 orderBy: {
+                   group: {
+                     sortOrder: "asc"
+                   }
+                 },
+                 include: {
+                   group: {
+                     select: {
+                       id: true,
+                       name: true,
+                       ageRange: true,
+                       students: {
+                         where: {
+                           status: "ACTIVE"
+                         },
+                         select: {
+                           id: true
+                         }
+                       }
+                     }
+                   }
+                 }
+               },
+           ?   exams?: true,
+           ?   cashFundBudget?: true,
+           ?   cashFundEntries?: true,
+           ?   cashExpenseReports?: true,
+           ?   inventoryRequests?: true
+             }
+           })
+
+Unknown field `position` for include statement on model `TeacherProfile`. Available options are marked with ?.
+    at <unknown> (src\modules\teachers\server\teachers.repository.ts:45:32)
+    at async DashboardTeachersView (src\modules\teachers\views\dashboard-teachers-view.tsx:9:30)
+  43 |
+  44 | export async function listTeacherProfilesForAdmin() {
+> 45 |   return prisma.teacherProfile.findMany({
+     |                                ^
+  46 |     where: {
+  47 |       isActive: true,
+  48 |       user: { is: { role: { in: ["TEACHER", "ADMIN_TEACHER"] } } }, {
+  clientVersion: '7.5.0',
+  digest: '1158030715'
+}
+Image with src "https://res.cloudinary.com/trsbzk8f/image/upload/v1788474631/koru/cms/ajjpc8lmutm0i89vcryo.webp" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "https://res.cloudinary.com/trsbzk8f/image/upload/v1789256005/koru/cms/jvwhaz6wj2qeaeecwctm.webp" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "https://res.cloudinary.com/trsbzk8f/image/upload/v1790024048/koru/cms/wth1irqolhmtvommpw1v.webp" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+Image with src "https://res.cloudinary.com/trsbzk8f/image/upload/v1790023988/koru/cms/xoetvd98clhosktmtbqb.webp" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+ GET / 200 in 48s (next.js: 13.5s, application-code: 34.6s)
+[browser] Image with src "https://res.cloudinary.com/trsbzk8f/image/upload/v1788474631/koru/cms/ajjpc8lmutm0i89vcryo.webp" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "https://res.cloudinary.com/trsbzk8f/image/upload/v1789256005/koru/cms/jvwhaz6wj2qeaeecwctm.webp" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "https://res.cloudinary.com/trsbzk8f/image/upload/v1790024048/koru/cms/wth1irqolhmtvommpw1v.webp" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "https://res.cloudinary.com/trsbzk8f/image/upload/v1790023988/koru/cms/xoetvd98clhosktmtbqb.webp" is using quality "70" which is not configured in images.qualities [75]. Please update your config to [70, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+✓ Finished writing to filesystem cache in 28.3s
+ GET /documentos/landing-video 307 in 25.3s (next.js: 23.7s, application-code: 1559ms)
+✓ Finished filesystem cache database compaction in 34.3s
+[browser] Image with src "/branding/koru-logo.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[browser] Image with src "/assets/images/DSC01443.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+ GET /dashboard 200 in 9.1s (next.js: 3.2s, application-code: 5.9s)
+ GET /dashboard/administracion 200 in 4.6s (next.js: 494ms, application-code: 4.1s)
+ GET /dashboard/administracion 200 in 3.7s (next.js: 22ms, application-code: 3.7s)
+ GET /api/development/view 200 in 3.6s (next.js: 1954ms, application-code: 1630ms)
+ GET /api/development/view 200 in 3.6s (next.js: 1994ms, application-code: 1598ms)
+✓ Finished filesystem cache database compaction in 35.1s
+⨯ Error [PrismaClientValidationError]: 
+Invalid `{imported module ./src/lib/prisma.ts}["prisma"].teacherProfile.findMany()` invocation in
+C:\Users\franc\OneDrive\Escritorio\Proyectos\koru\.next\dev\server\chunks\ssr\_0p4fw3j._.js:3056:154
+
+  3053     };
+  3054 }
+  3055 async function listTeacherProfilesForAdmin() {
+→ 3056     return {imported module ./src/lib/prisma.ts}["prisma"].teacherProfile.findMany({
+             where: {
+               isActive: true,
+               user: {
+                 is: {
+                   role: {
+                     in: [
+                       "TEACHER",
+                       "ADMIN_TEACHER"
+                     ]
+                   }
+                 }
+               }
+             },
+             orderBy: [
+               {
+                 isActive: "desc"
+               },
+               {
+                 displayName: "asc"
+               }
+             ],
+             include: {
+               position: true,
+               ~~~~~~~~
+               organizationGroup: true,
+               pendingOrganizationGroup: true,
+               user: {
+                 select: {
+                   id: true,
+                   name: true,
+                   email: true,
+                   role: true
+                 }
+               },
+               groupResponsibilities: {
+                 orderBy: {
+                   group: {
+                     sortOrder: "asc"
+                   }
+                 },
+                 include: {
+                   group: {
+                     select: {
+                       id: true,
+                       name: true,
+                       ageRange: true,
+                       students: {
+                         where: {
+                           status: "ACTIVE"
+                         },
+                         select: {
+                           id: true
+                         }
+                       }
+                     }
+                   }
+                 }
+               },
+           ?   exams?: true,
+           ?   cashFundBudget?: true,
+           ?   cashFundEntries?: true,
+           ?   cashExpenseReports?: true,
+           ?   inventoryRequests?: true
+             }
+           })
+
+Unknown field `position` for include statement on model `TeacherProfile`. Available options are marked with ?.
+    at <unknown> (src\modules\teachers\server\teachers.repository.ts:45:32)
+    at async DashboardTeachersView (src\modules\teachers\views\dashboard-teachers-view.tsx:9:30)
+  43 |
+  44 | export async function listTeacherProfilesForAdmin() {
+> 45 |   return prisma.teacherProfile.findMany({
+     |                                ^
+  46 |     where: {
+  47 |       isActive: true,
+  48 |       user: { is: { role: { in: ["TEACHER", "ADMIN_TEACHER"] } } }, {
+  clientVersion: '7.5.0',
+  digest: '1158030715'
+}
+ GET /dashboard/teachers 200 in 3.4s (next.js: 24ms, application-code: 3.3s)
+[browser] Uncaught PrismaClientValidationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].teacherProfile.findMany()` invocation in
+C:\Users\franc\OneDrive\Escritorio\Proyectos\koru\.next\dev\server\chunks\ssr\_0p4fw3j._.js:3056:154
+
+  3053     };
+  3054 }
+  3055 async function listTeacherProfilesForAdmin() {
+→ 3056     return __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].teacherProfile.findMany({
+             where: {
+               isActive: true,
+               user: {
+                 is: {
+                   role: {
+                     in: [
+                       "TEACHER",
+                       "ADMIN_TEACHER"
+                     ]
+                   }
+                 }
+               }
+             },
+             orderBy: [
+               {
+                 isActive: "desc"
+               },
+               {
+                 displayName: "asc"
+               }
+             ],
+             include: {
+               position: true,
+               ~~~~~~~~
+               organizationGroup: true,
+               pendingOrganizationGroup: true,
+               user: {
+                 select: {
+                   id: true,
+                   name: true,
+                   email: true,
+                   role: true
+                 }
+               },
+               groupResponsibilities: {
+                 orderBy: {
+                   group: {
+                     sortOrder: "asc"
+                   }
+                 },
+                 include: {
+                   group: {
+                     select: {
+                       id: true,
+                       name: true,
+                       ageRange: true,
+                       students: {
+                         where: {
+                           status: "ACTIVE"
+                         },
+                         select: {
+                           id: true
+                         }
+                       }
+                     }
+                   }
+                 }
+               },
+           ?   exams?: true,
+           ?   cashFundBudget?: true,
+           ?   cashFundEntries?: true,
+           ?   cashExpenseReports?: true,
+           ?   inventoryRequests?: true
+             }
+           })
+
+Unknown field `position` for include statement on model `TeacherProfile`. Available options are marked with ?.
+    at <unknown> (src\modules\teachers\server\teachers.repository.ts:45:32)
+    at  DashboardTeachersView (src\modules\teachers\views\dashboard-teachers-view.tsx:9:30)
+    at DashboardShell (src/modules/dashboard/components/dashboard-shell.tsx:541:11)
+    at DashboardTeachersPage (src\app\(dashboard)\dashboard\teachers\page.tsx:13:5)
+  43 |
+  44 | export async function listTeacherProfilesForAdmin() {
+> 45 |   return prisma.teacherProfile.findMany({
+     |                                ^
+  46 |     where: {
+  47 |       isActive: true,
+  48 |       user: { is: { role: { in: ["TEACHER", "ADMIN_TEACHER"] } } },
+
+[2m[3759.61ms][22m [@tailwindcss/postcss] src\app\globals.css
+[2m[   0.47ms][22m  [2m ↳ [22mQuick bail check
+[2m[  44.87ms][22m  [2m ↳ [22mRegister full rebuild paths
+[2m[2752.25ms][22m  [2m ↳ [22mScan for candidates
+[2m[ 126.97ms][22m  [2m ↳ [22mRegister dependency messages
+[2m[ 472.33ms][22m  [2m ↳ [22mBuild utilities
+[2m[ 352.37ms][22m  [2m ↳ [22mUpdate PostCSS AST
+

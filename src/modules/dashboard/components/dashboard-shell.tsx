@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   LayoutDashboard,
+  Home,
   FileText,
   FolderOpen,
   NotebookPen,
@@ -25,6 +26,7 @@ import {
 } from "lucide-react";
 
 import { getCmsContentNavigation } from "@/modules/cms/content-page-config";
+import { DevelopmentViewSwitcher } from "@/modules/auth/components/development-view-switcher";
 import { CmsLandingEditor } from "@/modules/dashboard/components/cms-landing-editor";
 import {
   DashboardEditorPanelLayout,
@@ -128,6 +130,7 @@ export function DashboardShell({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentEditorSlug = searchParams.get("slug") ?? "/";
+  const isHomeActive = pathname === "/dashboard";
   const isBlogActive = pathname.startsWith("/dashboard/blog");
   const isCalendarActive = pathname.startsWith("/dashboard/calendar");
   const isUsersActive = pathname.startsWith("/dashboard/users");
@@ -192,6 +195,12 @@ export function DashboardShell({
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton hidden={!can("dashboard.access")} isActive={isHomeActive} className={sidebarMenuButtonClass} render={<Link href="/dashboard" />}>
+                    <Home />
+                    <span>Inicio</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem className="hidden md:block">
                   <SidebarMenuButton
                     hidden={!can("blog.view")}
@@ -452,7 +461,7 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                {can("teachers.view") ? (
+                {isSuperAdmin ? (
                   <>
                     <SidebarMenuItem>
                       <SidebarMenuButton
@@ -591,12 +600,14 @@ function DashboardCanvas({
           </BreadcrumbList>
         </Breadcrumb>
 
+        <div className="ml-auto"><DevelopmentViewSwitcher /></div>
+
         {canUsePanel ? (
           <Button
             type="button"
             variant={open ? "secondary" : "ghost"}
             size="icon-sm"
-            className="ml-auto"
+            className=""
             onClick={() => setOpen(!open)}
           >
             <SlidersHorizontal className="h-4 w-4" />

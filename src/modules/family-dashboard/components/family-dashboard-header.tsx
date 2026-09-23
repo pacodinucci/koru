@@ -1,6 +1,7 @@
 import { Bell, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { DevelopmentViewSwitcher } from "@/modules/auth/components/development-view-switcher";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -17,7 +18,8 @@ export function FamilyDashboardHeader({ title }: FamilyDashboardHeaderProps) {
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input className="pl-9" placeholder="Buscar recursos o mensajes..." />
       </div>
-      <Button variant="ghost" size="icon-sm" className="ml-auto">
+      <div className="ml-auto"><DevelopmentViewSwitcher /></div>
+      <Button variant="ghost" size="icon-sm">
         <Bell />
         <span className="sr-only">Notificaciones</span>
       </Button>

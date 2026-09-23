@@ -1,9 +1,11 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 
 export const teacherFormSchema = z.object({
   id: z.string().min(1),
   phone: z.string().trim().optional(),
   bio: z.string().trim().optional(),
+  position: z.string().trim().optional(),
+  organizationGroup: z.string().trim().optional(),
   isActive: z.boolean(),
   groupIds: z.array(z.string()),
 });
