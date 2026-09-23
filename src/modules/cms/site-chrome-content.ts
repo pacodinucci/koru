@@ -60,7 +60,6 @@ export const siteChromeSlotIds = {
   footerTermsLabel: "site-chrome.footer.terms.label",
   footerTermsHref: "site-chrome.footer.terms.href",
   footerPrivacyLabel: "site-chrome.footer.privacy.label",
-  footerPrivacyHref: "site-chrome.footer.privacy.href",
 } as const;
 
 export const siteChromeNavbarSlots: LandingContentSlot[] = [
@@ -90,7 +89,6 @@ export const siteChromeFooterSlots: LandingContentSlot[] = [
   textSlot(siteChromeSlotIds.footerTermsLabel, "Footer · legales · términos", "Términos y condiciones"),
   textSlot(siteChromeSlotIds.footerTermsHref, "Footer · legales · enlace de términos", "#"),
   textSlot(siteChromeSlotIds.footerPrivacyLabel, "Footer · legales · privacidad", "Privacidad"),
-  textSlot(siteChromeSlotIds.footerPrivacyHref, "Footer · legales · enlace de privacidad", "#"),
 ];
 
 export const siteChromeSlots = [...siteChromeNavbarSlots, ...siteChromeFooterSlots];
