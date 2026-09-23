@@ -49,7 +49,6 @@ export async function listTeacherProfilesForAdmin() {
     },
     orderBy: [{ isActive: "desc" }, { displayName: "asc" }],
     include: {
-      position: true, organizationGroup: true, pendingOrganizationGroup: true,
       user: { select: { id: true, name: true, email: true, role: true } },
       groupResponsibilities: {
         orderBy: { group: { sortOrder: "asc" } },
