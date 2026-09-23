@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { AuthenticatedUser } from "@/modules/auth/server/auth-guards";
@@ -29,7 +29,7 @@ export async function TeacherHomeView({ user }: { user: AuthenticatedUser }) {
       </Card>
 
       <Card id="alumnos">
-        <CardHeader className="flex-row items-center justify-between gap-3"><CardTitle className="text-base">Mis alumnos</CardTitle><Button asChild variant="outline" size="sm"><Link href="/dashboard/exams">Ir a notas</Link></Button></CardHeader>
+        <CardHeader className="flex-row items-center justify-between gap-3"><CardTitle className="text-base">Mis alumnos</CardTitle><Link href="/dashboard/exams" className={buttonVariants({ variant: "outline", size: "sm" })}>Ir a notas</Link></CardHeader>
         <CardContent>
           <Table><TableHeader><TableRow><TableHead>Apellido y nombre</TableHead><TableHead>Curso</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader><TableBody>
             {students.length === 0 ? <TableRow><TableCell colSpan={3} className="text-muted-foreground">No hay alumnos activos en tus cursos.</TableCell></TableRow> : students.map((student) => (
