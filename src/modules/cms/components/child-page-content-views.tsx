@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 
 import { TeamApplicationForm } from "@/app/(pages)/comunidad/team-application-form";
 import { CmsPageEditableCopy } from "@/modules/cms/components/cms-page-editable-copy";
@@ -82,25 +81,10 @@ export function GroupDetailView({
   ...props
 }: ChildViewProps & { group: AccompanimentGroup }) {
   const editable = useEditable(props);
-  const lastExperienceCardRef = useRef<HTMLElement | null>(null);
-  const [isLastExperienceCardVisible, setIsLastExperienceCardVisible] = useState(false);
-
-  useEffect(() => {
-    const lastCard = lastExperienceCardRef.current;
-    if (!lastCard) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsLastExperienceCardVisible(entry.isIntersecting),
-      { threshold: 0.01 },
-    );
-
-    observer.observe(lastCard);
-    return () => observer.disconnect();
-  }, [group.experienceCards.length]);
   return (
     <main className="bg-[#f7f6f1]" style={{ fontFamily: "var(--font-montserrat)" }}>
-      <section className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.95fr)] lg:px-14 lg:py-20">
-        <div className="space-y-7">
+      <section className="mx-auto grid w-full max-w-7xl min-w-0 gap-10 px-6 py-12 md:px-10 md:py-16 xl:grid-cols-[minmax(0,1fr)_17rem] xl:gap-24 xl:px-14 xl:py-20">
+        <div className="min-w-0 space-y-7">
           <Link href="/como-acompanamos#grupos-de-acompanamiento" className="inline-flex text-sm font-semibold uppercase tracking-[0.18em] text-[var(--complement-800)]">
             <CmsPageEditableCopy {...editable} as="span" slotId="group.back" />
           </Link>
@@ -114,7 +98,7 @@ export function GroupDetailView({
             ))}
           </div>
         </div>
-        <div className="relative mx-auto aspect-[4/5] w-full max-w-[24rem] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%] lg:sticky lg:top-28 lg:self-start">
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-[15rem] sm:max-w-[17rem] xl:max-w-[18rem] overflow-hidden rounded-[44%_56%_47%_53%/53%_45%_55%_47%] xl:sticky xl:top-28 xl:self-start">
           <CmsPageEditableImage slotId="group.image.hero" defaultSrc={group.imageSrc} alt={group.imageAlt} imageMap={props.imageMap} previewMode={props.previewMode} selectedContentSlotId={props.selectedContentSlotId} onSelectContentSlot={props.onSelectContentSlot} fill className="object-cover" priority />
         </div>
       </section>
@@ -122,11 +106,8 @@ export function GroupDetailView({
         <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 md:py-20 lg:px-14">
           <div className="mx-auto max-w-5xl">
               <div>
-                <h2 className={`sticky top-28 z-20 mb-8 text-4xl leading-none text-black transition-opacity duration-500 ease-out md:text-5xl ${isLastExperienceCardVisible ? "opacity-0" : "opacity-100"}`} style={{ fontFamily: "var(--font-roboto-condensed)" }}>
-                  Experiencias de aprendizaje
-                </h2>
                 {group.experienceCards.map((card, index) => (
-                  <article key={index} ref={index === group.experienceCards.length - 1 ? lastExperienceCardRef : undefined} className="sticky top-48 mb-[35svh] grid min-h-[34rem] overflow-hidden rounded-[2rem] border border-black/10 bg-[#f7f6f1] shadow-[0_22px_70px_rgba(0,0,0,0.16)] md:grid-cols-2 lg:min-h-[38rem]" style={{ zIndex: index + 1 }}>
+                  <article key={index} className="sticky top-48 mb-[35svh] grid min-h-[34rem] overflow-hidden rounded-[2rem] border border-black/10 bg-[#f7f6f1] shadow-[0_22px_70px_rgba(0,0,0,0.16)] md:grid-cols-2 lg:min-h-[38rem]" style={{ zIndex: index + 1 }}>
                     <div className="flex flex-col justify-center p-7 md:p-10 lg:p-12">
                       <CmsPageEditableCopy {...editable} as="h2" slotId={`group.card.${index}.title`} className="mb-5 text-4xl leading-none text-black md:text-5xl" style={{ fontFamily: "var(--font-roboto-condensed)" }} />
                       <CmsPageEditableCopy {...editable} as="p" slotId={`group.card.${index}.description`} className="text-lg leading-relaxed text-black/80 md:text-xl" />
