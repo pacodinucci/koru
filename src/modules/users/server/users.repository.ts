@@ -17,6 +17,10 @@ export type CreateUserInvitationInput = {
   accessRoleId: string;
   familyId?: string;
   invitedById: string;
+  teacherName?: string;
+  teacherPosition?: string;
+  teacherGroup?: string;
+  teacherGroupMatched?: boolean;
 };
 export type UpdateUserRoleInput = { userId: string; accessRoleId: string };
 export type DeleteUserForAdminInput = { userId: string; adminId: string };
@@ -171,6 +175,10 @@ export async function createUserInvitation({ email, accessRoleId, familyId, invi
       lastSentAt: null,
       invitedById,
       acceptedAt: null,
+      teacherName: isTeacherRole(role) ? teacherName ?? null : null,
+      teacherPosition: isTeacherRole(role) ? teacherPosition ?? null : null,
+      teacherGroup: isTeacherRole(role) ? teacherGroup ?? null : null,
+      teacherGroupMatched: isTeacherRole(role) && teacherGroupMatched,
     };
     const invitation = existing
       ? await tx.userInvitation.update({ where: { id: existing.id }, data, include: { family: { select: { name: true } } } })
