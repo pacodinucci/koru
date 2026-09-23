@@ -106,7 +106,7 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
   const [saveError, setSaveError] = useState("");
 
   async function handleSubmit(submitEvent: FormEvent<HTMLFormElement>) {
-    const submitter = submitEvent.nativeEvent.submitter as HTMLButtonElement | null;
+    const submitter = (submitEvent.nativeEvent as SubmitEvent).submitter;
     if (submitter?.dataset.serverAction === "true") return;
 
     submitEvent.preventDefault();
