@@ -105,9 +105,10 @@ export function GroupDetailView({
       <section className="bg-white">
         <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 md:py-20 lg:px-14">
           <div className="mx-auto max-w-5xl">
+            <h2 className="mb-12 text-center text-4xl leading-none text-black md:text-5xl" style={{ fontFamily: "var(--font-roboto-condensed)" }}>Experiencias de aprendizaje</h2>
               <div>
                 {group.experienceCards.map((card, index) => (
-                  <article key={index} className="sticky top-48 mb-[35svh] grid min-h-[34rem] overflow-hidden rounded-[2rem] border border-black/10 bg-[#f7f6f1] shadow-[0_22px_70px_rgba(0,0,0,0.16)] md:grid-cols-2 lg:min-h-[38rem]" style={{ zIndex: index + 1 }}>
+                  <article key={index} className="relative mb-10 grid min-h-[34rem] overflow-hidden rounded-[2rem] border border-black/10 bg-[#f7f6f1] shadow-[0_22px_70px_rgba(0,0,0,0.16)] md:mb-16 md:grid-cols-2 lg:sticky lg:top-[max(2rem,calc((100svh-38rem)/2))] lg:mb-[35svh] lg:h-[min(38rem,calc(100svh-4rem))] lg:min-h-0 [@media(min-width:1024px)_and_(max-height:37rem)]:static [@media(min-width:1024px)_and_(max-height:37rem)]:h-auto [@media(min-width:1024px)_and_(max-height:37rem)]:min-h-[34rem]" style={{ zIndex: index + 1 }}>
                     <div className="flex flex-col justify-center p-7 md:p-10 lg:p-12">
                       <CmsPageEditableCopy {...editable} as="h2" slotId={`group.card.${index}.title`} className="mb-5 text-4xl leading-none text-black md:text-5xl" style={{ fontFamily: "var(--font-roboto-condensed)" }} />
                       <CmsPageEditableCopy {...editable} as="p" slotId={`group.card.${index}.description`} className="text-lg leading-relaxed text-black/80 md:text-xl" />
