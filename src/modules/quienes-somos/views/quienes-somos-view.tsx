@@ -410,16 +410,16 @@ function TeamSection({
           })}
         </div>
         {selectedMemberIndex !== null ? (
-          <div className={previewMode ? "absolute inset-0 z-50 flex items-center justify-center p-6 md:p-10" : "fixed inset-0 z-50 flex items-center justify-center p-6 md:p-10"} role="dialog" aria-modal="true">
+          <div className={previewMode ? "absolute inset-0 z-50 flex items-center justify-center p-6 md:p-10" : "fixed inset-0 z-50 flex items-center justify-center md:p-10"} role="dialog" aria-modal="true">
             <button type="button" className={previewMode ? "absolute inset-0 bg-black/60" : "absolute inset-0 bg-black/70 backdrop-blur-sm"} aria-label="Cerrar perfil" onClick={() => setSelectedMemberIndex(null)} />
-            <article className="relative z-10 aspect-[4/5] w-full max-w-md overflow-hidden bg-black shadow-2xl animate-in fade-in zoom-in-75 duration-500">
+            <article className={previewMode ? "relative z-10 aspect-[4/5] w-full max-w-md overflow-hidden bg-black shadow-2xl animate-in fade-in zoom-in-75 duration-500" : "relative z-10 h-dvh w-full overflow-hidden bg-black shadow-2xl animate-in fade-in zoom-in-75 duration-500 md:aspect-[4/5] md:h-auto md:max-w-md"}>
               {teamMembers[selectedMemberIndex].imageSrc || imageMap?.["about.image.team." + selectedMemberIndex] ? (
                 <CmsPageEditableImage slotId={"about.image.team." + selectedMemberIndex} defaultSrc={teamMembers[selectedMemberIndex].imageSrc ?? ""} alt={teamMembers[selectedMemberIndex].name + ", " + teamMembers[selectedMemberIndex].role} imageMap={imageMap} previewMode={false} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} fill sizes="(min-width: 768px) 90vw, 448px" className="object-cover" lockFrame />
               ) : (
                 <div className="flex h-full items-center justify-center bg-[#f3d889] text-8xl font-semibold text-slate-950/80">{getInitials(teamMembers[selectedMemberIndex].name)}</div>
               )}
               <button type="button" onClick={() => setSelectedMemberIndex(null)} className="absolute top-5 z-20 flex h-10 w-10 items-center justify-center text-3xl leading-none text-white transition-opacity hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" style={{ right: "1.25rem", left: "auto" }} aria-label="Cerrar perfil">×</button>
-              <div className="absolute inset-x-0 bottom-0 z-10 p-7 text-white" style={{ background: "linear-gradient(to top, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.82) 48%, rgba(0, 0, 0, 0) 100%)" }}>
+              <div className="absolute inset-x-0 bottom-0 z-10 max-h-full overflow-y-auto p-7 pb-[calc(1.75rem+env(safe-area-inset-bottom))] text-white md:pb-7" style={{ background: "linear-gradient(to top, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.82) 48%, rgba(0, 0, 0, 0) 100%)" }}>
                 <EditableCopy as="h3" slotId={"content.quienes-somos.team.member." + selectedMemberIndex + ".name"} textMap={textMap} previewMode={previewMode} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} className="text-5xl leading-none" style={{ fontFamily: "var(--font-roboto-condensed)" }} />
                 <EditableCopy as="p" slotId={"content.quienes-somos.team.member." + selectedMemberIndex + ".role"} textMap={textMap} previewMode={previewMode} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} className="mt-3 text-sm font-medium uppercase tracking-[0.14em] text-white/80" />
                 <EditableCopy as="p" slotId={"content.quienes-somos.team.member." + selectedMemberIndex + ".detail"} textMap={textMap} previewMode={previewMode} selectedContentSlotId={selectedContentSlotId} onSelectContentSlot={onSelectContentSlot} className="mt-5 border-t border-white/30 pt-5 text-base leading-relaxed text-white/90" />
