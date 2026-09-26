@@ -140,6 +140,7 @@ export function DashboardShell({
   const isFamiliesActive = pathname.startsWith("/dashboard/families");
   const isTeachersActive = pathname.startsWith("/dashboard/teachers");
   const isExamsActive = pathname.startsWith("/dashboard/exams");
+  const isReportsActive = pathname.startsWith("/dashboard/reportes");
   const isLayoutActive = pathname.startsWith("/dashboard/diseno");
   const isContentActive = pathname.startsWith("/dashboard/content");
   const isDocumentsActive = pathname.startsWith("/dashboard/documentos");
@@ -460,6 +461,19 @@ export function DashboardShell({
                     <span>Notas</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+
+                {(userRole === "TEACHER" || userRole === "ADMIN_TEACHER") ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isReportsActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/reportes" />}
+                    >
+                      <FileText />
+                      <span>Reportes</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
 
                 {isSuperAdmin ? (
                   <>

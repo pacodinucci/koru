@@ -770,6 +770,7 @@ model TeacherProfile {
   pendingOrganizationGroup String?
   isActive              Boolean               @default(true)
   groupResponsibilities StudentGroupTeacher[]
+  studentReports        StudentReport[]
   exams                 Exam[]
   cashFundBudget          CashFundBudget?
   cashFundEntries         CashFundEntry[] @relation("LegacyCashFundEntries")
@@ -817,6 +818,7 @@ model Student {
   responsibles      StudentResponsible[]
   guardians         StudentGuardian[]
   examGrades        ExamGrade[]
+  reports           StudentReport[]
   createdAt         DateTime               @default(now())
   updatedAt         DateTime               @updatedAt
 
@@ -826,6 +828,28 @@ model Student {
   @@index([lastName, firstName])
   @@index([familyId])
   @@unique([familyId, identityKey])
+}
+
+enum StudentReportType {
+  TEXT
+  PDF
+}
+
+model StudentReport {
+  id                 String            @id @default(cuid())
+  studentId          String
+  student            Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId          String
+  teacher            TeacherProfile    @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  type               StudentReportType
+  title              String
+  body               String?
+  cloudinaryPublicId String?
+  fileName           String?
+  createdAt          DateTime          @default(now())
+
+  @@index([studentId, createdAt])
+  @@index([teacherId])
 }
 
 model StudentAddress {

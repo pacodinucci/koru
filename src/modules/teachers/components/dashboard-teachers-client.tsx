@@ -129,8 +129,7 @@ export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersC
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
-            Los docentes se crean asignando el rol <span className="font-medium text-slate-700">Docente</span> desde Usuarios.
-            Esta pantalla gestiona el perfil extendido y los grupos responsables.
+            Invitá docentes desde esta pantalla. Una vez que creen su cuenta, podés editar su perfil y asignarles grupos responsables.
           </div>
           <Table>
             <TableHeader>

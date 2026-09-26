@@ -92,10 +92,18 @@ export async function reconcileUserInvitationAfterSignup(email: string, token: s
     }
 
     if (isTeacherRole(invitation.role)) {
+      const teacherProfile = {
+        displayName: invitation.teacherName || user.name || user.email,
+        email: user.email,
+        position: invitation.teacherPosition,
+        organizationGroup: invitation.teacherGroupMatched ? invitation.teacherGroup : null,
+        pendingOrganizationGroup: invitation.teacherGroupMatched ? null : invitation.teacherGroup,
+        isActive: true,
+      };
       await tx.teacherProfile.upsert({
         where: { userId: user.id },
-        create: { userId: user.id, displayName: user.name || user.email, email: user.email, isActive: true },
-        update: { displayName: user.name || user.email, email: user.email, isActive: true },
+        create: { userId: user.id, ...teacherProfile },
+        update: teacherProfile,
       });
     }
     await tx.userInvitation.update({
@@ -196,7 +204,7 @@ export async function createUserInvitation({ email, accessRoleId, familyId, invi
 export async function resendUserInvitation(id: string, invitedById: string) {
   const existing = await prisma.userInvitation.findUnique({
     where: { id },
-    select: { email: true, accessRoleId: true, familyId: true, status: true },
+    select: { email: true, accessRoleId: true, familyId: true, status: true, teacherName: true, teacherPosition: true, teacherGroup: true, teacherGroupMatched: true },
   });
   if (!existing || existing.status !== InvitationStatus.PENDING || !existing.accessRoleId) {
     throw new Error("invitation_not_resendable");
@@ -206,6 +214,10 @@ export async function resendUserInvitation(id: string, invitedById: string) {
     accessRoleId: existing.accessRoleId,
     familyId: existing.familyId ?? undefined,
     invitedById,
+    teacherName: existing.teacherName ?? undefined,
+    teacherPosition: existing.teacherPosition ?? undefined,
+    teacherGroup: existing.teacherGroup ?? undefined,
+    teacherGroupMatched: existing.teacherGroupMatched,
   });
 }
 
