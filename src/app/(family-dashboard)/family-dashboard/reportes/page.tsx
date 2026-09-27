@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { FamilyDashboardHeader } from "@/modules/family-dashboard/components/family-dashboard-header";
 import { FamilySidebar } from "@/modules/family-dashboard/components/family-sidebar";
 import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/family-dashboard-access";
+import { StudentReportBody } from "@/modules/teachers/components/student-report-body";
 
 export default async function FamilyReportsPage() {
   const { viewer, familyUser } = await requireFamilyDashboardAccess();
@@ -45,10 +46,10 @@ export default async function FamilyReportsPage() {
               <CardContent className="space-y-3">
                 {!student.reports.length ? <p className="text-sm text-muted-foreground">Todavía no hay reportes para este alumno.</p> : student.reports.map((report) => (
                   <article key={report.id} className="rounded-lg border p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-medium">{report.title}</h2><Badge variant="outline">{report.type === "PDF" ? "PDF" : "Texto"}</Badge></div>
+                    <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-medium">{report.title}</h2><Badge variant="outline">{report.type === "TEXT" ? "Texto" : report.type}</Badge></div>
                     <p className="mt-1 text-xs text-muted-foreground">{report.teacher.displayName} · {report.createdAt.toLocaleDateString("es-AR")}</p>
-                    {report.type === "TEXT" ? <p className="mt-3 whitespace-pre-wrap text-sm">{report.body}</p> : (
-                      <a className="mt-3 inline-flex items-center gap-1 text-sm text-primary underline" href={`/api/student-reports/${report.id}/download`} target="_blank" rel="noopener noreferrer"><FileText className="size-4" /> Abrir {report.fileName || "PDF"}</a>
+                    {report.type === "TEXT" ? <StudentReportBody body={report.body} /> : (
+                      <a className="mt-3 inline-flex items-center gap-1 text-sm text-primary underline" href={`/api/student-reports/${report.id}/download`} target="_blank" rel="noopener noreferrer"><FileText className="size-4" /> Abrir {report.fileName || report.type}</a>
                     )}
                   </article>
                 ))}

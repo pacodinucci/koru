@@ -1,10 +1,11 @@
 import { FileText } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { StudentReportBody } from "@/modules/teachers/components/student-report-body";
 
 export type TeacherReport = {
   id: string;
-  type: "TEXT" | "PDF";
+  type: "TEXT" | "PDF" | "DOC" | "DOCX";
   title: string;
   body: string | null;
   fileName: string | null;
@@ -23,14 +24,14 @@ export function TeacherReportItem({ report, student }: {
           <h3 className="font-medium text-slate-900">{report.title}</h3>
           {student ? <p className="mt-1 text-sm text-slate-600">{student.lastName}, {student.firstName} · {student.group.name}</p> : null}
         </div>
-        <Badge variant="outline">{report.type === "PDF" ? "PDF" : "Texto"}</Badge>
+        <Badge variant="outline">{report.type === "TEXT" ? "Texto" : report.type}</Badge>
       </div>
       <p className="mt-2 text-xs text-muted-foreground">{report.teacher.displayName} · {new Date(report.createdAt).toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })}</p>
       {report.type === "TEXT" ? (
-        <p className="mt-3 whitespace-pre-wrap text-sm text-slate-800">{report.body}</p>
+        <StudentReportBody body={report.body} />
       ) : (
         <a className="mt-3 inline-flex items-center gap-1 text-sm text-primary underline" href={`/api/student-reports/${report.id}/download`} target="_blank" rel="noopener noreferrer">
-          <FileText className="size-4" /> Abrir {report.fileName || "PDF"}
+          <FileText className="size-4" /> Abrir {report.fileName || report.type}
         </a>
       )}
     </li>

@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { v2 as cloudinary } from "cloudinary";
 
 import { env } from "@/lib/env";
+import { getStudentReportExtension, type StudentReportFileType } from "@/modules/teachers/lib/student-report-file";
 
 function configureCloudinary() {
   if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
@@ -17,14 +18,14 @@ function configureCloudinary() {
   });
 }
 
-export async function uploadStudentReportPdf(buffer: Buffer) {
+export async function uploadStudentReportFile(buffer: Buffer, type: StudentReportFileType) {
   configureCloudinary();
   return new Promise<string>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream({
       resource_type: "raw",
       type: "authenticated",
       folder: "koru/reportes-alumnos",
-      public_id: `${randomUUID()}.pdf`,
+      public_id: `${randomUUID()}.${getStudentReportExtension(type)}`,
     }, (error, result) => {
       if (error || !result?.public_id) {
         reject(error ?? new Error("student_report_upload_failed"));
@@ -36,16 +37,16 @@ export async function uploadStudentReportPdf(buffer: Buffer) {
   });
 }
 
-export function getStudentReportDownloadUrl(publicId: string) {
+export function getStudentReportDownloadUrl(publicId: string, type: StudentReportFileType) {
   configureCloudinary();
-  return cloudinary.utils.private_download_url(publicId, "pdf", {
+  return cloudinary.utils.private_download_url(publicId, getStudentReportExtension(type), {
     resource_type: "raw",
     type: "authenticated",
     expires_at: Math.floor(Date.now() / 1000) + 5 * 60,
   });
 }
 
-export async function deleteStudentReportPdf(publicId: string) {
+export async function deleteStudentReportFile(publicId: string) {
   configureCloudinary();
   await cloudinary.uploader.destroy(publicId, { resource_type: "raw", type: "authenticated" });
 }

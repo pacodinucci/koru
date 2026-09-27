@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser, isDevelopmentViewController } from "@/modules/auth/server/auth-guards";
 import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/family-dashboard-access";
+import { isStudentReportFileType } from "@/modules/teachers/lib/student-report-file";
 import { getAssignedTeacherStudent } from "@/modules/teachers/server/student-reports.repository";
 import { getStudentReportDownloadUrl } from "@/modules/teachers/server/student-report-cloudinary";
 
@@ -13,9 +14,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const report = await prisma.studentReport.findUnique({
     where: { id },
-    select: { studentId: true, cloudinaryPublicId: true, student: { select: { familyId: true } } },
+    select: { studentId: true, type: true, cloudinaryPublicId: true, student: { select: { familyId: true } } },
   });
-  if (!report?.cloudinaryPublicId) return NextResponse.json({ error: "Reporte no disponible." }, { status: 404 });
+  if (!report?.cloudinaryPublicId || !isStudentReportFileType(report.type)) {
+    return NextResponse.json({ error: "Reporte no disponible." }, { status: 404 });
+  }
 
   const previewFamilyId = isDevelopmentViewController(user)
     ? (await requireFamilyDashboardAccess()).familyUser.familyId
@@ -30,10 +33,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 
   try {
-    const url = getStudentReportDownloadUrl(report.cloudinaryPublicId);
+    const url = getStudentReportDownloadUrl(report.cloudinaryPublicId, report.type);
     return NextResponse.redirect(url, { headers: { "Cache-Control": "private, no-store" } });
   } catch {
-    return NextResponse.json({ error: "No pudimos abrir el PDF." }, { status: 503 });
+    return NextResponse.json({ error: "No pudimos abrir el documento." }, { status: 503 });
   }
 }
 

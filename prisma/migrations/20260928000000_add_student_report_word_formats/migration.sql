@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TYPE "StudentReportType" ADD VALUE 'DOC';
+ALTER TYPE "StudentReportType" ADD VALUE 'DOCX';
+
+COMMIT;

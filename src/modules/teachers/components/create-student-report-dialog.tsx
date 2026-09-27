@@ -12,11 +12,13 @@ import {
   ResponsiveDialogBody,
   ResponsiveDialogContent,
   ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { StudentReportRichEditor } from "@/modules/teachers/components/student-report-rich-editor";
+import { RICH_REPORT_PREFIX } from "@/modules/teachers/lib/student-report-rich-text";
 
 type StudentOption = {
   id: string;
@@ -29,9 +31,10 @@ export function CreateStudentReportDialog({ students }: { students: StudentOptio
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
-  const [kind, setKind] = useState<"TEXT" | "PDF">("TEXT");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editorValue, setEditorValue] = useState({ json: "", text: "" });
+  const [editorKey, setEditorKey] = useState(0);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,8 +44,31 @@ export function CreateStudentReportDialog({ students }: { students: StudentOptio
       setError("Elegí un alumno de tus cursos.");
       return;
     }
+    const file = data.get("file");
+    const hasFile = file instanceof File && file.name.length > 0;
+    const hasText = editorValue.text.trim().length > 0;
+    if (hasFile === hasText) {
+      setError("Adjuntá un archivo o escribí el reporte, pero no ambos.");
+      return;
+    }
+    if (hasFile) {
+      const extension = file.name.match(/\.(pdf|doc|docx)$/i)?.[1];
+      if (!extension) {
+        setError("Adjuntá un archivo PDF, DOC o DOCX.");
+        return;
+      }
+      data.set("type", extension.toUpperCase());
+      data.delete("body");
+    } else {
+      data.set("type", "TEXT");
+      const richBody = RICH_REPORT_PREFIX + editorValue.json;
+      if (richBody.length > 10000) {
+        setError("El reporte es demasiado extenso (máximo 10.000 caracteres de contenido).");
+        return;
+      }
+      data.set("body", richBody);
+    }
     data.delete("studentId");
-    data.set("type", kind);
     setSaving(true);
     setError(null);
     try {
@@ -53,7 +79,8 @@ export function CreateStudentReportDialog({ students }: { students: StudentOptio
       const result = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
       if (!response.ok || !result?.ok) throw new Error(result?.error ?? "No pudimos guardar el reporte.");
       formRef.current?.reset();
-      setKind("TEXT");
+      setEditorValue({ json: "", text: "" });
+      setEditorKey((key) => key + 1);
       setOpen(false);
       router.refresh();
     } catch (cause) {
@@ -73,8 +100,8 @@ export function CreateStudentReportDialog({ students }: { students: StudentOptio
           <ResponsiveDialogTitle>Nuevo reporte</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>El reporte quedará disponible para la familia del alumno.</ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
-        <ResponsiveDialogBody>
-          <form ref={formRef} onSubmit={submit} className="space-y-4" id="create-student-report-form">
+        <form ref={formRef} onSubmit={submit} className="flex min-h-0 flex-1 flex-col" id="create-student-report-form">
+          <ResponsiveDialogBody className="space-y-4">
             {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
             <div className="space-y-1.5">
               <Label htmlFor="report-student">Alumno</Label>
@@ -88,29 +115,20 @@ export function CreateStudentReportDialog({ students }: { students: StudentOptio
               <Input id="report-title" name="title" required minLength={2} maxLength={160} disabled={saving} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="report-kind">Formato</Label>
-              <select id="report-kind" value={kind} onChange={(event) => setKind(event.target.value as "TEXT" | "PDF")} disabled={saving} className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm">
-                <option value="TEXT">Texto</option>
-                <option value="PDF">PDF</option>
-              </select>
+              <Label htmlFor="report-file">Archivo</Label>
+              <Input id="report-file" name="file" type="file" accept=".pdf,.doc,.docx" disabled={saving} />
+              <p className="text-xs text-muted-foreground">PDF, DOC o DOCX de hasta 10 MB.</p>
             </div>
-            {kind === "TEXT" ? (
-              <div className="space-y-1.5">
-                <Label htmlFor="report-body">Reporte</Label>
-                <Textarea id="report-body" name="body" required maxLength={10000} rows={7} disabled={saving} />
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                <Label htmlFor="report-file">Archivo PDF</Label>
-                <Input id="report-file" name="file" type="file" accept="application/pdf,.pdf" required disabled={saving} />
-                <p className="text-xs text-muted-foreground">Hasta 10 MB.</p>
-              </div>
-            )}
-            <div className="flex justify-end">
-              <Button type="submit" disabled={saving}>{saving ? "Guardando…" : "Guardar reporte"}</Button>
+            <div className="space-y-1.5">
+              <Label htmlFor="report-body">Reporte escrito</Label>
+              <StudentReportRichEditor key={editorKey} onChange={setEditorValue} disabled={saving} />
+              <p className="text-xs text-muted-foreground">Adjuntá un archivo o escribí el reporte, pero no ambos.</p>
             </div>
-          </form>
-        </ResponsiveDialogBody>
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
+            <Button type="submit" disabled={saving}>{saving ? "Guardando…" : "Guardar reporte"}</Button>
+          </ResponsiveDialogFooter>
+        </form>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

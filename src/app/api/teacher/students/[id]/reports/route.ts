@@ -4,8 +4,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import {
-  deleteStudentReportPdf,
-  uploadStudentReportPdf,
+  getSafeStudentReportFileName,
+  isStudentReportFileType,
+  isValidStudentReportFile,
+} from "@/modules/teachers/lib/student-report-file";
+import { normalizeStudentReportBody } from "@/modules/teachers/lib/student-report-rich-text";
+import {
+  deleteStudentReportFile,
+  uploadStudentReportFile,
 } from "@/modules/teachers/server/student-report-cloudinary";
 import {
   getAssignedTeacherStudent,
@@ -28,7 +34,7 @@ function reportErrorResponse(error: unknown) {
   }, { status: migrationPending ? 503 : 500 });
 }
 
-const maxPdfBytes = 10 * 1024 * 1024;
+const maxFileBytes = 10 * 1024 * 1024;
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -80,18 +86,24 @@ export async function POST(request: Request, { params }: Context) {
   const type = formData.get("type");
   const body = String(formData.get("body") ?? "").trim();
   const file = formData.get("file");
+  const hasFile = file instanceof File && file.name.length > 0;
 
-  if (title.length < 2 || title.length > 160 || (type !== "TEXT" && type !== "PDF")) {
+  const fileType = isStudentReportFileType(type) ? type : null;
+  if (title.length < 2 || title.length > 160 || (type !== "TEXT" && !fileType)) {
     return NextResponse.json({ error: "Ingresá un título válido y elegí el tipo de reporte." }, { status: 400 });
   }
 
   if (type === "TEXT") {
-    if (!body || body.length > 10000) {
+    if (hasFile) {
+      return NextResponse.json({ error: "Adjuntá un archivo o escribí el reporte, pero no ambos." }, { status: 400 });
+    }
+    const normalizedBody = normalizeStudentReportBody(body);
+    if (!normalizedBody) {
       return NextResponse.json({ error: "Escribí el reporte (máximo 10.000 caracteres)." }, { status: 400 });
     }
     try {
       await prisma.studentReport.create({
-        data: { studentId: id, teacherId: assignment.teacherId, type, title, body },
+        data: { studentId: id, teacherId: assignment.teacherId, type, title, body: normalizedBody },
       });
       return NextResponse.json({ ok: true }, { status: 201 });
     } catch (error) {
@@ -99,17 +111,24 @@ export async function POST(request: Request, { params }: Context) {
     }
   }
 
-  if (!(file instanceof File) || file.type !== "application/pdf" || file.size === 0 || file.size > maxPdfBytes) {
-    return NextResponse.json({ error: "Adjuntá un PDF de hasta 10 MB." }, { status: 400 });
+  if (body) {
+    return NextResponse.json({ error: "Adjuntá un archivo o escribí el reporte, pero no ambos." }, { status: 400 });
+  }
+  if (!fileType || !(file instanceof File) || file.size === 0 || file.size > maxFileBytes) {
+    return NextResponse.json({ error: "Adjuntá un PDF, DOC o DOCX de hasta 10 MB." }, { status: 400 });
+  }
+  const fileName = getSafeStudentReportFileName(file.name, fileType);
+  if (!fileName) {
+    return NextResponse.json({ error: `El archivo debe tener extensión .${fileType.toLowerCase()}.` }, { status: 400 });
   }
   const buffer = Buffer.from(await file.arrayBuffer());
-  if (!buffer.subarray(0, 5).equals(Buffer.from("%PDF-"))) {
-    return NextResponse.json({ error: "El archivo no es un PDF válido." }, { status: 400 });
+  if (!isValidStudentReportFile(buffer, fileType)) {
+    return NextResponse.json({ error: `El archivo no es un ${fileType} válido.` }, { status: 400 });
   }
 
   let publicId: string | null = null;
   try {
-    publicId = await uploadStudentReportPdf(buffer);
+    publicId = await uploadStudentReportFile(buffer, fileType);
     const stillAssigned = await getAssignment(id);
     if (!stillAssigned || stillAssigned.teacherId !== assignment.teacherId) {
       throw new Error("teacher_assignment_changed");
@@ -118,17 +137,17 @@ export async function POST(request: Request, { params }: Context) {
       data: {
         studentId: id,
         teacherId: assignment.teacherId,
-        type,
+        type: fileType,
         title,
         cloudinaryPublicId: publicId,
-        fileName: file.name.slice(0, 255),
+        fileName,
       },
     });
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     if (publicId) {
-      try { await deleteStudentReportPdf(publicId); } catch (cleanupError) {
-        console.error("[student-reports] No se pudo limpiar el PDF huérfano", cleanupError);
+      try { await deleteStudentReportFile(publicId); } catch (cleanupError) {
+        console.error("[student-reports] No se pudo limpiar el archivo huérfano", cleanupError);
       }
     }
     console.error("[student-reports] No se pudo guardar el reporte", error);
