@@ -13,7 +13,6 @@ import {
   Home,
   LogOut,
   Settings2,
-  TrendingUp,
   WalletCards,
   User2,
 } from "lucide-react";
@@ -50,13 +49,12 @@ const mainItems = [
 
 const studentItems = [
   { title: "Expediente de cada niñ@", href: "/family-dashboard/expediente", icon: FileText },
-  { title: "Avances de tu hij@", href: "/family-dashboard/avances", icon: TrendingUp },
   {
     title: "Acuerdos de seguimiento",
     href: "/family-dashboard/acuerdos-seguimiento",
     icon: Handshake,
   },
-  { title: "Reportes", href: "/family-dashboard/reportes", icon: ClipboardList },
+  { title: "Reportes de tu Hij@", href: "/family-dashboard/reportes", icon: ClipboardList },
 ];
 
 const communityItems = [

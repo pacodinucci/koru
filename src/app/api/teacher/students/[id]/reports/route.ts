@@ -103,7 +103,7 @@ export async function POST(request: Request, { params }: Context) {
     }
     try {
       await prisma.studentReport.create({
-        data: { studentId: id, teacherId: assignment.teacherId, type, title, body: normalizedBody },
+        data: { studentId: id, teacherId: assignment.teacherId, type, title, body: normalizedBody, visibleToFamily: false },
       });
       return NextResponse.json({ ok: true }, { status: 201 });
     } catch (error) {
@@ -141,6 +141,7 @@ export async function POST(request: Request, { params }: Context) {
         title,
         cloudinaryPublicId: publicId,
         fileName,
+        visibleToFamily: false,
       },
     });
     return NextResponse.json({ ok: true }, { status: 201 });

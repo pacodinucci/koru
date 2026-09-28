@@ -15,6 +15,7 @@
     "src/modules/students/lib/**/*.ts",
     "src/modules/calendar/lib/**/*.ts",
     "src/modules/teachers/lib/**/*.ts",
+    "src/modules/follow-up-agreements/lib/**/*.ts",
     "src/modules/families/lib/**/*.ts",
     "src/modules/users/server/user-invitation-token.ts",
     "src/modules/auth/lib/**/*.ts",

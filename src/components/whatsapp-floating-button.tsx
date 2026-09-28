@@ -1,6 +1,21 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 const WHATSAPP_PHONE_NUMBER = "525513487080";
 
 export function WhatsAppFloatingButton() {
+  const pathname = usePathname();
+
+  if (
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/family-dashboard" ||
+    pathname.startsWith("/family-dashboard/")
+  ) {
+    return null;
+  }
+
   return (
     <a
       href={`https://wa.me/${WHATSAPP_PHONE_NUMBER}`}

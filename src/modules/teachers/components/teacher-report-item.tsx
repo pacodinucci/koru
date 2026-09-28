@@ -9,6 +9,7 @@ export type TeacherReport = {
   title: string;
   body: string | null;
   fileName: string | null;
+  visibleToFamily: boolean;
   createdAt: string;
   teacher: { displayName: string };
 };
@@ -24,7 +25,10 @@ export function TeacherReportItem({ report, student }: {
           <h3 className="font-medium text-slate-900">{report.title}</h3>
           {student ? <p className="mt-1 text-sm text-slate-600">{student.lastName}, {student.firstName} · {student.group.name}</p> : null}
         </div>
-        <Badge variant="outline">{report.type === "TEXT" ? "Texto" : report.type}</Badge>
+        <div className="flex flex-wrap gap-1.5">
+          <Badge variant="outline">{report.type === "TEXT" ? "Texto" : report.type}</Badge>
+          <Badge variant="secondary">{report.visibleToFamily ? "Visible para la familia" : "Solo docentes"}</Badge>
+        </div>
       </div>
       <p className="mt-2 text-xs text-muted-foreground">{report.teacher.displayName} · {new Date(report.createdAt).toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })}</p>
       {report.type === "TEXT" ? (

@@ -98,7 +98,7 @@ export function CreateStudentReportDialog({ students }: { students: StudentOptio
       <ResponsiveDialogContent className="[font-family:var(--font-montserrat)] [&_*]:[font-family:var(--font-montserrat)]">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Nuevo reporte</ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>El reporte quedará disponible para la familia del alumno.</ResponsiveDialogDescription>
+          <ResponsiveDialogDescription>El reporte se guardará como privado. Podés compartirlo desde la tabla de reportes.</ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <form ref={formRef} onSubmit={submit} className="flex min-h-0 flex-1 flex-col" id="create-student-report-form">
           <ResponsiveDialogBody className="space-y-4">

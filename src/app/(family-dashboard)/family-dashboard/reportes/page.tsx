@@ -19,6 +19,7 @@ export default async function FamilyReportsPage() {
       firstName: true,
       lastName: true,
       reports: {
+        where: { visibleToFamily: true },
         orderBy: { createdAt: "desc" },
         select: {
           id: true,

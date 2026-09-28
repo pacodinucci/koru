@@ -14,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const report = await prisma.studentReport.findUnique({
     where: { id },
-    select: { studentId: true, type: true, cloudinaryPublicId: true, student: { select: { familyId: true } } },
+    select: { studentId: true, type: true, fileName: true, visibleToFamily: true, cloudinaryPublicId: true, student: { select: { familyId: true } } },
   });
   if (!report?.cloudinaryPublicId || !isStudentReportFileType(report.type)) {
     return NextResponse.json({ error: "Reporte no disponible." }, { status: 404 });
@@ -23,7 +23,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const previewFamilyId = isDevelopmentViewController(user)
     ? (await requireFamilyDashboardAccess()).familyUser.familyId
     : null;
-  const familyAllowed = !!report.student.familyId && (
+  const familyAllowed = report.visibleToFamily && !!report.student.familyId && (
     (user.role === "PARENT" && report.student.familyId === user.familyId) ||
     (previewFamilyId !== null && report.student.familyId === previewFamilyId)
   );
@@ -34,7 +34,22 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   try {
     const url = getStudentReportDownloadUrl(report.cloudinaryPublicId, report.type);
-    return NextResponse.redirect(url, { headers: { "Cache-Control": "private, no-store" } });
+    const upstream = await fetch(url, { cache: "no-store" });
+    if (!upstream.ok || !upstream.body) throw new Error("student_report_download_failed");
+    const contentTypes = {
+      PDF: "application/pdf",
+      DOC: "application/msword",
+      DOCX: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    };
+    const fileName = report.fileName || `reporte.${report.type.toLowerCase()}`;
+    return new Response(upstream.body, {
+      headers: {
+        "Content-Type": contentTypes[report.type],
+        "Content-Disposition": `${report.type === "PDF" ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
   } catch {
     return NextResponse.json({ error: "No pudimos abrir el documento." }, { status: 503 });
   }

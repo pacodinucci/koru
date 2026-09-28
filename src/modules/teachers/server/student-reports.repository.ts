@@ -62,13 +62,14 @@ export async function listTeacherStudentReports(studentId: string) {
       title: true,
       body: true,
       fileName: true,
+      visibleToFamily: true,
       createdAt: true,
       teacher: { select: { displayName: true } },
     },
   });
 }
 
-export async function listAssignedTeacherReports(userId: string) {
+export async function listTeacherOwnedReports(userId: string) {
   const teacher = await prisma.teacherProfile.findFirst({
     where: { userId, isActive: true },
     select: { id: true },
@@ -77,6 +78,7 @@ export async function listAssignedTeacherReports(userId: string) {
 
   return prisma.studentReport.findMany({
     where: {
+      teacherId: teacher.id,
       student: {
         status: "ACTIVE",
         group: {
@@ -92,6 +94,7 @@ export async function listAssignedTeacherReports(userId: string) {
       title: true,
       body: true,
       fileName: true,
+      visibleToFamily: true,
       createdAt: true,
       teacher: { select: { displayName: true } },
       student: {

@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE "StudentReport"
+  ADD COLUMN "visibleToFamily" BOOLEAN NOT NULL DEFAULT false;
+
+COMMIT;

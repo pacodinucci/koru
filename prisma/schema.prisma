@@ -33,6 +33,7 @@ model User {
   familyProfile              FamilyProfile?
   familyId                   String?
   family                     Family?                     @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  followUpConsents           FollowUpAgreementFamily[]  @relation("FollowUpConsentActor")
 
   @@unique([email])
   @@index([accessRoleId])
@@ -197,6 +198,7 @@ model Family {
   plan            Plan?        @relation(fields: [planId], references: [id], onDelete: SetNull)
   users           User[]
   students        Student[]
+  followUpAgreements FollowUpAgreementFamily[]
   accountEntries  FamilyAccountEntry[]
   payments        FamilyPayment[]
   invitations     UserInvitation[]
@@ -771,6 +773,7 @@ model TeacherProfile {
   isActive              Boolean               @default(true)
   groupResponsibilities StudentGroupTeacher[]
   studentReports        StudentReport[]
+  followUpAgreements    FollowUpAgreement[]
   exams                 Exam[]
   cashFundBudget          CashFundBudget?
   cashFundEntries         CashFundEntry[] @relation("LegacyCashFundEntries")
@@ -819,6 +822,7 @@ model Student {
   guardians         StudentGuardian[]
   examGrades        ExamGrade[]
   reports           StudentReport[]
+  followUpAgreements FollowUpAgreementStudent[]
   createdAt         DateTime               @default(now())
   updatedAt         DateTime               @updatedAt
 
@@ -848,10 +852,60 @@ model StudentReport {
   body               String?
   cloudinaryPublicId String?
   fileName           String?
+  visibleToFamily    Boolean           @default(false)
   createdAt          DateTime          @default(now())
 
   @@index([studentId, createdAt])
   @@index([teacherId])
+}
+
+enum FollowUpAgreementStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model FollowUpAgreement {
+  id                 String                     @id @default(cuid())
+  teacherId          String
+  teacher            TeacherProfile             @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  title              String
+  body               String
+  status             FollowUpAgreementStatus    @default(DRAFT)
+  attachmentPublicId String?
+  attachmentFileName String?
+  attachmentMimeType String?
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+  publishedAt        DateTime?
+  families           FollowUpAgreementFamily[]
+  students           FollowUpAgreementStudent[]
+
+  @@index([teacherId, createdAt])
+  @@index([status, publishedAt])
+}
+
+model FollowUpAgreementFamily {
+  agreementId  String
+  agreement    FollowUpAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  familyId     String
+  family       Family            @relation(fields: [familyId], references: [id], onDelete: Restrict)
+  consentedAt  DateTime?
+  consentedById String?
+  consentedBy  User?             @relation("FollowUpConsentActor", fields: [consentedById], references: [id], onDelete: Restrict)
+
+  @@id([agreementId, familyId])
+  @@index([familyId, consentedAt])
+  @@index([consentedById])
+}
+
+model FollowUpAgreementStudent {
+  agreementId String
+  agreement   FollowUpAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student           @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@id([agreementId, studentId])
+  @@index([studentId])
 }
 
 model StudentAddress {

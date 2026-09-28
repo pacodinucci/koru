@@ -95,7 +95,7 @@ export function TeacherStudentRecordDialog({ studentId, name }: { studentId: str
       <ResponsiveDialogContent className="[font-family:var(--font-montserrat)] [&_*]:[font-family:var(--font-montserrat)]">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Expediente de {name}</ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>Datos cargados por la familia al ingresar y reportes compartidos con ella.</ResponsiveDialogDescription>
+          <ResponsiveDialogDescription>Datos cargados por la familia al ingresar y reportes de sus docentes. Algunos pueden ser privados.</ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <ResponsiveDialogBody className="space-y-6">
           {!record && !error ? <p className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Cargando expediente…</p> : null}
