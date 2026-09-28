@@ -105,7 +105,7 @@ export async function DashboardUsersView({
           <CardTitle className="text-base">Usuarios creados</CardTitle>
         </CardHeader>
         <CardContent className="min-w-0">
-          <Table>
+          <Table className="min-w-[720px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[32%]">Usuario</TableHead>
