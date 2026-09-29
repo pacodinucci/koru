@@ -91,7 +91,7 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
                 {initials(post.authorName)}
               </div>
               <p className="text-sm leading-none text-muted-foreground [font-family:var(--font-roboto-condensed)] md:text-base">
-                {post.authorName || "Usuario"} ·{" "}
+                Publicado por {post.authorName || "Usuario"} ·{" "}
                 {formatDate(post.publishedAt ?? post.createdAt)}
               </p>
             </div>
@@ -99,6 +99,12 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
             <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
               {post.title}
             </h1>
+
+            {post.editorialAuthorName ? (
+              <p className="text-xl font-semibold leading-snug text-[var(--brand-900)] md:text-2xl">
+                Por {post.editorialAuthorName}
+              </p>
+            ) : null}
 
             <div className="flex flex-wrap gap-1.5">
               {post.tags.map(({ tag }) => (

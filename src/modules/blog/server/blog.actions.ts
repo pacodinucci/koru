@@ -14,6 +14,7 @@ import { sanitizeBlogHtml } from "@/modules/blog/lib/sanitize-blog-html";
 const createPostSchema = z.object({
   title: z.string().min(4).max(180),
   excerpt: z.string().min(8).max(220),
+  editorialAuthorName: z.string().trim().max(120),
   slug: z.string().trim().min(1).max(180),
   contentJson: z.string().min(2),
   contentHtml: z.string().min(2),
@@ -197,6 +198,7 @@ export async function createBlogPostAction(formData: FormData) {
   const parsed = createPostSchema.safeParse({
     title: rawTitle,
     excerpt: String(formData.get("excerpt") ?? "").trim(),
+    editorialAuthorName: String(formData.get("editorialAuthorName") ?? "").trim(),
     slug: normalizedSlug,
     contentJson: String(formData.get("contentJson") ?? "").trim(),
     contentHtml: String(formData.get("contentHtml") ?? "").trim(),
@@ -256,6 +258,7 @@ export async function createBlogPostAction(formData: FormData) {
         title: parsed.data.title,
         slug: parsed.data.slug,
         excerpt: parsed.data.excerpt,
+        editorialAuthorName: parsed.data.editorialAuthorName || null,
         content: contentHtml,
         contentBlocks: parsedContentJson,
         status: parsed.data.status,
@@ -295,6 +298,7 @@ export async function updateBlogPostAction(formData: FormData) {
   const parsed = createPostSchema.safeParse({
     title: rawTitle,
     excerpt: String(formData.get("excerpt") ?? "").trim(),
+    editorialAuthorName: String(formData.get("editorialAuthorName") ?? "").trim(),
     slug: normalizedSlug,
     contentJson: String(formData.get("contentJson") ?? "").trim(),
     contentHtml: String(formData.get("contentHtml") ?? "").trim(),
@@ -364,6 +368,7 @@ export async function updateBlogPostAction(formData: FormData) {
         title: parsed.data.title,
         slug: parsed.data.slug,
         excerpt: parsed.data.excerpt,
+        editorialAuthorName: parsed.data.editorialAuthorName || null,
         content: contentHtml,
         contentBlocks: parsedContentJson,
         status: parsed.data.status,

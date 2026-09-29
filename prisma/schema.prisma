@@ -443,6 +443,7 @@ model BlogPost {
   status        BlogPostStatus     @default(DRAFT)
   visibility    BlogPostVisibility @default(PUBLIC)
   authorName    String?
+  editorialAuthorName String?
   publishedAt   DateTime?
   comments      BlogComment[]
   likes         BlogPostLike[]

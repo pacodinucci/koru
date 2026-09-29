@@ -150,6 +150,7 @@ export async function getDashboardPostById(id: string) {
       slug: true,
       title: true,
       excerpt: true,
+      editorialAuthorName: true,
       content: true,
       contentBlocks: true,
       status: true,

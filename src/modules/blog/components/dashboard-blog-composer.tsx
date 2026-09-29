@@ -73,6 +73,7 @@ type DashboardBlogComposerProps = {
     slug: string;
     title: string;
     excerpt: string;
+    editorialAuthorName: string | null;
     content: string;
     contentBlocks: unknown;
     status: BlogPostStatus;
@@ -414,6 +415,21 @@ export function DashboardBlogComposer({
                 />
               </div>
               <div className="space-y-1.5">
+                <label htmlFor={`${formId}-editorial-author`} className="text-sm font-medium text-slate-700">
+                  Autor
+                </label>
+                <Input
+                  id={`${formId}-editorial-author`}
+                  name="editorialAuthorName"
+                  maxLength={120}
+                  defaultValue={editingPost?.editorialAuthorName ?? ""}
+                  placeholder="Ej: Juan Pérez"
+                />
+                <p className="text-xs text-slate-500">
+                  Se mostrará debajo del título como «Por nombre». Puede ser distinto de quien publica.
+                </p>
+              </div>
+              <div className="space-y-1.5">
                 <p className="text-sm font-medium text-slate-700">Audiencia</p>
                 <input type="hidden" name="visibility" value={visibility} />
                 <div
@@ -640,4 +656,3 @@ export function DashboardBlogComposer({
     </>
   );
 }
-
