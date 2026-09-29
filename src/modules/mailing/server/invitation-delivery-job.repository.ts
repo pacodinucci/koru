@@ -22,6 +22,8 @@ type ClaimInvitationDeliveryJobsInput = {
   workerId: string;
   limit: number;
   now: Date;
+  excludeJobIds?: string[];
+  onlyInvitationId?: string;
 };
 
 const claimedJobSelect = {
@@ -101,9 +103,23 @@ export function recoverExpiredInvitationDeliveryJobs(now: Date, lockLeaseMs: num
 }
 
 /** Claims due jobs one by one with a conditional update, which is safe across concurrent workers. */
-export async function claimInvitationDeliveryJobs({ workerId, limit, now }: ClaimInvitationDeliveryJobsInput) {
+export async function claimInvitationDeliveryJobs({
+  workerId,
+  limit,
+  now,
+  excludeJobIds = [],
+  onlyInvitationId,
+}: ClaimInvitationDeliveryJobsInput) {
   const candidates = await prisma.invitationDeliveryJob.findMany({
     where: {
+      ...(onlyInvitationId
+        ? {
+            invitationId: onlyInvitationId,
+            ...(excludeJobIds.length > 0 ? { id: { notIn: excludeJobIds } } : {}),
+          }
+        : excludeJobIds.length > 0
+          ? { id: { notIn: excludeJobIds } }
+          : {}),
       status: { in: CLAIMABLE_STATUSES },
       nextAttemptAt: { lte: now },
     },
@@ -233,35 +249,28 @@ export function listInvitationDeliveryJobsForDashboard() {
 }
 
 /** Requeues only a definitive failure and only while its invitation/token remains current. */
-export async function requeueFailedInvitationDeliveryJob(jobId: string) {
+export async function getSendableInvitationIdForDeliveryJob(jobId: string) {
   const job = await prisma.invitationDeliveryJob.findUnique({
     where: { id: jobId },
-    select: { invitationId: true, tokenVersion: true, status: true },
+    select: {
+      invitationId: true,
+      tokenVersion: true,
+      status: true,
+      invitation: { select: { status: true, tokenVersion: true } },
+    },
   });
-  if (!job || job.status !== InvitationDeliveryJobStatus.FAILED) {
-    throw new Error("invitation_delivery_job_not_requeueable");
+  const sendableStatuses = [
+    InvitationDeliveryJobStatus.PENDING,
+    InvitationDeliveryJobStatus.RETRY_SCHEDULED,
+    InvitationDeliveryJobStatus.FAILED,
+  ];
+  if (
+    !job
+    || !sendableStatuses.includes(job.status)
+    || job.invitation.status !== "PENDING"
+    || job.invitation.tokenVersion !== job.tokenVersion
+  ) {
+    throw new Error("invitation_delivery_job_not_sendable");
   }
-
-  const result = await prisma.$transaction(async (tx) => {
-    const invitation = await tx.userInvitation.findFirst({
-      where: {
-        id: job.invitationId,
-        status: "PENDING",
-        tokenVersion: job.tokenVersion,
-      },
-      select: { id: true },
-    });
-    if (!invitation) throw new Error("invitation_delivery_job_not_requeueable");
-
-    return tx.invitationDeliveryJob.updateMany({
-      where: { id: jobId, status: InvitationDeliveryJobStatus.FAILED },
-      data: {
-        status: InvitationDeliveryJobStatus.PENDING,
-        nextAttemptAt: new Date(),
-        lockedAt: null,
-        lockedBy: null,
-      },
-    });
-  });
-  if (!result.count) throw new Error("invitation_delivery_job_not_requeueable");
+  return job.invitationId;
 }

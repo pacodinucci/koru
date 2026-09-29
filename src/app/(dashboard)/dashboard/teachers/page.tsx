@@ -3,6 +3,8 @@ import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardTeachersView } from "@/modules/teachers/views/dashboard-teachers-view";
 
+export const maxDuration = 60;
+
 export default async function DashboardTeachersPage() {
   const user = await requireRole(["SUPERADMIN"]);
   const cmsPages = (await discoverPagesGroupRoutes()).filter(

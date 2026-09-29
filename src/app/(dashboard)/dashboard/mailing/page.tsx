@@ -3,6 +3,8 @@ import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { DashboardMailingView } from "@/modules/mailing/views/dashboard-mailing-view";
 
+export const maxDuration = 60;
+
 export default async function DashboardMailingPage() {
   const user = await requirePermission("mailing.view");
   const cmsPages = (await discoverPagesGroupRoutes()).filter(

@@ -21,6 +21,7 @@ const singleInvitationSchema = z.object({
 export type TeacherImportState = { message: string; errors: string[]; imported: number };
 const norm = (value: unknown) => String(value ?? "").trim();
 const key = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const TEACHER_INVITATION_WORKER_BUDGET_MS = 45 * 1000;
 
 async function getTeacherInvitationContext() {
   const teacherRole = await prisma.role.findFirst({
@@ -84,7 +85,7 @@ export async function createTeacherInvitationAction(
     };
   }
   try {
-    await runInvitationDeliveryWorker();
+    await runInvitationDeliveryWorker(new Date(), TEACHER_INVITATION_WORKER_BUDGET_MS);
   } catch (error) {
     console.error("teacher_invitation_delivery_trigger_failed", error);
   }
@@ -113,7 +114,7 @@ export async function importTeacherInvitationsAction(_: TeacherImportState, form
       catch (error) { errors.push(`Fila ${index + 2}: ${error instanceof Error && error.message === "user_already_exists" ? "el correo ya tiene cuenta" : "no se pudo crear la invitación"}.`); }
     }
     if (imported) {
-      try { await runInvitationDeliveryWorker(); }
+      try { await runInvitationDeliveryWorker(new Date(), TEACHER_INVITATION_WORKER_BUDGET_MS); }
       catch (error) { console.error("teacher_invitation_delivery_trigger_failed", error); }
       revalidatePath("/dashboard/teachers");
       revalidatePath("/dashboard/users");
