@@ -248,7 +248,7 @@ export function listInvitationDeliveryJobsForDashboard() {
   });
 }
 
-/** Requeues only a definitive failure and only while its invitation/token remains current. */
+/** Allows manual delivery only while the job and its invitation/token remain sendable. */
 export async function getSendableInvitationIdForDeliveryJob(jobId: string) {
   const job = await prisma.invitationDeliveryJob.findUnique({
     where: { id: jobId },
@@ -259,7 +259,7 @@ export async function getSendableInvitationIdForDeliveryJob(jobId: string) {
       invitation: { select: { status: true, tokenVersion: true } },
     },
   });
-  const sendableStatuses = [
+  const sendableStatuses: InvitationDeliveryJobStatus[] = [
     InvitationDeliveryJobStatus.PENDING,
     InvitationDeliveryJobStatus.RETRY_SCHEDULED,
     InvitationDeliveryJobStatus.FAILED,

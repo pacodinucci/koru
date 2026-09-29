@@ -21,6 +21,12 @@ import {
   sendInvitationDeliveryJobAction,
 } from "@/modules/mailing/server/mailing.actions";
 
+const sendableJobStatuses: InvitationDeliveryJobStatus[] = [
+  InvitationDeliveryJobStatus.PENDING,
+  InvitationDeliveryJobStatus.RETRY_SCHEDULED,
+  InvitationDeliveryJobStatus.FAILED,
+];
+
 function formatDate(date: Date | null) {
   if (!date) return "-";
   return date.toLocaleDateString("es-AR", {
@@ -93,7 +99,7 @@ export async function DashboardMailingView({ canManage }: { canManage: boolean }
                   <TableCell>{job.attemptCount}</TableCell>
                   <TableCell className="text-xs">{formatDate(job.nextAttemptAt)}</TableCell>
                   <TableCell className="max-w-[240px] truncate text-xs text-muted-foreground" title={job.lastError ?? undefined}>{job.lastError ?? job.lastErrorCode ?? job.providerMessageId ?? "-"}</TableCell>
-                  <TableCell>{canManage && [InvitationDeliveryJobStatus.PENDING, InvitationDeliveryJobStatus.RETRY_SCHEDULED, InvitationDeliveryJobStatus.FAILED].includes(job.status) ? <form action={sendInvitationDeliveryJobAction}><input type="hidden" name="jobId" value={job.id} /><Button type="submit" variant="outline" className="h-8 px-2 text-xs">Enviar</Button></form> : "-"}</TableCell>
+                  <TableCell>{canManage && sendableJobStatuses.includes(job.status) ? <form action={sendInvitationDeliveryJobAction}><input type="hidden" name="jobId" value={job.id} /><Button type="submit" variant="outline" className="h-8 px-2 text-xs">Enviar</Button></form> : "-"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
