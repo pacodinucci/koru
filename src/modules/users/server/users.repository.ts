@@ -22,6 +22,10 @@ export type CreateUserInvitationInput = {
   teacherGroup?: string;
   teacherGroupMatched?: boolean;
 };
+type CreateInvitationForRoleInput = Omit<CreateUserInvitationInput, "accessRoleId"> & {
+  role: UserRole;
+  accessRoleId: string | null;
+};
 export type UpdateUserRoleInput = { userId: string; accessRoleId: string };
 export type DeleteUserForAdminInput = { userId: string; adminId: string };
 
@@ -166,9 +170,8 @@ async function requireFamilyForInvitation(familyId?: string) {
   if (!family) throw new Error("family_not_found");
 }
 
-export async function createUserInvitation({ email, accessRoleId, familyId, invitedById, teacherName, teacherPosition, teacherGroup, teacherGroupMatched = false }: CreateUserInvitationInput) {
-  const accessRole = await requireActiveRole(accessRoleId);
-  const role = accessRole.baseRole;
+async function createInvitationForRole({ email, role, accessRoleId, familyId, invitedById, teacherName, teacherPosition, teacherGroup, teacherGroupMatched = false }: CreateInvitationForRoleInput) {
+  if (!accessRoleId && role !== UserRole.PARENT) throw new Error("role_not_available");
   const normalizedEmail = normalizeInvitationEmail(email);
   validateInvitationFamily(role, familyId);
   await requireFamilyForInvitation(familyId);
@@ -214,15 +217,21 @@ export async function createUserInvitation({ email, accessRoleId, familyId, invi
     return { invitation, token: tokenData.token };
   });
 }
+
+export async function createUserInvitation(input: CreateUserInvitationInput) {
+  const accessRole = await requireActiveRole(input.accessRoleId);
+  return createInvitationForRole({ ...input, role: accessRole.baseRole });
+}
+
 export async function resendUserInvitation(id: string, invitedById: string) {
   const existing = await prisma.userInvitation.findUnique({
     where: { id },
-    select: { email: true, accessRoleId: true, familyId: true, status: true, teacherName: true, teacherPosition: true, teacherGroup: true, teacherGroupMatched: true },
+    select: { email: true, role: true, accessRoleId: true, familyId: true, status: true, teacherName: true, teacherPosition: true, teacherGroup: true, teacherGroupMatched: true },
   });
-  if (!existing || existing.status !== InvitationStatus.PENDING || !existing.accessRoleId) {
+  if (!existing || existing.status !== InvitationStatus.PENDING || (!existing.accessRoleId && (existing.role !== UserRole.PARENT || !existing.familyId))) {
     throw new Error("invitation_not_resendable");
   }
-  return createUserInvitation({
+  const input = {
     email: existing.email,
     accessRoleId: existing.accessRoleId,
     familyId: existing.familyId ?? undefined,
@@ -231,7 +240,9 @@ export async function resendUserInvitation(id: string, invitedById: string) {
     teacherPosition: existing.teacherPosition ?? undefined,
     teacherGroup: existing.teacherGroup ?? undefined,
     teacherGroupMatched: existing.teacherGroupMatched,
-  });
+  };
+  if (existing.accessRoleId) return createUserInvitation({ ...input, accessRoleId: existing.accessRoleId });
+  return createInvitationForRole({ ...input, role: UserRole.PARENT });
 }
 
 export async function revokeUserInvitation(id: string) {
