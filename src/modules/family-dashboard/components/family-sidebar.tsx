@@ -49,6 +49,7 @@ const mainItems = [
 
 const studentItems = [
   { title: "Expediente de cada niñ@", href: "/family-dashboard/expediente", icon: FileText },
+  { title: "Cuestionario de ingreso", href: "/family-dashboard/cuestionario-ingreso", icon: ClipboardList },
   {
     title: "Acuerdos de seguimiento",
     href: "/family-dashboard/acuerdos-seguimiento",

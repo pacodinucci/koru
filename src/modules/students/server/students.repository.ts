@@ -48,6 +48,7 @@ export async function listStudentsForAdmin() {
   return prisma.student.findMany({
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     include: {
+      admissionQuestionnaire: { select: { submittedAt: true, updatedAt: true } },
       group: {
         select: {
           id: true,
@@ -75,6 +76,7 @@ export async function getStudentRecordForAdmin(studentId: string) {
   return prisma.student.findUnique({
     where: { id: studentId },
     include: {
+      admissionQuestionnaire: { select: { answers: true, submittedAt: true, updatedAt: true } },
       group: { select: { id: true, name: true, ageRange: true } },
       address: true,
       medicalProfile: true,
@@ -208,4 +210,3 @@ export async function saveStudentForAdmin(
     });
   });
 }
-

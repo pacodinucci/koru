@@ -81,6 +81,7 @@ type Student = {
   groupId: string;
   status: StudentStatus;
   recordStatus: "DRAFT" | "SUBMITTED" | "REVIEWED" | "NEEDS_CHANGES";
+  questionnaireStatus: "PENDING" | "DRAFT" | "COMPLETED";
   updatedAt: string;
   notes: string | null;
   group: StudentGroup;
@@ -319,6 +320,7 @@ export function DashboardStudentsClient({
                 <TableHead>Docentes</TableHead>
                 <TableHead>Responsable principal</TableHead>
                 <TableHead>Ficha</TableHead>
+                <TableHead>Cuestionario</TableHead>
                 <TableHead>Actualizada</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Acciones</TableHead>
@@ -327,7 +329,7 @@ export function DashboardStudentsClient({
             <TableBody>
               {filteredStudents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-muted-foreground">
+                  <TableCell colSpan={10} className="text-muted-foreground">
                     Todavía no hay alumnos para mostrar.
                   </TableCell>
                 </TableRow>
@@ -373,6 +375,7 @@ export function DashboardStudentsClient({
                         {recordStatusLabels[student.recordStatus]}
                       </Badge>
                     </TableCell>
+                    <TableCell><Badge variant="secondary">{student.questionnaireStatus === "COMPLETED" ? "Completado" : student.questionnaireStatus === "DRAFT" ? "En progreso" : "Pendiente"}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {new Date(student.updatedAt).toLocaleDateString("es-AR")}
                     </TableCell>

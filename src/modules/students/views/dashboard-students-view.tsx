@@ -23,6 +23,7 @@ export async function DashboardStudentsView() {
         groupId: student.groupId,
         status: student.status,
         recordStatus: student.recordStatus,
+        questionnaireStatus: student.admissionQuestionnaire?.submittedAt ? "COMPLETED" : student.admissionQuestionnaire ? "DRAFT" : "PENDING",
         updatedAt: student.updatedAt.toISOString(),
         notes: student.notes,
         group: student.group,

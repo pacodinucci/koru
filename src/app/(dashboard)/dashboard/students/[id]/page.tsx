@@ -11,6 +11,7 @@ import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { updateStudentRecordStatusAction } from "@/modules/students/server/student.actions";
 import { getStudentRecordForAdmin } from "@/modules/students/server/students.repository";
+import { admissionQuestionnaireSections, readQuestionnaireAnswers } from "@/modules/family-dashboard/lib/admission-questionnaire";
 
 const statusLabels = {
   DRAFT: "En progreso",
@@ -33,6 +34,8 @@ export default async function DashboardStudentRecordPage({ params }: { params: P
   if (!student) notFound();
 
   const guardian = student.guardians[0];
+  const questionnaire = student.admissionQuestionnaire;
+  const questionnaireAnswers = readQuestionnaireAnswers(questionnaire?.answers);
   return (
     <DashboardShell userEmail={user.email}
       userRole={user.role}
@@ -70,6 +73,29 @@ export default async function DashboardStudentRecordPage({ params }: { params: P
               <Value label="Responsable principal" value={guardian?.fullName || guardian?.user?.name} /><Value label="Email" value={guardian?.email} /><Value label="Teléfono" value={guardian?.phone} />
               {student.responsibles.map((contact) => <Value key={contact.id} label={`Contacto secundario · ${contact.relationship}`} value={`${contact.fullName} · ${contact.phone}`} />)}
             </dl></section>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between gap-3">
+            <CardTitle>Cuestionario de ingreso</CardTitle>
+            <Badge variant="secondary">{questionnaire?.submittedAt ? "Completado" : questionnaire ? "En progreso" : "Pendiente"}</Badge>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {!questionnaire?.submittedAt ? <p className="text-sm text-muted-foreground">La familia todavía no envió el cuestionario. Las respuestas en borrador no se muestran.</p> : <>
+              <p className="text-xs text-muted-foreground">Información sensible para acompañamiento pedagógico interno. Enviado el {questionnaire.submittedAt.toLocaleDateString("es-AR")}.</p>
+              <section><h3 className="mb-3 font-semibold">Información general</h3><dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <Value label="Nombre completo" value={`${student.firstName} ${student.lastName}`} />
+                <Value label="Fecha de nacimiento" value={student.birthDate.toLocaleDateString("es-AR")} />
+                <Value label="Dirección" value={[student.address?.streetAndNumber, student.address?.neighborhood, student.address?.cityAndState].filter(Boolean).join(", ")} />
+                <Value label="Teléfono de contacto" value={guardian?.phone} />
+                <Value label="Correos de madre, padre o tutores" value={student.guardians.map((item) => item.email).join(", ")} />
+                <Value label="Nombre de madre, padre o tutores" value={student.guardians.map((item) => item.fullName || item.user?.name).filter(Boolean).join(", ")} />
+              </dl></section>
+              {admissionQuestionnaireSections.map((section) => <section key={section.title} className="border-t pt-5">
+                <h3 className="mb-3 font-semibold">{section.title}</h3>
+                <dl className="grid gap-4 sm:grid-cols-2">{section.questions.map((question) => <Value key={question.key} label={question.label} value={questionnaireAnswers[question.key]} />)}</dl>
+              </section>)}
+            </>}
           </CardContent>
         </Card>
       </div>
