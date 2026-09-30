@@ -17,7 +17,7 @@ export function getGoogleInvitationToken(cookieHeader: string | null) {
 }
 
 export function assertGoogleInvitationCanCreateUser(email: string, invitation: GoogleInvitation) {
-  if (invitation.status !== InvitationStatus.PENDING || !invitation.expiresAt || invitation.expiresAt <= new Date() || normalizeEmail(email) !== normalizeEmail(invitation.email)) throw new Error("google_invitation_not_authorized");
+  if ((invitation.status !== InvitationStatus.PENDING && invitation.status !== InvitationStatus.ACCEPTED) || !invitation.expiresAt || invitation.expiresAt <= new Date() || normalizeEmail(email) !== normalizeEmail(invitation.email)) throw new Error("google_invitation_not_authorized");
   validateInvitationFamily(invitation.role, invitation.familyId ?? undefined);
   return { role: invitation.role, familyId: invitation.role === UserRole.PARENT ? invitation.familyId : null };
 }

@@ -7,11 +7,13 @@ const invitation = { email: "family@example.com", role: UserRole.PARENT, familyI
 
 test("Google acepta una invitación vigente y asigna familia y rol", () => {
   assert.deepEqual(assertGoogleInvitationCanCreateUser("FAMILY@example.com", invitation), { role: UserRole.PARENT, familyId: "family-1" });
+  assert.deepEqual(assertGoogleInvitationCanCreateUser("family@example.com", { ...invitation, status: InvitationStatus.ACCEPTED }), { role: UserRole.PARENT, familyId: "family-1" });
 });
 
 test("Google rechaza email diferente, vencimiento y familia inválida", () => {
   assert.throws(() => assertGoogleInvitationCanCreateUser("other@example.com", invitation), /not_authorized/);
   assert.throws(() => assertGoogleInvitationCanCreateUser("family@example.com", { ...invitation, expiresAt: new Date(Date.now() - 1) }), /not_authorized/);
+  assert.throws(() => assertGoogleInvitationCanCreateUser("family@example.com", { ...invitation, status: InvitationStatus.REVOKED }), /not_authorized/);
   assert.throws(() => assertGoogleInvitationCanCreateUser("family@example.com", { ...invitation, familyId: null }), /family_required_for_parent/);
 });
 

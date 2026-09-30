@@ -8,8 +8,8 @@ import {
   cancelStaleInvitationDeliveryJobs,
   createInvitationDeliveryJob,
 } from "@/modules/mailing/server/invitation-delivery-job.repository";
-import { validateInvitationFamily } from "@/modules/users/lib/user-invitation-policy";
-import { encryptInvitationToken } from "@/modules/users/server/invitation-token-cipher";
+import { hasValidSignupInvitationToken, validateInvitationFamily } from "@/modules/users/lib/user-invitation-policy";
+import { decryptInvitationToken, encryptInvitationToken } from "@/modules/users/server/invitation-token-cipher";
 import { createInvitationToken, hashInvitationToken } from "@/modules/users/server/user-invitation-token";
 
 export type CreateUserInvitationInput = {
@@ -29,6 +29,20 @@ export function normalizeInvitationEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
+function getRecoverableInvitationTokenHash(invitation: {
+  status: InvitationStatus;
+  tokenHash: string | null;
+  tokenCiphertext: string | null;
+}) {
+  if (invitation.tokenHash) return invitation.tokenHash;
+  if (invitation.status !== InvitationStatus.ACCEPTED || !invitation.tokenCiphertext) return null;
+  try {
+    return hashInvitationToken(decryptInvitationToken(invitation.tokenCiphertext));
+  } catch {
+    return null;
+  }
+}
+
 async function requireActiveRole(accessRoleId: string) {
   const role = await prisma.role.findFirst({
     where: { id: accessRoleId, isActive: true },
@@ -38,16 +52,17 @@ async function requireActiveRole(accessRoleId: string) {
   return role;
 }
 
-export async function getPendingUserInvitationByEmail(email: string) {
-  return prisma.userInvitation.findFirst({
-    where: { email: normalizeInvitationEmail(email), status: InvitationStatus.PENDING },
-    select: { id: true, email: true, role: true, accessRoleId: true, familyId: true, status: true, tokenHash: true, expiresAt: true },
+export async function getSignupUserInvitationByEmail(email: string) {
+  return prisma.userInvitation.findUnique({
+    where: { email: normalizeInvitationEmail(email) },
+    select: { id: true, email: true, role: true, accessRoleId: true, familyId: true, status: true, tokenHash: true, tokenCiphertext: true, expiresAt: true },
   });
 }
 
-export async function requirePendingUserInvitationByEmail(email: string, token: string) {
-  const invitation = await getPendingUserInvitationByEmail(email);
-  if (!invitation || !invitation.tokenHash || !invitation.expiresAt || invitation.expiresAt <= new Date() || invitation.tokenHash !== hashInvitationToken(token)) {
+export async function requireSignupUserInvitationByEmail(email: string, token: string) {
+  const invitation = await getSignupUserInvitationByEmail(email);
+  const expectedHash = invitation ? getRecoverableInvitationTokenHash(invitation) : null;
+  if (!invitation || !hasValidSignupInvitationToken({ ...invitation, tokenHash: expectedHash }, hashInvitationToken(token))) {
     throw new Error("sign_up_invitation_required");
   }
   return invitation;
@@ -60,9 +75,11 @@ export async function reconcileUserInvitationAfterSignup(email: string, token: s
     if (!user) throw new Error("user_not_found");
     const invitation = await tx.userInvitation.findUnique({
       where: { email: normalizedEmail },
-      select: { id: true, role: true, accessRoleId: true, familyId: true, teacherName: true, teacherPosition: true, teacherGroup: true, teacherGroupMatched: true, status: true, tokenHash: true, expiresAt: true, acceptedAt: true },
+      select: { id: true, role: true, accessRoleId: true, familyId: true, teacherName: true, teacherPosition: true, teacherGroup: true, teacherGroupMatched: true, status: true, tokenHash: true, tokenCiphertext: true, expiresAt: true, acceptedAt: true },
     });
-    if (!invitation || invitation.status !== InvitationStatus.PENDING || !invitation.tokenHash || !invitation.expiresAt || invitation.expiresAt <= new Date() || invitation.tokenHash !== hashInvitationToken(token)) {
+    const tokenHash = hashInvitationToken(token);
+    const expectedHash = invitation ? getRecoverableInvitationTokenHash(invitation) : null;
+    if (!invitation || !hasValidSignupInvitationToken({ ...invitation, tokenHash: expectedHash }, tokenHash)) {
       throw new Error("invitation_not_available");
     }
 
@@ -108,7 +125,7 @@ export async function reconcileUserInvitationAfterSignup(email: string, token: s
     }
     await tx.userInvitation.update({
       where: { id: invitation.id },
-      data: { status: InvitationStatus.ACCEPTED, acceptedAt: invitation.acceptedAt ?? new Date(), tokenHash: null },
+      data: { status: InvitationStatus.ACCEPTED, acceptedAt: invitation.acceptedAt ?? new Date(), tokenHash },
     });
     await tx.studentGuardian.updateMany({ where: { email: normalizedEmail, userId: null }, data: { userId: user.id, canPickup: true } });
   });
@@ -268,7 +285,7 @@ export async function deleteUserForAdmin({ userId, adminId }: DeleteUserForAdmin
   if (userId === adminId) throw new Error("self_delete_forbidden");
   const existingUser = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, accessRole: { select: { key: true } } },
+    select: { id: true, email: true, accessRole: { select: { key: true } } },
   });
   if (!existingUser) throw new Error("user_not_found");
   if (existingUser.accessRole?.key === "SUPERADMIN") {
@@ -278,5 +295,11 @@ export async function deleteUserForAdmin({ userId, adminId }: DeleteUserForAdmin
   if (await prisma.calendarEvent.count({ where: { createdById: userId } }) > 0) {
     throw new Error("user_has_created_calendar_events");
   }
-  return prisma.user.delete({ where: { id: userId }, select: { id: true } });
+  return prisma.$transaction(async (tx) => {
+    await tx.userInvitation.updateMany({
+      where: { email: existingUser.email, status: { in: [InvitationStatus.PENDING, InvitationStatus.ACCEPTED] } },
+      data: { status: InvitationStatus.REVOKED, tokenHash: null, expiresAt: new Date() },
+    });
+    return tx.user.delete({ where: { id: userId }, select: { id: true } });
+  });
 }

@@ -13,7 +13,7 @@ import { prisma } from "@/lib/prisma";
 import {
   normalizeInvitationEmail,
   reconcileUserInvitationAfterSignup,
-  requirePendingUserInvitationByEmail,
+  requireSignupUserInvitationByEmail,
 } from "@/modules/users/server/users.repository";
 
 const googleCredentials = env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
@@ -35,7 +35,7 @@ export const auth = betterAuth({
           if (!token) return;
           if (typeof user.email !== "string") return false;
           try {
-            const invitation = await requirePendingUserInvitationByEmail(normalizeInvitationEmail(user.email), token);
+            const invitation = await requireSignupUserInvitationByEmail(normalizeInvitationEmail(user.email), token);
             return { data: assertGoogleInvitationCanCreateUser(user.email, invitation) };
           } catch {
             return false;
@@ -58,7 +58,7 @@ export const auth = betterAuth({
         throw APIError.from("BAD_REQUEST", { code: "INVALID_EMAIL", message: "Invalid email" });
       }
       try {
-        await requirePendingUserInvitationByEmail(normalizeInvitationEmail(email), token);
+        await requireSignupUserInvitationByEmail(normalizeInvitationEmail(email), token);
       } catch {
         throw APIError.from("FORBIDDEN", { code: "SIGN_UP_INVITATION_REQUIRED", message: "Email is not authorized to sign up" });
       }

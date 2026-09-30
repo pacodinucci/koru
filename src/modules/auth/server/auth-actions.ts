@@ -1,5 +1,6 @@
 "use server";
 
+import { InvitationStatus } from "@prisma/client";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -11,8 +12,9 @@ import { legacyRolePermissions } from "@/modules/auth/permissions/permission-cat
 import { GOOGLE_INVITATION_COOKIE, GOOGLE_INVITATION_COOKIE_MAX_AGE_SECONDS } from "@/modules/auth/lib/google-invitation-flow";
 import { hashInvitationToken } from "@/modules/users/server/user-invitation-token";
 import {
-  requirePendingUserInvitationByEmail,
+  requireSignupUserInvitationByEmail,
   normalizeInvitationEmail,
+  reconcileUserInvitationAfterSignup,
 } from "@/modules/users/server/users.repository";
 
 const signInSchema = z.object({
@@ -137,7 +139,7 @@ export async function signUpGoogleAction(formData: FormData) {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) redirect(getErrorPath("/sign-up", "Google no esta configurado."));
 
   const invitation = await prisma.userInvitation.findFirst({ where: { tokenHash: hashInvitationToken(token) }, select: { email: true } });
-  if (!invitation || !(await requirePendingUserInvitationByEmail(invitation.email, token).catch(() => null))) redirect(getErrorPath("/sign-up", "La invitacion no es valida o vencio."));
+  if (!invitation || !(await requireSignupUserInvitationByEmail(invitation.email, token).catch(() => null))) redirect(getErrorPath("/sign-up", "La invitacion no es valida o vencio."));
   if (await prisma.user.findUnique({ where: { email: normalizeInvitationEmail(invitation.email) }, select: { id: true } })) redirect(getErrorPath("/sign-in", "Esta invitacion ya tiene una cuenta. Inicia sesion con Google."));
 
   (await cookies()).set(GOOGLE_INVITATION_COOKIE, encodeURIComponent(token), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: GOOGLE_INVITATION_COOKIE_MAX_AGE_SECONDS });
@@ -173,7 +175,7 @@ export async function signUpAction(formData: FormData) {
   }
 
   const normalizedEmail = normalizeInvitationEmail(parsed.data.email);
-  const invitation = await requirePendingUserInvitationByEmail(normalizedEmail, parsed.data.invitationToken).catch(() => null);
+  const invitation = await requireSignupUserInvitationByEmail(normalizedEmail, parsed.data.invitationToken).catch(() => null);
 
   if (!invitation) {
     redirect(
@@ -182,6 +184,26 @@ export async function signUpAction(formData: FormData) {
         "Tu email no esta autorizado para crear un usuario.",
       ),
     );
+  }
+
+  const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail }, select: { id: true } });
+  if (existingUser) {
+    try {
+      await auth.api.signInEmail({
+        headers: await headers(),
+        body: { email: normalizedEmail, password: parsed.data.password },
+      });
+    } catch {
+      redirect(getErrorPath("/sign-in", "Este email ya tiene una cuenta. Inicia sesion con su contraseña."));
+    }
+    if (invitation.status === InvitationStatus.PENDING) {
+      try {
+        await reconcileUserInvitationAfterSignup(normalizedEmail, parsed.data.invitationToken);
+      } catch {
+        redirect(getErrorPath("/sign-up", "No pudimos completar el registro. Intenta de nuevo."));
+      }
+    }
+    redirect(await getPostAuthRedirect(normalizedEmail));
   }
 
   try {
