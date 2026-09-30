@@ -114,10 +114,6 @@ export async function reconcileUserInvitationAfterSignup(email: string, token: s
   });
 }
 
-export async function rollbackUserCreatedDuringFailedSignup(email: string) {
-  await prisma.user.delete({ where: { email: normalizeInvitationEmail(email) } });
-}
-
 export async function listUsers() {
   return prisma.user.findMany({
     orderBy: { createdAt: "desc" },

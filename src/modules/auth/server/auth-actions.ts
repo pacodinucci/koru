@@ -13,8 +13,6 @@ import { hashInvitationToken } from "@/modules/users/server/user-invitation-toke
 import {
   requirePendingUserInvitationByEmail,
   normalizeInvitationEmail,
-  reconcileUserInvitationAfterSignup,
-  rollbackUserCreatedDuringFailedSignup,
 } from "@/modules/users/server/users.repository";
 
 const signInSchema = z.object({
@@ -199,21 +197,6 @@ export async function signUpAction(formData: FormData) {
   } catch {
     redirect(
       getErrorPath("/sign-up", "No pudimos crear el usuario. Intenta de nuevo."),
-    );
-  }
-
-  try {
-    await reconcileUserInvitationAfterSignup(normalizedEmail, parsed.data.invitationToken);
-  } catch {
-    await rollbackUserCreatedDuringFailedSignup(normalizedEmail).catch(() => {
-      // If rollback fails, keep the user-facing error generic and let admins reconcile.
-    });
-
-    redirect(
-      getErrorPath(
-        "/sign-up",
-        "No pudimos completar la creacion del usuario. Intenta de nuevo o contacta a administracion.",
-      ),
     );
   }
 
