@@ -72,7 +72,7 @@ export const siteChromeNavbarSlots: LandingContentSlot[] = [
 
 export const siteChromeFooterSlots: LandingContentSlot[] = [
   textSlot(siteChromeSlotIds.footerDescription, "Footer · descripción", "Koru es una comunidad viva de aprendizaje donde acompañamos procesos con presencia, cuidado y vínculo auténtico.", true),
-  textSlot(siteChromeSlotIds.footerLinksTitle, "Footer · enlaces · título", "Links"),
+  textSlot(siteChromeSlotIds.footerLinksTitle, "Footer · nuestras redes · título", "Nuestras redes"),
   textSlot(siteChromeSlotIds.footerCommunityTitle, "Footer · comunidad · título", "Comunidad"),
   ...[
     "Acompañamiento integral",
