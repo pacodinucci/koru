@@ -116,7 +116,7 @@ export function FamiliesDataTable({
   const pageCount = table.getPageCount();
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Input
           type="search"
@@ -127,8 +127,8 @@ export function FamiliesDataTable({
         />
         <p className="text-sm text-slate-600">{table.getPrePaginatedRowModel().rows.length} familias</p>
       </div>
-      <div className="rounded-xl border border-slate-200">
-        <Table>
+      <div className="min-w-0 rounded-xl border border-slate-200">
+        <Table className="min-w-[840px]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>

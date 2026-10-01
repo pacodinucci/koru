@@ -55,6 +55,16 @@ export async function listStudentsForAdmin() {
           name: true,
           ageRange: true,
           teacherResponsibilities: {
+            where: {
+              teacher: {
+                is: {
+                  isActive: true,
+                  user: {
+                    is: { role: { in: [UserRole.TEACHER, UserRole.ADMIN_TEACHER] } },
+                  },
+                },
+              },
+            },
             orderBy: { teacher: { displayName: "asc" } },
             include: {
               teacher: { select: { id: true, displayName: true, email: true } },

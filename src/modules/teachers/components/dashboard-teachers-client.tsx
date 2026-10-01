@@ -123,15 +123,15 @@ export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersC
 
   return (
     <div className="space-y-4">
-      <Card size="sm">
+      <Card size="sm" className="min-w-0">
         <CardHeader>
           <CardTitle>Docentes</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="min-w-0 space-y-3">
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
             Invitá docentes desde esta pantalla. Una vez que creen su cuenta, podés editar su perfil y asignarles grupos responsables.
           </div>
-          <Table>
+          <Table className="min-w-[980px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>

@@ -74,11 +74,11 @@ export async function DashboardMailingView({ canManage }: { canManage: boolean }
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-base">Entregas de invitaciones</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="min-w-0 space-y-4">
           <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-5">
             <div className="rounded-lg border p-3"><div className="text-muted-foreground">Pendientes</div><strong>{counts.PENDING}</strong></div>
             <div className="rounded-lg border p-3"><div className="text-muted-foreground">Procesando</div><strong>{counts.PROCESSING}</strong></div>
@@ -86,7 +86,7 @@ export async function DashboardMailingView({ canManage }: { canManage: boolean }
             <div className="rounded-lg border p-3"><div className="text-muted-foreground">Enviadas</div><strong>{counts.SENT}</strong></div>
             <div className="rounded-lg border p-3"><div className="text-muted-foreground">Fallidas</div><strong>{counts.FAILED}</strong></div>
           </div>
-          <Table>
+          <Table className="min-w-[960px]">
             <TableHeader><TableRow>
               <TableHead>Invitación</TableHead><TableHead>Estado</TableHead><TableHead>Intentos</TableHead>
               <TableHead>Próximo intento</TableHead><TableHead>Detalle</TableHead><TableHead>Acción</TableHead>
@@ -107,10 +107,10 @@ export async function DashboardMailingView({ canManage }: { canManage: boolean }
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader><CardTitle className="text-base">Historial de mailing</CardTitle></CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="min-w-0">
+          <Table className="min-w-[1120px]">
             <TableHeader><TableRow><TableHead>Tipo</TableHead><TableHead>Asunto</TableHead><TableHead>Destinatarios</TableHead><TableHead>Estado</TableHead><TableHead>Proveedor</TableHead><TableHead>Creado</TableHead><TableHead>Error</TableHead></TableRow></TableHeader>
             <TableBody>
               {messages.length === 0 ? <TableRow><TableCell colSpan={7} className="text-muted-foreground">Todavía no hay emails registrados.</TableCell></TableRow> : messages.map((message) => (

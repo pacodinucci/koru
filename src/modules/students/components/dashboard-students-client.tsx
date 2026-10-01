@@ -279,7 +279,7 @@ export function DashboardStudentsClient({
 
   return (
     <div className="space-y-4">
-      <Card size="sm">
+      <Card size="sm" className="min-w-0">
         <CardHeader>
           <CardTitle>Alumnos</CardTitle>
           {!readOnly ? (
@@ -291,7 +291,7 @@ export function DashboardStudentsClient({
             </CardAction>
           ) : null}
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="min-w-0 space-y-3">
           <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_220px]">
             <Input
               value={search}
@@ -311,7 +311,7 @@ export function DashboardStudentsClient({
               ))}
             </select>
           </div>
-          <Table>
+          <Table className="min-w-[1280px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Alumno</TableHead>
