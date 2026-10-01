@@ -119,11 +119,32 @@ const statusLabels: Record<StudentStatus, string> = {
   INACTIVE: "Inactivo",
   GRADUATED: "Egresado",
 };
+const statusBadgeVariants: Record<StudentStatus, "success" | "muted" | "special"> = {
+  ACTIVE: "success",
+  INACTIVE: "muted",
+  GRADUATED: "special",
+};
 const recordStatusLabels: Record<Student["recordStatus"], string> = {
   DRAFT: "En progreso",
   SUBMITTED: "Pendiente de revisión",
   REVIEWED: "Revisada",
   NEEDS_CHANGES: "Requiere cambios",
+};
+const recordStatusBadgeVariants: Record<Student["recordStatus"], "info" | "warning" | "success" | "danger"> = {
+  DRAFT: "info",
+  SUBMITTED: "warning",
+  REVIEWED: "success",
+  NEEDS_CHANGES: "danger",
+};
+const questionnaireStatusLabels: Record<Student["questionnaireStatus"], string> = {
+  PENDING: "Pendiente",
+  DRAFT: "En progreso",
+  COMPLETED: "Completado",
+};
+const questionnaireStatusBadgeVariants: Record<Student["questionnaireStatus"], "warning" | "info" | "success"> = {
+  PENDING: "warning",
+  DRAFT: "info",
+  COMPLETED: "success",
 };
 
 const emptyValues: StudentFormInput = {
@@ -323,13 +344,13 @@ export function DashboardStudentsClient({
                 <TableHead>Cuestionario</TableHead>
                 <TableHead>Actualizada</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Acciones</TableHead>
+                {!readOnly ? <TableHead>Acciones</TableHead> : null}
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredStudents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-muted-foreground">
+                  <TableCell colSpan={readOnly ? 9 : 10} className="text-muted-foreground">
                     Todavía no hay alumnos para mostrar.
                   </TableCell>
                 </TableRow>
@@ -337,7 +358,12 @@ export function DashboardStudentsClient({
                 filteredStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">
-                      {student.lastName}, {student.firstName}
+                      <Link
+                        href={`/dashboard/students/${student.id}`}
+                        className="text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                      >
+                        {student.lastName}, {student.firstName}
+                      </Link>
                     </TableCell>
                     <TableCell>{calculateAge(student.birthDate)}</TableCell>
                     <TableCell>{student.group.name}</TableCell>
@@ -365,55 +391,32 @@ export function DashboardStudentsClient({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          student.recordStatus === "NEEDS_CHANGES"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
+                      <Badge variant={recordStatusBadgeVariants[student.recordStatus]}>
                         {recordStatusLabels[student.recordStatus]}
                       </Badge>
                     </TableCell>
-                    <TableCell><Badge variant="secondary">{student.questionnaireStatus === "COMPLETED" ? "Completado" : student.questionnaireStatus === "DRAFT" ? "En progreso" : "Pendiente"}</Badge></TableCell>
+                    <TableCell><Badge variant={questionnaireStatusBadgeVariants[student.questionnaireStatus]}>{questionnaireStatusLabels[student.questionnaireStatus]}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {new Date(student.updatedAt).toLocaleDateString("es-AR")}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          student.status === "ACTIVE" ? "default" : "secondary"
-                        }
-                      >
+                      <Badge variant={statusBadgeVariants[student.status]}>
                         {statusLabels[student.status]}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1.5">
+                    {!readOnly ? (
+                      <TableCell>
                         <Button
-                          nativeButton={false}
-                          render={
-                            <Link href={`/dashboard/students/${student.id}`} />
-                          }
+                          type="button"
                           variant="outline"
                           size="sm"
                           className="h-auto px-2 py-1"
+                          onClick={() => editStudent(student)}
                         >
-                          Ver expediente
+                          Editar
                         </Button>
-                        {!readOnly ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-auto px-2 py-1"
-                            onClick={() => editStudent(student)}
-                          >
-                            Editar
-                          </Button>
-                        ) : null}
-                      </div>
-                    </TableCell>
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 ))
               )}

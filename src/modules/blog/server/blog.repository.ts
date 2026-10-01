@@ -105,6 +105,20 @@ export async function getPublishedPostBySlug(slug: string, userId?: string) {
   });
 }
 
+export async function getPublicPublishedPostMetadataBySlug(slug: string) {
+  return prisma.blogPost.findFirst({
+    where: {
+      slug,
+      status: BlogPostStatus.PUBLISHED,
+      visibility: BlogPostVisibility.PUBLIC,
+    },
+    select: {
+      title: true,
+      excerpt: true,
+    },
+  });
+}
+
 export async function getPublishedPostAccessBySlug(slug: string) {
   return prisma.blogPost.findFirst({
     where: {

@@ -67,3 +67,13 @@ export const familyResponsibleUpdateSchema = z.object({
   emergencyContact: z.boolean(),
 });
 export type FamilyResponsibleUpdateInput = z.infer<typeof familyResponsibleUpdateSchema>;
+
+export const familyResponsibleDeleteSchema = z.object({
+  source: z.enum(["guardian", "responsible"]),
+  ids: z.array(z.string().min(1)).min(1).max(100),
+}).superRefine((value, context) => {
+  if (new Set(value.ids).size !== value.ids.length) {
+    context.addIssue({ code: "custom", path: ["ids"], message: "Los responsables deben ser únicos." });
+  }
+});
+export type FamilyResponsibleDeleteInput = z.infer<typeof familyResponsibleDeleteSchema>;

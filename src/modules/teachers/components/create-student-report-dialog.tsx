@@ -27,7 +27,13 @@ type StudentOption = {
   group: { name: string };
 };
 
-export function CreateStudentReportDialog({ students }: { students: StudentOption[] }) {
+export function CreateStudentReportDialog({
+  students,
+  fixedStudent,
+}: {
+  students: StudentOption[];
+  fixedStudent?: StudentOption;
+}) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
@@ -39,7 +45,7 @@ export function CreateStudentReportDialog({ students }: { students: StudentOptio
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const studentId = String(data.get("studentId") ?? "");
+    const studentId = fixedStudent?.id ?? String(data.get("studentId") ?? "");
     if (!studentId || !students.some((student) => student.id === studentId)) {
       setError("Elegí un alumno de tus cursos.");
       return;
@@ -82,6 +88,7 @@ export function CreateStudentReportDialog({ students }: { students: StudentOptio
       setEditorValue({ json: "", text: "" });
       setEditorKey((key) => key + 1);
       setOpen(false);
+      if (fixedStudent) router.push("/dashboard/reportes");
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No pudimos guardar el reporte.");
@@ -103,13 +110,22 @@ export function CreateStudentReportDialog({ students }: { students: StudentOptio
         <form ref={formRef} onSubmit={submit} className="flex min-h-0 flex-1 flex-col" id="create-student-report-form">
           <ResponsiveDialogBody className="space-y-4">
             {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
-            <div className="space-y-1.5">
-              <Label htmlFor="report-student">Alumno</Label>
-              <select id="report-student" name="studentId" required defaultValue="" disabled={saving} className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm">
-                <option value="" disabled>Elegí un alumno</option>
-                {students.map((student) => <option key={student.id} value={student.id}>{student.lastName}, {student.firstName} · {student.group.name}</option>)}
-              </select>
-            </div>
+            {fixedStudent ? (
+              <div className="space-y-1.5">
+                <Label>Alumno</Label>
+                <p className="rounded-lg border border-input bg-muted/30 px-2.5 py-2 text-sm">
+                  {fixedStudent.lastName}, {fixedStudent.firstName} · {fixedStudent.group.name}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label htmlFor="report-student">Alumno</Label>
+                <select id="report-student" name="studentId" required defaultValue="" disabled={saving} className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm">
+                  <option value="" disabled>Elegí un alumno</option>
+                  {students.map((student) => <option key={student.id} value={student.id}>{student.lastName}, {student.firstName} · {student.group.name}</option>)}
+                </select>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="report-title">Título</Label>
               <Input id="report-title" name="title" required minLength={2} maxLength={160} disabled={saving} />

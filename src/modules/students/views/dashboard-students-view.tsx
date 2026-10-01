@@ -1,16 +1,15 @@
 import { DashboardStudentsClient } from "@/modules/students/components/dashboard-students-client";
 import {
-  listFamilyUsersForSelect,
   listStudentGroups,
-  listStudentsForAdmin,
+  listStudentsForViewer,
 } from "@/modules/students/server/students.repository";
 import { getTeachersFromGroupResponsibilities } from "@/modules/students/lib/group-teachers";
+import type { AuthenticatedUser } from "@/modules/auth/server/auth-guards";
 
-export async function DashboardStudentsView() {
-  const [students, groups, familyUsers] = await Promise.all([
-    listStudentsForAdmin(),
-    listStudentGroups(),
-    listFamilyUsersForSelect(),
+export async function DashboardStudentsView({ user }: { user: AuthenticatedUser }) {
+  const [students, groups] = await Promise.all([
+    listStudentsForViewer(user),
+    listStudentGroups(user),
   ]);
 
   return (
@@ -41,7 +40,7 @@ export async function DashboardStudentsView() {
         })),
       }))}
       groups={groups}
-      familyUsers={familyUsers}
+      familyUsers={[]}
       readOnly
     />
   );

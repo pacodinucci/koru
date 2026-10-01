@@ -3,6 +3,11 @@ import "server-only";
 import { UserRole, type InvitationStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import {
+  studentGroupWhereForViewer,
+  studentWhereForViewer,
+  type StudentViewer,
+} from "@/modules/students/lib/student-read-scope";
 import type { StudentFormInput } from "@/modules/students/schemas/student.schema";
 
 function normalizeEmail(email: string) {
@@ -19,9 +24,9 @@ function parseBirthDate(value: string) {
   return date;
 }
 
-export async function listStudentGroups() {
+export async function listStudentGroups(viewer?: StudentViewer) {
   return prisma.studentGroup.findMany({
-    where: { isActive: true },
+    where: viewer ? studentGroupWhereForViewer(viewer) : { isActive: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: {
       id: true,
@@ -44,8 +49,9 @@ export async function listFamilyUsersForSelect() {
   });
 }
 
-export async function listStudentsForAdmin() {
+export async function listStudentsForViewer(viewer: StudentViewer) {
   return prisma.student.findMany({
+    where: studentWhereForViewer(viewer),
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     include: {
       admissionQuestionnaire: { select: { submittedAt: true, updatedAt: true } },
@@ -82,9 +88,12 @@ export async function listStudentsForAdmin() {
   });
 }
 
-export async function getStudentRecordForAdmin(studentId: string) {
-  return prisma.student.findUnique({
-    where: { id: studentId },
+export async function getStudentRecordForViewer(studentId: string, viewer: StudentViewer) {
+  return prisma.student.findFirst({
+    where: {
+      id: studentId,
+      ...studentWhereForViewer(viewer),
+    },
     include: {
       admissionQuestionnaire: { select: { answers: true, submittedAt: true, updatedAt: true } },
       group: { select: { id: true, name: true, ageRange: true } },
@@ -98,12 +107,35 @@ export async function getStudentRecordForAdmin(studentId: string) {
     },
   });
 }
+
+export async function listStudentReportsForViewer(studentId: string, viewer: StudentViewer) {
+  return prisma.studentReport.findMany({
+    where: {
+      student: { id: studentId, ...studentWhereForViewer(viewer) },
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      type: true,
+      title: true,
+      body: true,
+      fileName: true,
+      visibleToFamily: true,
+      createdAt: true,
+      teacher: { select: { displayName: true, userId: true } },
+    },
+  });
+}
 export async function updateStudentRecordStatus(
   studentId: string,
   recordStatus: "SUBMITTED" | "REVIEWED" | "NEEDS_CHANGES",
+  viewer: StudentViewer,
 ) {
-  return prisma.student.update({
-    where: { id: studentId },
+  return prisma.student.updateMany({
+    where: {
+      id: studentId,
+      ...studentWhereForViewer(viewer),
+    },
     data: { recordStatus },
   });
 }

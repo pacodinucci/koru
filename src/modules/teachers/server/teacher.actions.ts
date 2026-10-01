@@ -26,7 +26,6 @@ export async function updateTeacherProfileAction(input: TeacherFormInput) {
     await updateTeacherProfileForAdmin(parsed.data);
     revalidatePath("/dashboard/teachers");
     revalidatePath("/dashboard/students");
-    revalidatePath("/dashboard/exams");
     return { ok: true };
   } catch (error) {
     return {

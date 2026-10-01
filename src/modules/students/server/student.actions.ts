@@ -6,18 +6,18 @@ import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { studentFormSchema, type StudentFormInput } from "@/modules/students/schemas/student.schema";
 import {
   listStudentGroups,
-  listStudentsForAdmin,
+  listStudentsForViewer,
   updateStudentRecordStatus,
 } from "@/modules/students/server/students.repository";
 
 export async function listStudentsForAdminAction() {
-  await requirePermission("students.manage");
-  return listStudentsForAdmin();
+  const user = await requirePermission("students.manage");
+  return listStudentsForViewer(user);
 }
 
 export async function listStudentGroupsAction() {
-  await requirePermission("students.manage");
-  return listStudentGroups();
+  const user = await requirePermission("students.manage");
+  return listStudentGroups(user);
 }
 
 export async function saveStudentAction(input: StudentFormInput) {
@@ -28,11 +28,12 @@ export async function saveStudentAction(input: StudentFormInput) {
 }
 
 export async function updateStudentRecordStatusAction(formData: FormData) {
-  await requirePermission("students.manage");
+  const user = await requirePermission("students.manage");
   const studentId = formData.get("studentId");
   const recordStatus = formData.get("recordStatus");
   if (typeof studentId !== "string" || (recordStatus !== "SUBMITTED" && recordStatus !== "REVIEWED" && recordStatus !== "NEEDS_CHANGES")) return;
-  await updateStudentRecordStatus(studentId, recordStatus);
+  const result = await updateStudentRecordStatus(studentId, recordStatus, user);
+  if (result.count === 0) return;
   revalidatePath("/dashboard/students");
   revalidatePath(`/dashboard/students/${studentId}`);
 }

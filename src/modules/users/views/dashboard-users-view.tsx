@@ -47,16 +47,14 @@ function invitationStatusLabel(status: InvitationStatus) {
   return labels[status];
 }
 
+const invitationStatusVariants: Record<InvitationStatus, "warning" | "success" | "muted"> = {
+  PENDING: "warning",
+  ACCEPTED: "success",
+  REVOKED: "muted",
+};
+
 function invitationStatusVariant(status: InvitationStatus) {
-  if (status === InvitationStatus.PENDING) {
-    return "secondary" as const;
-  }
-
-  if (status === InvitationStatus.ACCEPTED) {
-    return "default" as const;
-  }
-
-  return "outline" as const;
+  return invitationStatusVariants[status];
 }
 
 type DashboardUsersViewProps = {
@@ -131,7 +129,7 @@ export async function DashboardUsersView({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={user.accessRole?.baseRole === "SUPERADMIN" ? "default" : "secondary"}>
+                      <Badge variant={user.accessRole?.baseRole === "SUPERADMIN" ? "special" : "info"}>
                         {user.accessRole?.name ?? user.role}
                       </Badge>
                       <div className="mt-1 text-xs text-muted-foreground">

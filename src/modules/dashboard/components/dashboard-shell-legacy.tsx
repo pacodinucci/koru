@@ -125,7 +125,7 @@ function DashboardMain({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
                   <LayoutGridIcon />
-                  Account
+                  Mi cuenta
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <form ref={signOutFormRef} action={onSignOut} className="hidden" />
@@ -135,7 +135,7 @@ function DashboardMain({
                   }}
                 >
                   <LogOutIcon />
-                  Sign out
+                  Cerrar sesión
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

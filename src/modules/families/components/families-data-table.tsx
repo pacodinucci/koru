@@ -41,6 +41,11 @@ const labels = {
   SUSPENDED: "Suspendida",
   INACTIVE: "Inactiva",
 } as const;
+const statusBadgeVariants: Record<FamilyListItem["status"], "success" | "warning" | "muted"> = {
+  ACTIVE: "success",
+  SUSPENDED: "warning",
+  INACTIVE: "muted",
+};
 const features = tableFeatures({
   columnFilteringFeature,
   globalFilteringFeature,
@@ -86,7 +91,7 @@ export function FamiliesDataTable({
         }),
         columnHelper.accessor("status", {
           header: "Estado",
-          cell: (info) => <Badge variant="secondary">{labels[info.getValue()]}</Badge>,
+          cell: (info) => <Badge variant={statusBadgeVariants[info.getValue()]}>{labels[info.getValue()]}</Badge>,
           enableGlobalFilter: false,
         }),
         columnHelper.accessor("balance", {

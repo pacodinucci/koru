@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResponsiveDialog, ResponsiveDialogBody, ResponsiveDialogContent, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from "@/components/ui/responsive-dialog";
-import { createFamilyStudentResponsibleAction, updateFamilyResponsibleAction } from "@/modules/family-dashboard/server/family-student-record.actions";
+import { createFamilyStudentResponsibleAction, deleteFamilyResponsiblesAction, updateFamilyResponsibleAction } from "@/modules/family-dashboard/server/family-student-record.actions";
 
 type StudentOption = { id: string; fullName: string };
 type ResponsibleItem = {
@@ -22,6 +22,10 @@ type ResponsibleItem = {
   emergencyContact: boolean;
   hasUser: boolean;
   isCurrentUser: boolean;
+  editable: boolean;
+  deletable: boolean;
+  deleteIds: string[];
+  source: "family-user" | "guardian" | "responsible";
 };
 
 const initialForm = {
@@ -46,6 +50,21 @@ export function FamilyResponsiblesPanel({
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  function removeResponsible(responsible: ResponsibleItem) {
+    if (!responsible.deletable || responsible.source === "family-user") return;
+    if (!window.confirm(`¿Eliminar a ${responsible.fullName} de los responsables de la familia?`)) return;
+
+    startTransition(async () => {
+      const result = await deleteFamilyResponsiblesAction({ source: responsible.source, ids: responsible.deleteIds });
+      if (!result.ok) {
+        setError("No se pudo eliminar el responsable. Actualizá la página e intentá de nuevo.");
+        return;
+      }
+      setError(null);
+      router.refresh();
+    });
+  }
 
   function update<K extends keyof typeof initialForm>(key: K, value: (typeof initialForm)[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -79,6 +98,8 @@ export function FamilyResponsiblesPanel({
         </Button>
       </div>
 
+      {error ? <p role="alert" className="border-b border-red-100 px-4 py-2 text-sm text-red-700">{error}</p> : null}
+
       {responsibles.length ? (
         <ul className="divide-y divide-slate-100">
           {responsibles.map((responsible) => (
@@ -88,12 +109,9 @@ export function FamilyResponsiblesPanel({
                   <p className="truncate text-sm font-medium text-slate-900">{responsible.fullName}</p>
                   <p className="text-xs text-slate-500">{responsible.phone}</p>
                 </div>
-                <div className="flex shrink-0 flex-wrap justify-end gap-1">
-                  {responsible.isCurrentUser ? <Badge className="bg-[var(--brand-600)]">Tu</Badge> : null}
-                  <Badge variant="outline">{responsible.hasUser ? "Con usuario" : "Sin usuario"}</Badge>
-                  {responsible.canPickup ? <Badge className="bg-[var(--brand-600)]">Retiro</Badge> : null}
-                  {responsible.emergencyContact ? <Badge variant="secondary">Emergencia</Badge> : null}
-                  <Button type="button" variant="ghost" size="icon" aria-label="Editar responsable" onClick={() => { setEditing(responsible); setForm({ studentId: "", fullName: responsible.fullName, relationship: responsible.relationship, phone: responsible.phone, canPickup: responsible.canPickup, emergencyContact: responsible.emergencyContact }); setIsOpen(true); }}><Pencil /></Button>
+                <div className="flex shrink-0 items-center gap-1">
+                  {responsible.editable ? <Button type="button" variant="ghost" size="icon" aria-label="Editar responsable" onClick={() => { setEditing(responsible); setForm({ studentId: "", fullName: responsible.fullName, relationship: responsible.relationship, phone: responsible.phone, canPickup: responsible.canPickup, emergencyContact: responsible.emergencyContact }); setIsOpen(true); }}><Pencil /></Button> : null}
+                  {responsible.deletable ? <Button type="button" variant="ghost" size="icon" aria-label={`Eliminar a ${responsible.fullName}`} onClick={() => removeResponsible(responsible)} disabled={isPending}><Trash2 /></Button> : null}
                 </div>
               </div>
             </li>
@@ -111,6 +129,12 @@ export function FamilyResponsiblesPanel({
             <form onSubmit={submit}>
               <ResponsiveDialogHeader><ResponsiveDialogTitle>{editing ? "Editar responsable" : "Agregar responsable"}</ResponsiveDialogTitle></ResponsiveDialogHeader>
               <ResponsiveDialogBody className="space-y-4">
+            {editing ? <div className="flex flex-wrap gap-1.5" aria-label="Estado del responsable">
+              {editing.isCurrentUser ? <Badge>Tu</Badge> : null}
+              <Badge variant="outline">{editing.hasUser ? "Con usuario" : "Sin usuario"}</Badge>
+              {form.canPickup ? <Badge>Retiro</Badge> : null}
+              {form.emergencyContact ? <Badge variant="secondary">Emergencia</Badge> : null}
+            </div> : null}
             {!editing ? <p className="text-sm text-muted-foreground">Este responsable se vinculará a todos los hijos de la familia.</p> : null}
             <div className="space-y-1.5"><Label htmlFor="responsible-name">Nombre completo</Label><Input id="responsible-name" value={form.fullName} onChange={(event) => update("fullName", event.target.value)} required /></div>
             <div className="space-y-1.5"><Label htmlFor="responsible-relationship">Rol en la familia</Label><select id="responsible-relationship" className="h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm" value={form.relationship} onChange={(event) => update("relationship", event.target.value)} required><option value="MOTHER">Madre</option><option value="FATHER">Padre</option><option value="TUTOR">Tutor/a</option><option value="GUARDIAN">Responsable</option><option value="OTHER">Otro</option></select></div>

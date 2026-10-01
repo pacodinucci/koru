@@ -24,8 +24,6 @@ export const permissionCatalog = [
   { key: "students.manage", section: "Alumnos", label: "Gestionar" },
   { key: "teachers.view", section: "Docentes", label: "Ver" },
   { key: "teachers.manage", section: "Docentes", label: "Gestionar" },
-  { key: "exams.view", section: "Notas", label: "Ver" },
-  { key: "exams.manage", section: "Notas", label: "Gestionar" },
   { key: "users.view", section: "Usuarios", label: "Ver" },
   { key: "users.manage", section: "Usuarios", label: "Gestionar" },
   { key: "mailing.view", section: "Mailing", label: "Ver" },
@@ -60,8 +58,6 @@ export const legacyRolePermissions: Record<UserRole, readonly PermissionKey[]> =
     "cash-fund.view",
     "inventory.view",
     "students.view",
-    "exams.view",
-    "exams.manage",
   ],
   TEACHER: [
     "dashboard.access",
@@ -69,8 +65,6 @@ export const legacyRolePermissions: Record<UserRole, readonly PermissionKey[]> =
     "cash-fund.view",
     "inventory.view",
     "students.view",
-    "exams.view",
-    "exams.manage",
   ],
   PARENT: [],
 };

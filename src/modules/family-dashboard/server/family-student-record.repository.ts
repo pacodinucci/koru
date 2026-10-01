@@ -189,3 +189,38 @@ export async function updateFamilyResponsible(input: FamilyResponsibleUpdateInpu
   await requireOwnedStudent(responsible.studentId, familyId);
   return prisma.studentResponsible.update({ where: { id: input.id }, data });
 }
+
+export async function deleteFamilyResponsibles(input: { source: "guardian" | "responsible"; ids: string[] }, user: FamilyUser) {
+  const familyId = requireFamilyId(user);
+
+  return prisma.$transaction(async (tx) => {
+    if (input.source === "guardian") {
+      const guardians = await tx.studentGuardian.findMany({
+        where: { id: { in: input.ids } },
+        select: { id: true, userId: true, email: true, student: { select: { familyId: true } } },
+      });
+      const familyUsers = await tx.user.findMany({
+        where: { familyId, email: { in: guardians.map((guardian) => guardian.email), mode: "insensitive" } },
+        select: { email: true },
+      });
+      const familyEmails = new Set(familyUsers.map((familyUser) => familyUser.email.trim().toLocaleLowerCase("en-US")));
+      if (guardians.length !== input.ids.length || guardians.some((guardian) => guardian.userId || familyEmails.has(guardian.email.trim().toLocaleLowerCase("en-US")) || guardian.student.familyId !== familyId)) {
+        throw new Error("responsible_not_found");
+      }
+      return tx.studentGuardian.deleteMany({
+        where: { id: { in: input.ids }, userId: null, student: { familyId } },
+      });
+    }
+
+    const responsibles = await tx.studentResponsible.findMany({
+      where: { id: { in: input.ids } },
+      select: { id: true, student: { select: { familyId: true } } },
+    });
+    if (responsibles.length !== input.ids.length || responsibles.some((responsible) => responsible.student.familyId !== familyId)) {
+      throw new Error("responsible_not_found");
+    }
+    return tx.studentResponsible.deleteMany({
+      where: { id: { in: input.ids }, student: { familyId } },
+    });
+  });
+}

@@ -28,7 +28,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     (previewFamilyId !== null && report.student.familyId === previewFamilyId)
   );
   const teacherAllowed = !familyAllowed && !!(await getAssignedTeacherStudent(user.id, report.studentId));
-  if (!familyAllowed && !teacherAllowed) {
+  const adminAllowed = user.permissionKeys.includes("students.view")
+    && (user.role === "ADMIN" || user.role === "SUPERADMIN" || user.role === "ADMIN_OPERATOR");
+  if (!familyAllowed && !teacherAllowed && !adminAllowed) {
     return NextResponse.json({ error: "Reporte no disponible." }, { status: 404 });
   }
 

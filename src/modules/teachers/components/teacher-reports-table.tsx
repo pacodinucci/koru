@@ -25,7 +25,10 @@ type StudentOption = {
   group: { name: string };
 };
 
-type ReportRow = TeacherReport & { student: StudentOption };
+type ReportRow = TeacherReport & {
+  student: StudentOption;
+  canManageVisibility?: boolean;
+};
 
 function ReportDetails({ report }: { report: ReportRow }) {
   return (
@@ -46,7 +49,15 @@ function ReportDetails({ report }: { report: ReportRow }) {
   );
 }
 
-export function TeacherReportsTable({ reports, students }: { reports: ReportRow[]; students: StudentOption[] }) {
+export function TeacherReportsTable({
+  reports,
+  students,
+  fixedStudent,
+}: {
+  reports: ReportRow[];
+  students: StudentOption[];
+  fixedStudent?: StudentOption;
+}) {
   const router = useRouter();
   const [studentId, setStudentId] = useState("");
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -56,6 +67,7 @@ export function TeacherReportsTable({ reports, students }: { reports: ReportRow[
   useEffect(() => setVisibilityOverrides({}), [reports]);
 
   async function changeVisibility(report: ReportRow, visibleToFamily: boolean) {
+    if (report.canManageVisibility === false) return;
     setPendingId(report.id);
     setError(null);
     try {
@@ -77,15 +89,21 @@ export function TeacherReportsTable({ reports, students }: { reports: ReportRow[
 
   if (reports.length === 0) {
     return <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-muted-foreground">
-      {students.length === 0 ? "Todavía no tenés alumnos asignados." : "Todavía no cargaste reportes."}
+      {fixedStudent
+        ? "Todavía no hay reportes de este alumno."
+        : students.length === 0
+          ? "Todavía no tenés alumnos asignados."
+          : "Todavía no cargaste reportes."}
     </div>;
   }
 
-  const filtered = studentId ? reports.filter((report) => report.student.id === studentId) : reports;
+  const filtered = fixedStudent
+    ? reports
+    : studentId ? reports.filter((report) => report.student.id === studentId) : reports;
 
   return (
     <div className="space-y-3">
-      <div className="space-y-1.5">
+      {!fixedStudent ? <div className="space-y-1.5">
         <Label htmlFor="report-student-filter">Filtrar por alumno</Label>
         <select id="report-student-filter" value={studentId} onChange={(event) => setStudentId(event.target.value)}
           className="h-9 w-full max-w-sm rounded-lg border border-input bg-background px-2.5 text-sm">
@@ -94,14 +112,14 @@ export function TeacherReportsTable({ reports, students }: { reports: ReportRow[
             {student.lastName}, {student.firstName} · {student.group.name}
           </option>)}
         </select>
-      </div>
+      </div> : null}
       {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
       <div className="rounded-xl border border-slate-200 bg-white">
-        <Table>
+        <Table className={fixedStudent ? "min-w-[560px]" : undefined}>
           <TableHeader>
             <TableRow className="bg-slate-50">
               <TableHead className="hidden w-[12%] md:table-cell">Fecha</TableHead>
-              <TableHead className="w-[30%] md:w-[20%]">Alumno</TableHead>
+              <TableHead className="w-[30%] md:w-[20%]">{fixedStudent ? "Docente" : "Alumno"}</TableHead>
               <TableHead className="w-[40%] md:w-[28%]">Reporte</TableHead>
               <TableHead className="hidden w-[10%] md:table-cell">Tipo</TableHead>
               <TableHead className="hidden w-[14%] md:table-cell">Detalle</TableHead>
@@ -113,7 +131,7 @@ export function TeacherReportsTable({ reports, students }: { reports: ReportRow[
               const visible = visibilityOverrides[report.id] ?? report.visibleToFamily;
               return <TableRow key={report.id}>
                 <TableCell className="hidden md:table-cell">{new Date(report.createdAt).toLocaleDateString("es-AR")}</TableCell>
-                <TableCell>{report.student.lastName}, {report.student.firstName}</TableCell>
+                <TableCell>{fixedStudent ? report.teacher.displayName : `${report.student.lastName}, ${report.student.firstName}`}</TableCell>
                 <TableCell className="font-medium">
                   {report.title}
                   <span className="mt-1 block text-xs font-normal text-muted-foreground md:hidden">
@@ -128,10 +146,13 @@ export function TeacherReportsTable({ reports, students }: { reports: ReportRow[
                     <Switch
                       checked={visible}
                       aria-label={`Visible para la familia: ${report.title} de ${report.student.firstName} ${report.student.lastName}`}
-                      disabled={pendingId !== null}
+                      disabled={pendingId !== null || report.canManageVisibility === false}
                       onCheckedChange={(checked) => void changeVisibility(report, checked)}
                     />
-                    <span className="text-xs text-muted-foreground">{visible ? "Visible" : "Privado"}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {visible ? "Visible" : "Privado"}
+                      {report.canManageVisibility === false ? <span className="block">Solo el autor puede cambiarlo</span> : null}
+                    </span>
                   </div>
                 </TableCell>
               </TableRow>;

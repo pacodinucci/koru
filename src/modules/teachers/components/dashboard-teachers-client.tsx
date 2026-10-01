@@ -165,7 +165,7 @@ export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersC
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={teacher.isActive ? "default" : "secondary"}>
+                      <Badge variant={teacher.isActive ? "success" : "muted"}>
                         {teacher.isActive ? "Activo" : "Inactivo"}
                       </Badge>
                     </TableCell>
@@ -255,7 +255,7 @@ export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersC
                         <div>
                           <FormLabel>Grupos responsables</FormLabel>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Estos grupos habilitan al docente a cargar exámenes y notas.
+                            Estos grupos definen los alumnos a cargo del docente.
                           </p>
                         </div>
                         <FormControl>

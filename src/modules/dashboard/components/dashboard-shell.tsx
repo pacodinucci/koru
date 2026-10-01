@@ -14,7 +14,6 @@ import {
   FolderOpen,
   NotebookPen,
   CalendarDays,
-  ClipboardList,
   Mail,
   Users,
   HandCoins,
@@ -139,7 +138,6 @@ export function DashboardShell({
   const isStudentsActive = pathname.startsWith("/dashboard/students");
   const isFamiliesActive = pathname.startsWith("/dashboard/families");
   const isTeachersActive = pathname.startsWith("/dashboard/teachers");
-  const isExamsActive = pathname.startsWith("/dashboard/exams");
   const isReportsActive = pathname.startsWith("/dashboard/reportes");
   const isLayoutActive = pathname.startsWith("/dashboard/diseno");
   const isContentActive = pathname.startsWith("/dashboard/content");
@@ -450,18 +448,6 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    hidden={!can("exams.view")}
-                    isActive={isExamsActive}
-                    className={sidebarMenuButtonClass}
-                    render={<Link href="/dashboard/exams" />}
-                  >
-                    <ClipboardList />
-                    <span>Notas</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-
                 {(userRole === "TEACHER" || userRole === "ADMIN_TEACHER") ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton
@@ -537,10 +523,10 @@ export function DashboardShell({
             >
               <DropdownMenuItem>
                 <User2 className="h-4 w-4" />
-                Account
+                Mi cuenta
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Sign out</DropdownMenuItem>
+              <DropdownMenuItem>Cerrar sesión</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarFooter>

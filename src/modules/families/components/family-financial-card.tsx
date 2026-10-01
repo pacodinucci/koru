@@ -16,7 +16,7 @@ type FamilyFinancialCardProps = { family: { id: string; name: string; balance: s
 const typeLabels: Record<FinancialEntry["type"], string> = { MONTHLY_CHARGE: "Cuota básica", EVENTUAL_CHARGE: "Cargo eventual", PAYMENT: "Pago", PAYMENT_REVERSAL: "Anulación", BALANCE_WAIVER: "Condonación" };
 const methodLabels: Record<NonNullable<FinancialEntry["payment"]>["method"], string> = { CASH: "Efectivo", BANK_TRANSFER: "Transferencia", CARD: "Tarjeta", OTHER: "Otro" };
 function currency(value: string | number) { return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(Number(value)); }
-function EntryStatus({ entry }: { entry: FinancialEntry }) { if (entry.payment?.status === "VOIDED") return <Badge variant="destructive">Anulado</Badge>; if (entry.type === "BALANCE_WAIVER") return <Badge variant="secondary">Condonado</Badge>; return <Badge variant="secondary">Registrado</Badge>; }
+function EntryStatus({ entry }: { entry: FinancialEntry }) { if (entry.payment?.status === "VOIDED") return <Badge variant="danger">Anulado</Badge>; if (entry.type === "BALANCE_WAIVER") return <Badge variant="special">Condonado</Badge>; return <Badge variant="info">Registrado</Badge>; }
 
 export function FamilyFinancialCard({ family, eventualChargeItems, canManagePayments, canWaive }: FamilyFinancialCardProps) {
   const router = useRouter();

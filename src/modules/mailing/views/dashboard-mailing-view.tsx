@@ -42,10 +42,14 @@ function statusLabel(status: EmailDeliveryStatus) {
   return ({ PENDING: "Pendiente", SENT: "Enviado", FAILED: "Falló" })[status];
 }
 
+const emailStatusVariants: Record<EmailDeliveryStatus, "warning" | "success" | "danger"> = {
+  PENDING: "warning",
+  SENT: "success",
+  FAILED: "danger",
+};
+
 function statusVariant(status: EmailDeliveryStatus) {
-  if (status === EmailDeliveryStatus.SENT) return "default" as const;
-  if (status === EmailDeliveryStatus.FAILED) return "destructive" as const;
-  return "secondary" as const;
+  return emailStatusVariants[status];
 }
 
 function jobStatusLabel(status: InvitationDeliveryJobStatus) {
@@ -55,11 +59,17 @@ function jobStatusLabel(status: InvitationDeliveryJobStatus) {
   })[status];
 }
 
+const jobStatusVariants: Record<InvitationDeliveryJobStatus, "warning" | "info" | "attention" | "success" | "danger" | "muted"> = {
+  PENDING: "warning",
+  PROCESSING: "info",
+  RETRY_SCHEDULED: "attention",
+  SENT: "success",
+  FAILED: "danger",
+  CANCELLED: "muted",
+};
+
 function jobStatusVariant(status: InvitationDeliveryJobStatus) {
-  if (status === InvitationDeliveryJobStatus.SENT) return "default" as const;
-  if (status === InvitationDeliveryJobStatus.FAILED) return "destructive" as const;
-  if (status === InvitationDeliveryJobStatus.CANCELLED) return "outline" as const;
-  return "secondary" as const;
+  return jobStatusVariants[status];
 }
 
 export async function DashboardMailingView({ canManage }: { canManage: boolean }) {

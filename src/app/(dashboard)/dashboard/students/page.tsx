@@ -17,7 +17,7 @@ export default async function DashboardStudentsPage() {
       cmsPages={cmsPages}
       breadcrumbPage="Alumnos"
     >
-      <DashboardStudentsView />
+      <DashboardStudentsView user={user} />
     </DashboardShell>
   );
 }

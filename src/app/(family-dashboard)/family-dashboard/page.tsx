@@ -13,6 +13,7 @@ import { FamilyResponsiblesPanel } from "@/modules/family-dashboard/views/family
 import { FamilyStudentOnboarding } from "@/modules/family-dashboard/views/family-student-onboarding";
 import { FamilyUpcomingEvents } from "@/modules/family-dashboard/views/family-upcoming-events";
 import { listUpcomingVisibleEventsForUser } from "@/modules/dashboard/server/calendar.repository";
+import { buildFamilyResponsibles } from "@/modules/families/lib/family-responsibles";
 import { listStudentGroups } from "@/modules/students/server/students.repository";
 
 export default async function FamilyDashboardPage({
@@ -22,12 +23,13 @@ export default async function FamilyDashboardPage({
 }) {
   const { view } = await searchParams;
   const { viewer, familyUser } = await requireFamilyDashboardAccess();
-  const [students, upcomingEvents, groups, familyProfile, family] = await Promise.all([
+  const [students, upcomingEvents, groups, familyProfile, family, familyUsers] = await Promise.all([
     familyUser.familyId ? listFamilyStudentRecords(familyUser.familyId) : Promise.resolve([]),
     listUpcomingVisibleEventsForUser(familyUser.id, familyUser.role),
     listStudentGroups(),
     getFamilyProfile(familyUser.id),
     familyUser.familyId ? prisma.family.findUnique({ where: { id: familyUser.familyId }, select: { name: true } }) : null,
+    familyUser.familyId ? prisma.user.findMany({ where: { familyId: familyUser.familyId }, select: { id: true, name: true, email: true }, orderBy: { createdAt: "asc" } }) : Promise.resolve([]),
   ]);
 
   const studentItems = students.map((student) => ({
@@ -53,58 +55,7 @@ export default async function FamilyDashboardPage({
     responsibles: student.responsibles,
   }));
 
-  const guardianResponsibles = new Map<string, {
-    id: string;
-    studentNames: string[];
-    fullName: string;
-    relationship: string;
-    phone: string;
-    canPickup: boolean;
-    emergencyContact: boolean;
-    hasUser: boolean;
-    isCurrentUser: boolean;
-  }>();
-
-  for (const student of students) {
-    const studentName = [student.firstName, student.lastName].join(" ");
-    for (const guardian of student.guardians) {
-      const key = guardian.userId ?? guardian.email;
-      const existing = guardianResponsibles.get(key);
-      if (existing) {
-        existing.studentNames.push(studentName);
-        existing.canPickup ||= guardian.canPickup;
-        existing.emergencyContact ||= guardian.emergencyContact;
-        continue;
-      }
-
-      guardianResponsibles.set(key, {
-        id: "guardian-" + guardian.id,
-        studentNames: [studentName],
-        fullName: guardian.fullName ?? guardian.email,
-        relationship: guardian.relationship,
-        phone: guardian.phone ?? "Sin teléfono",
-        canPickup: guardian.canPickup,
-        emergencyContact: guardian.emergencyContact,
-        hasUser: Boolean(guardian.userId),
-        isCurrentUser: guardian.userId === familyUser.id,
-      });
-    }
-  }
-
-  const responsibleItems = [
-    ...guardianResponsibles.values(),
-    ...students.flatMap((student) => student.responsibles.map((responsible) => ({
-      id: responsible.id,
-      studentNames: [[student.firstName, student.lastName].join(" ")],
-      fullName: responsible.fullName,
-      relationship: responsible.relationship,
-      phone: responsible.phone,
-      canPickup: responsible.canPickup,
-      emergencyContact: responsible.emergencyContact,
-      hasUser: false,
-      isCurrentUser: false,
-    }))),
-  ];
+  const responsibleItems = buildFamilyResponsibles(familyUsers, students, familyUser.id);
 
   const dashboardContent = (
     <div className="grid gap-4 xl:grid-cols-2 xl:items-start">

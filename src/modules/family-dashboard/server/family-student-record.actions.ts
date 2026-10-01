@@ -10,17 +10,20 @@ import {
   familyStudentMedicalSchema,
   familyStudentResponsibleSchema,
   familyResponsibleUpdateSchema,
+  familyResponsibleDeleteSchema,
   type FamilyStudentAddressInput,
   type FamilyStudentCompletionInput,
   type FamilyStudentIdentityInput,
   type FamilyStudentMedicalInput,
   type FamilyStudentResponsibleInput,
   type FamilyResponsibleUpdateInput,
+  type FamilyResponsibleDeleteInput,
 } from "@/modules/family-dashboard/schemas/family-student-record.schema";
 import {
   completeFamilyStudentRecord,
   createFamilyStudentResponsible,
   updateFamilyResponsible,
+  deleteFamilyResponsibles,
   saveFamilyStudentAddress,
   saveFamilyStudentIdentity,
   saveFamilyStudentMedical,
@@ -103,6 +106,21 @@ export async function updateFamilyResponsibleAction(input: FamilyResponsibleUpda
     await updateFamilyResponsible(parsed.data, user);
     revalidatePath("/family-dashboard");
     revalidatePath("/family-dashboard/expediente");
+    return { ok: true as const };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function deleteFamilyResponsiblesAction(input: FamilyResponsibleDeleteInput) {
+  const user = (await requireFamilyDashboardAccess("/family-dashboard?error=forbidden")).familyUser;
+  const parsed = familyResponsibleDeleteSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "invalid_input" };
+  try {
+    await deleteFamilyResponsibles(parsed.data, user);
+    revalidatePath("/family-dashboard");
+    revalidatePath("/family-dashboard/expediente");
+    revalidatePath("/dashboard/families");
     return { ok: true as const };
   } catch (error) {
     return failure(error);

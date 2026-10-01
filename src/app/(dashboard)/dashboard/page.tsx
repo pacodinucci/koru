@@ -15,7 +15,6 @@ const destinations: Array<[PermissionKey, string]> = [
   ["documents.view", "/dashboard/documentos"],
   ["families.view", "/dashboard/families"],
   ["students.view", "/dashboard/students"],
-  ["exams.view", "/dashboard/exams"],
   ["users.view", "/dashboard/users"],
   ["roles.view", "/dashboard/roles"],
 ];
