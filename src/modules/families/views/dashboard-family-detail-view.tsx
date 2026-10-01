@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FamilyFinancialCard } from "@/modules/families/components/family-financial-card";
+import { FamilyResponsiblesList } from "@/modules/families/components/family-responsibles-list";
 import { buildFamilyResponsibles } from "@/modules/families/lib/family-responsibles";
 import { assignPlanToFamilyAction } from "@/modules/families/server/families.actions";
 import { getFamilyFinancialRecord } from "@/modules/families/server/family-financial.repository";
@@ -27,7 +28,17 @@ export async function DashboardFamilyDetailView({ familyId, canManagePayments, c
       payment: entry.payment ? { id: entry.payment.id, method: entry.payment.method, reference: entry.payment.reference, status: entry.payment.status, receipt: entry.payment.receipt ? { id: entry.payment.receipt.id, status: entry.payment.receipt.status, pdfUrl: entry.payment.receipt.pdfUrl, number: entry.payment.receipt.number } : null } : null,
     })),
   };
-  const responsibles = buildFamilyResponsibles(family.users, family.students);
+  const responsibles = buildFamilyResponsibles(family.users, family.students).map((responsible) => ({
+    id: responsible.id,
+    fullName: responsible.fullName,
+    relationship: responsible.relationship,
+    phone: responsible.phone,
+    studentNames: responsible.studentNames,
+    canPickup: responsible.canPickup,
+    emergencyContact: responsible.emergencyContact,
+    hasUser: responsible.hasUser,
+    source: responsible.source,
+  }));
 
   return <div className="flex w-full flex-col gap-5">
     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -36,7 +47,7 @@ export async function DashboardFamilyDetailView({ familyId, canManagePayments, c
     <Card><CardHeader><CardTitle>Plan</CardTitle></CardHeader><CardContent><form action={assignPlanToFamilyAction} className="flex flex-wrap items-end gap-3"><input type="hidden" name="familyId" value={family.id} /><label className="grid gap-1 text-sm font-medium text-slate-700">Plan asignado<select name="planId" defaultValue={family.planId ?? ""} className="h-9 min-w-56 rounded-md border border-input bg-background px-3 text-sm" required><option value="" disabled>Seleccionar plan</option>{plans.filter((plan) => plan.isActive || plan.id === family.planId).map((plan) => <option key={plan.id} value={plan.id}>{plan.name} · {currency(plan.basicMonthlyFee.toString())}</option>)}</select></label><Button type="submit">Guardar plan</Button></form></CardContent></Card>
     <div className="grid gap-4 lg:grid-cols-2">
       <Card><CardHeader><CardTitle>Usuarios</CardTitle></CardHeader><CardContent className="space-y-2">{family.users.length ? family.users.map((user) => <div key={user.id} className="rounded-lg border border-slate-200 p-3"><p className="font-medium">{user.name || "Sin nombre"}</p><p className="text-sm text-slate-600">{user.email}</p></div>) : <p className="text-sm text-slate-600">Todavía no hay usuarios vinculados.</p>}</CardContent></Card>
-      <Card><CardHeader><CardTitle>Responsables</CardTitle></CardHeader><CardContent className="grid gap-2 md:grid-cols-2">{responsibles.length ? responsibles.map((responsible) => <div key={responsible.id} className="rounded-lg border border-slate-200 p-3"><p className="font-medium">{responsible.fullName}</p><p className="text-sm text-slate-600">{responsible.relationship}{responsible.phone !== "Sin teléfono" ? ` · ${responsible.phone}` : ""}</p></div>) : <p className="text-sm text-slate-600">Todavía no hay responsables registrados.</p>}</CardContent></Card>
+      <Card><CardHeader><CardTitle>Responsables</CardTitle></CardHeader><CardContent><FamilyResponsiblesList responsibles={responsibles} /></CardContent></Card>
     </div>
     <Card><CardHeader><CardTitle>Hij@s</CardTitle></CardHeader><CardContent className="space-y-2">{family.students.length ? family.students.map((student) => <div key={student.id} className="rounded-lg border border-slate-200 p-3"><p className="font-medium">{student.lastName}, {student.firstName}</p><p className="text-sm text-slate-600">{student.group.name}</p></div>) : <p className="text-sm text-slate-600">Todavía no hay hij@s registrados.</p>}</CardContent></Card>
     <FamilyFinancialCard family={financialFamily} eventualChargeItems={financialFamily.eventualChargeItems} canManagePayments={canManagePayments} canWaive={canWaive} />

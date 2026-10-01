@@ -52,11 +52,12 @@ export function FamilyResponsiblesPanel({
   const [isPending, startTransition] = useTransition();
 
   function removeResponsible(responsible: ResponsibleItem) {
-    if (!responsible.deletable || responsible.source === "family-user") return;
+    const { source, deleteIds } = responsible;
+    if (!responsible.deletable || source === "family-user") return;
     if (!window.confirm(`¿Eliminar a ${responsible.fullName} de los responsables de la familia?`)) return;
 
     startTransition(async () => {
-      const result = await deleteFamilyResponsiblesAction({ source: responsible.source, ids: responsible.deleteIds });
+      const result = await deleteFamilyResponsiblesAction({ source, ids: deleteIds });
       if (!result.ok) {
         setError("No se pudo eliminar el responsable. Actualizá la página e intentá de nuevo.");
         return;
