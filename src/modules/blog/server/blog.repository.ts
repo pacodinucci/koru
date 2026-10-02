@@ -115,6 +115,7 @@ export async function getPublicPublishedPostMetadataBySlug(slug: string) {
     select: {
       title: true,
       excerpt: true,
+      content: true,
     },
   });
 }

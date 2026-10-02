@@ -5,6 +5,8 @@ import { getPublicPublishedPostMetadataBySlug } from "@/modules/blog/server/blog
 
 export const dynamic = "force-dynamic";
 
+const defaultShareImage = "/branding/koru-logo.png";
+
 type BlogPostPageProps = {
   params: Promise<{
     slug: string;
@@ -13,6 +15,22 @@ type BlogPostPageProps = {
     comment?: string;
   }>;
 };
+
+function getShareImage(content: string) {
+  const source = content.match(/<img\b[^>]*\bsrc=["']([^"']+)["']/i)?.[1];
+  if (!source) return defaultShareImage;
+
+  if (source.startsWith("/") && !source.startsWith("//")) return source;
+
+  try {
+    const imageUrl = new URL(source);
+    return imageUrl.protocol === "http:" || imageUrl.protocol === "https:"
+      ? imageUrl.href
+      : defaultShareImage;
+  } catch {
+    return defaultShareImage;
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -30,13 +48,13 @@ export async function generateMetadata({
       siteName: "Koru",
       title: post.title,
       description: post.excerpt,
-      images: [{ url: "/branding/koru-logo.png", alt: "Koru" }],
+      images: [{ url: getShareImage(post.content), alt: post.title }],
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.excerpt,
-      images: ["/branding/koru-logo.png"],
+      images: [getShareImage(post.content)],
     },
   };
 }
