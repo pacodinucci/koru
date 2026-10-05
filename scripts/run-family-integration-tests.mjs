@@ -20,4 +20,4 @@ function run(command, args) {
 }
 
 run("npx", ["prisma", "migrate", "deploy"]);
-run("node", ["--test", "tests/integration/family-financial.test.mjs"]);
+run("node", ["--experimental-strip-types", "--test", "tests/integration/family-financial.test.mjs"]);

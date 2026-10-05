@@ -9,5 +9,5 @@ export async function GET(request: Request) {
   }
 
   const result = await generateMonthlyFamilyCharges();
-  return NextResponse.json({ ok: true, period: result.billingPeriod.toISOString().slice(0, 10), eligible: result.eligible, created: result.created, skipped: result.skipped });
+  return NextResponse.json({ ok: true, period: result.billingPeriod.toISOString().slice(0, 10), eligible: result.eligible, created: result.created, skipped: result.skipped, eventualInstallments: result.installments });
 }

@@ -15,7 +15,6 @@ import { FamilyFinancialCard } from "@/modules/families/components/family-financ
 import {
   assignFamilyStudentAction,
   assignFamilyUserAction,
-  assignPlanToFamilyAction,
   changeFamilyStatusAction,
   getFamilyDetailAction,
 } from "@/modules/families/server/families.actions";
@@ -36,7 +35,6 @@ type MemberOptions = {
 export function ManageFamilyDialog({
   familyId,
   familyName,
-  familyPlanId,
   familyStatus,
   options,
   canWaive,
@@ -45,7 +43,6 @@ export function ManageFamilyDialog({
 }: {
   familyId: string | null;
   familyName: string | null;
-  familyPlanId: string | null;
   familyStatus: keyof typeof labels | null;
   options: MemberOptions;
   canWaive: boolean;
@@ -71,7 +68,7 @@ export function ManageFamilyDialog({
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Gestionar familia</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            Administrá integrantes, plan, estado y cuenta corriente de {familyName}.
+            Administrá integrantes, estado y cuenta corriente de {familyName}. Los planes se asignan a cada alumno desde la ficha de la familia.
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <ResponsiveDialogBody>
@@ -99,16 +96,6 @@ export function ManageFamilyDialog({
                     </select>
                   </label>
                   <Button type="submit" variant="outline">Asignar</Button>
-                </form>
-                <form action={assignPlanToFamilyAction} className="flex flex-wrap items-end gap-2">
-                  <input type="hidden" name="familyId" value={familyId} />
-                  <label className="grid flex-1 gap-1 text-sm font-medium text-slate-700">Plan
-                    <select name="planId" defaultValue={familyPlanId ?? ""} className="h-9 rounded-md border border-input bg-background px-3 text-sm" required>
-                      <option value="" disabled>Seleccionar plan</option>
-                      {options.plans.filter((plan) => plan.isActive || plan.id === familyPlanId).map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}
-                    </select>
-                  </label>
-                  <Button type="submit" variant="outline">Guardar</Button>
                 </form>
                 <form action={changeFamilyStatusAction} className="flex flex-wrap items-end gap-2">
                   <input type="hidden" name="familyId" value={familyId} />

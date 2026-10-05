@@ -189,17 +189,18 @@ model Family {
   id              String       @id @default(cuid())
   name            String
   status          FamilyStatus @default(ACTIVE)
+  planId          String?
+  plan            Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
   streetAndNumber String?
   neighborhood    String?
   cityAndState    String?
   postalCode      String?
   notes           String?
-  planId          String?
-  plan            Plan?        @relation(fields: [planId], references: [id], onDelete: SetNull)
   users           User[]
   students        Student[]
   followUpAgreements FollowUpAgreementFamily[]
   accountEntries  FamilyAccountEntry[]
+  eventualChargeSchedules EventualChargeSchedule[]
   payments        FamilyPayment[]
   invitations     UserInvitation[]
   createdAt       DateTime     @default(now())
@@ -213,8 +214,10 @@ model Plan {
   id                  String                    @id @default(cuid())
   name                String                    @unique
   basicMonthlyFee     Decimal                   @map("monthlyFee") @db.Decimal(12, 2)
+  discountPercent     Decimal                   @default(0) @db.Decimal(5, 2)
   isActive            Boolean                   @default(true)
   families            Family[]
+  students            Student[]
   eventualChargeItems PlanEventualChargeItem[]
   createdAt           DateTime                  @default(now())
   updatedAt           DateTime                  @updatedAt
@@ -228,8 +231,11 @@ model PlanEventualChargeItem {
   plan            Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
   name            String
   suggestedAmount Decimal  @db.Decimal(12, 2)
+  discountPercent Decimal @default(0) @db.Decimal(5, 2)
+  installmentCount Int @default(1)
   isActive        Boolean  @default(true)
   accountEntries   FamilyAccountEntry[]
+  schedules EventualChargeSchedule[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -237,6 +243,27 @@ model PlanEventualChargeItem {
   @@index([planId, isActive])
 }
 
+model EventualChargeSchedule {
+  id String @id @default(cuid())
+  familyId String
+  family Family @relation(fields: [familyId], references: [id], onDelete: Restrict)
+  eventualChargeItemId String?
+  eventualChargeItem PlanEventualChargeItem? @relation(fields: [eventualChargeItemId], references: [id], onDelete: SetNull)
+  itemName String
+  totalAmount Decimal @db.Decimal(12, 2)
+  grossAmount Decimal? @db.Decimal(12, 2)
+  discountAmount Decimal? @db.Decimal(12, 2)
+  discountPercent Decimal? @db.Decimal(5, 2)
+  installmentCount Int
+  startPeriod DateTime @db.Date
+  createdById String
+  createdAt DateTime @default(now())
+  accountEntries FamilyAccountEntry[]
+
+  @@index([familyId])
+  @@index([startPeriod])
+  @@index([eventualChargeItemId])
+}
 enum AccountEntryType {
   MONTHLY_CHARGE
   EVENTUAL_CHARGE
@@ -676,11 +703,16 @@ model FamilyAccountEntry {
   family      Family           @relation(fields: [familyId], references: [id], onDelete: Restrict)
   type        AccountEntryType
   amount      Decimal          @db.Decimal(12, 2)
+  grossAmount Decimal?         @db.Decimal(12, 2)
+  discountAmount Decimal?      @db.Decimal(12, 2)
   description String
   occurredAt  DateTime         @default(now())
   billingPeriod DateTime?       @db.Date
   eventualChargeItemId String?
   eventualChargeItem   PlanEventualChargeItem? @relation(fields: [eventualChargeItemId], references: [id], onDelete: SetNull)
+  eventualChargeScheduleId String?
+  eventualChargeSchedule EventualChargeSchedule? @relation(fields: [eventualChargeScheduleId], references: [id], onDelete: Restrict)
+  installmentNumber Int?
   paymentId   String?          @unique
   payment     FamilyPayment?   @relation(fields: [paymentId], references: [id], onDelete: SetNull)
   createdById String?
@@ -688,6 +720,7 @@ model FamilyAccountEntry {
 
   @@index([familyId, occurredAt])
   @@index([eventualChargeItemId])
+  @@unique([eventualChargeScheduleId, installmentNumber], map: "EventualChargeSchedule_installment_number_key")
   @@unique([familyId, billingPeriod])
 }
 
@@ -812,6 +845,8 @@ model Student {
   group             StudentGroup           @relation(fields: [groupId], references: [id], onDelete: Restrict)
   familyId          String?
   family            Family?                 @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  planId            String?
+  plan              Plan?                   @relation(fields: [planId], references: [id], onDelete: SetNull)
   status            StudentStatus          @default(ACTIVE)
   recordStatus      StudentRecordStatus    @default(DRAFT)
   recordStep        Int                    @default(1)
@@ -833,6 +868,7 @@ model Student {
   @@index([recordStatus, updatedAt])
   @@index([lastName, firstName])
   @@index([familyId])
+  @@index([planId])
   @@unique([familyId, identityKey])
 }
 

@@ -9,7 +9,7 @@ export function listFamiliesForAdmin() {
     prisma.family.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        plan: { select: { id: true, name: true, basicMonthlyFee: true, isActive: true } },
+        students: { select: { plan: { select: { name: true, basicMonthlyFee: true, discountPercent: true, isActive: true } } } },
         _count: { select: { users: true, students: true } },
       },
     }),
@@ -58,6 +58,13 @@ export function getFamilyDetailForAdmin(familyId: string) {
 
 export function listPlansForAdmin() {
   return prisma.plan.findMany({ orderBy: { name: "asc" }, include: { eventualChargeItems: { orderBy: { name: "asc" } } } });
+}
+
+export function getPlanForAdmin(planId: string) {
+  return prisma.plan.findUnique({
+    where: { id: planId },
+    include: { eventualChargeItems: { orderBy: { name: "asc" } } },
+  });
 }
 
 export function listFamilyMembersForAssignment() {

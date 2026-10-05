@@ -6,6 +6,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noEmit": false,
+    "allowImportingTsExtensions": false,
     "outDir": ".tmp-domain-tests",
     "rootDir": ".",
     "types": ["node"]

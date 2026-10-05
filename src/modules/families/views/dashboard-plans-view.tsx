@@ -1,24 +1,33 @@
+import { Plus } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { CreatePlanForm } from "@/modules/families/components/create-plan-form";
-import { createPlanEventualChargeItemAction, updatePlanAction, updatePlanEventualChargeItemAction } from "@/modules/families/server/families.actions";
+import { PlansDataTable } from "@/modules/families/components/plans-data-table";
 import { listPlansForAdmin } from "@/modules/families/server/families.repository";
 
-export async function DashboardPlansView() {
+export async function DashboardPlansView({ canManage }: { canManage: boolean }) {
   const plans = await listPlansForAdmin();
 
-  return <div className="flex w-full flex-col gap-4">
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><h1 className="font-[family-name:var(--font-montserrat)] text-2xl font-semibold text-slate-900">Planes</h1><p className="mt-1 text-sm text-slate-600">Definí la cuota básica mensual y los rubros eventuales de cada plan.</p></div><Button variant="outline" nativeButton={false} render={<Link href="/dashboard/families" />}>Volver a Familias</Button></div>
-    <Card className="w-full rounded-2xl border-slate-200"><CardHeader><CardTitle>Nuevo plan</CardTitle><CardDescription>Completá la cuota básica y los rubros eventuales que podrán aplicarse después a cada familia.</CardDescription></CardHeader><CardContent><CreatePlanForm /></CardContent></Card>
-    <div className="space-y-4">{plans.length === 0 ? <Card className="rounded-2xl border-dashed"><CardContent className="py-10 text-center text-sm text-slate-600">Todavía no hay planes creados.</CardContent></Card> : plans.map((plan) => <Card key={plan.id} className="rounded-2xl border-slate-200"><CardHeader><CardTitle>{plan.name}</CardTitle><CardDescription>Configuración vigente para cargos futuros. Los cargos ya emitidos no se modifican.</CardDescription></CardHeader><CardContent className="space-y-5">
-      <form action={updatePlanAction} className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_140px_auto] md:items-end"><input type="hidden" name="planId" value={plan.id}/><label className="grid gap-1 text-sm font-medium text-slate-700">Nombre<Input name="name" defaultValue={plan.name} required/></label><label className="grid gap-1 text-sm font-medium text-slate-700">Cuota básica mensual<Input name="basicMonthlyFee" type="number" min="1" step="0.01" defaultValue={plan.basicMonthlyFee.toString()} required/></label><label className="grid gap-1 text-sm font-medium text-slate-700">Estado<select name="isActive" defaultValue={plan.isActive ? "true" : "false"} className="h-9 rounded-md border border-input bg-background px-3 text-sm"><option value="true">Activo</option><option value="false">Inactivo</option></select></label><Button type="submit" variant="outline">Guardar plan</Button></form>
-      <section className="space-y-3 border-t border-slate-200 pt-4"><div><h3 className="font-medium text-slate-900">Rubros eventuales</h3><p className="text-sm text-slate-600">No se facturan automáticamente. Se podrán aplicar a una familia desde su ficha financiera.</p></div>
-        <form action={createPlanEventualChargeItemAction} className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end"><input type="hidden" name="planId" value={plan.id}/><label className="grid gap-1 text-sm font-medium text-slate-700">Concepto<Input name="name" required placeholder="Ej.: Materiales"/></label><label className="grid gap-1 text-sm font-medium text-slate-700">Importe sugerido<Input name="suggestedAmount" type="number" min="0.01" step="0.01" required/></label><Button type="submit" variant="outline">Agregar rubro</Button></form>
-        {plan.eventualChargeItems.length ? <div className="space-y-2">{plan.eventualChargeItems.map((item) => <form key={item.id} action={updatePlanEventualChargeItemAction} className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-[minmax(0,1fr)_220px_140px_auto] md:items-end"><input type="hidden" name="planId" value={plan.id}/><input type="hidden" name="itemId" value={item.id}/><label className="grid gap-1 text-sm font-medium text-slate-700">Concepto<Input name="name" defaultValue={item.name} required/></label><label className="grid gap-1 text-sm font-medium text-slate-700">Importe sugerido<Input name="suggestedAmount" type="number" min="0.01" step="0.01" defaultValue={item.suggestedAmount.toString()} required/></label><label className="grid gap-1 text-sm font-medium text-slate-700">Estado<select name="isActive" defaultValue={item.isActive ? "true" : "false"} className="h-9 rounded-md border border-input bg-background px-3 text-sm"><option value="true">Activo</option><option value="false">Inactivo</option></select></label><Button type="submit" variant="outline">Guardar</Button></form>)}</div> : <p className="text-sm text-slate-600">Todavía no hay rubros eventuales.</p>}
-      </section>
-    </CardContent></Card>)}</div>
-  </div>;
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="font-[family-name:var(--font-montserrat)] text-2xl font-semibold text-slate-900">Planes</h1>
+          <p className="mt-1 text-sm text-slate-600">Consultá y administrá la cuota básica y los rubros eventuales de cada plan.</p>
+        </div>
+        {canManage ? (
+          <Button nativeButton={false} render={<Link href="/dashboard/families/plans/new" />}>
+            <Plus /> Nuevo plan
+          </Button>
+        ) : null}
+      </div>
+      <PlansDataTable canManage={canManage} plans={plans.map((plan) => ({
+        id: plan.id,
+        name: plan.name,
+        basicMonthlyFee: plan.basicMonthlyFee.toString(),
+        discountPercent: plan.discountPercent.toString(),
+        eventualItemsCount: plan.eventualChargeItems.length,
+      }))} />
+    </div>
+  );
 }

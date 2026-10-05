@@ -5,7 +5,7 @@ import { useState } from "react";
 import { FamiliesDataTable, type FamilyListItem } from "@/modules/families/components/families-data-table";
 import { ManageFamilyDialog } from "@/modules/families/components/manage-family-dialog";
 
-type ManagementFamily = FamilyListItem & { planId: string | null };
+type ManagementFamily = FamilyListItem;
 type FamilyManagementProps = {
   families: ManagementFamily[];
   options: {
@@ -23,6 +23,6 @@ export function FamiliesManagement({ families, options, canWaive, initialSearch 
 
   return <>
     <FamiliesDataTable families={families} onManage={setSelectedFamilyId} initialSearch={initialSearch} />
-    <ManageFamilyDialog familyId={selectedFamily?.id ?? null} familyName={selectedFamily?.name ?? null} familyPlanId={selectedFamily?.planId ?? null} familyStatus={selectedFamily?.status ?? null} options={options} canWaive={canWaive} open={selectedFamily !== null} onOpenChange={(open) => { if (!open) setSelectedFamilyId(null); }} />
+    <ManageFamilyDialog familyId={selectedFamily?.id ?? null} familyName={selectedFamily?.name ?? null} familyStatus={selectedFamily?.status ?? null} options={options} canWaive={canWaive} open={selectedFamily !== null} onOpenChange={(open) => { if (!open) setSelectedFamilyId(null); }} />
   </>;
 }

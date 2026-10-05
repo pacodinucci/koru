@@ -1,6 +1,6 @@
 "use server";
 
-import { AccountEntryType, PaymentMethod } from "@prisma/client";
+import { AccountEntryType, PaymentMethod, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -8,9 +8,12 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { createReceiptForPayment } from "@/modules/families/server/receipt.service";
 import { calculateFamilyBalance, canWaiveFamilyBalance } from "@/modules/families/lib/family-account-policy";
+import { getBillingPeriod } from "@/modules/families/lib/monthly-billing";
+import { eventualInstallmentDescription, splitInstallmentAmounts } from "@/modules/families/lib/eventual-installments";
+import { calculatePlanDiscount } from "@/modules/families/lib/plan-discounts";
 
 const paymentSchema = z.object({ familyId: z.string().min(1), amount: z.coerce.number().positive(), method: z.nativeEnum(PaymentMethod), reference: z.string().trim().max(160).optional() });
-const eventualChargeSchema = z.object({ familyId: z.string().min(1), eventualChargeItemId: z.string().min(1).optional(), description: z.string().trim().min(2).max(300), amount: z.coerce.number().positive() });
+const eventualChargeSchema = z.object({ familyId: z.string().min(1), eventualChargeItemId: z.string().min(1).optional(), description: z.string().trim().min(2).max(300), amount: z.coerce.number().nonnegative() });
 const voidPaymentSchema = z.object({ paymentId: z.string().min(1), reason: z.string().trim().min(2).max(300) });
 const waiverSchema = z.object({ familyId: z.string().min(1), amount: z.coerce.number().positive(), reason: z.string().trim().min(2).max(300) });
 
@@ -46,25 +49,60 @@ export async function registerFamilyEventualChargeAction(formData: FormData) {
   const parsed = eventualChargeSchema.safeParse({ familyId: field(formData, "familyId"), eventualChargeItemId: field(formData, "eventualChargeItemId") || undefined, description: field(formData, "description"), amount: field(formData, "amount") });
   if (!parsed.success) return { ok: false, message: "Revisá el concepto y el importe del cargo." };
 
-  const family = await prisma.family.findUnique({ where: { id: parsed.data.familyId }, select: { planId: true } });
+  const family = await prisma.family.findUnique({ where: { id: parsed.data.familyId }, select: { students: { select: { planId: true } } } });
   if (!family) return { ok: false, message: "No encontramos la familia." };
 
-  let description = parsed.data.description;
-  let amount = parsed.data.amount;
-  let eventualChargeItemId: string | undefined;
   if (parsed.data.eventualChargeItemId) {
-    if (!family.planId) return { ok: false, message: "La familia no tiene un plan asignado." };
-    const item = await prisma.planEventualChargeItem.findFirst({ where: { id: parsed.data.eventualChargeItemId, planId: family.planId, isActive: true } });
-    if (!item) return { ok: false, message: "El rubro seleccionado no está disponible para el plan de esta familia." };
-    description = item.name;
-    amount = Number(item.suggestedAmount);
-    eventualChargeItemId = item.id;
+    const planIds = family.students.flatMap((student) => student.planId ? [student.planId] : []);
+    if (!planIds.length) return { ok: false, message: "Los alumnos de la familia no tienen planes asignados." };
+    const item = await prisma.planEventualChargeItem.findFirst({ where: { id: parsed.data.eventualChargeItemId, planId: { in: planIds }, isActive: true } });
+    if (!item) return { ok: false, message: "El rubro seleccionado no está disponible para los planes de esta familia." };
+    const discounted = calculatePlanDiscount(item.suggestedAmount.toString(), item.discountPercent.toString());
+    let amounts: string[];
+    try { amounts = splitInstallmentAmounts(discounted.netAmount, item.installmentCount); }
+    catch { return { ok: false, message: "El importe con descuento no alcanza para la cantidad de cuotas." }; }
+    const grossAmounts = splitInstallmentAmounts(discounted.grossAmount, item.installmentCount);
+    const now = new Date();
+    await prisma.$transaction(async (tx) => {
+      const schedule = await tx.eventualChargeSchedule.create({ data: {
+        familyId: parsed.data.familyId,
+        eventualChargeItemId: item.id,
+        itemName: item.name,
+        totalAmount: discounted.netAmount,
+        grossAmount: discounted.grossAmount,
+        discountAmount: discounted.discountAmount,
+        discountPercent: item.discountPercent,
+        installmentCount: item.installmentCount,
+        startPeriod: getBillingPeriod(now),
+        createdById: admin.id,
+      } });
+      await tx.familyAccountEntry.create({ data: {
+        familyId: parsed.data.familyId,
+        type: AccountEntryType.EVENTUAL_CHARGE,
+        amount: amounts[0],
+        grossAmount: grossAmounts[0],
+        discountAmount: new Prisma.Decimal(grossAmounts[0]).minus(amounts[0]),
+        description: eventualInstallmentDescription(item.name, 1, item.installmentCount),
+        eventualChargeItemId: item.id,
+        eventualChargeScheduleId: schedule.id,
+        installmentNumber: 1,
+        occurredAt: now,
+        createdById: admin.id,
+      } });
+    });
+  } else {
+    if (parsed.data.amount <= 0) return { ok: false, message: "Ingresá un importe mayor a cero para el cargo libre." };
+    await prisma.familyAccountEntry.create({ data: {
+      familyId: parsed.data.familyId,
+      type: AccountEntryType.EVENTUAL_CHARGE,
+      amount: parsed.data.amount,
+      description: `Cargo eventual · ${parsed.data.description}`,
+      createdById: admin.id,
+    } });
   }
-
-  await prisma.familyAccountEntry.create({ data: { familyId: parsed.data.familyId, type: AccountEntryType.EVENTUAL_CHARGE, amount, description: `Cargo eventual · ${description}`, eventualChargeItemId, createdById: admin.id } });
   revalidatePath("/dashboard/families");
   revalidatePath(`/dashboard/families/${parsed.data.familyId}`);
-  return { ok: true, message: "Cargo eventual registrado." };
+  return { ok: true, message: parsed.data.eventualChargeItemId ? "Primera cuota registrada; las restantes se cobrarán mensualmente." : "Cargo eventual registrado." };
 }
 export async function voidFamilyPaymentAction(formData: FormData) {
   const admin = await requirePermission("families.payments");

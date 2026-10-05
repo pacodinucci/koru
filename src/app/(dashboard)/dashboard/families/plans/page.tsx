@@ -8,5 +8,5 @@ export default async function DashboardPlansPage() {
   const cmsPages = (await discoverPagesGroupRoutes()).filter((page) => !page.isDynamic);
   return <DashboardShell userEmail={user.email}
       userRole={user.role}
-      userPermissions={user.permissionKeys} cmsPages={cmsPages} breadcrumbPage="Planes"><DashboardPlansView /></DashboardShell>;
+      userPermissions={user.permissionKeys} cmsPages={cmsPages} breadcrumbPage="Planes"><DashboardPlansView canManage={user.permissionKeys.includes("families.manage")} /></DashboardShell>;
 }

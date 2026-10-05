@@ -30,7 +30,8 @@ export type FamilyListItem = {
   id: string;
   name: string;
   status: "ACTIVE" | "SUSPENDED" | "INACTIVE";
-  plan: { id: string; name: string; basicMonthlyFee: unknown; isActive: boolean } | null;
+  plansCount: number;
+  monthlyFee: string;
   balance: string;
   usersCount: number;
   studentsCount: number;
@@ -62,6 +63,10 @@ function currency(value: string) {
   }).format(Number(value));
 }
 
+function rowPlanSummary(family: FamilyListItem) {
+  return family.plansCount ? `${currency(family.monthlyFee)} · ${family.plansCount} ${family.plansCount === 1 ? "plan activo" : "planes activos"}` : "Sin planes activos";
+}
+
 export function FamiliesDataTable({
   families,
   initialSearch = "",
@@ -84,9 +89,9 @@ export function FamiliesDataTable({
           header: "Integrantes",
           cell: ({ row }) => `${row.original.usersCount} usuarios · ${row.original.studentsCount} alumnos`,
         }),
-        columnHelper.accessor("plan", {
-          header: "Plan",
-          cell: (info) => info.getValue()?.name ?? "Sin plan",
+        columnHelper.accessor("monthlyFee", {
+          header: "Cuota mensual",
+          cell: (info) => rowPlanSummary(info.row.original),
           enableGlobalFilter: false,
         }),
         columnHelper.accessor("status", {
