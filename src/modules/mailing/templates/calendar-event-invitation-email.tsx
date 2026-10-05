@@ -17,6 +17,7 @@ type CalendarEventInvitationEmailProps = {
   endsAt: Date;
   location?: string | null;
   eventUrl: string;
+  requiresSignIn?: boolean;
 };
 
 export function CalendarEventInvitationEmail({
@@ -26,6 +27,7 @@ export function CalendarEventInvitationEmail({
   endsAt,
   location,
   eventUrl,
+  requiresSignIn = true,
 }: CalendarEventInvitationEmailProps) {
   const date = startsAt.toLocaleDateString("es-MX", {
     weekday: "long",
@@ -53,7 +55,11 @@ export function CalendarEventInvitationEmail({
           <Section style={buttonWrapper}>
             <Button href={eventUrl} style={button}>Ver evento y responder</Button>
           </Section>
-          <Text style={muted}>Ingresá con el mismo email que recibió esta invitación.</Text>
+          <Text style={muted}>
+            {requiresSignIn
+              ? "Ingresá con el mismo email que recibió esta invitación."
+              : "Este enlace es personal. No lo compartas; podés responder sin crear una cuenta."}
+          </Text>
         </Container>
       </Body>
     </Html>

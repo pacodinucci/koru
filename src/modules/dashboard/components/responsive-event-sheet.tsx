@@ -58,7 +58,7 @@ export function ResponsiveEventSheet({
       ) : null}
 
       <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetContent side={isMobile ? "bottom" : "right"} className="w-full duration-300 sm:max-w-md [font-family:var(--font-montserrat)]" overlayClassName="duration-300">
+        <SheetContent side={isMobile ? "bottom" : "right"} className="scrollbar-none w-full overflow-y-auto overscroll-contain duration-300 sm:max-w-md [font-family:var(--font-montserrat)]" overlayClassName="duration-300">
           <SheetHeader>
             <SheetTitle>{title}</SheetTitle>
             <SheetDescription>{description}</SheetDescription>

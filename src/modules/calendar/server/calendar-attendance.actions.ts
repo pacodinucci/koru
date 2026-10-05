@@ -11,6 +11,8 @@ import {
   withCalendarActionResult,
 } from "@/modules/calendar/lib/calendar-action-redirect";
 import { respondToCalendarEvent } from "@/modules/calendar/server/calendar-attendance.repository";
+import { respondToExternalCalendarEvent } from "@/modules/calendar/server/calendar-attendance.repository";
+import { getExternalCalendarInvitationByToken } from "@/modules/calendar/server/calendar-external-invitation";
 import {
   removeAttendanceFromGoogle,
   syncConfirmedAttendanceToGoogle,
@@ -66,4 +68,24 @@ export async function respondToCalendarEventAction(formData: FormData) {
   revalidatePath(`/calendario/eventos/${eventId}`);
   revalidatePath("/family-dashboard/calendario");
   redirect(withCalendarActionResult(returnTo, "ok", "attendance_updated"));
+}
+
+export async function respondToExternalCalendarInvitationAction(formData: FormData) {
+  const token = getString(formData, "token");
+  const returnTo = `/calendario/invitacion/${encodeURIComponent(token)}`;
+  const attendance = await getExternalCalendarInvitationByToken(token);
+  if (!attendance) redirect("/calendario");
+
+  const value = getString(formData, "status");
+  const status = value === CalendarAttendanceStatus.CONFIRMED
+    ? CalendarAttendanceStatus.CONFIRMED
+    : value === CalendarAttendanceStatus.DECLINED
+      ? CalendarAttendanceStatus.DECLINED
+      : undefined;
+  if (!status) redirect(`${returnTo}?error=invalid_attendance_status`);
+
+  await respondToExternalCalendarEvent(attendance.id, status);
+  revalidatePath(returnTo);
+  revalidatePath(`/dashboard/calendar/${attendance.eventId}`);
+  redirect(`${returnTo}?ok=attendance_updated`);
 }

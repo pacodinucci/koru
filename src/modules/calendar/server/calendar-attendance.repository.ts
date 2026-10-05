@@ -4,15 +4,65 @@ import {
   CalendarAttendanceStatus,
   CalendarAudienceType,
   CalendarEventStatus,
+  Prisma,
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { getAudienceTypesForViewer } from "@/modules/calendar/lib/calendar-audience";
 
-export async function listUnsentCalendarEventAttendances(eventId: string) {
+export async function createManualCalendarEventAttendance({
+  eventId,
+  name,
+  email,
+}: {
+  eventId: string;
+  name: string;
+  email: string;
+}) {
+  const event = await prisma.calendarEvent.findFirst({
+    where: { id: eventId, status: CalendarEventStatus.PUBLISHED, attendanceConfirmationEnabled: true },
+    select: { id: true },
+  });
+  if (!event) throw new Error("event_not_available");
+
+  try {
+    return await prisma.calendarEventAttendance.create({
+      data: { eventId, name, email: email.toLowerCase() },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new Error("already_invited");
+    }
+    throw error;
+  }
+}
+
+export async function getExternalCalendarEventAttendance(attendanceId: string) {
+  return prisma.calendarEventAttendance.findFirst({
+    where: {
+      id: attendanceId,
+      userId: null,
+      event: { status: CalendarEventStatus.PUBLISHED, attendanceConfirmationEnabled: true },
+    },
+    include: {
+      event: { select: { id: true, title: true, startsAt: true, endsAt: true, location: true } },
+    },
+  });
+}
+
+export async function respondToExternalCalendarEvent(attendanceId: string, status: CalendarAttendanceStatus) {
+  if (status === CalendarAttendanceStatus.PENDING) throw new Error("invalid_attendance_status");
+  return prisma.calendarEventAttendance.update({
+    where: { id: attendanceId },
+    data: { status, respondedAt: new Date() },
+  });
+}
+
+export async function listUnsentCalendarEventAttendances(eventId: string, attendanceId?: string) {
   return prisma.calendarEventAttendance.findMany({
     where: {
       eventId,
+      ...(attendanceId ? { id: attendanceId } : {}),
       invitationSentAt: null,
       status: CalendarAttendanceStatus.PENDING,
       event: {

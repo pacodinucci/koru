@@ -39,11 +39,13 @@ type CalendarEventItem = {
   attendanceConfirmationEnabled: boolean;
   attendances?: Array<{
     id: string;
+    userId?: string | null;
     name: string;
     email: string;
     status: "PENDING" | "CONFIRMED" | "DECLINED";
     invitationSentAt?: Date | string | null;
     invitationError?: string | null;
+    respondedAt?: Date | string | null;
   }>;
   registrationAccess: CalendarRegistrationAccess;
   audiences?: Array<{ userId: string }>;

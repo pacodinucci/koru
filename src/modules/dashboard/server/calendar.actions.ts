@@ -11,6 +11,7 @@ import { after } from "next/server";
 
 import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { sendPendingCalendarEventInvitations } from "@/modules/calendar/server/calendar-invitation.service";
+import { createManualCalendarEventAttendance } from "@/modules/calendar/server/calendar-attendance.repository";
 import {
   removeEventFromGoogleCalendars,
   syncEventForConfirmedUsers,
@@ -145,4 +146,32 @@ export async function retryCalendarEventInvitationsAction(formData: FormData) {
     await sendPendingCalendarEventInvitations(id);
   });
   redirect("/dashboard/calendar?ok=mail_retry_scheduled");
+}
+
+export async function inviteExternalCalendarEventAttendeeAction(formData: FormData) {
+  await requirePermission("calendar.manage", "/dashboard/calendar?error=forbidden");
+  const eventId = getString(formData, "eventId").trim();
+  const name = getString(formData, "name").trim();
+  const email = getString(formData, "email").trim().toLowerCase();
+  const eventDate = getString(formData, "eventDate").trim();
+  const params = new URLSearchParams();
+  if (eventId) params.set("edit", eventId);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) params.set("date", eventDate);
+  const returnTo = `/dashboard/calendar?${params.toString()}`;
+
+  if (!eventId || !name || name.length > 160 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) {
+    redirect(`${returnTo}&error=invalid_manual_invitation`);
+  }
+
+  let attendanceId: string;
+  try {
+    const attendance = await createManualCalendarEventAttendance({ eventId, name, email });
+    attendanceId = attendance.id;
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "unknown";
+    redirect(`${returnTo}&error=${encodeURIComponent(code)}`);
+  }
+
+  const result = await sendPendingCalendarEventInvitations(eventId, attendanceId);
+  redirect(`${returnTo}&${result[0]?.status === "sent" ? "ok=manual_invitation_sent" : "error=manual_invitation_failed"}`);
 }

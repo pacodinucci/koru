@@ -1,14 +1,15 @@
 import "server-only";
 
 import { sendCalendarEventInvitationEmail } from "@/modules/mailing/server/mailing.service";
+import { createExternalCalendarInvitationToken } from "@/modules/calendar/server/calendar-external-invitation";
 import {
   listUnsentCalendarEventAttendances,
   markCalendarInvitationFailed,
   markCalendarInvitationSent,
 } from "@/modules/calendar/server/calendar-attendance.repository";
 
-export async function sendPendingCalendarEventInvitations(eventId: string) {
-  const attendances = await listUnsentCalendarEventAttendances(eventId);
+export async function sendPendingCalendarEventInvitations(eventId: string, attendanceId?: string) {
+  const attendances = await listUnsentCalendarEventAttendances(eventId, attendanceId);
   const results: Array<{ attendanceId: string; status: "sent" | "failed" }> = [];
 
   for (const attendance of attendances) {
@@ -18,6 +19,7 @@ export async function sendPendingCalendarEventInvitations(eventId: string) {
         email: attendance.email,
         recipientName: attendance.name,
         event: attendance.event,
+        externalInvitationToken: attendance.userId ? undefined : createExternalCalendarInvitationToken(attendance),
       });
 
       if (result.status === "sent") {

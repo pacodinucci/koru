@@ -98,6 +98,7 @@ type SendCalendarEventInvitationEmailInput = {
   attendanceId: string;
   email: string;
   recipientName: string;
+  externalInvitationToken?: string;
   event: {
     id: string;
     title: string;
@@ -112,8 +113,12 @@ export async function sendCalendarEventInvitationEmail({
   email,
   recipientName,
   event,
+  externalInvitationToken,
 }: SendCalendarEventInvitationEmailInput) {
-  const eventUrl = new URL(`/calendario/eventos/${event.id}`, getAppUrl());
+  const eventUrl = new URL(
+    externalInvitationToken ? `/calendario/invitacion/${externalInvitationToken}` : `/calendario/eventos/${event.id}`,
+    getAppUrl(),
+  );
 
 
   return sendMail({
@@ -127,6 +132,7 @@ export async function sendCalendarEventInvitationEmail({
       endsAt: event.endsAt,
       location: event.location,
       eventUrl: eventUrl.toString(),
+      requiresSignIn: !externalInvitationToken,
     }),
     payload: { attendanceId, eventId: event.id, email },
     idempotencyKey: `calendar-attendance-${attendanceId}`,
