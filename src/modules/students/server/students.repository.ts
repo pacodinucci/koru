@@ -97,7 +97,7 @@ export async function getStudentRecordForViewer(studentId: string, viewer: Stude
     include: {
       admissionQuestionnaire: { select: { answers: true, submittedAt: true, updatedAt: true } },
       group: { select: { id: true, name: true, ageRange: true } },
-      address: true,
+      family: { select: { streetAndNumber: true, neighborhood: true, cityAndState: true, postalCode: true } },
       medicalProfile: true,
       responsibles: { orderBy: { priority: "asc" } },
       guardians: {

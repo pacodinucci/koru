@@ -44,7 +44,12 @@ export default async function FamilyDashboardPage({
     recordStep: student.recordStep,
     updatedAt: student.updatedAt.toISOString(),
     group: student.group,
-    address: student.address,
+    address: student.family ? {
+      streetAndNumber: student.family.streetAndNumber ?? "",
+      neighborhood: student.family.neighborhood ?? "",
+      cityAndState: student.family.cityAndState ?? "",
+      postalCode: student.family.postalCode ?? "",
+    } : null,
     medicalProfile: student.medicalProfile,
     guardians: student.guardians.map((guardian) => ({
       userId: guardian.userId,

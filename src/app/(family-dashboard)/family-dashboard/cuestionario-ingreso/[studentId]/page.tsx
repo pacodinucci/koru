@@ -18,7 +18,7 @@ export default async function FamilyAdmissionQuestionnaireStudentPage({ params }
     where: { id: studentId, familyId: familyUser.familyId },
     select: {
       id: true, firstName: true, lastName: true, birthDate: true,
-      address: { select: { streetAndNumber: true, neighborhood: true, cityAndState: true } },
+      family: { select: { streetAndNumber: true, neighborhood: true, cityAndState: true } },
       guardians: { select: { fullName: true, email: true, phone: true }, orderBy: [{ isPrimary: "desc" }] },
       admissionQuestionnaire: { select: { answers: true, submittedAt: true } },
     },
@@ -35,10 +35,10 @@ export default async function FamilyAdmissionQuestionnaireStudentPage({ params }
         <Card>
           <CardHeader><CardTitle>Información general</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <p className="text-muted-foreground">Estos datos provienen del expediente. Si necesitás corregirlos, hacelo allí.</p>
+            <p className="text-muted-foreground">El domicilio se actualiza desde Tu perfil, en el inicio de la familia.</p>
             <p><strong>Nombre completo:</strong> {student.firstName} {student.lastName}</p>
             <p><strong>Fecha de nacimiento:</strong> {student.birthDate.toLocaleDateString("es-AR")}</p>
-            <p><strong>Dirección:</strong> {[student.address?.streetAndNumber, student.address?.neighborhood, student.address?.cityAndState].filter(Boolean).join(", ") || "No informada"}</p>
+            <p><strong>Dirección:</strong> {[student.family?.streetAndNumber, student.family?.neighborhood, student.family?.cityAndState].filter(Boolean).join(", ") || "No informada"}</p>
             <p><strong>Teléfono de contacto:</strong> {student.guardians[0]?.phone || "No informado"}</p>
             <p><strong>Correos de madre, padre o tutores:</strong> {student.guardians.map((guardian) => guardian.email).join(", ") || "No informados"}</p>
             <p><strong>Nombre de madre, padre o tutores:</strong> {student.guardians.map((guardian) => guardian.fullName).filter(Boolean).join(", ") || "No informado"}</p>

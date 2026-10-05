@@ -1,9 +1,7 @@
-import Link from "next/link";
-
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { AuthenticatedUser } from "@/modules/auth/server/auth-guards";
+import { TeacherStudentsTable } from "@/modules/teachers/components/teacher-students-table";
 import { listTeacherHomeData } from "@/modules/teachers/server/teachers.repository";
 
 export async function TeacherHomeView({ user }: { user: AuthenticatedUser }) {
@@ -30,11 +28,7 @@ export async function TeacherHomeView({ user }: { user: AuthenticatedUser }) {
       <Card id="alumnos">
         <CardHeader><CardTitle className="text-base">Mis alumnos</CardTitle></CardHeader>
         <CardContent>
-          <Table><TableHeader><TableRow><TableHead>Apellido y nombre</TableHead><TableHead>Curso</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader><TableBody>
-            {students.length === 0 ? <TableRow><TableCell colSpan={3} className="text-muted-foreground">No hay alumnos activos en tus cursos.</TableCell></TableRow> : students.map((student) => (
-              <TableRow key={student.id}><TableCell><Link className="font-medium text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" href={`/dashboard/students/${student.id}`}>{student.lastName}, {student.firstName}</Link></TableCell><TableCell>{student.group.name}</TableCell><TableCell><Badge>Activo</Badge></TableCell></TableRow>
-            ))}
-          </TableBody></Table>
+          <TeacherStudentsTable students={students} />
         </CardContent>
       </Card>
     </div>

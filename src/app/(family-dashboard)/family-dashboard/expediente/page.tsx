@@ -6,6 +6,8 @@ import { FamilyDashboardHeader } from "@/modules/family-dashboard/components/fam
 import { FamilySidebar } from "@/modules/family-dashboard/components/family-sidebar";
 import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/family-dashboard-access";
 import { listFamilyStudentRecords } from "@/modules/family-dashboard/server/family-student-record.repository";
+import { FamilyStudentMedicalSection, FamilyStudentPersonalSection } from "@/modules/family-dashboard/views/family-student-editable-sections";
+import { listStudentGroups } from "@/modules/students/server/students.repository";
 
 const statusLabels = {
   DRAFT: "En progreso",
@@ -20,9 +22,10 @@ function Value({ label, value }: { label: string; value?: string | null }) {
 
 export default async function FamilyStudentRecordPage() {
   const { viewer, familyUser } = await requireFamilyDashboardAccess();
-  const students = familyUser.familyId
-    ? await listFamilyStudentRecords(familyUser.familyId)
-    : [];
+  const [students, groups] = await Promise.all([
+    familyUser.familyId ? listFamilyStudentRecords(familyUser.familyId) : Promise.resolve([]),
+    listStudentGroups(),
+  ]);
 
   return (
     <SidebarProvider>
@@ -42,35 +45,40 @@ export default async function FamilyStudentRecordPage() {
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <section>
-                    <h2 className="mb-3 font-semibold">Datos personales</h2>
-                    <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                      <Value label="Documento" value={[student.documentType, student.documentNumber].filter(Boolean).join(" ")} />
-                      <Value label="Fecha de nacimiento" value={student.birthDate.toLocaleDateString("es-AR")} />
-                      <Value label="Grupo" value={student.group.name} />
-                      <Value label="Responsable principal" value={guardian?.fullName} />
-                    </dl>
+                    <FamilyStudentPersonalSection
+                      details={{
+                        studentId: student.id,
+                        documentType: student.documentType,
+                        documentNumber: student.documentNumber,
+                        birthDate: student.birthDate.toISOString(),
+                        groupId: student.groupId,
+                        groupName: student.group.name,
+                        primaryGuardianName: guardian?.fullName ?? null,
+                      }}
+                      groups={groups.map((group) => ({ id: group.id, name: group.name }))}
+                    />
                   </section>
                   <Separator />
                   <section>
                     <h2 className="mb-3 font-semibold">Domicilio</h2>
                     <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                      <Value label="Calle y número" value={student.address?.streetAndNumber} />
-                      <Value label="Barrio / localidad" value={student.address?.neighborhood} />
-                      <Value label="Ciudad y provincia" value={student.address?.cityAndState} />
-                      <Value label="Código postal" value={student.address?.postalCode} />
+                      <Value label="Calle y número" value={student.family?.streetAndNumber} />
+                      <Value label="Barrio / localidad" value={student.family?.neighborhood} />
+                      <Value label="Ciudad y provincia" value={student.family?.cityAndState} />
+                      <Value label="Código postal" value={student.family?.postalCode} />
                     </dl>
                   </section>
                   <Separator />
                   <section>
-                    <h2 className="mb-3 font-semibold">Salud</h2>
-                    <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      <Value label="Sangre y Rh" value={student.medicalProfile?.bloodType} />
-                      <Value label="Alergias" value={student.medicalProfile?.knownAllergies} />
-                      <Value label="Condiciones médicas" value={student.medicalProfile?.medicalConditions} />
-                      <Value label="Medicación" value={student.medicalProfile?.regularMedications} />
-                      <Value label="Cobertura" value={student.medicalProfile?.hasHealthInsurance ? "Sí" : "No"} />
-                      <Value label="Institución / afiliación" value={student.medicalProfile?.insuranceProviderAndPolicy} />
-                    </dl>
+                    <FamilyStudentMedicalSection details={{
+                      studentId: student.id,
+                      bloodType: student.medicalProfile?.bloodType ?? null,
+                      knownAllergies: student.medicalProfile?.knownAllergies ?? null,
+                      medicalConditions: student.medicalProfile?.medicalConditions ?? null,
+                      regularMedications: student.medicalProfile?.regularMedications ?? null,
+                      hasHealthInsurance: student.medicalProfile?.hasHealthInsurance ?? false,
+                      insuranceProviderAndPolicy: student.medicalProfile?.insuranceProviderAndPolicy ?? null,
+                    }} />
                   </section>
                   <Separator />
                   <section>

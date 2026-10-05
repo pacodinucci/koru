@@ -13,6 +13,15 @@ export const familyStudentIdentitySchema = z.object({
   groupId: z.string().min(1, "SeleccionÃ¡ un grupo."),
 });
 
+export const familyStudentPersonalEditSchema = z.object({
+  studentId: z.string().min(1),
+  documentType: z.string().trim().max(40),
+  documentNumber: z.string().trim().max(40),
+  birthDate: z.string().min(1),
+  groupId: z.string().min(1),
+  primaryGuardianName: z.string().trim().max(120),
+});
+
 export const familyStudentAddressSchema = z.object({
   studentId: z.string().min(1),
   streetAndNumber: requiredText("IngresÃ¡ la calle y el nÃºmero."),
@@ -44,6 +53,7 @@ export const familyStudentCompletionSchema = z.object({
 });
 
 export type FamilyStudentIdentityInput = z.infer<typeof familyStudentIdentitySchema>;
+export type FamilyStudentPersonalEditInput = z.infer<typeof familyStudentPersonalEditSchema>;
 export type FamilyStudentAddressInput = z.infer<typeof familyStudentAddressSchema>;
 export type FamilyStudentMedicalInput = z.infer<typeof familyStudentMedicalSchema>;
 export type FamilyStudentCompletionInput = z.infer<typeof familyStudentCompletionSchema>;

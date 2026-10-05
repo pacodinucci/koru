@@ -125,3 +125,20 @@ export async function publishAgreement(userId: string, id: string) {
   });
   if (!result.count) throw new AgreementError("El acuerdo ya fue publicado.", 409);
 }
+
+export async function deleteAgreement(userId: string, id: string) {
+  const scope = await getTeacherAgreementScope(userId);
+  if (!scope) throw new AgreementError("Docente no disponible.", 403);
+  const agreement = await prisma.followUpAgreement.findFirst({
+    where: { id, teacherId: scope.teacherId },
+    select: { attachmentPublicId: true },
+  });
+  if (!agreement) throw new AgreementError("Acuerdo no disponible.", 404);
+
+  const deleted = await prisma.followUpAgreement.deleteMany({ where: { id, teacherId: scope.teacherId } });
+  if (deleted.count !== 1) throw new AgreementError("Acuerdo no disponible.", 404);
+  if (agreement.attachmentPublicId) {
+    try { await deleteAgreementFile(agreement.attachmentPublicId); }
+    catch (error) { console.error("[follow-up-agreements] No se pudo borrar el adjunto del acuerdo", error); }
+  }
+}

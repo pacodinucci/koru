@@ -33,7 +33,7 @@ export function FamilyProfileForm({ initialProfile }: { initialProfile: Profile 
     <form onSubmit={submit} className="w-full max-w-xl space-y-4">
       <div className="border-b border-slate-200 pb-4">
         <h1 className="text-lg font-semibold text-slate-900">Tu perfil familiar</h1>
-        <p className="mt-1 text-sm text-slate-500">Este domicilio se autocompleta al registrar a un hijo y siempre puede modificarse en su ficha.</p>
+        <p className="mt-1 text-sm text-slate-500">Este domicilio se mostrará en el expediente de cada hijo/a y podrás actualizarlo desde acá.</p>
       </div>
       <div className="space-y-3">
         <div className="space-y-1.5"><Label htmlFor="street">Calle y número</Label><Input id="street" value={form.streetAndNumber} onChange={(event) => update("streetAndNumber", event.target.value)} /></div>

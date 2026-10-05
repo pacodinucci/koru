@@ -94,37 +94,42 @@ function normalizeRows(rows: FamilyImportRowInput[]) {
   return { normalized: normalized.filter((row) => !invalidRows.has(row.rowNumber)), issues };
 }
 
-async function appendDatabaseIssues(rows: NormalizedRow[], issues: FamilyImportIssue[]) {
+async function appendDatabaseIssues(rows: NormalizedRow[], issues: FamilyImportIssue[], rejectExistingInvitations = false) {
   if (!rows.length) return;
   const names = await prisma.family.findMany({ select: { name: true } });
   const existingFamilyKeys = new Set(names.map((family) => familyKey(family.name)));
   const emails = rows.flatMap((row) => row.emails);
   const users = await prisma.user.findMany({ where: { email: { in: emails } }, select: { email: true } });
   const existingUsers = new Set(users.map((user) => user.email.toLowerCase()));
+  const invitations = rejectExistingInvitations
+    ? await prisma.userInvitation.findMany({ where: { email: { in: emails } }, select: { email: true } })
+    : [];
+  const existingInvitations = new Set(invitations.map((invitation) => invitation.email.toLowerCase()));
 
   for (const row of rows) {
     if (existingFamilyKeys.has(row.familyKey)) issues.push({ rowNumber: row.rowNumber, message: "Ya existe una familia con ese nombre." });
     for (const email of row.emails) {
       if (existingUsers.has(email)) issues.push({ rowNumber: row.rowNumber, message: `El mail ${email} ya tiene un usuario creado.` });
+      if (existingInvitations.has(email)) issues.push({ rowNumber: row.rowNumber, message: `El mail ${email} ya tiene una invitación.` });
     }
   }
 }
 
-export async function previewFamilyImport(rows: FamilyImportRowInput[]): Promise<FamilyImportPreview> {
+export async function previewFamilyImport(rows: FamilyImportRowInput[], rejectExistingInvitations = false): Promise<FamilyImportPreview> {
   const result = normalizeRows(rows);
-  await appendDatabaseIssues(result.normalized, result.issues);
+  await appendDatabaseIssues(result.normalized, result.issues, rejectExistingInvitations);
   const invalidRows = new Set(result.issues.map((issue) => issue.rowNumber));
   const validRows = result.normalized.filter((row) => !invalidRows.has(row.rowNumber));
   return { validRows: validRows.map(({ rowNumber, familyName, emails }) => ({ rowNumber, familyName, emails })), issues: result.issues, familiesCount: validRows.length, invitationsCount: validRows.reduce((count, row) => count + row.emails.length, 0) };
 }
 
-export async function confirmFamilyImport(rows: FamilyImportRowInput[], invitedById: string) {
+export async function confirmFamilyImport(rows: FamilyImportRowInput[], invitedById: string, rejectExistingInvitations = false) {
   // Revalidate immediately before writing: the preview is advisory and may be stale.
-  const preview = await previewFamilyImport(rows);
+  const preview = await previewFamilyImport(rows, rejectExistingInvitations);
   if (preview.issues.length) return { ok: false as const, preview };
 
-  const invitationsCount = await prisma.$transaction(async (tx) => {
-    let invitationsCount = 0;
+  const deliveryJobIds = await prisma.$transaction(async (tx) => {
+    const deliveryJobIds: string[] = [];
     for (const row of preview.validRows) {
       // The schema has no normalized unique key. Checking again inside the transaction protects
       // the normal path; a future data migration can add a database uniqueness constraint.
@@ -137,7 +142,7 @@ export async function confirmFamilyImport(rows: FamilyImportRowInput[], invitedB
           tx.user.findUnique({ where: { email }, select: { id: true } }),
           tx.userInvitation.findUnique({ where: { email }, select: { id: true, tokenVersion: true } }),
         ]);
-        if (user) throw new Error("family_import_conflict");
+        if (user || (rejectExistingInvitations && invitation)) throw new Error("family_import_conflict");
         const tokenData = createInvitationToken();
         const tokenVersion = (invitation?.tokenVersion ?? 0) + 1;
         const invitationData = {
@@ -159,16 +164,16 @@ export async function confirmFamilyImport(rows: FamilyImportRowInput[], invitedB
         if (invitation) {
           await cancelStaleInvitationDeliveryJobs(tx, savedInvitation.id, tokenVersion);
         }
-        await createInvitationDeliveryJob(tx, {
+        const job = await createInvitationDeliveryJob(tx, {
           invitationId: savedInvitation.id,
           tokenVersion,
           idempotencyKey: `invitation-delivery-${savedInvitation.id}-${tokenVersion}`,
         });
-        invitationsCount += 1;
+        deliveryJobIds.push(job.id);
       }
     }
-    return invitationsCount;
+    return deliveryJobIds;
   }, { isolationLevel: "Serializable" });
 
-  return { ok: true as const, invitationsCount, familiesCount: preview.familiesCount };
+  return { ok: true as const, invitationsCount: deliveryJobIds.length, familiesCount: preview.familiesCount, deliveryJobIds };
 }

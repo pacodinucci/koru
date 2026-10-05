@@ -85,7 +85,7 @@ export default async function DashboardStudentRecordPage({ params }: { params: P
             <AccordionItem value="address">
               <AccordionTrigger>Domicilio</AccordionTrigger>
               <AccordionContent><dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Value label="Calle y número" value={student.address?.streetAndNumber} /><Value label="Barrio / localidad" value={student.address?.neighborhood} /><Value label="Ciudad y provincia" value={student.address?.cityAndState} /><Value label="Código postal" value={student.address?.postalCode} />
+              <Value label="Calle y número" value={student.family?.streetAndNumber} /><Value label="Barrio / localidad" value={student.family?.neighborhood} /><Value label="Ciudad y provincia" value={student.family?.cityAndState} /><Value label="Código postal" value={student.family?.postalCode} />
               </dl></AccordionContent>
             </AccordionItem>
             <AccordionItem value="health">
@@ -118,7 +118,7 @@ export default async function DashboardStudentRecordPage({ params }: { params: P
               <section><h3 className="mb-3 font-semibold">Información general</h3><dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <Value label="Nombre completo" value={`${student.firstName} ${student.lastName}`} />
                 <Value label="Fecha de nacimiento" value={student.birthDate.toLocaleDateString("es-AR")} />
-                <Value label="Dirección" value={[student.address?.streetAndNumber, student.address?.neighborhood, student.address?.cityAndState].filter(Boolean).join(", ")} />
+                <Value label="Dirección" value={[student.family?.streetAndNumber, student.family?.neighborhood, student.family?.cityAndState].filter(Boolean).join(", ")} />
                 <Value label="Teléfono de contacto" value={guardian?.phone} />
                 <Value label="Correos de madre, padre o tutores" value={student.guardians.map((item) => item.email).join(", ")} />
                 <Value label="Nombre de madre, padre o tutores" value={student.guardians.map((item) => item.fullName || item.user?.name).filter(Boolean).join(", ")} />

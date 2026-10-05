@@ -2,16 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/components/ui/toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
+  ResponsiveDialogClose,
   ResponsiveDialogContent,
   ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
   ResponsiveDialogTrigger,
@@ -59,9 +63,12 @@ export function TeacherReportsTable({
   fixedStudent?: StudentOption;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [studentId, setStudentId] = useState("");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [visibilityOverrides, setVisibilityOverrides] = useState<Record<string, boolean>>({});
+  const [deletedIds, setDeletedIds] = useState<string[]>([]);
+  const [selectedReport, setSelectedReport] = useState<ReportRow | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => setVisibilityOverrides({}), [reports]);
@@ -87,7 +94,27 @@ export function TeacherReportsTable({
     }
   }
 
-  if (reports.length === 0) {
+  async function deleteReport(report: ReportRow) {
+    if (report.canManageVisibility === false || pendingId !== null) return;
+    setPendingId(report.id);
+    try {
+      const response = await fetch(`/api/teacher/reports/${encodeURIComponent(report.id)}`, { method: "DELETE" });
+      const result = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+      if (!response.ok || !result?.ok) throw new Error(result?.error ?? "No pudimos eliminar el reporte.");
+      setSelectedReport(null);
+      setDeletedIds((current) => [...current, report.id]);
+      toast("Reporte eliminado.", "success");
+      router.refresh();
+    } catch (cause) {
+      toast(cause instanceof Error ? cause.message : "No pudimos eliminar el reporte.", "error");
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  const availableReports = reports.filter((report) => !deletedIds.includes(report.id));
+
+  if (availableReports.length === 0) {
     return <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-muted-foreground">
       {fixedStudent
         ? "Todavía no hay reportes de este alumno."
@@ -98,8 +125,8 @@ export function TeacherReportsTable({
   }
 
   const filtered = fixedStudent
-    ? reports
-    : studentId ? reports.filter((report) => report.student.id === studentId) : reports;
+    ? availableReports
+    : studentId ? availableReports.filter((report) => report.student.id === studentId) : availableReports;
 
   return (
     <div className="space-y-3">
@@ -114,8 +141,8 @@ export function TeacherReportsTable({
         </select>
       </div> : null}
       {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
-      <div className="rounded-xl border border-slate-200 bg-white">
-        <Table className={fixedStudent ? "min-w-[560px]" : undefined}>
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <Table className="min-w-[680px]">
           <TableHeader>
             <TableRow className="bg-slate-50">
               <TableHead className="hidden w-[12%] md:table-cell">Fecha</TableHead>
@@ -124,10 +151,11 @@ export function TeacherReportsTable({
               <TableHead className="hidden w-[10%] md:table-cell">Tipo</TableHead>
               <TableHead className="hidden w-[14%] md:table-cell">Detalle</TableHead>
               <TableHead className="w-[30%] md:w-[16%]">Familia</TableHead>
+              <TableHead className="w-[16%]">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">No hay reportes para este alumno.</TableCell></TableRow> : filtered.map((report) => {
+            {filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">No hay reportes para este alumno.</TableCell></TableRow> : filtered.map((report) => {
               const visible = visibilityOverrides[report.id] ?? report.visibleToFamily;
               return <TableRow key={report.id}>
                 <TableCell className="hidden md:table-cell">{new Date(report.createdAt).toLocaleDateString("es-AR")}</TableCell>
@@ -155,11 +183,29 @@ export function TeacherReportsTable({
                     </span>
                   </div>
                 </TableCell>
+                <TableCell>
+                  {report.canManageVisibility !== false ? <Button type="button" size="icon-sm" variant="destructive" aria-label={`Eliminar reporte ${report.title}`} title={`Eliminar reporte ${report.title}`} disabled={pendingId !== null} onClick={() => setSelectedReport(report)}><Trash2 /></Button> : null}
+                </TableCell>
               </TableRow>;
             })}
           </TableBody>
         </Table>
       </div>
+      {selectedReport ? <ResponsiveDialog open onOpenChange={(open) => { if (!open && pendingId === null) setSelectedReport(null); }}>
+        <ResponsiveDialogContent showCloseButton={pendingId === null} className="md:w-[min(calc(100vw-2rem),28rem)] [font-family:var(--font-montserrat)]">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Eliminar reporte</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>Esta acción no se puede deshacer.</ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody className="space-y-3">
+            <p>Vas a eliminar definitivamente el reporte <strong>{selectedReport.title}</strong> de {selectedReport.student.firstName} {selectedReport.student.lastName}. La familia dejará de verlo.</p>
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
+            <ResponsiveDialogClose render={<Button type="button" variant="outline" disabled={pendingId !== null}>Cancelar</Button>} />
+            <Button type="button" variant="destructive" disabled={pendingId !== null} onClick={() => void deleteReport(selectedReport)}>{pendingId === selectedReport.id ? "Eliminando…" : "Eliminar definitivamente"}</Button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog> : null}
     </div>
   );
 }

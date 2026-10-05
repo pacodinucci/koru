@@ -9,6 +9,7 @@ import type {
   FamilyStudentCompletionInput,
   FamilyStudentIdentityInput,
   FamilyStudentMedicalInput,
+  FamilyStudentPersonalEditInput,
   FamilyStudentResponsibleInput,
   FamilyResponsibleUpdateInput,
 } from "@/modules/family-dashboard/schemas/family-student-record.schema";
@@ -34,7 +35,7 @@ function normalizeIdentityPart(value: string) {
     .replace(/[^A-Z0-9]/g, "");
 }
 
-function buildStudentIdentity(input: FamilyStudentIdentityInput, birthDate: Date) {
+function buildStudentIdentity(input: Pick<FamilyStudentIdentityInput, "firstName" | "lastName" | "documentType" | "documentNumber">, birthDate: Date) {
   const documentNumber = normalizeIdentityPart(input.documentNumber);
   if (documentNumber) {
     const documentType = normalizeIdentityPart(input.documentType) || "DOCUMENT";
@@ -80,7 +81,7 @@ export async function listFamilyStudentRecords(familyId: string) {
     orderBy: [{ createdAt: "asc" }],
     include: {
       group: { select: { id: true, name: true, ageRange: true } },
-      address: true,
+      family: { select: { streetAndNumber: true, neighborhood: true, cityAndState: true, postalCode: true } },
       medicalProfile: true,
       responsibles: { orderBy: { priority: "asc" } },
       guardians: { orderBy: { isPrimary: "desc" } },
@@ -133,6 +134,70 @@ export async function saveFamilyStudentIdentity(input: FamilyStudentIdentityInpu
     mapStudentIdentityConflict(error);
   }
 }
+
+export async function updateFamilyStudentPersonal(input: FamilyStudentPersonalEditInput, user: FamilyUser) {
+  const familyId = requireFamilyId(user);
+  const birthDate = parseBirthDate(input.birthDate);
+  const student = await prisma.student.findFirst({
+    where: { id: input.studentId, familyId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      groupId: true,
+      guardians: { orderBy: { isPrimary: "desc" }, take: 1, select: { id: true } },
+    },
+  });
+  if (!student) throw new Error("student_not_found");
+
+  if (input.groupId !== student.groupId) {
+    const group = await prisma.studentGroup.findFirst({
+      where: { id: input.groupId, isActive: true },
+      select: { id: true },
+    });
+    if (!group) throw new Error("group_not_found");
+  }
+
+  const identity = buildStudentIdentity({
+    firstName: student.firstName,
+    lastName: student.lastName,
+    documentType: input.documentType,
+    documentNumber: input.documentNumber,
+  }, birthDate);
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.student.update({
+        where: { id: student.id, familyId },
+        data: { ...identity, birthDate, groupId: input.groupId },
+      });
+      const primaryGuardian = student.guardians[0];
+      if (primaryGuardian) {
+        await tx.studentGuardian.update({
+          where: { id: primaryGuardian.id, studentId: student.id },
+          data: { fullName: input.primaryGuardianName || null },
+        });
+      } else if (input.primaryGuardianName) {
+        await tx.studentGuardian.create({
+          data: {
+            studentId: student.id,
+            userId: user.id,
+            email: user.email.trim().toLowerCase(),
+            fullName: input.primaryGuardianName,
+            relationship: "GUARDIAN",
+            isPrimary: true,
+            canPickup: true,
+            emergencyContact: true,
+          },
+        });
+      }
+      return updated;
+    });
+  } catch (error) {
+    mapStudentIdentityConflict(error);
+  }
+}
+
 export async function saveFamilyStudentAddress(input: FamilyStudentAddressInput, user: FamilyUser) {
   await requireOwnedStudent(input.studentId, requireFamilyId(user));
   const { studentId, ...data } = input;

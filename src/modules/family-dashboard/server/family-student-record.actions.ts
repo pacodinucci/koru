@@ -8,6 +8,7 @@ import {
   familyStudentCompletionSchema,
   familyStudentIdentitySchema,
   familyStudentMedicalSchema,
+  familyStudentPersonalEditSchema,
   familyStudentResponsibleSchema,
   familyResponsibleUpdateSchema,
   familyResponsibleDeleteSchema,
@@ -15,6 +16,7 @@ import {
   type FamilyStudentCompletionInput,
   type FamilyStudentIdentityInput,
   type FamilyStudentMedicalInput,
+  type FamilyStudentPersonalEditInput,
   type FamilyStudentResponsibleInput,
   type FamilyResponsibleUpdateInput,
   type FamilyResponsibleDeleteInput,
@@ -27,6 +29,7 @@ import {
   saveFamilyStudentAddress,
   saveFamilyStudentIdentity,
   saveFamilyStudentMedical,
+  updateFamilyStudentPersonal,
 } from "@/modules/family-dashboard/server/family-student-record.repository";
 
 function failure(error: unknown) {
@@ -41,6 +44,22 @@ export async function saveFamilyStudentIdentityAction(input: FamilyStudentIdenti
     const student = await saveFamilyStudentIdentity(parsed.data, user);
     revalidatePath("/family-dashboard");
     return { ok: true as const, studentId: student.id };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function updateFamilyStudentPersonalAction(input: FamilyStudentPersonalEditInput) {
+  const user = (await requireFamilyDashboardAccess("/family-dashboard?error=forbidden")).familyUser;
+  const parsed = familyStudentPersonalEditSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, error: "invalid_input" };
+  try {
+    await updateFamilyStudentPersonal(parsed.data, user);
+    revalidatePath("/family-dashboard");
+    revalidatePath("/family-dashboard/expediente");
+    revalidatePath("/family-dashboard/cuestionario-ingreso/[studentId]", "page");
+    revalidatePath("/dashboard/students/[id]", "page");
+    return { ok: true as const };
   } catch (error) {
     return failure(error);
   }
@@ -64,6 +83,9 @@ export async function saveFamilyStudentMedicalAction(input: FamilyStudentMedical
   if (!parsed.success) return { ok: false as const, error: "invalid_input" };
   try {
     await saveFamilyStudentMedical(parsed.data, user);
+    revalidatePath("/family-dashboard");
+    revalidatePath("/family-dashboard/expediente");
+    revalidatePath("/dashboard/students/[id]", "page");
     return { ok: true as const };
   } catch (error) {
     return failure(error);

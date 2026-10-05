@@ -13,5 +13,8 @@ export async function saveFamilyProfileAction(input: FamilyProfileInput) {
   await saveFamilyProfile(user.id, parsed.data);
   revalidatePath("/family-dashboard");
   revalidatePath("/family-dashboard/perfil");
+  revalidatePath("/family-dashboard/expediente");
+  revalidatePath("/family-dashboard/cuestionario-ingreso/[studentId]", "page");
+  revalidatePath("/dashboard/students/[id]", "page");
   return { ok: true as const };
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { FamilyStatus } from "@prisma/client";
+import { FamilyStatus, InvitationDeliveryJobStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -9,7 +9,12 @@ import { prisma } from "@/lib/prisma";
 import { getFamilyDetailForAdmin } from "@/modules/families/server/families.repository";
 import { runInvitationDeliveryWorker } from "@/modules/mailing/server/invitation-delivery-worker.service";
 
-const familySchema = z.object({ name: z.string().trim().min(2).max(120) });
+const familySchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  primaryEmail: z.email(),
+  secondaryEmail: z.email().optional(),
+});
+export type CreateFamilyState = { status: "idle" | "success" | "warning" | "error"; message: string | null };
 const eventualItemDraftSchema = z.object({ name: z.string().trim().min(2).max(120), suggestedAmount: z.coerce.number().positive() });
 const planSchema = z.object({ name: z.string().trim().min(2).max(120), basicMonthlyFee: z.coerce.number().positive(), eventualItems: z.array(eventualItemDraftSchema).max(30) }).superRefine((plan, context) => {
   const names = new Set<string>();
@@ -32,12 +37,63 @@ function value(formData: FormData, key: string) {
   return typeof candidate === "string" ? candidate : "";
 }
 
-export async function createFamilyAction(formData: FormData) {
-  await requirePermission("families.manage");
-  const parsed = familySchema.safeParse({ name: value(formData, "name") });
-  if (!parsed.success) return;
-  await prisma.family.create({ data: { name: parsed.data.name } });
+export async function createFamilyAction(_previousState: CreateFamilyState, formData: FormData): Promise<CreateFamilyState> {
+  const admin = await requirePermission("families.manage");
+  const parsed = familySchema.safeParse({
+    name: value(formData, "name"),
+    primaryEmail: value(formData, "primaryEmail").trim().toLowerCase(),
+    secondaryEmail: value(formData, "secondaryEmail").trim().toLowerCase() || undefined,
+  });
+  if (!parsed.success) return { status: "error", message: "Completá el nombre y un email principal válido. El segundo email, si lo ingresás, también debe ser válido." };
+  if (parsed.data.primaryEmail === parsed.data.secondaryEmail) {
+    return { status: "error", message: "Los dos emails deben ser distintos." };
+  }
+
+  let deliveryJobIds: string[];
+  try {
+    const { confirmFamilyImport } = await import("@/modules/families/server/family-import.service");
+    const result = await confirmFamilyImport([{
+      rowNumber: 1,
+      familyName: parsed.data.name,
+      motherEmail: parsed.data.primaryEmail,
+      fatherEmail: parsed.data.secondaryEmail,
+    }], admin.id, true);
+    if (!result.ok) {
+      return { status: "error", message: result.preview.issues[0]?.message ?? "Revisá los datos de la familia e intentá nuevamente." };
+    }
+    deliveryJobIds = result.deliveryJobIds;
+  } catch (error) {
+    console.error("family_creation_failed", error);
+    const code = error instanceof Error ? error.message : "";
+    const prismaCode = error && typeof error === "object" && "code" in error ? error.code : null;
+    if (code === "invitation_token_encryption_key_missing" || code === "invitation_token_encryption_key_invalid") {
+      return { status: "error", message: "No se pudieron preparar las invitaciones porque falta una configuración segura de envío. Contactá al administrador." };
+    }
+    if (code === "family_import_conflict" || prismaCode === "P2034") {
+      return { status: "error", message: "La familia o alguno de los emails ya existe. Revisá los datos e intentá nuevamente." };
+    }
+    return { status: "error", message: "No pudimos crear la familia. Intentá nuevamente." };
+  }
+
   revalidatePath("/dashboard/families");
+  revalidatePath("/dashboard/users");
+  revalidatePath("/dashboard/mailing");
+
+  try {
+    await runInvitationDeliveryWorker();
+    const jobs = await prisma.invitationDeliveryJob.findMany({
+      where: { id: { in: deliveryJobIds } },
+      select: { status: true },
+    });
+    const sentCount = jobs.filter((job) => job.status === InvitationDeliveryJobStatus.SENT).length;
+    if (sentCount === deliveryJobIds.length) {
+      return { status: "success", message: `Familia creada. El proveedor aceptó ${sentCount} ${sentCount === 1 ? "invitación" : "invitaciones"} para enviar.` };
+    }
+    return { status: "warning", message: `Familia creada. ${sentCount} de ${deliveryJobIds.length} invitaciones aceptadas para envío; las restantes quedaron pendientes y podés revisarlas en Mailing.` };
+  } catch (error) {
+    console.error("family_creation_delivery_trigger_failed", error);
+    return { status: "warning", message: "Familia creada. Las invitaciones quedaron preparadas, pero no pudimos confirmar su envío. Revisalas en Mailing." };
+  }
 }
 
 export async function createPlanAction(formData: FormData) {
