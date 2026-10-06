@@ -46,6 +46,7 @@ export async function getPublishedPosts({
       content: true,
       visibility: true,
       authorName: true,
+      editorialAuthorName: true,
       publishedAt: true,
       createdAt: true,
       tags: {

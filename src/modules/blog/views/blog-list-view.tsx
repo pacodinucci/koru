@@ -233,6 +233,12 @@ export async function BlogListView({ tagSlug, textMap = {} }: BlogListViewProps)
                       </Link>
                     </h2>
 
+                    {post.editorialAuthorName ? (
+                      <p className="text-sm font-semibold leading-snug text-[var(--brand-900)]">
+                        Por {post.editorialAuthorName}
+                      </p>
+                    ) : null}
+
                     <div className="flex flex-wrap gap-1.5">
                       {post.tags.map(({ tag }) => (
                         <Link
