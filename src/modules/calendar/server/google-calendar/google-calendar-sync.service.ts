@@ -176,6 +176,7 @@ export async function syncConfirmedAttendanceToGoogle(
       description: true,
       startsAt: true,
       endsAt: true,
+      timeZone: true,
       allDay: true,
       location: true,
     },

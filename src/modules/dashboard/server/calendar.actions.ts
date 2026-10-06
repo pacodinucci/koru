@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 
 import { requirePermission } from "@/modules/auth/server/auth-guards";
+import { parseCalendarLocalDateTime } from "@/modules/calendar/lib/calendar-time-zone";
 import { sendPendingCalendarEventInvitations } from "@/modules/calendar/server/calendar-invitation.service";
 import { createManualCalendarEventAttendance } from "@/modules/calendar/server/calendar-attendance.repository";
 import {
@@ -49,12 +50,6 @@ function parseDurationMinutes(value: string) {
   return minutes;
 }
 
-function combineDateAndTime(dateValue: string, timeValue: string) {
-  const parsed = new Date(`${dateValue}T${timeValue}:00`);
-  if (Number.isNaN(parsed.getTime())) throw new Error("invalid_date");
-  return parsed;
-}
-
 export async function saveCalendarEventAction(formData: FormData) {
   const user = await requirePermission("calendar.manage", "/dashboard/calendar?error=forbidden");
   let savedEventId: string;
@@ -70,8 +65,9 @@ export async function saveCalendarEventAction(formData: FormData) {
     const imagePublicId = getString(formData, "imagePublicId").trim();
     const eventDate = getString(formData, "eventDate").trim();
     const startTime = getString(formData, "startTime").trim();
+    const timeZone = getString(formData, "timeZone").trim();
     const durationMinutes = parseDurationMinutes(getString(formData, "durationMinutes").trim());
-    const startsAt = combineDateAndTime(eventDate, startTime);
+    const startsAt = parseCalendarLocalDateTime(eventDate, startTime, timeZone);
     const visibility = parseVisibility(getString(formData, "visibility"));
     const audienceType = visibility === CalendarEventVisibility.PUBLIC
       ? CalendarAudienceType.ALL
@@ -93,6 +89,7 @@ export async function saveCalendarEventAction(formData: FormData) {
       imagePublicId,
       startsAt,
       endsAt: new Date(startsAt.getTime() + durationMinutes * 60_000),
+      timeZone,
       allDay: getBoolean(formData, "allDay"),
       location: getString(formData, "location").trim(),
       visibility,

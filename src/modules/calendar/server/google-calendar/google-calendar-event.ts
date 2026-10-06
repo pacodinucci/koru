@@ -1,6 +1,6 @@
 export const GOOGLE_CALENDAR_SCOPE =
   "https://www.googleapis.com/auth/calendar.events.owned";
-export const KORU_TIME_ZONE = "America/Argentina/Buenos_Aires";
+import { calendarDateValue } from "../../lib/calendar-time-zone";
 
 type KoruCalendarEvent = {
   id: string;
@@ -8,6 +8,7 @@ type KoruCalendarEvent = {
   description: string | null;
   startsAt: Date;
   endsAt: Date;
+  timeZone: string;
   allDay: boolean;
   location: string | null;
 };
@@ -24,17 +25,6 @@ type GoogleCalendarEventPayload = {
     };
   };
 };
-
-function formatDateInTimeZone(date: Date) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: KORU_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${value.year}-${value.month}-${value.day}`;
-}
 
 function addUtcDays(date: Date, days: number) {
   const copy = new Date(date);
@@ -64,14 +54,14 @@ export function buildGoogleCalendarEventPayload(
 
   if (event.allDay) {
     const exclusiveEnd =
-      formatDateInTimeZone(event.endsAt) === formatDateInTimeZone(event.startsAt)
+      calendarDateValue(event.endsAt, event.timeZone) === calendarDateValue(event.startsAt, event.timeZone)
         ? addUtcDays(event.startsAt, 1)
         : event.endsAt;
 
     return {
       ...base,
-      start: { date: formatDateInTimeZone(event.startsAt) },
-      end: { date: formatDateInTimeZone(exclusiveEnd) },
+      start: { date: calendarDateValue(event.startsAt, event.timeZone) },
+      end: { date: calendarDateValue(exclusiveEnd, event.timeZone) },
     };
   }
 
@@ -79,11 +69,11 @@ export function buildGoogleCalendarEventPayload(
     ...base,
     start: {
       dateTime: event.startsAt.toISOString(),
-      timeZone: KORU_TIME_ZONE,
+      timeZone: event.timeZone,
     },
     end: {
       dateTime: event.endsAt.toISOString(),
-      timeZone: KORU_TIME_ZONE,
+      timeZone: event.timeZone,
     },
   };
 }

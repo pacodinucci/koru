@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { calendarTimeZoneLabel } from "@/modules/calendar/lib/calendar-time-zone";
 
 import { respondToExternalCalendarInvitationAction } from "@/modules/calendar/server/calendar-attendance.actions";
 import { getExternalCalendarInvitationByToken } from "@/modules/calendar/server/calendar-external-invitation";
@@ -22,11 +23,12 @@ export default async function ExternalCalendarInvitationPage({ params, searchPar
       <p className="text-sm font-semibold text-[var(--complement-800)]">Koru · Invitación personal</p>
       <h1 className="mt-4 text-3xl font-semibold text-slate-900">{event.title}</h1>
       <p className="mt-4 text-sm text-slate-600">
-        {event.startsAt.toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" })}
+        {event.startsAt.toLocaleDateString("es-AR", { timeZone: event.timeZone, day: "numeric", month: "long", year: "numeric" })}
         {" · "}
-        {event.startsAt.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+        {event.startsAt.toLocaleTimeString("es-AR", { timeZone: event.timeZone, hour: "2-digit", minute: "2-digit" })}
         {" - "}
-        {event.endsAt.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+        {event.endsAt.toLocaleTimeString("es-AR", { timeZone: event.timeZone, hour: "2-digit", minute: "2-digit" })}
+        {` (${calendarTimeZoneLabel(event.timeZone)})`}
         {event.location ? ` · ${event.location}` : ""}
       </p>
       <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6">

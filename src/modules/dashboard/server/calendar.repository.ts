@@ -22,6 +22,7 @@ type SaveCalendarEventInput = {
   imagePublicId?: string;
   startsAt: Date;
   endsAt: Date;
+  timeZone: string;
   allDay: boolean;
   location?: string;
   status: CalendarEventStatus;
@@ -174,6 +175,7 @@ export async function saveCalendarEvent(input: SaveCalendarEventInput) {
           imagePublicId: input.imagePublicId || null,
           startsAt: input.startsAt,
           endsAt: input.endsAt,
+          timeZone: input.timeZone,
           allDay: input.allDay,
           location: input.location || null,
           status: input.status,
@@ -220,6 +222,7 @@ export async function saveCalendarEvent(input: SaveCalendarEventInput) {
         imagePublicId: input.imagePublicId || null,
         startsAt: input.startsAt,
         endsAt: input.endsAt,
+        timeZone: input.timeZone,
         allDay: input.allDay,
         location: input.location || null,
         status: input.status,
@@ -370,6 +373,7 @@ function getVisibleEventSelect(userId: string) {
     imageUrl: true,
     startsAt: true,
     endsAt: true,
+    timeZone: true,
     allDay: true,
     location: true,
     visibility: true,
@@ -416,6 +420,7 @@ export async function listPublicCalendarEventsByRange({
       imageUrl: true,
       startsAt: true,
       endsAt: true,
+      timeZone: true,
       location: true,
       visibility: true,
       registrationsEnabled: true,
@@ -453,6 +458,7 @@ export async function listUpcomingPublicCalendarEvents({
       imageUrl: true,
       startsAt: true,
       endsAt: true,
+      timeZone: true,
       location: true,
       visibility: true,
       registrationsEnabled: true,

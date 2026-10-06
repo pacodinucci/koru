@@ -19,6 +19,7 @@ type CalendarEventItem = {
   title: string;
   startsAt: Date;
   endsAt: Date;
+  timeZone: string;
   location?: string | null;
   description?: string | null;
   imageUrl?: string | null;
@@ -358,7 +359,7 @@ export function DashboardCalendarGrid({
           }}
         >
           <div className="border-r border-b border-slate-200 p-3 text-xs font-medium text-slate-400">
-            UTC
+            Hora de tu dispositivo · UTC
             {Intl.DateTimeFormat("en", { timeZoneName: "shortOffset" })
               .format(now)
               .replace(/.*GMT/, "")}
@@ -730,8 +731,8 @@ export function DashboardCalendarUpcomingTable({
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3">Fecha</th>
-              <th className="px-4 py-3">Hora inicio</th>
-              <th className="px-4 py-3">Hora fin</th>
+              <th className="px-4 py-3">Inicio (tu zona)</th>
+              <th className="px-4 py-3">Fin (tu zona)</th>
               <th className="px-4 py-3">Evento</th>
               <th className="px-4 py-3">Ubicación</th>
             </tr>

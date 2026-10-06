@@ -12,6 +12,7 @@ export type FamilyCalendarEventItem = {
   imageUrl?: string | null;
   startsAt: Date | string;
   endsAt: Date | string;
+  timeZone: string;
   allDay: boolean;
   location?: string | null;
   visibility: CalendarEventVisibility;

@@ -104,6 +104,7 @@ type SendCalendarEventInvitationEmailInput = {
     title: string;
     startsAt: Date;
     endsAt: Date;
+    timeZone: string;
     location: string | null;
   };
 };
@@ -130,6 +131,7 @@ export async function sendCalendarEventInvitationEmail({
       eventTitle: event.title,
       startsAt: event.startsAt,
       endsAt: event.endsAt,
+      timeZone: event.timeZone,
       location: event.location,
       eventUrl: eventUrl.toString(),
       requiresSignIn: !externalInvitationToken,

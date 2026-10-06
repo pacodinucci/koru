@@ -31,8 +31,8 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   const [events, googleConnection] = await Promise.all([
     listPublicCalendarEventsByRange({
       viewer: user ? { id: user.id, role: user.role } : undefined,
-      start,
-      end,
+      start: new Date(start.getTime() - 2 * 24 * 60 * 60 * 1000),
+      end: new Date(end.getTime() + 2 * 24 * 60 * 60 * 1000),
     }),
     user ? getGoogleCalendarConnectionState(user.id) : Promise.resolve(null),
   ]);

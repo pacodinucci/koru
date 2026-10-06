@@ -1,11 +1,17 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import {
+  calendarDateValue,
+  calendarTimeValue,
+  calendarTimeZoneLabel,
+} from "@/modules/calendar/lib/calendar-time-zone";
 
 type PublicCalendarEvent = {
   id: string;
   title: string;
   startsAt: Date;
   endsAt: Date;
+  timeZone: string;
   location: string | null;
 };
 
@@ -64,8 +70,8 @@ function getMonthDays(dateCursor: Date) {
   return [...leading, ...days, ...trailing];
 }
 
-function formatTime(start: Date, end: Date) {
-  return `${start.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}`;
+function formatTime(start: Date, end: Date, timeZone: string) {
+  return `${calendarTimeValue(start, timeZone)} - ${calendarTimeValue(end, timeZone)} (${calendarTimeZoneLabel(timeZone)})`;
 }
 
 export function PublicCalendarView({
@@ -82,8 +88,8 @@ export function PublicCalendarView({
       : undefined;
   const monthLabel = `${dateCursor.toLocaleDateString("es-AR", { month: "long" })} ${dateCursor.getFullYear()}`;
   const selectedEvents = selected
-    ? events.filter((event) => isSameDay(new Date(event.startsAt), selected))
-    : events;
+    ? events.filter((event) => calendarDateValue(new Date(event.startsAt), event.timeZone) === formatDateParam(selected))
+    : events.filter((event) => calendarDateValue(new Date(event.startsAt), event.timeZone).slice(0, 7) === formatDateParam(dateCursor).slice(0, 7));
   const days = getMonthDays(dateCursor);
   const currentYearMonths = Array.from(
     { length: 12 },
@@ -194,7 +200,7 @@ export function PublicCalendarView({
               }
 
               const dayEvents = events.filter((event) =>
-                isSameDay(new Date(event.startsAt), day),
+                calendarDateValue(new Date(event.startsAt), event.timeZone) === formatDateParam(day),
               );
               const isSelected = selected ? isSameDay(day, selected) : false;
 
@@ -262,10 +268,11 @@ export function PublicCalendarView({
                       </h3>
                       <p className="mt-2 text-sm text-black/65">
                         {startsAt.toLocaleDateString("es-AR", {
+                          timeZone: event.timeZone,
                           day: "numeric",
                           month: "short",
                         })}{" "}
-                        · {formatTime(startsAt, endsAt)}
+                        · {formatTime(startsAt, endsAt, event.timeZone)}
                       </p>
                       {event.location ? (
                         <p className="mt-1 text-sm text-black/65">

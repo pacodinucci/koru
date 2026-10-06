@@ -1065,6 +1065,7 @@ model CalendarEvent {
   imagePublicId                 String?
   startsAt                      DateTime
   endsAt                        DateTime
+  timeZone                      String                      @default("America/Mexico_City")
   allDay                        Boolean                     @default(false)
   location                      String?
   status                        CalendarEventStatus         @default(DRAFT)

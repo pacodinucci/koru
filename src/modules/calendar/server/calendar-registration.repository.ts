@@ -40,6 +40,7 @@ export async function getCalendarEventForViewer(id: string, viewer?: Viewer) {
       imageUrl: true,
       startsAt: true,
       endsAt: true,
+      timeZone: true,
       allDay: true,
       location: true,
       registrationsEnabled: true,

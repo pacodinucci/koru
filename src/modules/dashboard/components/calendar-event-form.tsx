@@ -9,6 +9,12 @@ import type {
 
 import { CalendarEventImageField } from "@/modules/dashboard/components/calendar-event-image-field";
 import { CalendarEventAttendanceDialog } from "@/modules/dashboard/components/calendar-event-attendance-dialog";
+import {
+  CALENDAR_TIME_ZONES,
+  DEFAULT_CALENDAR_TIME_ZONE,
+  calendarDateValue,
+  calendarTimeValue,
+} from "@/modules/calendar/lib/calendar-time-zone";
 
 import {
   cancelCalendarEventAction,
@@ -19,6 +25,7 @@ type EventItem = {
   title: string;
   startsAt: Date;
   endsAt: Date;
+  timeZone: string;
   location?: string | null;
   description?: string | null;
   imageUrl?: string | null;
@@ -60,6 +67,12 @@ const visibilityOptions: Array<{ value: CalendarEventVisibility; label: string }
   { value: "MEMBERS", label: "Privado" },
 ];
 
+const saveErrorMessages: Record<string, string> = {
+  invalid_date: "La fecha u hora no existe en la zona horaria seleccionada.",
+  ambiguous_date: "Esa hora ocurre dos veces por el cambio de horario. Elegí otra hora.",
+  invalid_time_zone: "Seleccioná una zona horaria válida.",
+};
+
 function roleLabel(role: UserRole) {
   if (role === "SUPERADMIN") return "Superadmin";
   if (role === "ADMIN_OPERATOR") return "Admin operador";
@@ -69,22 +82,8 @@ function roleLabel(role: UserRole) {
   return "Familia";
 }
 
-function toDateValue(date: Date) {
-  const d = new Date(date);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function toTimeValue(date: Date) {
-  const d = new Date(date);
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
-}
-
 export function CalendarEventForm({ users, ok, error, event, mode = "create" }: Props) {
+  const timeZone = event?.timeZone ?? DEFAULT_CALENDAR_TIME_ZONE;
   const initialVisibility = event?.visibility ?? "MEMBERS";
   const initialAudience =
     initialVisibility === "PUBLIC" ? "ALL" : event?.audienceType ?? "ALL";
@@ -142,17 +141,30 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
       <input
         name="eventDate"
         type="date"
-        defaultValue={event ? toDateValue(new Date(event.startsAt)) : undefined}
+        defaultValue={event ? calendarDateValue(new Date(event.startsAt), timeZone) : undefined}
         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
         required
       />
       <input
         name="startTime"
         type="time"
-        defaultValue={event ? toTimeValue(new Date(event.startsAt)) : undefined}
+        defaultValue={event ? calendarTimeValue(new Date(event.startsAt), timeZone) : undefined}
         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
         required
       />
+      <label className="block text-sm text-slate-700">
+        Zona horaria del evento
+        <select
+          name="timeZone"
+          defaultValue={timeZone}
+          className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          required
+        >
+          {CALENDAR_TIME_ZONES.map((zone) => (
+            <option key={zone.value} value={zone.value}>{zone.label}</option>
+          ))}
+        </select>
+      </label>
       <input
         name="durationMinutes"
         type="number"
@@ -264,7 +276,7 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
       {event?.attendanceConfirmationEnabled ? (
         <CalendarEventAttendanceDialog
           eventId={event.id}
-          eventDate={toDateValue(new Date(event.startsAt))}
+          eventDate={calendarDateValue(new Date(event.startsAt), timeZone)}
           attendances={event.attendances ?? []}
           error={error}
           ok={ok}
@@ -272,7 +284,7 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
       ) : null}
 
       {ok ? <p className="text-xs text-emerald-700">Guardado: {ok}</p> : null}
-      {error ? <p className="text-xs text-rose-700">Error: {error}</p> : null}
+      {error ? <p className="text-xs text-rose-700">{saveErrorMessages[error] ?? `Error: ${error}`}</p> : null}
       {saveError ? <p className="text-xs text-rose-700">{saveError}</p> : null}
 
       <div className="grid grid-cols-2 gap-2">

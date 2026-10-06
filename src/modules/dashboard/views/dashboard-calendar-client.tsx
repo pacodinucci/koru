@@ -28,6 +28,7 @@ type CalendarEventItem = {
   title: string;
   startsAt: string | Date;
   endsAt: string | Date;
+  timeZone: string;
   location?: string | null;
   description?: string | null;
   imageUrl?: string | null;

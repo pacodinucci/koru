@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
+import { calendarTimeZoneLabel } from "@/modules/calendar/lib/calendar-time-zone";
 import { respondToCalendarEventAction } from "@/modules/calendar/server/calendar-attendance.actions";
 import { getCalendarAttendanceForUser } from "@/modules/calendar/server/calendar-attendance.repository";
 import { registerForCalendarEventAction } from "@/modules/calendar/server/calendar-registration.actions";
@@ -62,10 +63,11 @@ export default async function CalendarEventPage({ params, searchParams }: Props)
       </Link>
       <article className="mt-8 pb-12">
         <p className="text-sm text-black/65">
-          {event.startsAt.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}
+          {event.startsAt.toLocaleDateString("es-MX", { timeZone: event.timeZone, day: "numeric", month: "long", year: "numeric" })}
           {" · "}
-          {event.startsAt.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
-          {!event.allDay ? ` - ${event.endsAt.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}` : ""}
+          {event.startsAt.toLocaleTimeString("es-MX", { timeZone: event.timeZone, hour: "2-digit", minute: "2-digit" })}
+          {!event.allDay ? ` - ${event.endsAt.toLocaleTimeString("es-MX", { timeZone: event.timeZone, hour: "2-digit", minute: "2-digit" })}` : ""}
+          {` (${calendarTimeZoneLabel(event.timeZone)})`}
         </p>
         {event.imageUrl ? (
           <div className="relative mb-8 mt-5 aspect-[16/9] max-h-[34rem] w-full overflow-hidden rounded-lg">

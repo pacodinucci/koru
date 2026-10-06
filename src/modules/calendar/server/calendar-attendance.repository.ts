@@ -45,7 +45,7 @@ export async function getExternalCalendarEventAttendance(attendanceId: string) {
       event: { status: CalendarEventStatus.PUBLISHED, attendanceConfirmationEnabled: true },
     },
     include: {
-      event: { select: { id: true, title: true, startsAt: true, endsAt: true, location: true } },
+      event: { select: { id: true, title: true, startsAt: true, endsAt: true, timeZone: true, location: true } },
     },
   });
 }
@@ -78,6 +78,7 @@ export async function listUnsentCalendarEventAttendances(eventId: string, attend
           title: true,
           startsAt: true,
           endsAt: true,
+          timeZone: true,
           location: true,
         },
       },

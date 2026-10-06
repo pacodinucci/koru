@@ -9,12 +9,14 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+import { calendarTimeZoneLabel } from "@/modules/calendar/lib/calendar-time-zone";
 
 type CalendarEventInvitationEmailProps = {
   recipientName: string;
   eventTitle: string;
   startsAt: Date;
   endsAt: Date;
+  timeZone: string;
   location?: string | null;
   eventUrl: string;
   requiresSignIn?: boolean;
@@ -25,17 +27,19 @@ export function CalendarEventInvitationEmail({
   eventTitle,
   startsAt,
   endsAt,
+  timeZone,
   location,
   eventUrl,
   requiresSignIn = true,
 }: CalendarEventInvitationEmailProps) {
   const date = startsAt.toLocaleDateString("es-MX", {
+    timeZone,
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  const time = `${startsAt.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })} - ${endsAt.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}`;
+  const time = `${startsAt.toLocaleTimeString("es-MX", { timeZone, hour: "2-digit", minute: "2-digit" })} - ${endsAt.toLocaleTimeString("es-MX", { timeZone, hour: "2-digit", minute: "2-digit" })} (${calendarTimeZoneLabel(timeZone)})`;
 
   return (
     <Html>
