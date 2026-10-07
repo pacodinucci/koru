@@ -86,18 +86,18 @@ export function BlogEventDialog({
                   {attendanceLabels[attendance.status]}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <form action={respondToCalendarEventAction}>
+              <div className="grid grid-cols-2 gap-3">
+                <form action={respondToCalendarEventAction} className="min-w-0">
                   <input type="hidden" name="eventId" value={event.id} />
                   <input type="hidden" name="status" value="CONFIRMED" />
-                  <button type="submit" className="rounded-lg bg-[var(--complement-800)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--complement-900)]">
+                  <button type="submit" className="h-full w-full rounded-lg bg-[var(--complement-800)] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--complement-900)]">
                     Confirmar asistencia
                   </button>
                 </form>
-                <form action={respondToCalendarEventAction}>
+                <form action={respondToCalendarEventAction} className="min-w-0">
                   <input type="hidden" name="eventId" value={event.id} />
                   <input type="hidden" name="status" value="DECLINED" />
-                  <button type="submit" className="rounded-lg border border-[var(--complement-800)] px-5 py-2.5 text-sm font-semibold text-[var(--complement-900)] transition hover:bg-muted">
+                  <button type="submit" className="h-full w-full rounded-lg border border-[var(--complement-800)] px-3 py-2.5 text-sm font-semibold text-[var(--complement-900)] transition hover:bg-muted">
                     No podré asistir
                   </button>
                 </form>
@@ -107,7 +107,7 @@ export function BlogEventDialog({
             <section className="border-t pt-5">
               <h3 className="text-lg font-semibold">Confirmación de asistencia</h3>
               <p className="mt-1 text-sm text-muted-foreground">Ingresá con tu cuenta para ver y responder la invitación.</p>
-              <Link href={`/sign-in?returnTo=${encodeURIComponent(eventPath)}`} className="mt-4 inline-flex rounded-lg bg-[var(--complement-800)] px-5 py-2.5 text-sm font-semibold text-white">
+              <Link href={`/sign-in?returnTo=${encodeURIComponent(eventPath)}`} className="mt-4 flex w-full justify-center rounded-lg bg-[var(--complement-800)] px-5 py-2.5 text-sm font-semibold text-white">
                 Ingresar para responder
               </Link>
             </section>
@@ -120,7 +120,7 @@ export function BlogEventDialog({
               <input name="name" required placeholder="Nombre y apellido" className="rounded-lg border px-3 py-2" />
               <input name="email" type="email" required placeholder="Email" className="rounded-lg border px-3 py-2" />
               <input name="phone" type="tel" required placeholder="Teléfono" className="rounded-lg border px-3 py-2" />
-              <button type="submit" className="w-fit rounded-lg bg-[var(--complement-800)] px-5 py-2.5 text-sm font-semibold text-white">Inscribirme</button>
+              <button type="submit" className="w-full rounded-lg bg-[var(--complement-800)] px-5 py-2.5 text-sm font-semibold text-white">Inscribirme</button>
             </form>
           ) : null}
 

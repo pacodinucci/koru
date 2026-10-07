@@ -14,7 +14,7 @@ const initialState: CreateFamilyState = { status: "idle", message: null };
 
 function SubmitButton() {
   const { pending } = useFormStatus();
-  return <Button type="submit" className="justify-self-end" disabled={pending}>{pending ? "Creando familia..." : "Crear familia"}</Button>;
+  return <Button type="submit" className="w-full" disabled={pending}>{pending ? "Creando familia..." : "Crear familia"}</Button>;
 }
 
 export function CreateFamilyDialog() {

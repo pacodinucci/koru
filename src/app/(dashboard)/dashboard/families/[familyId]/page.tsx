@@ -10,5 +10,5 @@ export default async function DashboardFamilyPage({ params }: { params: Promise<
   if (!familyId) notFound();
   return <DashboardShell userEmail={user.email}
       userRole={user.role}
-      userPermissions={user.permissionKeys} cmsPages={cmsPages.filter((page) => !page.isDynamic)} breadcrumbPage="Familia"><DashboardFamilyDetailView familyId={familyId} canManagePayments={user.permissionKeys.includes("families.payments")} canWaive={user.permissionKeys.includes("families.waive-balance")} /></DashboardShell>;
+      userPermissions={user.permissionKeys} cmsPages={cmsPages.filter((page) => !page.isDynamic)} breadcrumbPage="Familia"><DashboardFamilyDetailView familyId={familyId} canManageFamily={user.permissionKeys.includes("families.manage")} canManagePayments={user.permissionKeys.includes("families.payments")} canWaive={user.permissionKeys.includes("families.waive-balance")} /></DashboardShell>;
 }

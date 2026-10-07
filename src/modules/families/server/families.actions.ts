@@ -1,6 +1,6 @@
 "use server";
 
-import { FamilyStatus, InvitationDeliveryJobStatus } from "@prisma/client";
+import { FamilyStatus, InvitationDeliveryJobStatus, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -11,6 +11,8 @@ import { getFamilyDetailForAdmin } from "@/modules/families/server/families.repo
 import { MAX_EVENTUAL_INSTALLMENTS, splitInstallmentAmounts } from "@/modules/families/lib/eventual-installments";
 import { calculatePlanDiscount } from "@/modules/families/lib/plan-discounts";
 import { runInvitationDeliveryWorker } from "@/modules/mailing/server/invitation-delivery-worker.service";
+import { invitationErrorState, type UserInvitationActionState } from "@/modules/users/lib/user-invitation-feedback";
+import { createUserInvitation } from "@/modules/users/server/users.repository";
 
 const familySchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -105,6 +107,42 @@ export async function createFamilyAction(_previousState: CreateFamilyState, form
   } catch (error) {
     console.error("family_creation_delivery_trigger_failed", error);
     return { status: "warning", message: "Familia creada. Las invitaciones quedaron preparadas, pero no pudimos confirmar su envío. Revisalas en Mailing." };
+  }
+}
+
+export async function inviteFamilyUserAction(_previousState: UserInvitationActionState, formData: FormData): Promise<UserInvitationActionState> {
+  const admin = await requirePermission("families.manage");
+  const parsed = z.object({ familyId: z.string().min(1), email: z.email() }).safeParse({
+    familyId: value(formData, "familyId"),
+    email: value(formData, "email").trim().toLowerCase(),
+  });
+  if (!parsed.success) return { status: "error", message: "Ingresá un email válido." };
+
+  const familyRole = await prisma.role.findFirst({
+    where: { key: "PARENT", baseRole: UserRole.PARENT, isActive: true },
+    select: { id: true },
+  });
+  if (!familyRole) return { status: "error", message: "El rol de familia no está disponible. Contactá al administrador." };
+
+  try {
+    await createUserInvitation({
+      email: parsed.data.email,
+      familyId: parsed.data.familyId,
+      accessRoleId: familyRole.id,
+      invitedById: admin.id,
+    });
+  } catch (error) {
+    return invitationErrorState(error instanceof Error ? error.message : "");
+  }
+
+  revalidatePath("/dashboard/users");
+  revalidatePath("/dashboard/mailing");
+  try {
+    await runInvitationDeliveryWorker();
+    return { status: "success", message: "Invitación creada y encolada para su envío." };
+  } catch (error) {
+    console.error("family_user_invitation_delivery_trigger_failed", error);
+    return { status: "warning", message: "Invitación creada. No pudimos confirmar el envío; revisala en Mailing." };
   }
 }
 

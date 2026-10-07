@@ -104,7 +104,7 @@ export function CalendarEventAttendanceDialog({ eventId, eventDate, attendances,
           {unsent ? (
             <form action={retryCalendarEventInvitationsAction} onSubmit={(event) => event.stopPropagation()}>
               <input type="hidden" name="id" value={eventId} />
-              <button type="submit" className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+              <button type="submit" className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
                 Reintentar emails pendientes
               </button>
             </form>
@@ -113,7 +113,7 @@ export function CalendarEventAttendanceDialog({ eventId, eventDate, attendances,
           <section className="border-t border-slate-200 pt-5">
             <h3 className="text-sm font-semibold text-slate-900">Enviar invitación manual</h3>
             <p className="mt-1 text-xs text-slate-500">La persona recibirá un enlace personal para responder sin crear una cuenta.</p>
-            <form action={inviteExternalCalendarEventAttendeeAction} onSubmit={(event) => event.stopPropagation()} className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <form action={inviteExternalCalendarEventAttendeeAction} onSubmit={(event) => event.stopPropagation()} className="mt-3 grid gap-3 sm:grid-cols-2 sm:items-end">
               <input type="hidden" name="eventId" value={eventId} />
               <input type="hidden" name="eventDate" value={eventDate} />
               <label className="grid gap-1 text-xs font-medium text-slate-700">
@@ -124,7 +124,7 @@ export function CalendarEventAttendanceDialog({ eventId, eventDate, attendances,
                 Email
                 <input name="email" type="email" required maxLength={320} autoComplete="email" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
               </label>
-              <button type="submit" className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">Enviar invitación</button>
+              <button type="submit" className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white sm:col-span-2">Enviar invitación</button>
             </form>
             {error === "already_invited" ? <p className="mt-2 text-xs text-rose-700">Ese email ya fue invitado a este evento.</p> : null}
             {error === "manual_invitation_failed" ? <p className="mt-2 text-xs text-rose-700">No se pudo enviar el email. Podés reintentarlo arriba.</p> : null}

@@ -25,6 +25,7 @@ model User {
   calendarEventRegistrations CalendarEventRegistration[]
   calendarEventAttendances   CalendarEventAttendance[]
   googleCalendarConnection   GoogleCalendarConnection?
+  basecampConnection         BasecampConnection?
   uploadedMediaAssets        MediaAsset[]
   uploadedDocuments          Document[]
   createdInvitations         UserInvitation[]            @relation("UserInvitationsCreated")
@@ -1196,6 +1197,18 @@ model GoogleCalendarConnection {
   eventSyncs          GoogleCalendarEventSync[]
 
   @@index([status])
+}
+
+model BasecampConnection {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  basecampIdentityId     String
+  accessTokenCiphertext  String
+  refreshTokenCiphertext String
+  expiresAt              DateTime
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }
 
 model GoogleCalendarEventSync {

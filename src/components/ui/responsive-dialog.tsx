@@ -111,12 +111,17 @@ function ResponsiveDialogBody({
 
 function ResponsiveDialogFooter({
   className,
+  columns = 2,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & { columns?: 1 | 2 }) {
   return (
     <div
       data-slot="responsive-dialog-footer"
-      className={cn("shrink-0 flex flex-col-reverse gap-2 border-t bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:flex-row sm:justify-end", className)}
+      className={cn(
+        "grid shrink-0 gap-2 border-t bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] [&>*]:min-w-0 [&>button]:h-auto [&>button]:min-h-8 [&>button]:whitespace-normal [&>form>button]:w-full [&>form>button]:whitespace-normal",
+        columns === 1 ? "grid-cols-1" : "grid-cols-2",
+        className,
+      )}
       {...props}
     />
   );

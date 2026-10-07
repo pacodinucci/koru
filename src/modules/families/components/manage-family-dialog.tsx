@@ -77,7 +77,7 @@ export function ManageFamilyDialog({
           {detail ? (
             <div className="space-y-6">
               <section className="grid gap-3 rounded-xl border border-slate-200 p-4 lg:grid-cols-2">
-                <form action={assignFamilyUserAction} className="flex flex-wrap items-end gap-2">
+                <form action={assignFamilyUserAction} className="grid gap-2">
                   <input type="hidden" name="familyId" value={familyId} />
                   <label className="grid flex-1 gap-1 text-sm font-medium text-slate-700">Asignar usuario
                     <select name="userId" defaultValue="" className="h-9 rounded-md border border-input bg-background px-3 text-sm" required>
@@ -85,9 +85,9 @@ export function ManageFamilyDialog({
                       {options.users.filter((user) => !user.familyId || user.familyId === familyId).map((user) => <option key={user.id} value={user.id}>{user.name || user.email}</option>)}
                     </select>
                   </label>
-                  <Button type="submit" variant="outline">Asignar</Button>
+                  <Button type="submit" variant="outline" className="w-full">Asignar</Button>
                 </form>
-                <form action={assignFamilyStudentAction} className="flex flex-wrap items-end gap-2">
+                <form action={assignFamilyStudentAction} className="grid gap-2">
                   <input type="hidden" name="familyId" value={familyId} />
                   <label className="grid flex-1 gap-1 text-sm font-medium text-slate-700">Asignar alumno
                     <select name="studentId" defaultValue="" className="h-9 rounded-md border border-input bg-background px-3 text-sm" required>
@@ -95,16 +95,16 @@ export function ManageFamilyDialog({
                       {options.students.filter((student) => !student.familyId || student.familyId === familyId).map((student) => <option key={student.id} value={student.id}>{student.lastName}, {student.firstName}</option>)}
                     </select>
                   </label>
-                  <Button type="submit" variant="outline">Asignar</Button>
+                  <Button type="submit" variant="outline" className="w-full">Asignar</Button>
                 </form>
-                <form action={changeFamilyStatusAction} className="flex flex-wrap items-end gap-2">
+                <form action={changeFamilyStatusAction} className="grid gap-2">
                   <input type="hidden" name="familyId" value={familyId} />
                   <label className="grid flex-1 gap-1 text-sm font-medium text-slate-700">Estado
                     <select name="status" defaultValue={familyStatus} className="h-9 rounded-md border border-input bg-background px-3 text-sm">
                       {Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                     </select>
                   </label>
-                  <Button type="submit" variant="outline">Guardar</Button>
+                  <Button type="submit" variant="outline" className="w-full">Guardar</Button>
                 </form>
               </section>
               <FamilyFinancialCard family={detail} eventualChargeItems={detail.eventualChargeItems} canManagePayments={detail.canManagePayments} canWaive={canWaive} />

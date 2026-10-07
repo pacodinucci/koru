@@ -198,20 +198,20 @@ export function FamilyEventDetailDialog({
                   {attendanceLabels[attendanceStatus]}
                 </p>
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                <form action={respondToCalendarEventAction}>
+              <div className="grid grid-cols-2 gap-2">
+                <form action={respondToCalendarEventAction} className="min-w-0">
                   <input type="hidden" name="eventId" value={event.id} />
                   <input type="hidden" name="status" value="CONFIRMED" />
                   <input type="hidden" name="returnTo" value={returnTo} />
                   <Button
                     type="submit"
                     size="lg"
-                    className="w-full bg-[var(--complement-800)] text-white hover:bg-[var(--complement-900)] sm:w-auto"
+                    className="h-full w-full whitespace-normal bg-[var(--complement-800)] py-2 text-white hover:bg-[var(--complement-900)]"
                   >
                     Confirmar asistencia
                   </Button>
                 </form>
-                <form action={respondToCalendarEventAction}>
+                <form action={respondToCalendarEventAction} className="min-w-0">
                   <input type="hidden" name="eventId" value={event.id} />
                   <input type="hidden" name="status" value="DECLINED" />
                   <input type="hidden" name="returnTo" value={returnTo} />
@@ -219,7 +219,7 @@ export function FamilyEventDetailDialog({
                     type="submit"
                     variant="outline"
                     size="lg"
-                    className="w-full border-[var(--complement-800)] text-[var(--complement-900)] sm:w-auto"
+                    className="h-full w-full whitespace-normal border-[var(--complement-800)] py-2 text-[var(--complement-900)]"
                   >
                     No podré asistir
                   </Button>
@@ -264,7 +264,7 @@ export function FamilyEventDetailDialog({
               <Button
                 type="submit"
                 size="lg"
-                className="mt-1 w-full bg-[var(--complement-800)] text-white hover:bg-[var(--complement-900)] sm:w-fit"
+                className="mt-1 w-full bg-[var(--complement-800)] text-white hover:bg-[var(--complement-900)]"
               >
                 Inscribirme
               </Button>

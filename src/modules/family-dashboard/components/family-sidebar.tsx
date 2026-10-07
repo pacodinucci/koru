@@ -118,7 +118,7 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
         <SidebarGroup>
           <SidebarGroupLabel>Escuela para familias</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
@@ -140,7 +140,7 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
         <SidebarGroup>
           <SidebarGroupLabel>Seguimiento de tu hij@</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               {studentItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
@@ -162,7 +162,7 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
         <SidebarGroup>
           <SidebarGroupLabel>Comunidad y proyectos</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               {communityItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton

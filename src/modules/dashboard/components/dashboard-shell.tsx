@@ -15,6 +15,7 @@ import {
   NotebookPen,
   CalendarDays,
   Mail,
+  MountainSnow,
   Users,
   HandCoins,
   PackageSearch,
@@ -68,7 +69,11 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import type { LandingTextMap } from "@/modules/landing/types/landing-text";
-import { isAdminRole, isSuperAdminRole, type AppUserRole } from "@/modules/auth/roles";
+import {
+  isAdminRole,
+  isSuperAdminRole,
+  type AppUserRole,
+} from "@/modules/auth/roles";
 import type { PermissionKey } from "@/modules/auth/permissions/permission-catalog";
 
 const contentNavigationItems = [
@@ -77,7 +82,11 @@ const contentNavigationItems = [
   { key: "landing", label: "Landing", parent: undefined },
   { key: "quienes-somos", label: "Quienes Somos", parent: undefined },
   { key: "como-acompanamos", label: "Cómo acompañamos", parent: undefined },
-  ...getCmsContentNavigation().map(({ key, label, parent }) => ({ key, label, parent })),
+  ...getCmsContentNavigation().map(({ key, label, parent }) => ({
+    key,
+    label,
+    parent,
+  })),
 ].sort((left, right) => {
   const leftGroup = left.parent?.split(" · ")[0] ?? left.label;
   const rightGroup = right.parent?.split(" · ")[0] ?? right.label;
@@ -132,6 +141,7 @@ export function DashboardShell({
   const isHomeActive = pathname === "/dashboard";
   const isBlogActive = pathname.startsWith("/dashboard/blog");
   const isCalendarActive = pathname.startsWith("/dashboard/calendar");
+  const isBasecampActive = pathname.startsWith("/dashboard/basecamp");
   const isUsersActive = pathname.startsWith("/dashboard/users");
   const isRolesActive = pathname.startsWith("/dashboard/roles");
   const isMailingActive = pathname.startsWith("/dashboard/mailing");
@@ -144,7 +154,9 @@ export function DashboardShell({
   const isDocumentsActive = pathname.startsWith("/dashboard/documentos");
   const isCashFundActive = pathname.startsWith("/dashboard/caja-chica");
   const isInventoryActive = pathname.startsWith("/dashboard/inventario");
-  const isAdministrationActive = pathname.startsWith("/dashboard/administracion");
+  const isAdministrationActive = pathname.startsWith(
+    "/dashboard/administracion",
+  );
   const isPageEditorActive =
     pathname.startsWith("/dashboard/pages/edit") ||
     /^\/dashboard\/pages\/[^/]+$/.test(pathname);
@@ -162,16 +174,25 @@ export function DashboardShell({
   const [contentOpen, setContentOpen] = useState(isContentActive);
   const isAdmin = isAdminRole(userRole);
   const isSuperAdmin = isSuperAdminRole(userRole);
+  const canViewBasecamp =
+    userRole === "ADMIN" ||
+    userRole === "SUPERADMIN" ||
+    userRole === "TEACHER" ||
+    userRole === "ADMIN_TEACHER";
   const permissionSet = new Set(userPermissions);
   const can = (permission: PermissionKey) =>
     userPermissions ? permissionSet.has(permission) : isAdmin;
   const showCmsNavigation = false;
-  const sidebarMenuButtonClass = "h-10 rounded-xl px-3 text-slate-600 hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
-
+  const sidebarMenuButtonClass =
+    "h-10 rounded-xl px-3 text-slate-600 hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
 
   return (
     <SidebarProvider>
-      <Sidebar variant="inset" collapsible="icon" className="[font-family:var(--font-montserrat)]">
+      <Sidebar
+        variant="inset"
+        collapsible="icon"
+        className="[font-family:var(--font-montserrat)]"
+      >
         <SidebarHeader>
           <div className="flex items-center justify-center px-3 py-3 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-2">
             <Link href="/" aria-label="Volver al inicio">
@@ -193,9 +214,14 @@ export function DashboardShell({
               Navigation
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-1">
                 <SidebarMenuItem>
-                  <SidebarMenuButton hidden={!can("dashboard.access")} isActive={isHomeActive} className={sidebarMenuButtonClass} render={<Link href="/dashboard" />}>
+                  <SidebarMenuButton
+                    hidden={!can("dashboard.access")}
+                    isActive={isHomeActive}
+                    className={sidebarMenuButtonClass}
+                    render={<Link href="/dashboard" />}
+                  >
                     <Home />
                     <span>Inicio</span>
                   </SidebarMenuButton>
@@ -228,53 +254,60 @@ export function DashboardShell({
 
                     {cmsOpen ? (
                       <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          isActive={isLayoutActive}
-                          render={<Link href="/dashboard/diseno" />}
-                        >
-                          <LayoutDashboard />
-                          <span>Layout</span>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          isActive={isLandingActive || isPageEditorActive}
-                          onClick={() => setPagesOpen((previous) => !previous)}
-                        >
-                          <FileText />
-                          <span>Pages</span>
-                          <ChevronDown
-                            className={`ml-auto transition-transform ${pagesOpen ? "rotate-180" : ""}`}
-                          />
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      {pagesOpen ? (
-                        <SidebarMenuSub className="mx-6">
-                          {cmsPages.map((page) => {
-                            const href =
-                              page.slug === "/"
-                                ? "/dashboard/pages/landing"
-                                : `/dashboard/pages/${encodeURIComponent(page.slug.slice(1))}`;
-                            const isCurrent =
-                              (pathname === "/dashboard/pages/edit" &&
-                                decodeURIComponent(currentEditorSlug) === page.slug) ||
-                              currentPathSlug === page.slug;
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            isActive={isLayoutActive}
+                            render={<Link href="/dashboard/diseno" />}
+                          >
+                            <LayoutDashboard />
+                            <span>Layout</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            isActive={isLandingActive || isPageEditorActive}
+                            onClick={() =>
+                              setPagesOpen((previous) => !previous)
+                            }
+                          >
+                            <FileText />
+                            <span>Pages</span>
+                            <ChevronDown
+                              className={`ml-auto transition-transform ${pagesOpen ? "rotate-180" : ""}`}
+                            />
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        {pagesOpen ? (
+                          <SidebarMenuSub className="mx-6">
+                            {cmsPages.map((page) => {
+                              const href =
+                                page.slug === "/"
+                                  ? "/dashboard/pages/landing"
+                                  : `/dashboard/pages/${encodeURIComponent(page.slug.slice(1))}`;
+                              const isCurrent =
+                                (pathname === "/dashboard/pages/edit" &&
+                                  decodeURIComponent(currentEditorSlug) ===
+                                    page.slug) ||
+                                currentPathSlug === page.slug;
 
-                            return (
-                              <SidebarMenuSubItem key={page.slug}>
-                                <SidebarMenuSubButton
-                                  isActive={isCurrent}
-                                  render={<Link href={href} />}
-                                >
-                                  <FileText />
-                                  <span>{page.slug === "/" ? "Landing" : page.slug}</span>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            );
-                          })}
-                        </SidebarMenuSub>
-                      ) : null}
+                              return (
+                                <SidebarMenuSubItem key={page.slug}>
+                                  <SidebarMenuSubButton
+                                    isActive={isCurrent}
+                                    render={<Link href={href} />}
+                                  >
+                                    <FileText />
+                                    <span>
+                                      {page.slug === "/"
+                                        ? "Landing"
+                                        : page.slug}
+                                    </span>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              );
+                            })}
+                          </SidebarMenuSub>
+                        ) : null}
                       </SidebarMenuSub>
                     ) : null}
                   </SidebarMenuItem>
@@ -296,26 +329,38 @@ export function DashboardShell({
 
                     {contentOpen ? (
                       <SidebarMenuSub className="koru-scrollbar-minimal max-h-[55dvh] overflow-y-auto pr-1">
-                        {contentNavigationItems.map(({ key, label, parent }) => (
-                          <SidebarMenuSubItem key={key}>
-                            <SidebarMenuSubButton
-                              isActive={pathname === `/dashboard/content/${key}`}
-                              className={parent ? "pl-6" : undefined}
-                              render={<Link href={`/dashboard/content/${key}`} />}
-                            >
-                              <FileText />
-                              <span className="truncate">{parent ? `↳ ${label}` : label}</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
+                        {contentNavigationItems.map(
+                          ({ key, label, parent }) => (
+                            <SidebarMenuSubItem key={key}>
+                              <SidebarMenuSubButton
+                                isActive={
+                                  pathname === `/dashboard/content/${key}`
+                                }
+                                className={parent ? "pl-6" : undefined}
+                                render={
+                                  <Link href={`/dashboard/content/${key}`} />
+                                }
+                              >
+                                <FileText />
+                                <span className="truncate">
+                                  {parent ? `↳ ${label}` : label}
+                                </span>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ),
+                        )}
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton render={<Link href="/dashboard/blog" />}>
+                          <SidebarMenuSubButton
+                            render={<Link href="/dashboard/blog" />}
+                          >
                             <NotebookPen />
                             <span>↳ Publicaciones del blog</span>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton render={<Link href="/dashboard/calendar" />}>
+                          <SidebarMenuSubButton
+                            render={<Link href="/dashboard/calendar" />}
+                          >
                             <CalendarDays />
                             <span>↳ Eventos del calendario</span>
                           </SidebarMenuSubButton>
@@ -384,6 +429,19 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
+                {canViewBasecamp ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isBasecampActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/basecamp" />}
+                    >
+                      <MountainSnow />
+                      <span>Basecamp</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
+
                 {can("users.view") ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton
@@ -448,7 +506,7 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
 
-                {(userRole === "TEACHER" || userRole === "ADMIN_TEACHER") ? (
+                {userRole === "TEACHER" || userRole === "ADMIN_TEACHER" ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={isReportsActive}
@@ -534,9 +592,7 @@ export function DashboardShell({
 
       <SidebarInset className="h-svh min-w-0 max-w-full overflow-hidden bg-slate-50 md:h-[calc(100svh-1rem)]">
         <DashboardEditorPanelProvider
-          defaultOpen={
-            panelDefaultOpen || editorMode === "layout"
-          }
+          defaultOpen={panelDefaultOpen || editorMode === "layout"}
         >
           <DashboardCanvas
             initialTextMap={initialTextMap}
@@ -600,7 +656,9 @@ function DashboardCanvas({
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="ml-auto"><DevelopmentViewSwitcher /></div>
+        <div className="ml-auto">
+          <DevelopmentViewSwitcher />
+        </div>
 
         {canUsePanel ? (
           <Button
@@ -617,7 +675,10 @@ function DashboardCanvas({
       </header>
 
       {isCmsEditor ? (
-        <DashboardEditorPanelLayout className="min-h-0 h-full flex-1" variant="flush">
+        <DashboardEditorPanelLayout
+          className="min-h-0 h-full flex-1"
+          variant="flush"
+        >
           <main className="h-full min-h-0 min-w-0 overflow-hidden p-0">
             <CmsLandingEditor
               initialTextMap={initialTextMap ?? {}}

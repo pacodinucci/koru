@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FamilyAdminActionsMenu } from "@/modules/families/components/family-admin-actions-menu";
 import { FamilyFinancialCard } from "@/modules/families/components/family-financial-card";
 import { FamilyResponsiblesList } from "@/modules/families/components/family-responsibles-list";
 import { buildFamilyResponsibles } from "@/modules/families/lib/family-responsibles";
@@ -15,7 +16,7 @@ function currency(value: string | number) {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(Number(value));
 }
 
-export async function DashboardFamilyDetailView({ familyId, canManagePayments, canWaive }: { familyId: string; canManagePayments: boolean; canWaive: boolean }) {
+export async function DashboardFamilyDetailView({ familyId, canManageFamily, canManagePayments, canWaive }: { familyId: string; canManageFamily: boolean; canManagePayments: boolean; canWaive: boolean }) {
   const [family, plans] = await Promise.all([getFamilyFinancialRecord(familyId).catch(() => null), listPlansForAdmin()]);
   if (!family) notFound();
   const balance = family.accountEntries.reduce((total, entry) => total + Number(entry.amount), 0);
@@ -44,6 +45,7 @@ export async function DashboardFamilyDetailView({ familyId, canManagePayments, c
   return <div className="flex w-full flex-col gap-5">
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div><Button variant="outline" nativeButton={false} render={<Link href="/dashboard/families" />}>Volver a Familias</Button><h1 className="mt-4 font-[family-name:var(--font-montserrat)] text-2xl font-semibold text-slate-900">{family.name}</h1><p className="mt-1 text-sm text-slate-600">Ficha integral de la familia.</p></div>
+      {canManageFamily ? <FamilyAdminActionsMenu familyId={family.id} familyName={family.name} /> : null}
     </div>
     <div className="grid gap-4 lg:grid-cols-2">
       <Card><CardHeader><CardTitle>Usuarios</CardTitle></CardHeader><CardContent className="space-y-2">{family.users.length ? family.users.map((user) => <div key={user.id} className="rounded-lg border border-slate-200 p-3"><p className="font-medium">{user.name || "Sin nombre"}</p><p className="text-sm text-slate-600">{user.email}</p></div>) : <p className="text-sm text-slate-600">Todavía no hay usuarios vinculados.</p>}</CardContent></Card>

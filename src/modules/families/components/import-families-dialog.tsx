@@ -94,9 +94,9 @@ export function ImportFamiliesDialog() {
       </ResponsiveDialogHeader>
       <ResponsiveDialogBody>
         <div className="grid gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="button" variant="outline" onClick={downloadTemplate}><DownloadIcon /> Descargar plantilla</Button>
-            <label className="cursor-pointer text-sm font-medium text-slate-700">
+          <div className="grid gap-3">
+            <Button type="button" variant="outline" className="w-full" onClick={downloadTemplate}><DownloadIcon /> Descargar plantilla</Button>
+            <label className="block w-full cursor-pointer text-sm font-medium text-slate-700">
               <span className="sr-only">Seleccionar archivo Excel</span>
               <input type="file" accept=".xlsx,.xls" onChange={onFileChange} className="block w-full font-montserrat text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:font-montserrat file:font-medium file:text-slate-700" />
             </label>
@@ -111,7 +111,7 @@ export function ImportFamiliesDialog() {
               {preview.issues.length > 20 ? <p>Y {preview.issues.length - 20} errores más.</p> : null}
             </div> : <p className="text-emerald-700">La planilla está lista para importar.</p>}
             {preview.validRows.length ? <div className="max-h-44 min-w-0 max-w-full overflow-auto rounded-lg border border-slate-100"><table className="w-full min-w-[640px] text-left text-xs"><thead className="bg-slate-50 text-slate-600"><tr><th className="p-2">Fila</th><th className="p-2">Familia</th><th className="p-2">Invitaciones</th></tr></thead><tbody>{preview.validRows.map((row) => <tr key={row.rowNumber} className="border-t border-slate-100"><td className="p-2">{row.rowNumber}</td><td className="p-2">{row.familyName}</td><td className="p-2">{row.emails.join(", ")}</td></tr>)}</tbody></table></div> : null}
-            <Button type="button" onClick={confirm} disabled={isPending || hasIssues || !preview.validRows.length} className="justify-self-end">Confirmar importación</Button>
+            <Button type="button" onClick={confirm} disabled={isPending || hasIssues || !preview.validRows.length} className="w-full">Confirmar importación</Button>
           </div> : null}
           {message ? <p className="text-sm text-slate-700" role="status">{message}</p> : null}
         </div>

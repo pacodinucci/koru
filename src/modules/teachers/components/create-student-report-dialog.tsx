@@ -141,7 +141,7 @@ export function CreateStudentReportDialog({
               <p className="text-xs text-muted-foreground">Adjuntá un archivo o escribí el reporte, pero no ambos.</p>
             </div>
           </ResponsiveDialogBody>
-          <ResponsiveDialogFooter>
+          <ResponsiveDialogFooter columns={1}>
             <Button type="submit" disabled={saving}>{saving ? "Guardando…" : "Guardar reporte"}</Button>
           </ResponsiveDialogFooter>
         </form>

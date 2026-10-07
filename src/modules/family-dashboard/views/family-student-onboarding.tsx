@@ -194,8 +194,8 @@ function FamilyActionsMenu({ onRegisterAnotherStudent }: { onRegisterAnotherStud
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={trigger} />
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={onRegisterAnotherStudent}>
+      <DropdownMenuContent align="end" className="w-max">
+        <DropdownMenuItem className="whitespace-nowrap" onClick={onRegisterAnotherStudent}>
           <Plus /> Registrar otro hijo/a
         </DropdownMenuItem>
       </DropdownMenuContent>
