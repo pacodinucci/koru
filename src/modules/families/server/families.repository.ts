@@ -9,7 +9,7 @@ export function listFamiliesForAdmin() {
     prisma.family.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        students: { select: { plan: { select: { name: true, basicMonthlyFee: true, discountPercent: true, isActive: true } } } },
+        students: { select: { plan: { select: { name: true, annualFee: true, installmentCount: true, startMonth: true, discountPercent: true, isActive: true } } } },
         _count: { select: { users: true, students: true } },
       },
     }),

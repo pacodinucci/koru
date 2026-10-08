@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requirePermission } from "@/modules/auth/server/auth-guards";
+import { synchronizeStudentBilling } from "@/modules/families/server/student-billing.core";
+import { getBillingPeriod } from "@/modules/families/lib/monthly-billing";
 import { prisma } from "@/lib/prisma";
 import { getFamilyDetailForAdmin } from "@/modules/families/server/families.repository";
 import { MAX_EVENTUAL_INSTALLMENTS, splitInstallmentAmounts } from "@/modules/families/lib/eventual-installments";
@@ -21,8 +23,8 @@ const familySchema = z.object({
 });
 export type CreateFamilyState = { status: "idle" | "success" | "warning" | "error"; message: string | null };
 const discountPercentSchema = z.coerce.number().min(0).max(100).refine((value) => /^\d+(?:\.\d{1,2})?$/.test(value.toString()));
-const eventualItemDraftSchema = z.object({ name: z.string().trim().min(2).max(120), suggestedAmount: z.coerce.number().positive(), discountPercent: discountPercentSchema, installmentCount: z.coerce.number().int().min(1).max(MAX_EVENTUAL_INSTALLMENTS) });
-const planSchema = z.object({ name: z.string().trim().min(2).max(120), basicMonthlyFee: z.coerce.number().positive(), discountPercent: discountPercentSchema, eventualItems: z.array(eventualItemDraftSchema).max(30) }).superRefine((plan, context) => {
+const eventualItemDraftSchema = z.object({ name: z.string().trim().min(2).max(120), suggestedAmount: z.coerce.number().positive(), discountPercent: discountPercentSchema, installmentCount: z.coerce.number().int().min(1).max(MAX_EVENTUAL_INSTALLMENTS), startMonth: z.coerce.number().int().min(1).max(12) });
+const planSchema = z.object({ name: z.string().trim().min(2).max(120), annualFee: z.coerce.number().positive(), installmentCount: z.coerce.number().int().min(1).max(12), startMonth: z.coerce.number().int().min(1).max(12), discountPercent: discountPercentSchema, eventualItems: z.array(eventualItemDraftSchema).max(30) }).superRefine((plan, context) => {
   const names = new Set<string>();
   plan.eventualItems.forEach((item, index) => {
     const key = item.name.toLocaleLowerCase("es-AR");
@@ -30,8 +32,8 @@ const planSchema = z.object({ name: z.string().trim().min(2).max(120), basicMont
     names.add(key);
   });
 });
-const updatePlanSchema = z.object({ planId: z.string().min(1), name: z.string().trim().min(2).max(120), basicMonthlyFee: z.coerce.number().positive(), discountPercent: discountPercentSchema });
-const eventualChargeItemSchema = z.object({ planId: z.string().min(1), name: z.string().trim().min(2).max(120), suggestedAmount: z.coerce.number().positive(), discountPercent: discountPercentSchema, installmentCount: z.coerce.number().int().min(1).max(MAX_EVENTUAL_INSTALLMENTS) });
+const updatePlanSchema = z.object({ planId: z.string().min(1), name: z.string().trim().min(2).max(120), annualFee: z.coerce.number().positive(), installmentCount: z.coerce.number().int().min(1).max(12), startMonth: z.coerce.number().int().min(1).max(12), discountPercent: discountPercentSchema });
+const eventualChargeItemSchema = z.object({ planId: z.string().min(1), name: z.string().trim().min(2).max(120), suggestedAmount: z.coerce.number().positive(), discountPercent: discountPercentSchema, installmentCount: z.coerce.number().int().min(1).max(MAX_EVENTUAL_INSTALLMENTS), startMonth: z.coerce.number().int().min(1).max(12) });
 const updateEventualChargeItemSchema = eventualChargeItemSchema.extend({ itemId: z.string().min(1) });
 const planAssignmentSchema = z.object({ familyId: z.string().min(1), studentId: z.string().min(1), planId: z.string().min(1) });
 const statusSchema = z.object({ familyId: z.string().min(1), status: z.nativeEnum(FamilyStatus) });
@@ -40,10 +42,6 @@ const familyIdSchema = z.string().min(1);
 
 function validInstallmentTerms(amount: number, count: number, discountPercent: number) {
   try { splitInstallmentAmounts(amount.toString(), count); splitInstallmentAmounts(calculatePlanDiscount(amount.toString(), discountPercent.toString()).netAmount, count); return true; }
-  catch { return false; }
-}
-function validMonthlyFee(amount: number, discountPercent: number) {
-  try { calculatePlanDiscount(amount.toString(), discountPercent.toString()); return true; }
   catch { return false; }
 }
 function value(formData: FormData, key: string) {
@@ -152,13 +150,13 @@ export async function createPlanAction(_previousState: CreatePlanState, formData
   let eventualItems: unknown;
   try { eventualItems = JSON.parse(value(formData, "eventualItems") || "[]"); }
   catch { return { message: "Revisá los rubros eventuales e intentá de nuevo." }; }
-  const parsed = planSchema.safeParse({ name: value(formData, "name"), basicMonthlyFee: value(formData, "basicMonthlyFee"), discountPercent: value(formData, "discountPercent"), eventualItems });
+  const parsed = planSchema.safeParse({ name: value(formData, "name"), annualFee: value(formData, "annualFee"), installmentCount: value(formData, "installmentCount"), startMonth: value(formData, "startMonth"), discountPercent: value(formData, "discountPercent"), eventualItems });
   if (!parsed.success) return { message: "Completá un nombre, una cuota válida y rubros con nombres distintos." };
-  if (!validMonthlyFee(parsed.data.basicMonthlyFee, parsed.data.discountPercent)) return { message: "La cuota y el descuento deben tener hasta dos decimales." };
+  if (!validInstallmentTerms(parsed.data.annualFee, parsed.data.installmentCount, parsed.data.discountPercent)) return { message: "Revisá el importe anual, las cuotas y el descuento: hasta dos decimales y al menos un centavo por cuota." };
   if (parsed.data.eventualItems.some((item) => !validInstallmentTerms(item.suggestedAmount, item.installmentCount, item.discountPercent))) return { message: "Revisá los descuentos y cuotas: cada cuota debe ser de al menos $0,01, salvo bonificación completa." };
   let plan: { id: string };
   try {
-    plan = await prisma.plan.create({ data: { name: parsed.data.name, basicMonthlyFee: parsed.data.basicMonthlyFee, discountPercent: parsed.data.discountPercent, eventualChargeItems: { create: parsed.data.eventualItems } } });
+    plan = await prisma.plan.create({ data: { name: parsed.data.name, annualFee: parsed.data.annualFee, installmentCount: parsed.data.installmentCount, startMonth: parsed.data.startMonth, discountPercent: parsed.data.discountPercent, eventualChargeItems: { create: parsed.data.eventualItems } } });
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
       return { message: "Ya existe un plan con ese nombre. Elegí otro para el nuevo plan." };
@@ -171,10 +169,10 @@ export async function createPlanAction(_previousState: CreatePlanState, formData
 }
 export async function updatePlanAction(formData: FormData) {
   await requirePermission("families.manage");
-  const parsed = updatePlanSchema.safeParse({ planId: value(formData, "planId"), name: value(formData, "name"), basicMonthlyFee: value(formData, "basicMonthlyFee"), discountPercent: value(formData, "discountPercent") });
+  const parsed = updatePlanSchema.safeParse({ planId: value(formData, "planId"), name: value(formData, "name"), annualFee: value(formData, "annualFee"), installmentCount: value(formData, "installmentCount"), startMonth: value(formData, "startMonth"), discountPercent: value(formData, "discountPercent") });
   if (!parsed.success) return;
-  if (!validMonthlyFee(parsed.data.basicMonthlyFee, parsed.data.discountPercent)) return;
-  await prisma.plan.update({ where: { id: parsed.data.planId }, data: { name: parsed.data.name, basicMonthlyFee: parsed.data.basicMonthlyFee, discountPercent: parsed.data.discountPercent } });
+  if (!validInstallmentTerms(parsed.data.annualFee, parsed.data.installmentCount, parsed.data.discountPercent)) return;
+  await prisma.plan.update({ where: { id: parsed.data.planId }, data: { name: parsed.data.name, annualFee: parsed.data.annualFee, installmentCount: parsed.data.installmentCount, startMonth: parsed.data.startMonth, discountPercent: parsed.data.discountPercent } });
   revalidatePath("/dashboard/families");
   revalidatePath("/dashboard/families/plans");
   revalidatePath(`/dashboard/families/plans/${parsed.data.planId}`);
@@ -182,7 +180,7 @@ export async function updatePlanAction(formData: FormData) {
 
 export async function createPlanEventualChargeItemAction(formData: FormData) {
   await requirePermission("families.manage");
-  const parsed = eventualChargeItemSchema.safeParse({ planId: value(formData, "planId"), name: value(formData, "name"), suggestedAmount: value(formData, "suggestedAmount"), discountPercent: value(formData, "discountPercent"), installmentCount: value(formData, "installmentCount") });
+  const parsed = eventualChargeItemSchema.safeParse({ planId: value(formData, "planId"), name: value(formData, "name"), suggestedAmount: value(formData, "suggestedAmount"), discountPercent: value(formData, "discountPercent"), installmentCount: value(formData, "installmentCount"), startMonth: value(formData, "startMonth") });
   if (!parsed.success) return;
   if (!validInstallmentTerms(parsed.data.suggestedAmount, parsed.data.installmentCount, parsed.data.discountPercent)) return;
   await prisma.planEventualChargeItem.create({ data: parsed.data });
@@ -192,17 +190,17 @@ export async function createPlanEventualChargeItemAction(formData: FormData) {
 
 export async function updatePlanEventualChargeItemAction(formData: FormData) {
   await requirePermission("families.manage");
-  const parsed = updateEventualChargeItemSchema.safeParse({ itemId: value(formData, "itemId"), planId: value(formData, "planId"), name: value(formData, "name"), suggestedAmount: value(formData, "suggestedAmount"), discountPercent: value(formData, "discountPercent"), installmentCount: value(formData, "installmentCount") });
+  const parsed = updateEventualChargeItemSchema.safeParse({ itemId: value(formData, "itemId"), planId: value(formData, "planId"), name: value(formData, "name"), suggestedAmount: value(formData, "suggestedAmount"), discountPercent: value(formData, "discountPercent"), installmentCount: value(formData, "installmentCount"), startMonth: value(formData, "startMonth") });
   if (!parsed.success) return;
   if (!validInstallmentTerms(parsed.data.suggestedAmount, parsed.data.installmentCount, parsed.data.discountPercent)) return;
   const item = await prisma.planEventualChargeItem.findUnique({ where: { id: parsed.data.itemId }, select: { planId: true } });
   if (!item || item.planId !== parsed.data.planId) return;
-  await prisma.planEventualChargeItem.update({ where: { id: parsed.data.itemId }, data: { name: parsed.data.name, suggestedAmount: parsed.data.suggestedAmount, discountPercent: parsed.data.discountPercent, installmentCount: parsed.data.installmentCount } });
+  await prisma.planEventualChargeItem.update({ where: { id: parsed.data.itemId }, data: { name: parsed.data.name, suggestedAmount: parsed.data.suggestedAmount, discountPercent: parsed.data.discountPercent, installmentCount: parsed.data.installmentCount, startMonth: parsed.data.startMonth } });
   revalidatePath("/dashboard/families/plans");
   revalidatePath(`/dashboard/families/plans/${parsed.data.planId}`);
 }
 export async function assignPlanToStudentAction(formData: FormData) {
-  await requirePermission("families.manage");
+  const admin = await requirePermission("families.manage");
   const parsed = planAssignmentSchema.safeParse({ familyId: value(formData, "familyId"), studentId: value(formData, "studentId"), planId: value(formData, "planId") });
   if (!parsed.success) return;
   const [student, plan] = await Promise.all([
@@ -210,7 +208,21 @@ export async function assignPlanToStudentAction(formData: FormData) {
     prisma.plan.findUnique({ where: { id: parsed.data.planId }, select: { isActive: true } }),
   ]);
   if (student?.familyId !== parsed.data.familyId || !plan || (!plan.isActive && student.planId !== parsed.data.planId)) return;
-  await prisma.student.update({ where: { id: parsed.data.studentId }, data: { planId: parsed.data.planId } });
+  await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${parsed.data.familyId}))`;
+    const currentStudent = await tx.student.findUnique({ where: { id: parsed.data.studentId } });
+    if (currentStudent?.familyId !== parsed.data.familyId) return;
+    const now = new Date();
+    const period = getBillingPeriod(now);
+    const nextPeriod = new Date(Date.UTC(period.getUTCFullYear(), period.getUTCMonth() + 1, 1));
+    if (currentStudent.planId !== parsed.data.planId) {
+      await tx.eventualChargeSchedule.updateMany({ where: { studentId: parsed.data.studentId, cancelledFrom: null }, data: { cancelledFrom: nextPeriod } });
+      await tx.eventualChargeSchedule.updateMany({ where: { studentId: parsed.data.studentId, sourceKey: { endsWith: ":" + parsed.data.planId }, startPeriod: { gte: new Date(Date.UTC(period.getUTCFullYear(), 0, 1)), lt: new Date(Date.UTC(period.getUTCFullYear() + 1, 0, 1)) } }, data: { cancelledFrom: null, effectiveFrom: nextPeriod } });
+    }
+    await tx.student.update({ where: { id: parsed.data.studentId }, data: { planId: parsed.data.planId } });
+    // Existing ambiguous charges require explicit review in the family preview.
+    await synchronizeStudentBilling(tx, parsed.data.familyId, admin.id, now);
+  }, { timeout: 30000 });
   revalidatePath("/dashboard/families");
   revalidatePath(`/dashboard/families/${parsed.data.familyId}`);
 }
@@ -253,7 +265,7 @@ export async function getFamilyDetailAction(familyId: string) {
   );
   const eventualChargeItems = await prisma.planEventualChargeItem.findMany({
     where: { plan: { students: { some: { familyId: family.id } } }, isActive: true },
-    select: { id: true, name: true, suggestedAmount: true, discountPercent: true, installmentCount: true },
+    select: { id: true, name: true, suggestedAmount: true, discountPercent: true, installmentCount: true, startMonth: true },
     orderBy: { name: "asc" },
   });
   return {
@@ -266,6 +278,7 @@ export async function getFamilyDetailAction(familyId: string) {
       suggestedAmount: item.suggestedAmount.toString(),
       discountPercent: item.discountPercent.toString(),
       installmentCount: item.installmentCount,
+      startMonth: item.startMonth,
     })),
     canManagePayments: user.permissionKeys.includes("families.payments"),
     entries: family.accountEntries.map((entry) => ({

@@ -9,8 +9,8 @@ test("aplica descuento por alumno antes de sumar y congela bruto y descuento del
   let payload;
   const prisma = {
     family: { findMany: async () => [{ id: "family", students: [
-      { firstName: "Ana", lastName: "A", plan: { name: "Plan A", basicMonthlyFee: new Prisma.Decimal("100.10"), discountPercent: new Prisma.Decimal("10") } },
-      { firstName: "Beto", lastName: "B", plan: { name: "Plan B", basicMonthlyFee: new Prisma.Decimal("200.20"), discountPercent: new Prisma.Decimal("0") } },
+      { firstName: "Ana", lastName: "A", plan: { name: "Plan A", annualFee: new Prisma.Decimal("1201.20"), installmentCount: 12, startMonth: 1, discountPercent: new Prisma.Decimal("10") } },
+      { firstName: "Beto", lastName: "B", plan: { name: "Plan B", annualFee: new Prisma.Decimal("2402.40"), installmentCount: 12, startMonth: 1, discountPercent: new Prisma.Decimal("0") } },
     ] }] },
     familyAccountEntry: { createMany: async (args) => { payload = args; return { count: 1 }; } },
   };

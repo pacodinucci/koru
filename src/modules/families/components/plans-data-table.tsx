@@ -11,12 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/toast";
 import { PlanDeleteDialog } from "@/modules/families/components/plan-delete-dialog";
+import { BILLING_MONTHS } from "@/modules/families/lib/annual-plan";
 import { calculatePlanDiscount } from "@/modules/families/lib/plan-discounts";
 
 type PlanListItem = {
   id: string;
   name: string;
-  basicMonthlyFee: string;
+  annualFee: string;
+  installmentCount: number;
+  startMonth: number;
   discountPercent: string;
   eventualItemsCount: number;
 };
@@ -58,7 +61,7 @@ export function PlansDataTable({ plans, canManage }: { plans: PlanListItem[]; ca
           <TableHeader>
             <TableRow>
               <TableHead>Nombre</TableHead>
-              <TableHead>Cuota básica mensual</TableHead>
+              <TableHead>Cuotas / inicio</TableHead><TableHead>Cuota anual</TableHead>
               <TableHead>Rubros eventuales</TableHead>
               {canManage ? <TableHead className="w-20 text-right">Acciones</TableHead> : null}
             </TableRow>
@@ -66,7 +69,7 @@ export function PlansDataTable({ plans, canManage }: { plans: PlanListItem[]; ca
           <TableBody>
             {visiblePlans.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canManage ? 4 : 3} className="py-10 text-center text-slate-600">
+                <TableCell colSpan={canManage ? 5 : 4} className="py-10 text-center text-slate-600">
                   {plans.length === 0 ? "Todavía no hay planes creados." : "No encontramos planes con ese nombre."}
                 </TableCell>
               </TableRow>
@@ -77,7 +80,8 @@ export function PlansDataTable({ plans, canManage }: { plans: PlanListItem[]; ca
                     {plan.name}
                   </Link>
                 </TableCell>
-                <TableCell>{Number(plan.discountPercent) > 0 ? <div><span className="text-xs text-muted-foreground line-through">{currency.format(Number(plan.basicMonthlyFee))}</span><p>{currency.format(Number(calculatePlanDiscount(plan.basicMonthlyFee, plan.discountPercent).netAmount))} <span className="text-xs text-muted-foreground">({plan.discountPercent}% desc.)</span></p></div> : currency.format(Number(plan.basicMonthlyFee))}</TableCell>
+                <TableCell>{plan.installmentCount} / {BILLING_MONTHS[plan.startMonth - 1]}</TableCell>
+                <TableCell>{Number(plan.discountPercent) > 0 ? <div><span className="text-xs text-muted-foreground line-through">{currency.format(Number(plan.annualFee))}</span><p>{currency.format(Number(calculatePlanDiscount(plan.annualFee, plan.discountPercent).netAmount))} <span className="text-xs text-muted-foreground">({plan.discountPercent}% desc.)</span></p></div> : currency.format(Number(plan.annualFee))}</TableCell>
                 <TableCell>{plan.eventualItemsCount}</TableCell>
                 {canManage ? (
                   <TableCell className="text-right">

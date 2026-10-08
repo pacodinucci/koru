@@ -214,7 +214,9 @@ model Family {
 model Plan {
   id                  String                    @id @default(cuid())
   name                String                    @unique
-  basicMonthlyFee     Decimal                   @map("monthlyFee") @db.Decimal(12, 2)
+  annualFee           Decimal                   @map("monthlyFee") @db.Decimal(12, 2)
+  installmentCount    Int                       @default(12)
+  startMonth          Int                       @default(1)
   discountPercent     Decimal                   @default(0) @db.Decimal(5, 2)
   isActive            Boolean                   @default(true)
   families            Family[]
@@ -234,6 +236,7 @@ model PlanEventualChargeItem {
   suggestedAmount Decimal  @db.Decimal(12, 2)
   discountPercent Decimal @default(0) @db.Decimal(5, 2)
   installmentCount Int @default(1)
+  startMonth      Int @default(1)
   isActive        Boolean  @default(true)
   accountEntries   FamilyAccountEntry[]
   schedules EventualChargeSchedule[]
@@ -245,6 +248,12 @@ model PlanEventualChargeItem {
 }
 
 model EventualChargeSchedule {
+  sourceKey String? @unique
+  studentId String?
+  student Student? @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  isBase Boolean @default(false)
+  effectiveFrom DateTime? @db.Date
+  cancelledFrom DateTime? @db.Date
   id String @id @default(cuid())
   familyId String
   family Family @relation(fields: [familyId], references: [id], onDelete: Restrict)
@@ -858,6 +867,7 @@ model Student {
   admissionQuestionnaire StudentAdmissionQuestionnaire?
   responsibles      StudentResponsible[]
   guardians         StudentGuardian[]
+  billingSchedules  EventualChargeSchedule[]
   examGrades        ExamGrade[]
   reports           StudentReport[]
   followUpAgreements FollowUpAgreementStudent[]

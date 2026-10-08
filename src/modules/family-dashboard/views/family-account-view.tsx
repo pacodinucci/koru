@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { getFamilyAccountForUser } from "@/modules/family-dashboard/server/family-account.repository";
-import { calculatePlanDiscount } from "@/modules/families/lib/plan-discounts";
+import { annualPlanInstallment } from "@/modules/families/lib/annual-plan";
 
 type FamilyAccount = NonNullable<Awaited<ReturnType<typeof getFamilyAccountForUser>>>;
 
@@ -15,8 +15,8 @@ function currency(value: number | string) {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(Number(value));
 }
 
-function monthlyNet(plan: { basicMonthlyFee: { toString(): string }; discountPercent: { toString(): string } }) {
-  return calculatePlanDiscount(plan.basicMonthlyFee.toString(), plan.discountPercent.toString()).netAmount;
+function monthlyNet(plan: { installmentCount: number; annualFee: { toString(): string }; discountPercent: { toString(): string } }) {
+  return annualPlanInstallment(plan.annualFee.toString(), plan.discountPercent.toString(), plan.installmentCount).netAmount;
 }
 
 export function FamilyAccountView({ account }: { account: FamilyAccount | null }) {

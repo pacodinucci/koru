@@ -87,7 +87,9 @@ export default async function NewPlanPage({
             <CreatePlanForm
               key={source?.id ?? "empty"}
               initialName={source ? `${source.name.slice(0, 112)} (copia)` : ""}
-              initialFee={source?.basicMonthlyFee.toString() ?? ""}
+              initialFee={source?.annualFee.toString() ?? ""}
+              initialInstallmentCount={source?.installmentCount ?? 12}
+              initialStartMonth={source?.startMonth ?? 1}
               initialDiscountPercent={source?.discountPercent.toString() ?? "0"}
               initialItems={
                 source?.eventualChargeItems
@@ -97,6 +99,7 @@ export default async function NewPlanPage({
                     suggestedAmount: item.suggestedAmount.toString(),
                     discountPercent: item.discountPercent.toString(),
                     installmentCount: item.installmentCount.toString(),
+                    startMonth: item.startMonth.toString(),
                   })) ?? []
               }
             />

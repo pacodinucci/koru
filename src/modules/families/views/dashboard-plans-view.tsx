@@ -24,7 +24,9 @@ export async function DashboardPlansView({ canManage }: { canManage: boolean }) 
       <PlansDataTable canManage={canManage} plans={plans.map((plan) => ({
         id: plan.id,
         name: plan.name,
-        basicMonthlyFee: plan.basicMonthlyFee.toString(),
+        annualFee: plan.annualFee.toString(),
+        installmentCount: plan.installmentCount,
+        startMonth: plan.startMonth,
         discountPercent: plan.discountPercent.toString(),
         eventualItemsCount: plan.eventualChargeItems.length,
       }))} />

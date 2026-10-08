@@ -29,3 +29,8 @@ export function dueInstallmentIndexes(startPeriod: Date, count: number, currentP
     installmentPeriod(startPeriod, index) <= currentPeriod && !emittedNumbers.has(index + 1),
   );
 }
+
+export function eventualStartPeriod(currentPeriod: Date, startMonth: number): Date {
+  if (!Number.isInteger(startMonth) || startMonth < 1 || startMonth > 12) throw new Error("invalid_start_month");
+  return new Date(Date.UTC(currentPeriod.getUTCFullYear(), startMonth - 1, 1));
+}

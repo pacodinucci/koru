@@ -26,7 +26,7 @@ async function cleanup() {
 test.after(async () => { await cleanup(); await prisma.$disconnect(); await pool.end(); });
 
 test("la cuenta familiar persiste pagos, reversas y recibos anulados", async () => {
-  const plan = await prisma.plan.create({ data: { name: `Test plan ${suffix}`, basicMonthlyFee: 100 } });
+  const plan = await prisma.plan.create({ data: { name: `Test plan ${suffix}`, annualFee: 1200 } });
   planId = plan.id;
   const family = await prisma.family.create({ data: { name: `Test family ${suffix}` } });
   familyId = family.id;
@@ -51,9 +51,9 @@ test("la cuenta familiar persiste pagos, reversas y recibos anulados", async () 
 test("la cuota familiar suma los planes activos de sus alumnos en un único cargo", async () => {
   const token = randomUUID();
   const plans = await Promise.all([
-    prisma.plan.create({ data: { name: `Plan A ${token}`, basicMonthlyFee: "100.10" } }),
-    prisma.plan.create({ data: { name: `Plan B ${token}`, basicMonthlyFee: "200.20" } }),
-    prisma.plan.create({ data: { name: `Plan inactivo ${token}`, basicMonthlyFee: "999.00", isActive: false } }),
+    prisma.plan.create({ data: { name: `Plan A ${token}`, annualFee: "1201.20" } }),
+    prisma.plan.create({ data: { name: `Plan B ${token}`, annualFee: "2402.40" } }),
+    prisma.plan.create({ data: { name: `Plan inactivo ${token}`, annualFee: "11988.00", isActive: false } }),
   ]);
   const group = await prisma.studentGroup.create({ data: { name: `Grupo ${token}`, slug: `grupo-${token}`, ageRange: "Prueba" } });
   const family = await prisma.family.create({ data: { name: `Familia cuotas ${token}` } });
