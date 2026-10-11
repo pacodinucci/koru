@@ -1,9 +1,11 @@
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from "@react-email/components";
 
+import { EMAIL_LOCALE, formatReceiptDate } from "@/modules/mailing/lib/email-copy";
+
 type ReceiptEmailProps = { receiptNumber: number; amount: string; paidAt: Date; downloadUrl: string };
 
 export function ReceiptEmail({ receiptNumber, amount, paidAt, downloadUrl }: ReceiptEmailProps) {
-  return <Html><Head/><Preview>{`Tu recibo Nº ${receiptNumber} está disponible`}</Preview><Body style={body}><Container style={container}><Text style={eyebrow}>Koru · Administración</Text><Heading style={heading}>Recibo de pago disponible</Heading><Text style={text}>Registramos tu pago y ya podés descargar el comprobante.</Text><Section style={details}><Text style={detail}>Recibo Nº {receiptNumber}</Text><Text style={detail}>Importe: ${amount}</Text><Text style={detail}>Fecha: {paidAt.toLocaleDateString("es-AR")}</Text></Section><Section style={buttonWrapper}><Button href={downloadUrl} style={button}>Descargar recibo</Button></Section><Text style={muted}>Este enlace es personal y temporal. Si vence, podés descargar el recibo desde Mi cuenta.</Text></Container></Body></Html>;
+  return <Html lang={EMAIL_LOCALE}><Head/><Preview>{`Tu recibo Nº ${receiptNumber} está disponible`}</Preview><Body style={body}><Container style={container}><Text style={eyebrow}>Koru · Administración</Text><Heading style={heading}>Recibo de pago disponible</Heading><Text style={text}>Registramos tu pago y ya puedes descargar el comprobante.</Text><Section style={details}><Text style={detail}>Recibo Nº {receiptNumber}</Text><Text style={detail}>Importe: ${amount}</Text><Text style={detail}>Fecha: {formatReceiptDate(paidAt)}</Text></Section><Section style={buttonWrapper}><Button href={downloadUrl} style={button}>Descargar recibo</Button></Section><Text style={muted}>Este enlace es personal y temporal. Si vence, puedes descargar el recibo desde Mi cuenta.</Text></Container></Body></Html>;
 }
 
 const body = { margin: 0, backgroundColor: "#f8fafc", fontFamily: "Arial, sans-serif" };

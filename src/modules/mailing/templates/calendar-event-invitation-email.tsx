@@ -9,6 +9,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+import { EMAIL_LOCALE } from "@/modules/mailing/lib/email-copy";
 import { calendarTimeZoneLabel } from "@/modules/calendar/lib/calendar-time-zone";
 
 type CalendarEventInvitationEmailProps = {
@@ -32,23 +33,23 @@ export function CalendarEventInvitationEmail({
   eventUrl,
   requiresSignIn = true,
 }: CalendarEventInvitationEmailProps) {
-  const date = startsAt.toLocaleDateString("es-MX", {
+  const date = startsAt.toLocaleDateString(EMAIL_LOCALE, {
     timeZone,
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  const time = `${startsAt.toLocaleTimeString("es-MX", { timeZone, hour: "2-digit", minute: "2-digit" })} - ${endsAt.toLocaleTimeString("es-MX", { timeZone, hour: "2-digit", minute: "2-digit" })} (${calendarTimeZoneLabel(timeZone)})`;
+  const time = `${startsAt.toLocaleTimeString(EMAIL_LOCALE, { timeZone, hour: "2-digit", minute: "2-digit" })} - ${endsAt.toLocaleTimeString(EMAIL_LOCALE, { timeZone, hour: "2-digit", minute: "2-digit" })} (${calendarTimeZoneLabel(timeZone)})`;
 
   return (
-    <Html>
+    <Html lang={EMAIL_LOCALE}>
       <Head />
-      <Preview>Confirmá tu asistencia a {eventTitle}</Preview>
+      <Preview>Confirma tu asistencia a {eventTitle}</Preview>
       <Body style={body}>
         <Container style={container}>
           <Text style={eyebrow}>Koru · Calendario</Text>
-          <Heading style={heading}>Confirmá tu asistencia</Heading>
+          <Heading style={heading}>Confirma tu asistencia</Heading>
           <Text style={text}>Hola {recipientName}, te invitamos al siguiente evento:</Text>
           <Section style={details}>
             <Text style={eventName}>{eventTitle}</Text>
@@ -61,8 +62,8 @@ export function CalendarEventInvitationEmail({
           </Section>
           <Text style={muted}>
             {requiresSignIn
-              ? "Ingresá con el mismo email que recibió esta invitación."
-              : "Este enlace es personal. No lo compartas; podés responder sin crear una cuenta."}
+              ? "Inicia sesión con el correo electrónico al que enviamos esta invitación."
+              : "Este enlace es personal. No lo compartas; puedes responder sin crear una cuenta."}
           </Text>
         </Container>
       </Body>

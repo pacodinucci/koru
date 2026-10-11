@@ -1,9 +1,12 @@
 import { Body, Container, Head, Heading, Html, Preview, Section, Text } from "@react-email/components";
 
-type OperationDecisionEmailProps = { recipientName: string; title: string; status: string; detail: string; reason?: string | null };
+import { EMAIL_LOCALE, operationEmailStatusLabel, type OperationEmailStatus } from "@/modules/mailing/lib/email-copy";
+
+type OperationDecisionEmailProps = { recipientName: string; title: string; status: OperationEmailStatus; detail: string; reason?: string | null };
 
 export function OperationDecisionEmail({ recipientName, title, status, detail, reason }: OperationDecisionEmailProps) {
-  return <Html><Head /><Preview>{`Tu ${title.toLowerCase()} fue ${status.toLowerCase()}`}</Preview><Body style={body}><Container style={container}><Text style={eyebrow}>Koru · Operaciones</Text><Heading style={heading}>Hay una decisión sobre tu {title.toLowerCase()}</Heading><Text style={text}>Hola {recipientName}, tu {title.toLowerCase()} fue <strong>{status.toLowerCase()}</strong>.</Text><Section style={details}><Text style={detailStyle}>{detail}</Text>{reason ? <Text style={detailStyle}>Motivo: {reason}</Text> : null}</Section><Text style={muted}>Podés consultar el detalle y el historial desde Operaciones.</Text></Container></Body></Html>;
+  const statusLabel = operationEmailStatusLabel(status);
+  return <Html lang={EMAIL_LOCALE}><Head /><Preview>{`Tu ${title.toLowerCase()} fue ${statusLabel}`}</Preview><Body style={body}><Container style={container}><Text style={eyebrow}>Koru · Operaciones</Text><Heading style={heading}>Hay una decisión sobre tu {title.toLowerCase()}</Heading><Text style={text}>Hola {recipientName}, tu {title.toLowerCase()} fue <strong>{statusLabel}</strong>.</Text><Section style={details}><Text style={detailStyle}>{detail}</Text>{reason ? <Text style={detailStyle}>Motivo: {reason}</Text> : null}</Section><Text style={muted}>Puedes consultar el detalle y el historial desde Operaciones.</Text></Container></Body></Html>;
 }
 const body = { margin: 0, backgroundColor: "#f8fafc", fontFamily: "Arial, sans-serif" };
 const container = { margin: "0 auto", padding: "40px 24px", maxWidth: "560px" };

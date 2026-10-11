@@ -37,7 +37,7 @@ export async function decideInventoryRequestLineAction(formData: FormData) {
     if (parsed.data.approvedQuantity > 0) await tx.inventoryMovement.create({ data: { productId: line.productId, requestLineId: line.id, type: InventoryMovementType.REQUEST_FULFILLMENT, quantity: -parsed.data.approvedQuantity, reason: parsed.data.reason, createdById: operator.id } });
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   const notification = await prisma.inventoryRequestLine.findUnique({ where: { id: parsed.data.lineId }, include: { product: true, request: { include: { teacher: { include: { user: { select: { email: true, name: true } } } } } } } });
-  if (notification?.request.teacher.user) await sendOperationDecisionEmail({ email: notification.request.teacher.user.email, recipientName: notification.request.teacher.user.name, title: "pedido de inventario", status: notification.request.status, detail: `${notification.product.name}: ${Number(notification.approvedQuantity ?? 0)} de ${Number(notification.requestedQuantity)}`, reason: parsed.data.reason, idempotencyKey: `inventory-request-decision-${notification.requestId}-${notification.request.status}` });
+  if (notification?.request.teacher.user) await sendOperationDecisionEmail({ email: notification.request.teacher.user.email, recipientName: notification.request.teacher.user.name, title: "solicitud de inventario", status: notification.request.status, detail: `${notification.product.name}: ${Number(notification.approvedQuantity ?? 0)} de ${Number(notification.requestedQuantity)}`, reason: parsed.data.reason, idempotencyKey: `inventory-request-decision-${notification.requestId}-${notification.request.status}` });
   revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Solicitud resuelta." };
 }
@@ -80,7 +80,7 @@ export async function decideWholeInventoryRequestAction(requestId: string, decis
     await tx.inventoryRequest.update({ where: { id: request.id }, data: { status, decidedById: operator.id, decidedAt: new Date() } });
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   const notification = await prisma.inventoryRequest.findUnique({ where: { id: requestId }, include: { teacher: { include: { user: { select: { email: true, name: true } } } }, lines: { include: { product: true } } } });
-  if (notification?.teacher.user) await sendOperationDecisionEmail({ email: notification.teacher.user.email, recipientName: notification.teacher.user.name, title: "pedido de inventario", status: notification.status, detail: notification.lines.map((line) => `${line.product.name}: ${Number(line.approvedQuantity ?? 0)} de ${Number(line.requestedQuantity)}`).join(" · "), idempotencyKey: `inventory-request-decision-${notification.id}-${notification.status}` });
+  if (notification?.teacher.user) await sendOperationDecisionEmail({ email: notification.teacher.user.email, recipientName: notification.teacher.user.name, title: "solicitud de inventario", status: notification.status, detail: notification.lines.map((line) => `${line.product.name}: ${Number(line.approvedQuantity ?? 0)} de ${Number(line.requestedQuantity)}`).join(" · "), idempotencyKey: `inventory-request-decision-${notification.id}-${notification.status}` });
   revalidatePath("/dashboard/inventario");
   return { ok: true, message: "Solicitud resuelta." };
 }

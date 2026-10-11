@@ -56,7 +56,7 @@ export async function decideCashExpenseReportAction(formData: FormData) {
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   if (!result) return { ok: false, message: "La rendición ya fue resuelta." };
   const notification = await prisma.cashExpenseReport.findUnique({ where: { id: parsed.data.reportId }, include: { teacher: { include: { user: { select: { email: true, name: true } } } } } });
-  if (notification?.teacher.user) await sendOperationDecisionEmail({ email: notification.teacher.user.email, recipientName: notification.teacher.user.name, title: "rendición", status: result, detail: `${notification.concept} · solicitado $${Number(notification.requestedAmount).toFixed(2)} · aprobado $${parsed.data.approvedAmount.toFixed(2)}`, reason: parsed.data.reason, idempotencyKey: `cash-expense-decision-${notification.id}-${result}` });
+  if (notification?.teacher.user) await sendOperationDecisionEmail({ email: notification.teacher.user.email, recipientName: notification.teacher.user.name, title: "comprobación de gastos", status: result, detail: `${notification.concept} · solicitado $${Number(notification.requestedAmount).toFixed(2)} · aprobado $${parsed.data.approvedAmount.toFixed(2)}`, reason: parsed.data.reason, idempotencyKey: `cash-expense-decision-${notification.id}-${result}` });
   revalidatePath("/dashboard/caja-chica");
   return { ok: true, message: "Rendición resuelta." };
 }

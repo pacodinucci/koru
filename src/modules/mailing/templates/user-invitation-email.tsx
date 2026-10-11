@@ -9,6 +9,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+import { EMAIL_LOCALE, USER_INVITATION_SUBJECT } from "@/modules/mailing/lib/email-copy";
 import type { UserRole } from "@prisma/client";
 
 type UserInvitationEmailProps = {
@@ -34,29 +35,29 @@ export function UserInvitationEmail({
   familyName,
 }: UserInvitationEmailProps) {
   return (
-    <Html>
+    <Html lang={EMAIL_LOCALE}>
       <Head />
-      <Preview>Te invitaron a crear tu usuario en Koru</Preview>
+      <Preview>{USER_INVITATION_SUBJECT}</Preview>
       <Body style={body}>
         <Container style={container}>
           <Text style={eyebrow}>Koru</Text>
-          <Heading style={heading}>Te invitaron a crear tu usuario</Heading>
+          <Heading style={heading}>Te invitaron a crear tu cuenta</Heading>
           <Text style={text}>
-            Autorizamos el email <strong>{email}</strong> para ingresar al
-            ecosistema Koru con rol de <strong>{roleLabels[role]}</strong>.
+            Tu correo electrónico <strong>{email}</strong> está autorizado para acceder a
+            Koru con el rol de <strong>{roleLabels[role]}</strong>.
           </Text>
           {familyName ? (
             <Text style={text}>
-              Tu usuario quedará vinculado a la familia <strong>{familyName}</strong>.
+              Tu cuenta quedará vinculada a la familia <strong>{familyName}</strong>.
             </Text>
           ) : null}
           <Section style={buttonWrapper}>
             <Button href={invitationUrl} style={button}>
-              Crear usuario
+              Crear cuenta
             </Button>
           </Section>
           <Text style={muted}>
-            Si no esperabas esta invitación, podés ignorar este email.
+            Si no esperabas esta invitación, puedes ignorar este correo.
           </Text>
         </Container>
       </Body>

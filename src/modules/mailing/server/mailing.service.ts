@@ -15,6 +15,8 @@ import { UserInvitationEmail } from "@/modules/mailing/templates/user-invitation
 import { OperationDecisionEmail } from "@/modules/mailing/templates/operation-decision-email";
 import type { SendMailInput } from "@/modules/mailing/types/mailing";
 
+import { USER_INVITATION_SUBJECT, calendarInvitationSubject, operationEmailStatusLabel, type OperationEmailStatus } from "@/modules/mailing/lib/email-copy";
+
 const defaultFrom = "Koru <onboarding@resend.dev>";
 
 function getFromAddress() {
@@ -78,7 +80,7 @@ export async function sendUserInvitationEmail({
   return sendMail({
     type: EmailMessageType.USER_INVITATION,
     to: [{ email }],
-    subject: "Te invitaron a crear tu usuario en Koru",
+    subject: USER_INVITATION_SUBJECT,
     react: createElement(UserInvitationEmail, {
       email,
       role,
@@ -125,7 +127,7 @@ export async function sendCalendarEventInvitationEmail({
   return sendMail({
     type: EmailMessageType.CALENDAR_EVENT,
     to: [{ email, name: recipientName }],
-    subject: `Confirmá tu asistencia: ${event.title}`,
+    subject: calendarInvitationSubject(event.title),
     react: createElement(CalendarEventInvitationEmail, {
       recipientName,
       eventTitle: event.title,
@@ -140,8 +142,8 @@ export async function sendCalendarEventInvitationEmail({
     idempotencyKey: `calendar-attendance-${attendanceId}`,
   });
 }
-type SendOperationDecisionEmailInput = { email: string; recipientName: string; title: string; status: string; detail: string; reason?: string | null; idempotencyKey: string };
+type SendOperationDecisionEmailInput = { email: string; recipientName: string; title: string; status: OperationEmailStatus; detail: string; reason?: string | null; idempotencyKey: string };
 
 export async function sendOperationDecisionEmail(input: SendOperationDecisionEmailInput) {
-  return sendMail({ type: EmailMessageType.MANUAL, to: [{ email: input.email, name: input.recipientName }], subject: `Koru · ${input.title}: ${input.status.toLowerCase()}`, react: createElement(OperationDecisionEmail, input), payload: { title: input.title, status: input.status, detail: input.detail, reason: input.reason }, idempotencyKey: input.idempotencyKey });
+  return sendMail({ type: EmailMessageType.MANUAL, to: [{ email: input.email, name: input.recipientName }], subject: `Koru · ${input.title}: ${operationEmailStatusLabel(input.status)}`, react: createElement(OperationDecisionEmail, input), payload: { title: input.title, status: input.status, detail: input.detail, reason: input.reason }, idempotencyKey: input.idempotencyKey });
 }
