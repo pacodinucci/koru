@@ -209,7 +209,8 @@ export async function assignPlanToStudentAction(formData: FormData) {
   ]);
   if (student?.familyId !== parsed.data.familyId || !plan || (!plan.isActive && student.planId !== parsed.data.planId)) return;
   await prisma.$transaction(async tx => {
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${parsed.data.familyId}))`;
+    // Return an integer: PrismaPg cannot deserialize the lock function's void result.
+    await tx.$queryRaw`SELECT 1 FROM pg_advisory_xact_lock(hashtext(${parsed.data.familyId}))`;
     const currentStudent = await tx.student.findUnique({ where: { id: parsed.data.studentId } });
     if (currentStudent?.familyId !== parsed.data.familyId) return;
     const now = new Date();
