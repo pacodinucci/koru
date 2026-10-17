@@ -816,6 +816,7 @@ model TeacherProfile {
   pendingOrganizationGroup String?
   isActive              Boolean               @default(true)
   groupResponsibilities StudentGroupTeacher[]
+  psychopedagogyEntries PsychopedagogyEntry[]
   studentReports        StudentReport[]
   followUpAgreements    FollowUpAgreement[]
   exams                 Exam[]
@@ -869,6 +870,7 @@ model Student {
   guardians         StudentGuardian[]
   billingSchedules  EventualChargeSchedule[]
   examGrades        ExamGrade[]
+  psychopedagogyEntries PsychopedagogyEntry[]
   reports           StudentReport[]
   followUpAgreements FollowUpAgreementStudent[]
   createdAt         DateTime               @default(now())
@@ -916,6 +918,21 @@ model StudentReport {
   createdAt          DateTime          @default(now())
 
   @@index([studentId, createdAt])
+  @@index([teacherId])
+}
+
+model PsychopedagogyEntry {
+  id        String         @id @default(cuid())
+  studentId String
+  student   Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  entryDate DateTime       @db.Date
+  title     String
+  body      String
+  createdAt DateTime       @default(now())
+
+  @@index([studentId, entryDate])
   @@index([teacherId])
 }
 
@@ -1429,6 +1446,20 @@ model InventoryRequestLine {
   @@index([productId])
 }
 
+model InventoryPurchase {
+  id            String              @id
+  supplier      String
+  occurredAt    DateTime
+  totalAmount   Decimal             @db.Decimal(12, 2)
+  invoiceNumber String?
+  fingerprint   String
+  createdById   String?
+  createdAt     DateTime            @default(now())
+  movements     InventoryMovement[]
+
+  @@index([occurredAt])
+}
+
 model InventoryMovement {
   id          String                @id @default(cuid())
   productId   String
@@ -1441,9 +1472,12 @@ model InventoryMovement {
   createdById String?
   requestLineId String?
   requestLine InventoryRequestLine? @relation(fields: [requestLineId], references: [id], onDelete: Restrict)
+  purchaseId  String?
+  purchase    InventoryPurchase?    @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
   reversesId  String?               @unique
   createdAt   DateTime              @default(now())
 
   @@index([productId, occurredAt])
   @@index([type, occurredAt])
+  @@index([purchaseId])
 }

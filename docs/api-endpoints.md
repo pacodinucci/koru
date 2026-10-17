@@ -23,6 +23,17 @@ Objetivo: tener una guía clara de arquitectura sin entrar en detalle fino de ca
   - límite de 5 MB,
   - devuelve `{ ok: true, url }` al subir correctamente.
 
+### 1.3 `GET|POST /api/teacher/students/{id}/psychopedagogy`
+- Pantalla: `/dashboard/psicopedagogia`, desde el menú **Psicopedagogía**.
+- Acceso: `TEACHER` y `ADMIN_TEACHER`, con perfil docente activo y alumno activo asignado a un grupo activo del docente.
+- `GET`: devuelve `{ entries }` con las bitácoras propias del alumno seleccionado, ordenadas por fecha descendente. No se cachea.
+- `POST`: recibe JSON `{ date: "2026-02-28", title: "Seguimiento", body: "Texto libre" }`.
+- Campos obligatorios: fecha calendario válida `YYYY-MM-DD`, título de hasta 160 caracteres y texto de hasta 10.000 caracteres. Se recortan espacios al inicio/final; el texto conserva sus saltos de línea y no interpreta HTML.
+- Respuestas: `201 { ok: true }` al crear; `400 { error }` para datos inválidos; `404 { error }` si el alumno no está disponible; `503 { error }` si falta aplicar la migración; `500 { error }` ante otros errores.
+- Persistencia: modelo independiente `PsychopedagogyEntry`; no crea reportes ni comparte contenido con familias. La fecha de la entrada es independiente del momento de creación.
+- Instalación: revisar y aplicar la migración `20260930120000_add_psychopedagogy_entries` con el procedimiento de despliegue de la base (`npx prisma migrate deploy` aplica **todas** las migraciones pendientes); luego generar el cliente con `npm run prisma:generate`. No se debe ejecutar contra una base sin confirmar primero el destino.
+- Pruebas sin base de datos: `node --test tests/integration/psychopedagogy.test.mjs tests/integration/psychopedagogy-ui.test.mjs`.
+
 ## 2) Operaciones existentes sin endpoint HTTP dedicado
 
 Hoy varias operaciones viven como **Server Actions** (acopladas al frontend), no como API pública:

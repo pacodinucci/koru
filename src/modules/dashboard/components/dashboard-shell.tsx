@@ -149,6 +149,8 @@ export function DashboardShell({
   const isFamiliesActive = pathname.startsWith("/dashboard/families");
   const isTeachersActive = pathname.startsWith("/dashboard/teachers");
   const isReportsActive = pathname.startsWith("/dashboard/reportes");
+  const isPsychopedagogyActive = pathname.startsWith("/dashboard/psicopedagogia");
+  const isAgreementsActive = pathname.startsWith("/dashboard/acuerdos-seguimiento");
   const isLayoutActive = pathname.startsWith("/dashboard/diseno");
   const isContentActive = pathname.startsWith("/dashboard/content");
   const isDocumentsActive = pathname.startsWith("/dashboard/documentos");
@@ -507,16 +509,38 @@ export function DashboardShell({
                 </SidebarMenuItem>
 
                 {userRole === "TEACHER" || userRole === "ADMIN_TEACHER" ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={isReportsActive}
-                      className={sidebarMenuButtonClass}
-                      render={<Link href="/dashboard/reportes" />}
-                    >
-                      <FileText />
-                      <span>Reportes</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={isAgreementsActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/acuerdos-seguimiento" />}
+                      >
+                        <NotebookPen />
+                        <span>Acuerdos de Seguimiento</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={isReportsActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/reportes" />}
+                      >
+                        <FileText />
+                        <span>Reportes</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        isActive={isPsychopedagogyActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/psicopedagogia" />}
+                      >
+                        <NotebookPen />
+                        <span>Psicopedagogía</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
                 ) : null}
 
                 {isSuperAdmin ? (

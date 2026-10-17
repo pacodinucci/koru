@@ -93,7 +93,7 @@ export function TeacherAgreementsClient({ agreements }: { agreements: Agreement[
     <div className="space-y-5 [font-family:var(--font-montserrat)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Acuerdos de seguimiento</h1>
+          <h1 className="text-xl font-semibold text-slate-900">Acuerdos de Seguimiento</h1>
           <p className="mt-1 text-sm text-muted-foreground">Constancias de citas compartidas con las familias involucradas.</p>
         </div>
         <Button nativeButton={false} render={<Link href="/dashboard/acuerdos-seguimiento/nuevo" />}>

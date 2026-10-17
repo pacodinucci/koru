@@ -16,7 +16,7 @@ export default async function FollowUpAgreementsPage() {
       userRole={user.role}
       userPermissions={user.permissionKeys}
       cmsPages={cmsPages}
-      breadcrumbPage="Acuerdos de seguimiento"
+      breadcrumbPage="Acuerdos de Seguimiento"
     >
       <TeacherAgreementsClient
         agreements={agreements.map((agreement) => ({

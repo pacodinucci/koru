@@ -1,6 +1,6 @@
 "use client";
 
-import { PackagePlus, Settings2, SlidersHorizontal } from "lucide-react";
+import { Settings2, SlidersHorizontal } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
@@ -20,9 +20,10 @@ import {
 import {
   adjustInventoryStockAction,
   createInventoryProductAction,
-  registerInventoryStockMovementAction,
   setInventoryMinimumStockAction,
 } from "@/modules/operations/server/inventory.actions";
+
+import { InventoryInvoiceImport } from "@/modules/operations/components/inventory-invoice-import";
 
 type Product = { id: string; name: string; unit: string; stock: number; minimumStock: number };
 type ActionResult = { ok: boolean; message: string };
@@ -39,31 +40,27 @@ export function InventoryAdminActions({
 }) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-      {canOperate ? <InventoryMovementDialog kind="stock-in" products={products} /> : null}
-      {canOperate ? <InventoryMovementDialog kind="adjustment" products={products} /> : null}
+      {canOperate ? <InventoryInvoiceImport products={products} canConfigure={canConfigure} /> : null}
+      {canOperate ? <InventoryAdjustmentDialog products={products} /> : null}
       {canConfigure ? <InventoryConfigurationDialog products={products} /> : null}
     </div>
   );
 }
 
-function InventoryMovementDialog({ kind, products }: { kind: "stock-in" | "adjustment"; products: Product[] }) {
+function InventoryAdjustmentDialog({ products }: { products: Product[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
-  const isAdjustment = kind === "adjustment";
-  const title = isAdjustment ? "Ajustar stock" : "Registrar ingreso";
-  const description = isAdjustment
-    ? "Corregí diferencias de inventario dejando el motivo registrado."
-    : "Incorporá mercadería al stock disponible con su referencia de ingreso.";
-  const action: Action = isAdjustment ? adjustInventoryStockAction : registerInventoryStockMovementAction;
+  const title = "Ajustar stock";
+  const description = "Corregí diferencias de inventario dejando el motivo registrado.";
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     setMessage("");
     startTransition(async () => {
-      const result = await action(new FormData(form));
+      const result = await adjustInventoryStockAction(new FormData(form));
       setMessage(result.message);
       if (result.ok) {
         form.reset();
@@ -72,21 +69,19 @@ function InventoryMovementDialog({ kind, products }: { kind: "stock-in" | "adjus
     });
   }
 
-  const Icon = isAdjustment ? SlidersHorizontal : PackagePlus;
   return (
     <ResponsiveDialog open={open} onOpenChange={(next) => { setOpen(next); if (!next) setMessage(""); }}>
-      <ResponsiveDialogTrigger render={<Button type="button" variant={isAdjustment ? "outline" : "default"} className="w-full justify-center sm:w-auto" />}>
-        <Icon className="size-4" />
+      <ResponsiveDialogTrigger render={<Button type="button" variant="outline" className="w-full justify-center sm:w-auto" />}>
+        <SlidersHorizontal className="size-4" />
         {title}
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent className="font-montserrat md:max-w-md">
         <ResponsiveDialogHeader><ResponsiveDialogTitle>{title}</ResponsiveDialogTitle><ResponsiveDialogDescription>{description}</ResponsiveDialogDescription></ResponsiveDialogHeader>
         <form onSubmit={submit} className="contents">
           <ResponsiveDialogBody className="grid gap-4">
-            <div className="grid gap-2"><Label htmlFor={`${kind}-product`}>Producto</Label><select id={`${kind}-product`} name="productId" className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm" required autoFocus><option value="">Seleccionar producto</option>{products.map((product) => <option key={product.id} value={product.id}>{product.name} · {product.stock} {product.unit}</option>)}</select></div>
-            <div className="grid gap-2"><Label htmlFor={`${kind}-quantity`}>{isAdjustment ? "Ajuste de cantidad" : "Cantidad ingresada"}</Label><Input id={`${kind}-quantity`} name="quantity" type="number" min={isAdjustment ? undefined : "0.001"} step="0.001" inputMode="decimal" placeholder={isAdjustment ? "Ej.: -2 o 5" : "0"} required />{isAdjustment ? <p className="text-xs text-slate-500">Usá un valor negativo para descontar y uno positivo para sumar.</p> : null}</div>
-            {!isAdjustment ? <div className="grid gap-2"><Label htmlFor="stock-in-unit-cost">Costo unitario <span className="text-slate-400">(opcional)</span></Label><Input id="stock-in-unit-cost" name="unitCost" type="number" min="0" step="0.01" inputMode="decimal" placeholder="0,00" /></div> : null}
-            <div className="grid gap-2"><Label htmlFor={`${kind}-reason`}>Motivo o referencia</Label><Input id={`${kind}-reason`} name="reason" minLength={2} maxLength={500} placeholder={isAdjustment ? "Ej.: recuento físico" : "Ej.: compra a proveedor"} required /></div>
+            <div className="grid gap-2"><Label htmlFor="adjustment-product">Producto</Label><select id="adjustment-product" name="productId" className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm" required autoFocus><option value="">Seleccionar producto</option>{products.map((product) => <option key={product.id} value={product.id}>{product.name} · {product.stock} {product.unit}</option>)}</select></div>
+            <div className="grid gap-2"><Label htmlFor="adjustment-quantity">Ajuste de cantidad</Label><Input id="adjustment-quantity" name="quantity" type="number" step="0.001" inputMode="decimal" placeholder="Ej.: -2 o 5" required /><p className="text-xs text-slate-500">Usá un valor negativo para descontar y uno positivo para sumar.</p></div>
+            <div className="grid gap-2"><Label htmlFor="adjustment-reason">Motivo o referencia</Label><Input id="adjustment-reason" name="reason" minLength={2} maxLength={500} placeholder="Ej.: recuento físico" required /></div>
             {message ? <p role="status" className="text-sm text-slate-600">{message}</p> : null}
           </ResponsiveDialogBody>
           <ResponsiveDialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button><Button type="submit" disabled={pending || products.length === 0}>{pending ? "Guardando…" : title}</Button></ResponsiveDialogFooter>

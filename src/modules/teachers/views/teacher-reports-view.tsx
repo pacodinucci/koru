@@ -1,6 +1,3 @@
-import Link from "next/link";
-
-import { Button } from "@/components/ui/button";
 import { CreateStudentReportDialog } from "@/modules/teachers/components/create-student-report-dialog";
 import { TeacherReportsTable } from "@/modules/teachers/components/teacher-reports-table";
 import { listTeacherOwnedReports } from "@/modules/teachers/server/student-reports.repository";
@@ -20,9 +17,6 @@ export async function TeacherReportsView({ userId }: { userId: string }) {
           <p className="mt-1 text-sm text-muted-foreground">Tus reportes por alumno. Sólo los que compartís son visibles para su familia.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button nativeButton={false} render={<Link href="/dashboard/acuerdos-seguimiento" />} variant="outline">
-            Ir a Acuerdos de seguimiento
-          </Button>
           <CreateStudentReportDialog students={students} />
         </div>
       </div>
