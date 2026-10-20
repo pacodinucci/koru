@@ -9,6 +9,7 @@ import { FamilyFinancialCard } from "@/modules/families/components/family-financ
 import { FamilyResponsiblesList } from "@/modules/families/components/family-responsibles-list";
 import { buildFamilyResponsibles } from "@/modules/families/lib/family-responsibles";
 import { annualPlanInstallment } from "@/modules/families/lib/annual-plan";
+import { buildAllocationSummary } from "@/modules/families/lib/payment-allocation";
 import { assignPlanToStudentAction } from "@/modules/families/server/families.actions";
 import { getFamilyFinancialRecord } from "@/modules/families/server/family-financial.repository";
 import { listPlansForAdmin } from "@/modules/families/server/families.repository";
@@ -25,6 +26,7 @@ export async function DashboardFamilyDetailView({ familyId, canManageFamily, can
     id: family.id,
     name: family.name,
     balance: balance.toFixed(2),
+    ...buildAllocationSummary(family.accountEntries),
     eventualChargeItems: Array.from(new Map(family.students.flatMap((student) => student.plan?.eventualChargeItems ?? []).map((item) => [item.id, { id: item.id, name: item.name, suggestedAmount: item.suggestedAmount.toString(), discountPercent: item.discountPercent.toString(), installmentCount: item.installmentCount, startMonth: item.startMonth }])).values()),
     entries: family.accountEntries.map((entry) => ({
       id: entry.id, type: entry.type, amount: entry.amount.toString(), grossAmount: entry.grossAmount?.toString() ?? null, discountAmount: entry.discountAmount?.toString() ?? null, description: entry.description, occurredAt: entry.occurredAt.toISOString(),

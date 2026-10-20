@@ -107,7 +107,9 @@ export function ManageFamilyDialog({
                   <Button type="submit" variant="outline" className="w-full">Guardar</Button>
                 </form>
               </section>
-              <FamilyFinancialCard family={detail} eventualChargeItems={detail.eventualChargeItems} canManagePayments={detail.canManagePayments} canWaive={canWaive} />
+              <FamilyFinancialCard family={detail} eventualChargeItems={detail.eventualChargeItems} canManagePayments={detail.canManagePayments} canWaive={canWaive} onFinancialChange={() => {
+                startTransition(async () => setDetail(await getFamilyDetailAction(familyId)));
+              }} />
             </div>
           ) : null}
         </ResponsiveDialogBody>

@@ -10,7 +10,7 @@ import {
   Text,
 } from "@react-email/components";
 import { EMAIL_LOCALE } from "@/modules/mailing/lib/email-copy";
-import { calendarTimeZoneLabel } from "@/modules/calendar/lib/calendar-time-zone";
+import { DEFAULT_CALENDAR_TIME_ZONE, calendarTimeZoneLabel } from "@/modules/calendar/lib/calendar-time-zone";
 
 type CalendarEventInvitationEmailProps = {
   recipientName: string;
@@ -28,11 +28,11 @@ export function CalendarEventInvitationEmail({
   eventTitle,
   startsAt,
   endsAt,
-  timeZone,
   location,
   eventUrl,
   requiresSignIn = true,
 }: CalendarEventInvitationEmailProps) {
+  const timeZone = DEFAULT_CALENDAR_TIME_ZONE;
   const date = startsAt.toLocaleDateString(EMAIL_LOCALE, {
     timeZone,
     weekday: "long",

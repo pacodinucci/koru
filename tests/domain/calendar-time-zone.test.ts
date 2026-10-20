@@ -2,36 +2,49 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  CALENDAR_TIME_ZONES,
   DEFAULT_CALENDAR_TIME_ZONE,
   calendarDateValue,
   calendarTimeValue,
+  calendarTimeZoneLabel,
+  isCalendarTimeZone,
   parseCalendarLocalDateTime,
 } from "../../src/modules/calendar/lib/calendar-time-zone";
 
-test("usa Ciudad de México como zona inicial del calendario", () => {
+test("Mexico City is the only calendar timezone", () => {
   assert.equal(DEFAULT_CALENDAR_TIME_ZONE, "America/Mexico_City");
+  assert.deepEqual(CALENDAR_TIME_ZONES.map((zone) => zone.value), [DEFAULT_CALENDAR_TIME_ZONE]);
+  assert.equal(isCalendarTimeZone(DEFAULT_CALENDAR_TIME_ZONE), true);
+  assert.equal(isCalendarTimeZone("America/Argentina/Buenos_Aires"), false);
 });
 
-test("interpreta la hora de Buenos Aires sin depender de la zona del servidor", () => {
-  const date = parseCalendarLocalDateTime("2026-10-05", "12:30", "America/Argentina/Buenos_Aires");
-  assert.equal(date.toISOString(), "2026-10-05T15:30:00.000Z");
-  assert.equal(calendarDateValue(date, "America/Argentina/Buenos_Aires"), "2026-10-05");
-  assert.equal(calendarTimeValue(date, "America/Argentina/Buenos_Aires"), "12:30");
+test("legacy timezone arguments cannot change Mexico wall time or labels", () => {
+  for (const zone of ["America/Argentina/Buenos_Aires", "America/New_York", "Mars/Olympus"]) {
+    const date = parseCalendarLocalDateTime("2026-10-05", "23:30", zone);
+    assert.equal(date.toISOString(), "2026-10-06T05:30:00.000Z");
+    assert.equal(calendarDateValue(date, zone), "2026-10-05");
+    assert.equal(calendarTimeValue(date, zone), "23:30");
+    assert.equal(calendarTimeZoneLabel(zone), "Ciudad de México (México)");
+  }
 });
 
-test("interpreta la hora de México y conserva la fecha local al editar", () => {
-  const date = parseCalendarLocalDateTime("2026-10-05", "23:30", "America/Mexico_City");
+test("Mexico dates round-trip without depending on the server timezone", () => {
+  const date = parseCalendarLocalDateTime("2026-10-05", "23:30", DEFAULT_CALENDAR_TIME_ZONE);
   assert.equal(date.toISOString(), "2026-10-06T05:30:00.000Z");
-  assert.equal(calendarDateValue(date, "America/Mexico_City"), "2026-10-05");
-  assert.equal(calendarTimeValue(date, "America/Mexico_City"), "23:30");
+  assert.equal(calendarDateValue(date, DEFAULT_CALENDAR_TIME_ZONE), "2026-10-05");
+  assert.equal(calendarTimeValue(date, DEFAULT_CALENDAR_TIME_ZONE), "23:30");
 });
 
-test("rechaza fechas inexistentes y zonas no permitidas", () => {
-  assert.throws(() => parseCalendarLocalDateTime("2026-02-30", "12:30", "America/Argentina/Buenos_Aires"), /invalid_date/);
-  assert.throws(() => parseCalendarLocalDateTime("2026-10-05", "12:30", "Mars/Olympus"), /invalid_time_zone/);
+test("malformed dates and times remain invalid regardless of a legacy zone", () => {
+  for (const [date, time] of [
+    ["2026-02-30", "12:30"], ["2026-13-01", "12:30"], ["2026-10-05", "24:00"],
+    ["2026-10-05", "12:60"], ["2026-1-05", "12:30"], ["2026-10-05", "9:30"],
+  ]) {
+    assert.throws(() => parseCalendarLocalDateTime(date, time, "America/New_York"), /^Error: invalid_date$/);
+  }
 });
 
-test("rechaza horas inexistentes o ambiguas por horario de verano", () => {
-  assert.throws(() => parseCalendarLocalDateTime("2026-03-08", "02:30", "America/New_York"), /invalid_date/);
-  assert.throws(() => parseCalendarLocalDateTime("2026-11-01", "01:30", "America/New_York"), /ambiguous_date/);
+test("other countries' DST rules do not invalidate Mexico wall times", () => {
+  assert.equal(parseCalendarLocalDateTime("2026-03-08", "02:30", "America/New_York").toISOString(), "2026-03-08T08:30:00.000Z");
+  assert.equal(parseCalendarLocalDateTime("2026-11-01", "01:30", "America/New_York").toISOString(), "2026-11-01T07:30:00.000Z");
 });

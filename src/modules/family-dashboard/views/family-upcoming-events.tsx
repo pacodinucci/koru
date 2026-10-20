@@ -2,11 +2,11 @@ import { CalendarDays } from "lucide-react";
 import Link from "next/link";
 
 import type { FamilyCalendarEventItem } from "@/modules/family-dashboard/lib/family-calendar-event";
-import { calendarTimeZoneLabel } from "@/modules/calendar/lib/calendar-time-zone";
+import { calendarTimeValue, calendarTimeZoneLabel, DEFAULT_CALENDAR_TIME_ZONE } from "@/modules/calendar/lib/calendar-time-zone";
 
-function formatEventDate(value: Date | string, timeZone: string) {
+function formatEventDate(value: Date | string) {
   return new Date(value).toLocaleDateString("es-MX", {
-    timeZone,
+    timeZone: DEFAULT_CALENDAR_TIME_ZONE,
     day: "2-digit",
     month: "short",
   });
@@ -14,11 +14,7 @@ function formatEventDate(value: Date | string, timeZone: string) {
 
 function formatEventTime(event: FamilyCalendarEventItem) {
   if (event.allDay) return "Todo el día";
-  return new Date(event.startsAt).toLocaleTimeString("es-MX", {
-    timeZone: event.timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return calendarTimeValue(new Date(event.startsAt), DEFAULT_CALENDAR_TIME_ZONE);
 }
 
 export function FamilyUpcomingEvents({
@@ -49,9 +45,9 @@ export function FamilyUpcomingEvents({
                 className="grid grid-cols-[76px_minmax(0,1fr)] gap-3 px-4 py-3 hover:bg-slate-50"
               >
                 <div className="text-xs text-slate-500">
-                  <p className="font-medium text-slate-700">{formatEventDate(event.startsAt, event.timeZone)}</p>
+                  <p className="font-medium text-slate-700">{formatEventDate(event.startsAt)}</p>
                   <p>{formatEventTime(event)}</p>
-                  <p>{calendarTimeZoneLabel(event.timeZone)}</p>
+                  <p>{calendarTimeZoneLabel(DEFAULT_CALENDAR_TIME_ZONE)}</p>
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-900">{event.title}</p>

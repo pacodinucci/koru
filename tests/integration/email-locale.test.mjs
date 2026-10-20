@@ -60,6 +60,22 @@ test("invitaciones internas y externas mantienen las fechas y zona del evento", 
   assert.equal(copy.calendarInvitationSubject("Reunión"), "Confirma tu asistencia: Reunión");
 });
 
+test("calendar invitations always show Mexico dates and times for legacy zones", () => {
+  const startsAt = new Date("2026-11-02T04:00:00Z");
+  const endsAt = new Date("2026-11-02T05:00:00Z");
+  const props = { recipientName: "Ana", eventTitle: "Reunión", startsAt, endsAt, eventUrl: "https://example.com/event" };
+  const expected = renderEmail(CalendarEventInvitationEmail, { ...props, timeZone: "America/Mexico_City" });
+  assert.match(expected, /1 de noviembre de 2026/);
+  const mexicoTime = (date) => date.toLocaleTimeString("es-MX", { timeZone: "America/Mexico_City", hour: "2-digit", minute: "2-digit" });
+  assert.ok(expected.includes(`${mexicoTime(startsAt)} - ${mexicoTime(endsAt)}`));
+  assert.match(expected, /Ciudad de México/);
+  for (const timeZone of ["America/Argentina/Buenos_Aires", "Europe/Madrid", "Mars/Olympus"]) {
+    assert.equal(renderEmail(CalendarEventInvitationEmail, { ...props, timeZone }), expected);
+  }
+  assert.equal(startsAt.toISOString(), "2026-11-02T04:00:00.000Z");
+  assert.equal(endsAt.toISOString(), "2026-11-02T05:00:00.000Z");
+});
+
 test("recibo usa fecha mexicana independiente de la zona del servidor", () => {
   const paidAt = new Date("2026-10-11T02:00:00Z");
   const date = copy.formatReceiptDate(paidAt);

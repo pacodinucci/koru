@@ -1,4 +1,5 @@
 import { requirePermission } from "@/modules/auth/server/auth-guards";
+import { calendarTodayCursor, serializeDate } from "@/modules/dashboard/lib/calendar-range";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import {
@@ -29,8 +30,8 @@ export default async function DashboardCalendarPage({
   const user = await requirePermission("calendar.view");
 
   const { ok, error, date, view, edit } = await searchParams;
-  const parsedDate = date ? new Date(`${date}T00:00:00`) : new Date();
-  const dateCursor = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+  const parsedDate = date ? new Date(`${date}T12:00:00`) : calendarTodayCursor();
+  const dateCursor = Number.isNaN(parsedDate.getTime()) ? calendarTodayCursor() : parsedDate;
   const viewMode = view === "day" || view === "month" ? view : "week";
   const [events, upcomingEvents, users, cmsPages] = await Promise.all([
     listCalendarEventsForAdminByRange(dateCursor, viewMode),
@@ -43,7 +44,7 @@ export default async function DashboardCalendarPage({
     <DashboardCalendarClientProvider
       key={dateCursor.toISOString() + "-" + viewMode + "-" + (ok ?? "") + "-" + (error ?? "")}
       initialEvents={events}
-      initialDateCursor={dateCursor}
+      initialDateCursor={serializeDate(dateCursor)}
       initialViewMode={viewMode}
       initialSelectedEventId={edit}
       initialUpcomingEvents={upcomingEvents}

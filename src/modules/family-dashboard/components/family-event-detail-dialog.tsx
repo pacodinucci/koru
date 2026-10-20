@@ -22,7 +22,7 @@ import {
 import { respondToCalendarEventAction } from "@/modules/calendar/server/calendar-attendance.actions";
 import { registerForCalendarEventAction } from "@/modules/calendar/server/calendar-registration.actions";
 import type { NormalizedFamilyCalendarEvent } from "@/modules/family-dashboard/lib/family-calendar-event";
-import { calendarTimeZoneLabel } from "@/modules/calendar/lib/calendar-time-zone";
+import { calendarTimeValue, calendarTimeZoneLabel, DEFAULT_CALENDAR_TIME_ZONE } from "@/modules/calendar/lib/calendar-time-zone";
 
 const attendanceLabels = {
   PENDING: "Todavía no respondiste.",
@@ -51,7 +51,7 @@ type FamilyEventDetailDialogProps = {
 
 function formatEventDate(event: NormalizedFamilyCalendarEvent) {
   const date = event.startsAt.toLocaleDateString("es-AR", {
-    timeZone: event.timeZone,
+    timeZone: DEFAULT_CALENDAR_TIME_ZONE,
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -59,17 +59,9 @@ function formatEventDate(event: NormalizedFamilyCalendarEvent) {
   });
   if (event.allDay) return `${date} · Todo el día`;
 
-  const startsAt = event.startsAt.toLocaleTimeString("es-AR", {
-    timeZone: event.timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  const endsAt = event.endsAt.toLocaleTimeString("es-AR", {
-    timeZone: event.timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return `${date} · ${startsAt} - ${endsAt} (${calendarTimeZoneLabel(event.timeZone)})`;
+  const startsAt = calendarTimeValue(event.startsAt, DEFAULT_CALENDAR_TIME_ZONE);
+  const endsAt = calendarTimeValue(event.endsAt, DEFAULT_CALENDAR_TIME_ZONE);
+  return `${date} · ${startsAt} - ${endsAt} (${calendarTimeZoneLabel(DEFAULT_CALENDAR_TIME_ZONE)})`;
 }
 
 export function FamilyEventDetailDialog({

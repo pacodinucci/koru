@@ -39,6 +39,7 @@ export function getFamilyDetailForAdmin(familyId: string) {
       accountEntries: {
         orderBy: { occurredAt: "desc" },
         include: {
+          allocationsAsCredit: true,
           payment: {
             select: {
               id: true,

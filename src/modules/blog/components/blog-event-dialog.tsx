@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/responsive-dialog";
 import { respondToCalendarEventAction } from "@/modules/calendar/server/calendar-attendance.actions";
 import { registerForCalendarEventAction } from "@/modules/calendar/server/calendar-registration.actions";
+import { calendarTimeValue, DEFAULT_CALENDAR_TIME_ZONE } from "@/modules/calendar/lib/calendar-time-zone";
 
 type EventItem = {
   id: string;
@@ -22,6 +23,7 @@ type EventItem = {
   imageUrl?: string | null;
   startsAt: Date | string;
   endsAt: Date | string;
+  timeZone: string;
   location?: string | null;
   visibility: "PUBLIC" | "MEMBERS";
   registrationsEnabled: boolean;
@@ -72,7 +74,7 @@ export function BlogEventDialog({
           <div className="space-y-2 text-sm text-muted-foreground">
             <p className="flex items-center gap-2">
               <ClockIcon className="size-4" />
-              {startsAt.toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" })} · {startsAt.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })} - {endsAt.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
+              {startsAt.toLocaleDateString("es-AR", { timeZone: DEFAULT_CALENDAR_TIME_ZONE, day: "numeric", month: "long", year: "numeric" })} · {calendarTimeValue(startsAt, DEFAULT_CALENDAR_TIME_ZONE)} - {calendarTimeValue(endsAt, DEFAULT_CALENDAR_TIME_ZONE)}
             </p>
             {event.location ? <p className="flex items-center gap-2"><MapPinIcon className="size-4" />{event.location}</p> : null}
           </div>

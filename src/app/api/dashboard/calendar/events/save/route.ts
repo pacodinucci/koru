@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 import { after } from "next/server";
 
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
-import { parseCalendarLocalDateTime } from "@/modules/calendar/lib/calendar-time-zone";
+import { DEFAULT_CALENDAR_TIME_ZONE, parseCalendarLocalDateTime } from "@/modules/calendar/lib/calendar-time-zone";
 import { sendPendingCalendarEventInvitations } from "@/modules/calendar/server/calendar-invitation.service";
 import { syncEventForConfirmedUsers } from "@/modules/calendar/server/google-calendar/google-calendar-sync.service";
 import { saveCalendarEvent } from "@/modules/dashboard/server/calendar.repository";
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     const eventDate = getString(formData, "eventDate").trim();
     const startTime = getString(formData, "startTime").trim();
-    const timeZone = getString(formData, "timeZone").trim();
+    const timeZone = DEFAULT_CALENDAR_TIME_ZONE;
     const startsAt = parseCalendarLocalDateTime(eventDate, startTime, timeZone);
     const durationMinutes = parseDurationMinutes(getString(formData, "durationMinutes").trim());
     const visibilityValue = getString(formData, "visibility");

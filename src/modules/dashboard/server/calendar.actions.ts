@@ -10,7 +10,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 
 import { requirePermission } from "@/modules/auth/server/auth-guards";
-import { parseCalendarLocalDateTime } from "@/modules/calendar/lib/calendar-time-zone";
+import { DEFAULT_CALENDAR_TIME_ZONE, parseCalendarLocalDateTime } from "@/modules/calendar/lib/calendar-time-zone";
 import { sendPendingCalendarEventInvitations } from "@/modules/calendar/server/calendar-invitation.service";
 import { createManualCalendarEventAttendance } from "@/modules/calendar/server/calendar-attendance.repository";
 import {
@@ -65,7 +65,7 @@ export async function saveCalendarEventAction(formData: FormData) {
     const imagePublicId = getString(formData, "imagePublicId").trim();
     const eventDate = getString(formData, "eventDate").trim();
     const startTime = getString(formData, "startTime").trim();
-    const timeZone = getString(formData, "timeZone").trim();
+    const timeZone = DEFAULT_CALENDAR_TIME_ZONE;
     const durationMinutes = parseDurationMinutes(getString(formData, "durationMinutes").trim());
     const startsAt = parseCalendarLocalDateTime(eventDate, startTime, timeZone);
     const visibility = parseVisibility(getString(formData, "visibility"));

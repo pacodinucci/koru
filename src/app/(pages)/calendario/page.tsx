@@ -2,7 +2,7 @@ import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import { GoogleCalendarConnectionCard } from "@/modules/calendar/components/google-calendar-connection-card";
 import { getGoogleCalendarConnectionState } from "@/modules/calendar/server/google-calendar/google-calendar.repository";
 import { PublicCalendarView } from "@/modules/calendar/views/public-calendar-view";
-import { getRangeForView } from "@/modules/dashboard/lib/calendar-range";
+import { calendarTodayCursor, getRangeForView } from "@/modules/dashboard/lib/calendar-range";
 import { listPublicCalendarEventsByRange } from "@/modules/dashboard/server/calendar.repository";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +17,9 @@ type CalendarPageProps = {
 };
 
 function parseDate(value?: string) {
-  if (!value) return new Date();
+  if (!value) return calendarTodayCursor();
   const parsed = new Date(`${value}T12:00:00`);
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  return Number.isNaN(parsed.getTime()) ? calendarTodayCursor() : parsed;
 }
 
 export default async function CalendarPage({ searchParams }: CalendarPageProps) {

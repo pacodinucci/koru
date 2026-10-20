@@ -725,6 +725,8 @@ model FamilyAccountEntry {
   installmentNumber Int?
   paymentId   String?          @unique
   payment     FamilyPayment?   @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  allocationsAsCredit FamilyPaymentAllocation[] @relation("AllocationCredit")
+  allocationsAsCharge FamilyPaymentAllocation[] @relation("AllocationCharge")
   createdById String?
   createdAt   DateTime         @default(now())
 
@@ -732,6 +734,21 @@ model FamilyAccountEntry {
   @@index([eventualChargeItemId])
   @@unique([eventualChargeScheduleId, installmentNumber], map: "EventualChargeSchedule_installment_number_key")
   @@unique([familyId, billingPeriod])
+}
+
+// Explicit credit-to-charge application; ledger entries remain the balance authority.
+model FamilyPaymentAllocation {
+  id            String @id @default(cuid())
+  creditEntryId String
+  creditEntry   FamilyAccountEntry @relation("AllocationCredit", fields: [creditEntryId], references: [id], onDelete: Restrict)
+  chargeEntryId String
+  chargeEntry   FamilyAccountEntry @relation("AllocationCharge", fields: [chargeEntryId], references: [id], onDelete: Restrict)
+  amount        Decimal @db.Decimal(12, 2)
+  createdById   String
+  createdAt     DateTime @default(now())
+
+  @@index([creditEntryId])
+  @@index([chargeEntryId])
 }
 
 model FamilyPayment {

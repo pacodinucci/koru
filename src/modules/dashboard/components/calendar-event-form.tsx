@@ -10,7 +10,6 @@ import type {
 import { CalendarEventImageField } from "@/modules/dashboard/components/calendar-event-image-field";
 import { CalendarEventAttendanceDialog } from "@/modules/dashboard/components/calendar-event-attendance-dialog";
 import {
-  CALENDAR_TIME_ZONES,
   DEFAULT_CALENDAR_TIME_ZONE,
   calendarDateValue,
   calendarTimeValue,
@@ -68,9 +67,8 @@ const visibilityOptions: Array<{ value: CalendarEventVisibility; label: string }
 ];
 
 const saveErrorMessages: Record<string, string> = {
-  invalid_date: "La fecha u hora no existe en la zona horaria seleccionada.",
-  ambiguous_date: "Esa hora ocurre dos veces por el cambio de horario. Elegí otra hora.",
-  invalid_time_zone: "Seleccioná una zona horaria válida.",
+  invalid_date: "La fecha u hora no es válida en Ciudad de México.",
+  ambiguous_date: "Esa hora ocurre dos veces en Ciudad de México por el cambio de horario. Elegí otra hora.",
 };
 
 function roleLabel(role: UserRole) {
@@ -83,7 +81,7 @@ function roleLabel(role: UserRole) {
 }
 
 export function CalendarEventForm({ users, ok, error, event, mode = "create" }: Props) {
-  const timeZone = event?.timeZone ?? DEFAULT_CALENDAR_TIME_ZONE;
+  const timeZone = DEFAULT_CALENDAR_TIME_ZONE;
   const initialVisibility = event?.visibility ?? "MEMBERS";
   const initialAudience =
     initialVisibility === "PUBLIC" ? "ALL" : event?.audienceType ?? "ALL";
@@ -152,19 +150,9 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
         required
       />
-      <label className="block text-sm text-slate-700">
-        Zona horaria del evento
-        <select
-          name="timeZone"
-          defaultValue={timeZone}
-          className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-          required
-        >
-          {CALENDAR_TIME_ZONES.map((zone) => (
-            <option key={zone.value} value={zone.value}>{zone.label}</option>
-          ))}
-        </select>
-      </label>
+      <p className="text-sm text-slate-700">
+        Todos los horarios son de Ciudad de México (México).
+      </p>
       <input
         name="durationMinutes"
         type="number"

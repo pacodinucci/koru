@@ -1,6 +1,6 @@
 export const GOOGLE_CALENDAR_SCOPE =
   "https://www.googleapis.com/auth/calendar.events.owned";
-import { calendarDateValue } from "../../lib/calendar-time-zone";
+import { DEFAULT_CALENDAR_TIME_ZONE, calendarDateValue } from "../../lib/calendar-time-zone";
 
 type KoruCalendarEvent = {
   id: string;
@@ -54,14 +54,14 @@ export function buildGoogleCalendarEventPayload(
 
   if (event.allDay) {
     const exclusiveEnd =
-      calendarDateValue(event.endsAt, event.timeZone) === calendarDateValue(event.startsAt, event.timeZone)
+      calendarDateValue(event.endsAt, DEFAULT_CALENDAR_TIME_ZONE) === calendarDateValue(event.startsAt, DEFAULT_CALENDAR_TIME_ZONE)
         ? addUtcDays(event.startsAt, 1)
         : event.endsAt;
 
     return {
       ...base,
-      start: { date: calendarDateValue(event.startsAt, event.timeZone) },
-      end: { date: calendarDateValue(exclusiveEnd, event.timeZone) },
+      start: { date: calendarDateValue(event.startsAt, DEFAULT_CALENDAR_TIME_ZONE) },
+      end: { date: calendarDateValue(exclusiveEnd, DEFAULT_CALENDAR_TIME_ZONE) },
     };
   }
 
@@ -69,11 +69,11 @@ export function buildGoogleCalendarEventPayload(
     ...base,
     start: {
       dateTime: event.startsAt.toISOString(),
-      timeZone: event.timeZone,
+      timeZone: DEFAULT_CALENDAR_TIME_ZONE,
     },
     end: {
       dateTime: event.endsAt.toISOString(),
-      timeZone: event.timeZone,
+      timeZone: DEFAULT_CALENDAR_TIME_ZONE,
     },
   };
 }

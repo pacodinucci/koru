@@ -8,11 +8,14 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import {
   type CalendarViewMode,
+  calendarTodayCursor,
   getNextCursor,
+  serializeDate,
 } from "@/modules/dashboard/lib/calendar-range";
 
 import { CalendarEventForm } from "@/modules/dashboard/components/calendar-event-form";
 import { ResponsiveEventSheet } from "@/modules/dashboard/components/responsive-event-sheet";
+import { calendarDateValue, calendarTimeValue, calendarTimeZoneLabel, DEFAULT_CALENDAR_TIME_ZONE } from "@/modules/calendar/lib/calendar-time-zone";
 
 type CalendarEventItem = {
   id: string;
@@ -68,13 +71,7 @@ function toDateOnly(date: Date) {
 }
 
 function formatRange(start: Date, end: Date) {
-  return `${start.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString(
-    "es-MX",
-    {
-      hour: "2-digit",
-      minute: "2-digit",
-    },
-  )}`;
+  return `${calendarTimeValue(start, DEFAULT_CALENDAR_TIME_ZONE)} - ${calendarTimeValue(end, DEFAULT_CALENDAR_TIME_ZONE)}`;
 }
 
 function getStartOfWeek(baseDate: Date) {
@@ -120,7 +117,7 @@ function hrefWith(
   editId?: string,
 ) {
   const params = new URLSearchParams();
-  params.set("date", toDateOnly(dateCursor).toISOString().slice(0, 10));
+  params.set("date", serializeDate(dateCursor));
   params.set("view", viewMode);
   if (editId) params.set("edit", editId);
   return `/dashboard/calendar?${params.toString()}`;
@@ -220,7 +217,6 @@ export function DashboardCalendarGrid({
   | "onGoToday"
   | "onSelectEvent"
 >) {
-  const now = new Date();
   const visibleDays = getVisibleDays(dateCursor, viewMode);
   const headerLabel = formatHeaderLabel(dateCursor, viewMode);
   const hours = getHourRows();
@@ -242,7 +238,7 @@ export function DashboardCalendarGrid({
             </button>
           ) : (
             <Link
-              href={hrefWith(new Date(), viewMode)}
+              href={hrefWith(calendarTodayCursor(), viewMode)}
               className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700"
             >
               Hoy
@@ -315,7 +311,7 @@ export function DashboardCalendarGrid({
           ))}
           {visibleDays.map((day) => {
             const dayEvents = events.filter((e) =>
-              isSameDay(new Date(e.startsAt), day),
+              calendarDateValue(new Date(e.startsAt), DEFAULT_CALENDAR_TIME_ZONE) === serializeDate(day),
             );
             return (
               <div
@@ -359,10 +355,7 @@ export function DashboardCalendarGrid({
           }}
         >
           <div className="border-r border-b border-slate-200 p-3 text-xs font-medium text-slate-400">
-            Hora de tu dispositivo · UTC
-            {Intl.DateTimeFormat("en", { timeZoneName: "shortOffset" })
-              .format(now)
-              .replace(/.*GMT/, "")}
+            {calendarTimeZoneLabel(DEFAULT_CALENDAR_TIME_ZONE)}
           </div>
           {visibleDays.map((day, i) => (
             <div
@@ -389,8 +382,8 @@ export function DashboardCalendarGrid({
                 const cellEvents = events.filter((event) => {
                   const startsAt = new Date(event.startsAt);
                   return (
-                    isSameDay(startsAt, day) &&
-                    startsAt.getHours() === Number(hour.split(":")[0])
+                    calendarDateValue(startsAt, DEFAULT_CALENDAR_TIME_ZONE) === serializeDate(day) &&
+                    Number(calendarTimeValue(startsAt, DEFAULT_CALENDAR_TIME_ZONE).split(":")[0]) === Number(hour.split(":")[0])
                   );
                 });
                 return (
@@ -609,7 +602,7 @@ export function DashboardCalendarSidePanel({
           {days.map((day, i) => (
             <span
               key={i}
-              className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs ${isSameDay(day, today) ? "bg-emerald-600 text-white" : "text-slate-800"}`}
+              className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs ${isSameDay(day, calendarTodayCursor(today)) ? "bg-emerald-600 text-white" : "text-slate-800"}`}
             >
               {day.getDate()}
             </span>
@@ -647,6 +640,7 @@ export function DashboardCalendarSidePanel({
                 >
                   <span className="text-slate-600">
                     {new Date(event.startsAt).toLocaleDateString("es-MX", {
+                      timeZone: DEFAULT_CALENDAR_TIME_ZONE,
                       day: "2-digit",
                       month: "2-digit",
                     })}
@@ -678,6 +672,7 @@ export function DashboardCalendarSidePanel({
                 >
                   <span className="text-slate-600">
                     {new Date(event.startsAt).toLocaleDateString("es-MX", {
+                      timeZone: DEFAULT_CALENDAR_TIME_ZONE,
                       day: "2-digit",
                       month: "2-digit",
                     })}
@@ -731,8 +726,8 @@ export function DashboardCalendarUpcomingTable({
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3">Fecha</th>
-              <th className="px-4 py-3">Inicio (tu zona)</th>
-              <th className="px-4 py-3">Fin (tu zona)</th>
+              <th className="px-4 py-3">Inicio (Ciudad de México)</th>
+              <th className="px-4 py-3">Fin (Ciudad de México)</th>
               <th className="px-4 py-3">Evento</th>
               <th className="px-4 py-3">Ubicación</th>
             </tr>
@@ -746,22 +741,17 @@ export function DashboardCalendarUpcomingTable({
                 >
                   <td className="px-4 py-3 text-slate-700">
                     {new Date(event.startsAt).toLocaleDateString("es-MX", {
+                      timeZone: DEFAULT_CALENDAR_TIME_ZONE,
                       day: "2-digit",
                       month: "2-digit",
                       year: "numeric",
                     })}
                   </td>
                   <td className="px-4 py-3 text-slate-700">
-                    {new Date(event.startsAt).toLocaleTimeString("es-MX", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {calendarTimeValue(new Date(event.startsAt), DEFAULT_CALENDAR_TIME_ZONE)}
                   </td>
                   <td className="px-4 py-3 text-slate-700">
-                    {new Date(event.endsAt).toLocaleTimeString("es-MX", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {calendarTimeValue(new Date(event.endsAt), DEFAULT_CALENDAR_TIME_ZONE)}
                   </td>
                   <td className="px-4 py-3 font-semibold text-slate-900">
                     {onSelectEvent ? (

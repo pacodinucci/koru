@@ -16,6 +16,7 @@ import {
   getPublishedPosts,
 } from "@/modules/blog/server/blog.repository";
 import { listUpcomingPublicCalendarEvents } from "@/modules/dashboard/server/calendar.repository";
+import { calendarTimeValue, DEFAULT_CALENDAR_TIME_ZONE } from "@/modules/calendar/lib/calendar-time-zone";
 
 type BlogCalendarEvent = Awaited<
   ReturnType<typeof listUpcomingPublicCalendarEvents>
@@ -47,13 +48,7 @@ function initials(name: string | null) {
 }
 
 function formatEventTime(start: Date, end: Date) {
-  return `${start.toLocaleTimeString("es-AR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })} - ${end.toLocaleTimeString("es-AR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })}`;
+  return `${calendarTimeValue(start, DEFAULT_CALENDAR_TIME_ZONE)} - ${calendarTimeValue(end, DEFAULT_CALENDAR_TIME_ZONE)}`;
 }
 
 function BlogEventsSidebar({ events, isAuthenticated }: { events: BlogCalendarEvent[]; isAuthenticated: boolean }) {
@@ -80,13 +75,13 @@ function BlogEventsSidebar({ events, isAuthenticated }: { events: BlogCalendarEv
             >
               <div className="flex h-full flex-col items-center justify-center border-r border-black/10 px-2 py-3 text-center">
                 <span className="text-[10px] font-medium leading-none text-muted-foreground">
-                  {startsAt.toLocaleDateString("es-AR", { month: "short" }).toUpperCase()}
+                  {startsAt.toLocaleDateString("es-AR", { timeZone: DEFAULT_CALENDAR_TIME_ZONE, month: "short" }).toUpperCase()}
                 </span>
                 <span className="mt-1 text-2xl font-semibold leading-none text-foreground">
-                  {startsAt.getDate()}
+                  {startsAt.toLocaleDateString("es-AR", { timeZone: DEFAULT_CALENDAR_TIME_ZONE, day: "numeric" })}
                 </span>
                 <span className="mt-1 text-[10px] leading-none text-muted-foreground">
-                  {startsAt.getFullYear()}
+                  {startsAt.toLocaleDateString("es-AR", { timeZone: DEFAULT_CALENDAR_TIME_ZONE, year: "numeric" })}
                 </span>
               </div>
 

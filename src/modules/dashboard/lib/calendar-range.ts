@@ -1,7 +1,19 @@
+import {
+  calendarDateValue,
+  DEFAULT_CALENDAR_TIME_ZONE,
+  parseCalendarLocalDateTime,
+} from "@/modules/calendar/lib/calendar-time-zone";
+
 export type CalendarViewMode = "day" | "week" | "month";
 
+// Cursors are civil dates, not instants. Noon keeps local date arithmetic stable.
 export function toDateOnly(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+}
+
+export function calendarTodayCursor(now: Date = new Date()): Date {
+  const [year, month, day] = calendarDateValue(now, DEFAULT_CALENDAR_TIME_ZONE).split("-").map(Number);
+  return new Date(year, month - 1, day, 12);
 }
 
 export function addDays(date: Date, days: number) {
@@ -21,21 +33,24 @@ export function getStartOfWeek(baseDate: Date) {
 export function getRangeForView(dateCursor: Date, viewMode: CalendarViewMode) {
   const cursor = toDateOnly(dateCursor);
 
+  let start: Date;
+  let end: Date;
   if (viewMode === "day") {
-    const start = cursor;
-    const end = addDays(start, 1);
-    return { start, end };
+    start = cursor;
+    end = addDays(start, 1);
+  } else if (viewMode === "week") {
+    start = getStartOfWeek(cursor);
+    end = addDays(start, 7);
+  } else {
+    start = new Date(cursor.getFullYear(), cursor.getMonth(), 1, 12);
+    end = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1, 12);
   }
 
-  if (viewMode === "week") {
-    const start = getStartOfWeek(cursor);
-    const end = addDays(start, 7);
-    return { start, end };
-  }
-
-  const start = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
-  const end = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
-  return { start, end };
+  // Only query boundaries are instants: interpret each civil midnight in Mexico.
+  return {
+    start: parseCalendarLocalDateTime(serializeDate(start), "00:00", DEFAULT_CALENDAR_TIME_ZONE),
+    end: parseCalendarLocalDateTime(serializeDate(end), "00:00", DEFAULT_CALENDAR_TIME_ZONE),
+  };
 }
 
 export function getNextCursor(
@@ -48,5 +63,5 @@ export function getNextCursor(
 }
 
 export function serializeDate(date: Date) {
-  return toDateOnly(date).toISOString().slice(0, 10);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }

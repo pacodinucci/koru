@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { requirePermission } from "@/modules/auth/server/auth-guards";
+import { DEFAULT_CALENDAR_TIME_ZONE } from "@/modules/calendar/lib/calendar-time-zone";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { getCalendarEventAttendanceForAdmin } from "@/modules/dashboard/server/calendar.repository";
@@ -12,6 +13,7 @@ type Props = {
 
 function formatDateTime(date: Date) {
   return date.toLocaleDateString("es-MX", {
+    timeZone: DEFAULT_CALENDAR_TIME_ZONE,
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -20,6 +22,7 @@ function formatDateTime(date: Date) {
 
 function formatTime(date: Date) {
   return date.toLocaleTimeString("es-MX", {
+    timeZone: DEFAULT_CALENDAR_TIME_ZONE,
     hour: "2-digit",
     minute: "2-digit",
   });

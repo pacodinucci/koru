@@ -12,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 import { getFamilyDetailForAdmin } from "@/modules/families/server/families.repository";
 import { MAX_EVENTUAL_INSTALLMENTS, splitInstallmentAmounts } from "@/modules/families/lib/eventual-installments";
 import { calculatePlanDiscount } from "@/modules/families/lib/plan-discounts";
+import { buildAllocationSummary } from "@/modules/families/lib/payment-allocation";
 import { runInvitationDeliveryWorker } from "@/modules/mailing/server/invitation-delivery-worker.service";
 import { invitationErrorState, type UserInvitationActionState } from "@/modules/users/lib/user-invitation-feedback";
 import { createUserInvitation } from "@/modules/users/server/users.repository";
@@ -273,6 +274,7 @@ export async function getFamilyDetailAction(familyId: string) {
     id: family.id,
     name: family.name,
     balance: balance.toFixed(2),
+    ...buildAllocationSummary(family.accountEntries),
     eventualChargeItems: eventualChargeItems.map((item) => ({
       id: item.id,
       name: item.name,

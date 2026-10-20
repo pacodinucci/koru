@@ -11,6 +11,7 @@ import type {
 
 import {
   type CalendarViewMode,
+  calendarTodayCursor,
   getNextCursor,
   getRangeForView,
   serializeDate,
@@ -90,7 +91,7 @@ export function DashboardCalendarClientProvider({
   children,
 }: {
   initialEvents: CalendarEventItem[];
-  initialDateCursor: Date;
+  initialDateCursor: Date | string;
   initialViewMode: CalendarViewMode;
   initialSelectedEventId?: string;
   initialUpcomingEvents: CalendarEventItem[];
@@ -101,7 +102,11 @@ export function DashboardCalendarClientProvider({
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const [dateCursor, setDateCursor] = useState(toDateOnly(initialDateCursor));
+  const [dateCursor, setDateCursor] = useState(() => {
+    if (typeof initialDateCursor !== "string") return toDateOnly(initialDateCursor);
+    const [year, month, day] = initialDateCursor.split("-").map(Number);
+    return new Date(year, month - 1, day, 12);
+  });
   const [viewMode, setViewMode] = useState<CalendarViewMode>(initialViewMode);
   const [selectedEventId, setSelectedEventId] = useState(initialSelectedEventId);
   const [isUpcomingListOpen, setIsUpcomingListOpen] = useState(false);
@@ -231,7 +236,7 @@ export function DashboardCalendarGridClient() {
       selectedEventId={selectedEventId}
       onChangeView={(nextView) => navigate(dateCursor, nextView)}
       onMoveCursor={(direction) => navigate(getNextCursor(dateCursor, viewMode, direction), viewMode)}
-      onGoToday={() => navigate(new Date(), viewMode)}
+      onGoToday={() => navigate(calendarTodayCursor(), viewMode)}
       onSelectEvent={selectEvent}
     />
   );

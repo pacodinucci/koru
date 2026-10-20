@@ -2,25 +2,20 @@ export const DEFAULT_CALENDAR_TIME_ZONE = "America/Mexico_City";
 
 export const CALENDAR_TIME_ZONES = [
   { value: DEFAULT_CALENDAR_TIME_ZONE, label: "Ciudad de México (México)" },
-  { value: "America/Argentina/Buenos_Aires", label: "Buenos Aires (Argentina)" },
-  { value: "America/Bogota", label: "Bogotá (Colombia)" },
-  { value: "America/Santiago", label: "Santiago (Chile)" },
-  { value: "America/New_York", label: "Nueva York (EE. UU.)" },
-  { value: "America/Los_Angeles", label: "Los Ángeles (EE. UU.)" },
-  { value: "Europe/Madrid", label: "Madrid (España)" },
 ] as const;
 
 export function isCalendarTimeZone(value: string) {
   return CALENDAR_TIME_ZONES.some((zone) => zone.value === value);
 }
 
-export function calendarTimeZoneLabel(value: string) {
-  return CALENDAR_TIME_ZONES.find((zone) => zone.value === value)?.label ?? value;
+// Legacy zone arguments remain accepted, but never override Koru's fixed policy.
+export function calendarTimeZoneLabel(_timeZone?: string) {
+  return CALENDAR_TIME_ZONES[0].label;
 }
 
-function dateTimeParts(date: Date, timeZone: string) {
+function dateTimeParts(date: Date) {
   const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone,
+    timeZone: DEFAULT_CALENDAR_TIME_ZONE,
     hourCycle: "h23",
     year: "numeric",
     month: "2-digit",
@@ -40,18 +35,17 @@ function dateTimeParts(date: Date, timeZone: string) {
   };
 }
 
-export function calendarDateValue(date: Date, timeZone: string) {
-  const { year, month, day } = dateTimeParts(date, timeZone);
+export function calendarDateValue(date: Date, _timeZone?: string) {
+  const { year, month, day } = dateTimeParts(date);
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-export function calendarTimeValue(date: Date, timeZone: string) {
-  const { hour, minute } = dateTimeParts(date, timeZone);
+export function calendarTimeValue(date: Date, _timeZone?: string) {
+  const { hour, minute } = dateTimeParts(date);
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
-export function parseCalendarLocalDateTime(dateValue: string, timeValue: string, timeZone: string) {
-  if (!isCalendarTimeZone(timeZone)) throw new Error("invalid_time_zone");
+export function parseCalendarLocalDateTime(dateValue: string, timeValue: string, _timeZone?: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue) || !/^\d{2}:\d{2}$/.test(timeValue)) {
     throw new Error("invalid_date");
   }
@@ -69,14 +63,14 @@ export function parseCalendarLocalDateTime(dateValue: string, timeValue: string,
   const offsets = new Set<number>();
   for (const delta of [-36, -12, 0, 12, 36]) {
     const probe = wallClockUtc + delta * 60 * 60 * 1000;
-    const parts = dateTimeParts(new Date(probe), timeZone);
+    const parts = dateTimeParts(new Date(probe));
     offsets.add(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second) - probe);
   }
   const matches = [...offsets]
     .map((offset) => new Date(wallClockUtc - offset))
     .filter((candidate) =>
-      calendarDateValue(candidate, timeZone) === dateValue &&
-      calendarTimeValue(candidate, timeZone) === timeValue,
+      calendarDateValue(candidate) === dateValue &&
+      calendarTimeValue(candidate) === timeValue,
     );
   if (matches.length !== 1) throw new Error(matches.length ? "ambiguous_date" : "invalid_date");
   return matches[0];

@@ -49,7 +49,7 @@ test("los eventos de día completo usan fin exclusivo", () => {
   assert.equal(payload.start.dateTime, undefined);
 });
 
-test("Google Calendar recibe la zona propia del evento", () => {
+test("Google Calendar uses Mexico for legacy events without changing their instants", () => {
   const payload = buildGoogleCalendarEventPayload(
     {
       id: "event-3",
@@ -57,7 +57,7 @@ test("Google Calendar recibe la zona propia del evento", () => {
       description: null,
       startsAt: new Date("2026-10-05T18:30:00.000Z"),
       endsAt: new Date("2026-10-05T19:30:00.000Z"),
-      timeZone: "America/Mexico_City",
+      timeZone: "America/Argentina/Buenos_Aires",
       allDay: false,
       location: null,
     },
@@ -65,5 +65,18 @@ test("Google Calendar recibe la zona propia del evento", () => {
   );
 
   assert.equal(payload.start.dateTime, "2026-10-05T18:30:00.000Z");
-  assert.equal(payload.start.timeZone, "America/Mexico_City");
+  assert.equal(payload.start.timeZone, DEFAULT_CALENDAR_TIME_ZONE);
+  assert.equal(payload.end.dateTime, "2026-10-05T19:30:00.000Z");
+  assert.equal(payload.end.timeZone, DEFAULT_CALENDAR_TIME_ZONE);
+});
+
+test("all-day legacy events use Mexico dates and an exclusive end", () => {
+  const payload = buildGoogleCalendarEventPayload({
+    id: "legacy-all-day", title: "Jornada", description: null,
+    startsAt: new Date("2026-10-06T04:00:00.000Z"),
+    endsAt: new Date("2026-10-06T05:00:00.000Z"),
+    timeZone: "Europe/Madrid", allDay: true, location: null,
+  }, "https://koru.example");
+  assert.deepEqual(payload.start, { date: "2026-10-05" });
+  assert.deepEqual(payload.end, { date: "2026-10-06" });
 });
