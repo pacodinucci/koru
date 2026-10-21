@@ -7,7 +7,8 @@ import { useState, useTransition } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { KoruIdCard } from "@/modules/family-dashboard/components/koru-id-card";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -337,25 +338,17 @@ export function FamilyStudentOnboarding({
             </p>
           )}
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="flex flex-wrap items-start gap-5">
           {students.map((student) => (
-            <Card key={student.id} size="sm">
-              <CardHeader>
-                <CardTitle>{student.firstName} {student.lastName}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Grupo</span>
-                  <span>{student.group.name}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Ficha</span>
-                  <Badge variant={student.recordStatus === "NEEDS_CHANGES" ? "destructive" : "secondary"}>
-                    {statusLabels[student.recordStatus]}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
+            <div key={student.id} className="min-w-0 w-full max-w-[360px] space-y-2">
+              <KoruIdCard studentId={student.id} firstName={student.firstName} lastName={student.lastName} groupName={student.group.name} />
+              <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-sm">
+                <span className="text-muted-foreground">Ficha</span>
+                <Badge variant={student.recordStatus === "NEEDS_CHANGES" ? "destructive" : "secondary"}>
+                  {statusLabels[student.recordStatus]}
+                </Badge>
+              </div>
+            </div>
           ))}
         </div>
         {dashboardContent}

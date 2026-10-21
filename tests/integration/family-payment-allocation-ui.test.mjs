@@ -48,7 +48,7 @@ function loader(overrides = {}, globals = {}) {
       ...globals, FormData: globals.FormData ?? FormData, module: mod, exports: mod.exports,
       require(id) {
         if (Object.hasOwn(overrides, id)) return overrides[id];
-        if (["react", "react/jsx-runtime"].includes(id)) return require(id);
+        if (["react", "react/jsx-runtime", "lucide-react"].includes(id)) return require(id);
         if (id.startsWith(base)) return load(id.slice(base.length));
         if (id.startsWith("./family-")) return load(id.slice(2));
         if (id === "next/navigation") return { useRouter: () => ({ refresh() {} }) };
@@ -59,6 +59,12 @@ function loader(overrides = {}, globals = {}) {
             void nativeButton;
             return render ? React.cloneElement(render, props, children) : React.createElement("button", props, children);
           },
+        };
+        if (id.endsWith("ui/dropdown-menu")) return {
+          DropdownMenu: ({ children }) => React.createElement("div", { "data-menu": true }, children),
+          DropdownMenuTrigger: ({ render, children, ...props }) => React.cloneElement(render, props, children),
+          DropdownMenuContent: ({ children }) => React.createElement("div", { role: "menu" }, children),
+          DropdownMenuItem: ({ children, ...props }) => React.createElement("button", { ...props, role: "menuitem" }, children),
         };
         if (id.endsWith("ui/responsive-dialog")) return new Proxy({}, {
           get: (_, name) => name === "ResponsiveDialog"
@@ -80,7 +86,7 @@ const fields = () => load("family-payment-allocation-fields");
 
 // Deterministic React callback/hook harness, NOT a browser or a DOM simulation.
 // Primitives are stubbed; actual family components and their callbacks are executed.
-function harness({ credits = [], canManagePayments = true, canWaive = true, result, chargeList = charges, entries = [], confirmVoid = true, onFinancialChange } = {}) {
+function harness({ credits = [], canManagePayments = true, canWaive = true, balance = "180.00", pending = false, result, chargeList = charges, entries = [], futureCharges = [], confirmVoid = true, onFinancialChange } = {}) {
   const states = new Map();
   let current;
   let cursor;
@@ -105,7 +111,7 @@ function harness({ credits = [], canManagePayments = true, canWaive = true, resu
       if (!(i in slots)) slots[i] = { current: initial };
       return slots[i];
     },
-    useTransition: () => [false, (fn) => transitions.push(fn())],
+    useTransition: () => [pending, (fn) => transitions.push(fn())],
   };
   class Form {
     constructor(form) { this.data = new Map(Object.entries(form?.values ?? {})); }
@@ -157,13 +163,14 @@ function harness({ credits = [], canManagePayments = true, canWaive = true, resu
     render() {
       const active = new Set();
       tree = expand(React.createElement(component, {
-        family: { ...family(credits), pendingCharges: chargeList, entries },
+        family: { ...family(credits), balance, pendingCharges: chargeList, entries, futureCharges },
         eventualChargeItems: [], canManagePayments, canWaive, onFinancialChange,
       }), "root", active);
       for (const key of states.keys()) if (!active.has(key)) states.delete(key);
       return api;
     },
     update(nextCredits, nextCharges) { credits = nextCredits; chargeList = nextCharges; return api.render(); },
+    setPending(value) { pending = value; return api.render(); },
     nodes: () => nodes(tree),
     find: (fn) => nodes(tree).find(fn),
     text: () => text(tree),
@@ -246,15 +253,27 @@ test("SSR exposes required date immediately beside Registrar pago and preserves 
   }));
   assert.match(html, /<input(?=[^>]*name="paidAt")(?=[^>]*required="")[^>]*\/?>.*?<\/label><button[^>]*>Registrar pago/s);
   assert.match(html, /type="date"/);
+  assert.match(html, /^<section[^>]*class="[^"]*bg-white/);
+  assert.ok(html.includes("Ficha financiera") && html.includes("Cargos y movimientos") && html.includes("<table"), "the same white financial section contains payment controls and the table");
   for (const label of ["Agregar cargo", "Condonar saldo", "Todavía no hay movimientos registrados", "Referencia", "Medio"]) {
     assert.ok(html.includes(label));
   }
 });
 
-test("charge form opens only from the button left of balance, uses Montserrat and cancels without writes", () => {
+test("charge form opens from the financial menu right of balance, uses Montserrat and cancels without writes", () => {
   const ui = harness();
   assert.equal(ui.button("Registrar cargo"), undefined);
-  assert.ok(ui.text().indexOf("Agregar cargo") < ui.text().indexOf("Saldo actual"));
+  const { FamilyFinancialCard } = load("family-financial-card");
+  const html = renderToStaticMarkup(React.createElement(FamilyFinancialCard, {
+    family: family(), eventualChargeItems: [], canManagePayments: true, canWaive: true,
+  }));
+  assert.match(html, /Saldo actual.*<button[^>]*aria-label="Opciones de la ficha financiera"[^>]*>.*lucide-ellipsis-vertical/s);
+  assert.doesNotMatch(html, /<button[^>]*>Acciones/, "the menu trigger must not display the word Acciones");
+  const menu = ui.find((n) => n.props.role === "menu");
+  assert.ok(menu);
+  assert.equal(ui.button("Agregar cargo").props.role, "menuitem");
+  assert.equal(ui.button("Condonar saldo").props.role, "menuitem");
+  assert.equal(ui.find((n) => n.type === "textarea" && n.props.name === "reason"), undefined);
   ui.button("Agregar cargo").props.onClick();
   ui.render();
   assert.ok(ui.find((n) => n.type === "dialog"));
@@ -539,15 +558,16 @@ test("existing charge, waiver, void and receipt behaviors remain available", asy
   const ui = harness({ entries: [paymentEntry] });
   ui.button("Agregar cargo").props.onClick();
   ui.render();
-  const forms = ui.nodes().filter((n) => n.type === "form");
   const originalPayloads = [
     { familyId: "family", amount: "25", description: "Extra" },
     { familyId: "family", amount: "10", reason: "Motivo" },
     { paymentId: "payment", reason: "Error" },
   ];
-  for (let i = 0; i < originalPayloads.length; i++) {
-    await ui.submit(forms[i + 1], { values: originalPayloads[i], reportValidity: () => true, reset() {} });
-  }
+  await ui.submit(ui.find((n) => n.props["aria-label"] === "Registrar cargo"), { values: originalPayloads[0], reportValidity: () => true, reset() {} });
+  ui.button("Condonar saldo").props.onClick();
+  ui.render();
+  await ui.submit(ui.find((n) => n.props["aria-label"] === "Condonar saldo" && n.type === "form"), { values: originalPayloads[1], reportValidity: () => true, reset() {} });
+  await ui.submit(ui.nodes().filter((n) => n.type === "form").at(-1), { values: originalPayloads[2], reportValidity: () => true, reset() {} });
   assert.deepEqual(ui.calls, originalPayloads.map((data, i) => ({ name: ["charge", "waive", "void"][i], data })));
   assert.equal(ui.refreshes(), 3);
   const cancelled = harness({ entries: [paymentEntry], confirmVoid: false });
@@ -582,4 +602,113 @@ test("financial mutations notify client-owned detail loaders after payment and r
   legacy.choose("a", "20");
   await legacy.submit(dialogForm(legacy));
   assert.equal(reloads, 2);
+});
+
+
+test("waiver opens only in its responsive dialog and cancel never writes", () => {
+  const ui = harness();
+  assert.equal(ui.find((n) => n.type === "form" && n.props["aria-label"] === "Condonar saldo"), undefined);
+  ui.button("Condonar saldo").props.onClick();
+  ui.render();
+  assert.ok(ui.find((n) => n.type === "dialog"));
+  assert.ok(ui.find((n) => n.type === "textarea" && n.props.name === "reason" && n.props.required && n.props.minLength === 2 && n.props.maxLength === 300));
+  assert.ok(ui.find((n) => n.type === "input" && n.props.name === "amount" && n.props.max === "180.00" && n.props.min === "0.01"));
+  assert.equal(ui.nodes().filter((n) => n.props.className?.includes("[font-family:var(--font-montserrat)]")).length, 2);
+  ui.setPending(true);
+  assert.equal(ui.button("Cancelar").props.disabled, true);
+  ui.button("Cancelar").props.onClick();
+  ui.find((n) => n.type === "dialog").props.onOpenChange(false);
+  ui.render();
+  assert.ok(ui.find((n) => n.type === "dialog"));
+  ui.setPending(false);
+  ui.button("Cancelar").props.onClick();
+  ui.render();
+  assert.equal(ui.find((n) => n.type === "dialog"), undefined);
+  assert.deepEqual(ui.calls, []);
+  assert.equal(ui.refreshes(), 0);
+  for (const options of [{ canWaive: false }, { balance: "0" }, { balance: "-10" }]) {
+    assert.equal(harness(options).button("Condonar saldo"), undefined);
+  }
+  const waiverOnly = harness({ canManagePayments: false });
+  assert.equal(waiverOnly.button("Agregar cargo"), undefined);
+  waiverOnly.button("Condonar saldo").props.onClick();
+  waiverOnly.render();
+  assert.ok(waiverOnly.find((n) => n.type === "dialog"));
+  assert.equal(harness({ canManagePayments: false, canWaive: false }).find((n) => n.props["aria-label"] === "Opciones de la ficha financiera"), undefined);
+});
+
+test("waiver dialog preserves the payload, keeps failures open and refreshes only on success", async () => {
+  for (const mode of ["success", "server", "transport"]) {
+    let reloads = 0;
+    const ui = harness({ onFinancialChange: () => reloads++, result: () => {
+      if (mode === "transport") throw new Error("offline");
+      return { ok: mode === "success", message: mode === "success" ? "Condonación guardada" : "Revisá el saldo" };
+    } });
+    ui.button("Condonar saldo").props.onClick();
+    ui.render();
+    const form = ui.find((n) => n.type === "form" && n.props["aria-label"] === "Condonar saldo");
+    const values = { familyId: "family", amount: "10.00", reason: "Acuerdo familiar" };
+    await ui.submit(form, { ...ui.form, values });
+    assert.deepEqual(ui.calls, [{ name: "waive", data: values }]);
+    assert.equal(Boolean(ui.find((n) => n.type === "dialog")), mode !== "success");
+    assert.equal(ui.refreshes(), mode === "success" ? 1 : 0);
+    assert.equal(ui.resets(), mode === "success" ? 1 : 0);
+    assert.equal(reloads, mode === "success" ? 1 : 0);
+    if (mode !== "success") assert.ok(ui.find((n) => n.props.role === "alert"));
+    else assert.ok(ui.text().includes("Condonación guardada"));
+  }
+});
+
+
+test("charge table defaults to all and filters pending including partial, future and paid without accounting writes", () => {
+  const entry = (id, description, amount = "100.00") => ({ id, type: "EVENTUAL_CHARGE", amount, grossAmount: null, discountAmount: null, description, occurredAt: "2026-10-15T12:00:00Z", payment: null });
+  const entries = [entry("a", "Cargo pendiente"), entry("b", "Cargo parcial", "80.00"), entry("paid", "Cargo saldado", "20.00"), entry("zero", "Sin costo", "0.00"), paymentEntry];
+  const futureCharges = [{ ...entry("future:s:2", "Cuota noviembre", "33.34"), occurredAt: "2026-11-01T00:00:00Z", isFuture: true }];
+  const chargeList = [charges[0], { ...charges[1], outstandingAmount: "30.00" }];
+  const before = JSON.stringify({ entries, futureCharges, chargeList });
+  const ui = harness({ entries, futureCharges, chargeList });
+  const filter = () => ui.find((n) => n.type === "select" && n.props["aria-label"] === "Filtrar cargos");
+  assert.ok(filter());
+  assert.equal(filter().props.value, "all");
+  for (const label of ["Cargo pendiente", "Cargo parcial", "Cargo saldado", "Sin costo", "Cuota noviembre", "Pago anterior", "Recibo #8"]) assert.ok(ui.text().includes(label), label);
+  assert.ok(ui.text().includes("Futuro"));
+  assert.ok(ui.text().includes("Saldado"));
+  assert.ok(ui.text().includes("no se suman al saldo actual"));
+  const futureRow = ui.find((n) => n.type === "tr" && JSON.stringify(n.props.children).includes("Cuota noviembre"));
+  assert.ok(futureRow);
+  assert.ok(!JSON.stringify(futureRow).includes("31/10"), "UTC period must not drift to previous month in Argentina");
+  filter().props.onChange({ target: { value: "pending" } });
+  ui.render();
+  assert.ok(ui.text().includes("Cargo pendiente"));
+  assert.ok(ui.text().includes("Cargo parcial"));
+  for (const label of ["Cargo saldado", "Sin costo", "Cuota noviembre", "Pago anterior"]) assert.ok(!ui.text().includes(label), label);
+  assert.match(ui.text(), /Pendiente:.*30,00/);
+  filter().props.onChange({ target: { value: "future" } });
+  ui.render();
+  assert.ok(ui.text().includes("Cuota noviembre"));
+  for (const label of ["Cargo pendiente", "Cargo parcial", "Cargo saldado", "Pago anterior", "Recibo #8"]) assert.ok(!ui.text().includes(label), label);
+  filter().props.onChange({ target: { value: "all" } });
+  ui.render();
+  assert.ok(ui.text().includes("Cargo saldado"));
+  assert.ok(ui.text().includes("Recibo #8"));
+  assert.deepEqual(ui.calls, []);
+  assert.equal(ui.refreshes(), 0);
+  assert.equal(JSON.stringify({ entries, futureCharges, chargeList }), before);
+});
+
+test("charge filter has specific empty states and future rows never become payable allocation choices", async () => {
+  const ui = harness({ chargeList: [], futureCharges: [{ id: "future:s:1", type: "EVENTUAL_CHARGE", amount: "20.00", grossAmount: null, discountAmount: null, description: "Solo futuro", occurredAt: "2027-01-01T00:00:00Z", isFuture: true, payment: null }] });
+  const filter = () => ui.find((n) => n.type === "select" && n.props["aria-label"] === "Filtrar cargos");
+  assert.ok(filter());
+  filter().props.onChange({ target: { value: "pending" } });
+  ui.render();
+  assert.ok(ui.text().includes("No hay cargos pendientes."));
+  await ui.submit(paymentForm(ui));
+  assert.equal(ui.nodes().filter((n) => n.type === "input" && n.props.type === "checkbox").length, 0);
+  assert.equal(ui.button("Confirmar pago").props.disabled, true);
+  assert.deepEqual(ui.calls, []);
+  const empty = harness({ chargeList: [] });
+  empty.find((n) => n.props["aria-label"] === "Filtrar cargos").props.onChange({ target: { value: "future" } });
+  empty.render();
+  assert.ok(empty.text().includes("No hay cargos futuros."));
 });

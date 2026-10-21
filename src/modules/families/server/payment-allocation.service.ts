@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { lockFamilyBilling } from "./eventual-installments.core.ts";
 
 import {
   AllocationInputError, argentinaPaymentDate, buildAllocationSummary, centsToMoney,
@@ -27,6 +28,7 @@ function parseInput<T>(parse: () => T, message: string): T {
 }
 
 async function loadAccount(tx: Prisma.TransactionClient, familyId: string) {
+  await lockFamilyBilling(tx, familyId);
   const family = await tx.family.findUnique({ where: { id: familyId }, select: { id: true } });
   if (!family) reject("No encontramos la familia.");
   const entries = await tx.familyAccountEntry.findMany({
@@ -50,13 +52,14 @@ async function appendAllocations(tx: Prisma.TransactionClient, creditEntryId: st
 }
 
 // Dependency injection keeps the financial entry points testable without a live database.
-// PostgreSQL serializable predicates cover all family reads, including phantom credits.
+// The shared family lock coordinates schedule edits/generation with allocations;
+// serializable predicates also cover stale snapshots and phantom credits.
 // Never retry blindly: the operator must review the refreshed debt before trying again.
 export function createFamilyPaymentService(db: TransactionDatabase) {
   async function transaction(work: (tx: Prisma.TransactionClient) => Promise<Result>): Promise<Result> {
     try { return await db.$transaction(work, { isolationLevel: "Serializable" }); } catch (error) {
       if (error instanceof AllocationInputError) return { ok: false, message: error.message };
-      if (error && typeof error === "object" && "code" in error && error.code === "P2034") return { ok: false, message: conflictMessage };
+      if (error && typeof error === "object" && "code" in error && (error.code === "P2034" || error.code === "P2003")) return { ok: false, message: conflictMessage };
       throw error;
     }
   }
@@ -112,6 +115,7 @@ export function createFamilyPaymentService(db: TransactionDatabase) {
         if (!hasId(input.paymentId) || !reasonIsValid(input.reason)) reject("Indicá el motivo de la anulación.");
         const payment = await tx.familyPayment.findUnique({ where: { id: input.paymentId } });
         if (!payment) reject("No encontramos el pago.");
+        await lockFamilyBilling(tx, payment.familyId);
         if (payment.status !== "VOIDED") {
           await tx.familyPayment.update({ where: { id: payment.id }, data: { status: "VOIDED", voidedAt: new Date(), voidReason: input.reason.trim() } });
           await tx.paymentReceipt.updateMany({ where: { paymentId: payment.id }, data: { status: "VOIDED" } });

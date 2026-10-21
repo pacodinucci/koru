@@ -38,7 +38,7 @@ export default async function FamilyStudentRecordPage() {
           ) : students.map((student) => {
             const guardian = student.guardians[0];
             return (
-              <Card key={student.id}>
+              <Card key={student.id} id={`alumno-${student.id}`} className="scroll-mt-24">
                 <CardHeader className="flex-row items-center justify-between gap-3">
                   <CardTitle>{student.firstName} {student.lastName}</CardTitle>
                   <Badge variant="secondary">{statusLabels[student.recordStatus]}</Badge>

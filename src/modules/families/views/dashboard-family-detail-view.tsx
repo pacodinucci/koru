@@ -1,25 +1,32 @@
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FamilyAdminActionsMenu } from "@/modules/families/components/family-admin-actions-menu";
-import { FamilyBillingPreview } from "@/modules/families/components/family-billing-preview";
 import { FamilyFinancialCard } from "@/modules/families/components/family-financial-card";
 import { FamilyResponsiblesList } from "@/modules/families/components/family-responsibles-list";
 import { buildFamilyResponsibles } from "@/modules/families/lib/family-responsibles";
-import { annualPlanInstallment } from "@/modules/families/lib/annual-plan";
+import { StudentRubricAssignmentForm } from "@/modules/families/components/student-rubric-assignment-form";
+import { StudentRubricAssignmentEditor } from "@/modules/families/components/student-rubric-assignment-editor";
 import { buildAllocationSummary } from "@/modules/families/lib/payment-allocation";
-import { assignPlanToStudentAction } from "@/modules/families/server/families.actions";
+import { projectFutureFamilyCharges } from "@/modules/families/lib/family-charge-projections";
+import { getBillingPeriod } from "@/modules/families/lib/monthly-billing";
 import { getFamilyFinancialRecord } from "@/modules/families/server/family-financial.repository";
-import { listPlansForAdmin } from "@/modules/families/server/families.repository";
+import { listBillingRubricsForAdmin, listStudentRubricAssignments } from "@/modules/families/server/rubrics.repository";
 
 function currency(value: string | number) {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(Number(value));
 }
 
 export async function DashboardFamilyDetailView({ familyId, canManageFamily, canManagePayments, canWaive }: { familyId: string; canManageFamily: boolean; canManagePayments: boolean; canWaive: boolean }) {
-  const [family, plans] = await Promise.all([getFamilyFinancialRecord(familyId).catch(() => null), listPlansForAdmin()]);
+  const [family, rubrics, assignments] = await Promise.all([
+    getFamilyFinancialRecord(familyId).catch(() => null),
+    listBillingRubricsForAdmin(),
+    listStudentRubricAssignments(familyId),
+  ]);
+  const rubricOptions = rubrics.map((rubric) => ({ id: rubric.id, name: rubric.name, amount: rubric.amount.toString(), isActive: rubric.isActive }));
   if (!family) notFound();
   const balance = family.accountEntries.reduce((total, entry) => total + Number(entry.amount), 0);
   const financialFamily = {
@@ -27,7 +34,10 @@ export async function DashboardFamilyDetailView({ familyId, canManageFamily, can
     name: family.name,
     balance: balance.toFixed(2),
     ...buildAllocationSummary(family.accountEntries),
-    eventualChargeItems: Array.from(new Map(family.students.flatMap((student) => student.plan?.eventualChargeItems ?? []).map((item) => [item.id, { id: item.id, name: item.name, suggestedAmount: item.suggestedAmount.toString(), discountPercent: item.discountPercent.toString(), installmentCount: item.installmentCount, startMonth: item.startMonth }])).values()),
+    futureCharges: projectFutureFamilyCharges(family.eventualChargeSchedules, getBillingPeriod()),
+    // Rubrics are student assignments, not legacy PlanEventualChargeItem IDs.
+    // An empty list keeps the financial card's manual free-charge flow available.
+    eventualChargeItems: [],
     entries: family.accountEntries.map((entry) => ({
       id: entry.id, type: entry.type, amount: entry.amount.toString(), grossAmount: entry.grossAmount?.toString() ?? null, discountAmount: entry.discountAmount?.toString() ?? null, description: entry.description, occurredAt: entry.occurredAt.toISOString(),
       payment: entry.payment ? { id: entry.payment.id, method: entry.payment.method, reference: entry.payment.reference, status: entry.payment.status, receipt: entry.payment.receipt ? { id: entry.payment.receipt.id, status: entry.payment.receipt.status, pdfUrl: entry.payment.receipt.pdfUrl, number: entry.payment.receipt.number } : null } : null,
@@ -47,15 +57,53 @@ export async function DashboardFamilyDetailView({ familyId, canManageFamily, can
 
   return <div className="flex w-full flex-col gap-5">
     <div className="flex flex-wrap items-start justify-between gap-3">
-      <div><Button variant="outline" nativeButton={false} render={<Link href="/dashboard/families" />}>Volver a Familias</Button><h1 className="mt-4 font-[family-name:var(--font-montserrat)] text-2xl font-semibold text-slate-900">{family.name}</h1><p className="mt-1 text-sm text-slate-600">Ficha integral de la familia.</p></div>
+      <div><Button nativeButton={false} render={<Link href="/dashboard/families" />} variant="ghost" size="sm"><ArrowLeft /> Volver a familias</Button><h1 className="mt-4 font-[family-name:var(--font-montserrat)] text-2xl font-semibold text-slate-900">{family.name}</h1><p className="mt-1 text-sm text-slate-600">Ficha integral de la familia.</p></div>
       {canManageFamily ? <FamilyAdminActionsMenu familyId={family.id} familyName={family.name} /> : null}
     </div>
     <div className="grid gap-4 lg:grid-cols-2">
       <Card><CardHeader><CardTitle>Usuarios</CardTitle></CardHeader><CardContent className="space-y-2">{family.users.length ? family.users.map((user) => <div key={user.id} className="rounded-lg border border-slate-200 p-3"><p className="font-medium">{user.name || "Sin nombre"}</p><p className="text-sm text-slate-600">{user.email}</p></div>) : <p className="text-sm text-slate-600">Todavía no hay usuarios vinculados.</p>}</CardContent></Card>
       <Card><CardHeader><CardTitle>Responsables</CardTitle></CardHeader><CardContent><FamilyResponsiblesList responsibles={responsibles} /></CardContent></Card>
     </div>
-    <Card><CardHeader><CardTitle>Hij@s</CardTitle></CardHeader><CardContent className="space-y-2">{family.students.length ? family.students.map((student) => <div key={student.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 p-3"><div><p className="font-medium">{student.lastName}, {student.firstName}</p><p className="text-sm text-slate-600">{student.group.name}</p></div><form action={assignPlanToStudentAction} className="flex flex-wrap items-end gap-2"><input type="hidden" name="familyId" value={family.id} /><input type="hidden" name="studentId" value={student.id} /><label className="grid gap-1 text-sm font-medium text-slate-700">Plan asignado<select name="planId" defaultValue={student.planId ?? ""} className="h-9 min-w-56 rounded-md border border-input bg-background px-3 text-sm" required><option value="" disabled>Seleccionar plan</option>{plans.filter((plan) => plan.isActive || plan.id === student.planId).map((plan) => <option key={plan.id} value={plan.id}>{plan.name} · {currency(annualPlanInstallment(plan.annualFee.toString(), plan.discountPercent.toString(), plan.installmentCount).netAmount)}{plan.discountPercent.isZero() ? "" : ` (${plan.discountPercent}% desc.)`}</option>)}</select></label><Button type="submit">Guardar plan</Button></form></div>) : <p className="text-sm text-slate-600">Todavía no hay hij@s registrados.</p>}</CardContent></Card>
-    {canManagePayments ? <FamilyBillingPreview familyId={family.id} /> : null}
+    <Card>
+      <CardHeader><CardTitle>Hij@s · Rubros por alumno</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        {family.students.length ? family.students.map((student) => {
+          const studentAssignments = assignments.filter((assignment) => assignment.studentId === student.id);
+          return (
+            <section key={student.id} aria-label={`Rubros de ${student.firstName} ${student.lastName}`} className="space-y-3 rounded-lg border border-slate-200 p-3">
+              <div>
+                <Link href={`/dashboard/students/${student.id}`} className="font-medium text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{student.lastName}, {student.firstName}</Link>
+                <p className="text-sm text-slate-600">{student.group.name}</p>
+              </div>
+              {studentAssignments.length ? (
+                <ul className="space-y-2">
+                  {studentAssignments.map((assignment) => (
+                    <li key={assignment.id} className="rounded-md bg-slate-50 p-3 text-sm">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-medium">{assignment.itemName}</p>
+                        {canManageFamily && assignment.rubricId ? <StudentRubricAssignmentEditor familyId={family.id} studentId={student.id} rubrics={rubricOptions} assignment={{
+                          id: assignment.id,
+                          rubricId: assignment.rubricId,
+                          itemName: assignment.itemName,
+                          grossAmount: (assignment.grossAmount ?? assignment.totalAmount).toString(),
+                          discountPercent: assignment.discountPercent?.toString() ?? "0",
+                          installmentCount: assignment.installmentCount,
+                          startPeriod: assignment.startPeriod.toISOString(),
+                        }} /> : null}
+                      </div>
+                      <p className="text-slate-600">Bruto: {currency((assignment.grossAmount ?? assignment.totalAmount).toString())} · Descuento ({assignment.discountPercent?.toString() ?? "0"}%): {currency(assignment.discountAmount?.toString() ?? "0")} · Neto: {currency(assignment.totalAmount.toString())}</p>
+                      <p className="text-slate-600">{assignment.installmentCount} {assignment.installmentCount === 1 ? "cuota" : "cuotas"} · {assignment.installmentCount === 1 ? "Mes de imputación" : "Desde"} {new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", timeZone: "UTC" }).format(assignment.startPeriod)}</p>
+                      {assignment.cancelledFrom ? <p className="text-slate-600">Cancelado desde {new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", timeZone: "UTC" }).format(assignment.cancelledFrom)}</p> : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="text-sm text-slate-600">Todavía no tiene rubros asignados.</p>}
+              {canManageFamily ? <StudentRubricAssignmentForm familyId={family.id} studentId={student.id} rubrics={rubricOptions} /> : null}
+            </section>
+          );
+        }) : <p className="text-sm text-slate-600">Todavía no hay hij@s registrados.</p>}
+      </CardContent>
+    </Card>
     <FamilyFinancialCard family={financialFamily} eventualChargeItems={financialFamily.eventualChargeItems} canManagePayments={canManagePayments} canWaive={canWaive} />
   </div>;
 }

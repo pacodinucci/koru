@@ -1,12 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TeacherInvitationImport } from "@/modules/teachers/components/teacher-invitation-import";
-import { TeacherInvitationSingle } from "@/modules/teachers/components/teacher-invitation-single";
+import { requireRole } from "@/modules/auth/server/auth-guards";
 import { DashboardTeachersClient } from "@/modules/teachers/components/dashboard-teachers-client";
 import { listStudentGroups } from "@/modules/students/server/students.repository";
 import { countStudentsFromGroupResponsibilities } from "@/modules/teachers/lib/group-student-count";
 import { listTeacherProfilesForAdmin } from "@/modules/teachers/server/teachers.repository";
 
 export async function DashboardTeachersView() {
+  const user = await requireRole(["SUPERADMIN"]);
   const [teachers, groups] = await Promise.all([
     listTeacherProfilesForAdmin(),
     listStudentGroups(),
@@ -14,17 +13,8 @@ export async function DashboardTeachersView() {
 
   return (
     <div className="space-y-4">
-      <div className="space-y-4">
-        <Card size="sm">
-          <CardHeader><CardTitle>Invitar docente</CardTitle></CardHeader>
-          <CardContent><TeacherInvitationSingle /></CardContent>
-        </Card>
-        <Card size="sm">
-          <CardHeader><CardTitle>Importar docentes</CardTitle></CardHeader>
-          <CardContent><TeacherInvitationImport /></CardContent>
-        </Card>
-      </div>
       <DashboardTeachersClient
+      canManageReports={user.role === "SUPERADMIN"}
       teachers={teachers.map((teacher) => ({
         id: teacher.id,
         displayName: teacher.displayName,

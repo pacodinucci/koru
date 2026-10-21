@@ -9,8 +9,11 @@ export function listFamiliesForAdmin() {
     prisma.family.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        students: { select: { plan: { select: { name: true, annualFee: true, installmentCount: true, startMonth: true, discountPercent: true, isActive: true } } } },
-        _count: { select: { users: true, students: true } },
+        _count: { select: {
+          users: true,
+          students: true,
+          eventualChargeSchedules: { where: { rubricId: { not: null }, cancelledFrom: null } },
+        } },
       },
     }),
     prisma.familyAccountEntry.groupBy({
@@ -36,6 +39,7 @@ export function getFamilyDetailForAdmin(familyId: string) {
   return prisma.family.findUnique({
     where: { id: familyId },
     include: {
+      eventualChargeSchedules: { include: { student: { select: { firstName: true, lastName: true, familyId: true } }, accountEntries: { select: { installmentNumber: true } } } },
       accountEntries: {
         orderBy: { occurredAt: "desc" },
         include: {

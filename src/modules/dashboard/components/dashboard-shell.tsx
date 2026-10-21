@@ -20,7 +20,6 @@ import {
   HandCoins,
   PackageSearch,
   ShieldCheck,
-  Settings,
   User2,
   SlidersHorizontal,
 } from "lucide-react";
@@ -139,6 +138,7 @@ export function DashboardShell({
   const searchParams = useSearchParams();
   const currentEditorSlug = searchParams.get("slug") ?? "/";
   const isHomeActive = pathname === "/dashboard";
+  const isKanbanActive = pathname.startsWith("/dashboard/kanban");
   const isBlogActive = pathname.startsWith("/dashboard/blog");
   const isCalendarActive = pathname.startsWith("/dashboard/calendar");
   const isBasecampActive = pathname.startsWith("/dashboard/basecamp");
@@ -149,8 +149,15 @@ export function DashboardShell({
   const isFamiliesActive = pathname.startsWith("/dashboard/families");
   const isTeachersActive = pathname.startsWith("/dashboard/teachers");
   const isReportsActive = pathname.startsWith("/dashboard/reportes");
-  const isPsychopedagogyActive = pathname.startsWith("/dashboard/psicopedagogia");
-  const isAgreementsActive = pathname.startsWith("/dashboard/acuerdos-seguimiento");
+  const isPsychopedagogyActive = pathname.startsWith(
+    "/dashboard/psicopedagogia",
+  );
+  const isAgreementsActive = pathname.startsWith(
+    "/dashboard/acuerdos-seguimiento",
+  );
+  const isOwnAgreementsActive = pathname.startsWith(
+    "/dashboard/mis-acuerdos-seguimiento",
+  );
   const isLayoutActive = pathname.startsWith("/dashboard/diseno");
   const isContentActive = pathname.startsWith("/dashboard/content");
   const isDocumentsActive = pathname.startsWith("/dashboard/documentos");
@@ -211,342 +218,96 @@ export function DashboardShell({
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-slate-500">
-              Navigation
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-1">
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    hidden={!can("dashboard.access")}
-                    isActive={isHomeActive}
-                    className={sidebarMenuButtonClass}
-                    render={<Link href="/dashboard" />}
-                  >
-                    <Home />
-                    <span>Inicio</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem className="hidden md:block">
-                  <SidebarMenuButton
-                    hidden={!can("blog.view")}
-                    isActive={isBlogActive}
-                    className={sidebarMenuButtonClass}
-                    render={<Link href="/dashboard/blog" />}
-                  >
-                    <NotebookPen />
-                    <span>Blog</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-
-                {showCmsNavigation && can("content.view") ? (
+          {can("dashboard.access") ? (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-1">
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      isActive={isCmsActive}
+                      tooltip="Inicio"
+                      aria-label="Inicio"
+                      hidden={!can("dashboard.access")}
+                      isActive={isHomeActive}
                       className={sidebarMenuButtonClass}
-                      onClick={() => setCmsOpen((previous) => !previous)}
+                      render={<Link href="/dashboard" />}
+                    >
+                      <Home />
+                      <span>Inicio</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      tooltip="Kanban"
+                      aria-label="Kanban"
+                      isActive={isKanbanActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/kanban" />}
                     >
                       <LayoutDashboard />
-                      <span>CMS</span>
-                      <ChevronDown
-                        className={`ml-auto transition-transform ${cmsOpen ? "rotate-180" : ""}`}
-                      />
+                      <span>Kanban</span>
                     </SidebarMenuButton>
-
-                    {cmsOpen ? (
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            isActive={isLayoutActive}
-                            render={<Link href="/dashboard/diseno" />}
-                          >
-                            <LayoutDashboard />
-                            <span>Layout</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            isActive={isLandingActive || isPageEditorActive}
-                            onClick={() =>
-                              setPagesOpen((previous) => !previous)
-                            }
-                          >
-                            <FileText />
-                            <span>Pages</span>
-                            <ChevronDown
-                              className={`ml-auto transition-transform ${pagesOpen ? "rotate-180" : ""}`}
-                            />
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        {pagesOpen ? (
-                          <SidebarMenuSub className="mx-6">
-                            {cmsPages.map((page) => {
-                              const href =
-                                page.slug === "/"
-                                  ? "/dashboard/pages/landing"
-                                  : `/dashboard/pages/${encodeURIComponent(page.slug.slice(1))}`;
-                              const isCurrent =
-                                (pathname === "/dashboard/pages/edit" &&
-                                  decodeURIComponent(currentEditorSlug) ===
-                                    page.slug) ||
-                                currentPathSlug === page.slug;
-
-                              return (
-                                <SidebarMenuSubItem key={page.slug}>
-                                  <SidebarMenuSubButton
-                                    isActive={isCurrent}
-                                    render={<Link href={href} />}
-                                  >
-                                    <FileText />
-                                    <span>
-                                      {page.slug === "/"
-                                        ? "Landing"
-                                        : page.slug}
-                                    </span>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              );
-                            })}
-                          </SidebarMenuSub>
-                        ) : null}
-                      </SidebarMenuSub>
-                    ) : null}
                   </SidebarMenuItem>
-                ) : null}
-
-                {can("content.view") ? (
-                  <SidebarMenuItem className="hidden md:block">
-                    <SidebarMenuButton
-                      isActive={isContentActive}
-                      className={sidebarMenuButtonClass}
-                      onClick={() => setContentOpen((previous) => !previous)}
-                    >
-                      <FileText />
-                      <span>Contenido</span>
-                      <ChevronDown
-                        className={`ml-auto transition-transform ${contentOpen ? "rotate-180" : ""}`}
-                      />
-                    </SidebarMenuButton>
-
-                    {contentOpen ? (
-                      <SidebarMenuSub className="koru-scrollbar-minimal max-h-[55dvh] overflow-y-auto pr-1">
-                        {contentNavigationItems.map(
-                          ({ key, label, parent }) => (
-                            <SidebarMenuSubItem key={key}>
-                              <SidebarMenuSubButton
-                                isActive={
-                                  pathname === `/dashboard/content/${key}`
-                                }
-                                className={parent ? "pl-6" : undefined}
-                                render={
-                                  <Link href={`/dashboard/content/${key}`} />
-                                }
-                              >
-                                <FileText />
-                                <span className="truncate">
-                                  {parent ? `↳ ${label}` : label}
-                                </span>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ),
-                        )}
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            render={<Link href="/dashboard/blog" />}
-                          >
-                            <NotebookPen />
-                            <span>↳ Publicaciones del blog</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            render={<Link href="/dashboard/calendar" />}
-                          >
-                            <CalendarDays />
-                            <span>↳ Eventos del calendario</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </SidebarMenuSub>
-                    ) : null}
-                  </SidebarMenuItem>
-                ) : null}
-                {isSuperAdmin ? (
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ) : null}
+          {can("students.view") ||
+          can("families.view") ||
+          isSuperAdmin ||
+          canViewBasecamp ||
+          can("calendar.view") ? (
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-slate-500">
+                Gestión escolar
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-1">
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      isActive={isAdministrationActive}
+                      tooltip="Alumnos"
+                      aria-label="Alumnos"
+                      hidden={!can("students.view")}
+                      isActive={isStudentsActive}
                       className={sidebarMenuButtonClass}
-                      render={<Link href="/dashboard/administracion" />}
-                    >
-                      <SlidersHorizontal />
-                      <span>Administración</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : null}
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    hidden={!can("cash-fund.view")}
-                    isActive={isCashFundActive}
-                    className={sidebarMenuButtonClass}
-                    render={<Link href="/dashboard/caja-chica" />}
-                  >
-                    <HandCoins />
-                    <span>Caja chica</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    hidden={!can("inventory.view")}
-                    isActive={isInventoryActive}
-                    className={sidebarMenuButtonClass}
-                    render={<Link href="/dashboard/inventario" />}
-                  >
-                    <PackageSearch />
-                    <span>Inventario</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-
-                {can("documents.view") ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={isDocumentsActive}
-                      className={sidebarMenuButtonClass}
-                      render={<Link href="/dashboard/documentos" />}
-                    >
-                      <FolderOpen />
-                      <span>Documentos</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : null}
-
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    hidden={!can("calendar.view")}
-                    isActive={isCalendarActive}
-                    className={sidebarMenuButtonClass}
-                    render={<Link href="/dashboard/calendar" />}
-                  >
-                    <CalendarDays />
-                    <span>Calendario</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-
-                {canViewBasecamp ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={isBasecampActive}
-                      className={sidebarMenuButtonClass}
-                      render={<Link href="/dashboard/basecamp" />}
-                    >
-                      <MountainSnow />
-                      <span>Basecamp</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : null}
-
-                {can("users.view") ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={isUsersActive}
-                      className={sidebarMenuButtonClass}
-                      render={<Link href="/dashboard/users" />}
+                      render={<Link href="/dashboard/students" />}
                     >
                       <Users />
-                      <span>Usuarios</span>
+                      <span>Alumnos</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ) : null}
-
-                {can("roles.view") ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={isRolesActive}
-                      className={sidebarMenuButtonClass}
-                      render={<Link href="/dashboard/roles" />}
-                    >
-                      <ShieldCheck />
-                      <span>Roles</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : null}
-
-                {can("mailing.view") ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={isMailingActive}
-                      className={sidebarMenuButtonClass}
-                      render={<Link href="/dashboard/mailing" />}
-                    >
-                      <Mail />
-                      <span>Mailing</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : null}
-
-                {can("families.view") ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={isFamiliesActive}
-                      className={sidebarMenuButtonClass}
-                      render={<Link href="/dashboard/families" />}
-                    >
-                      <Users />
-                      <span>Familias</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : null}
-
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    hidden={!can("students.view")}
-                    isActive={isStudentsActive}
-                    className={sidebarMenuButtonClass}
-                    render={<Link href="/dashboard/students" />}
-                  >
-                    <Users />
-                    <span>Alumnos</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-
-                {userRole === "TEACHER" || userRole === "ADMIN_TEACHER" ? (
-                  <>
+                  {can("families.view") ? (
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        isActive={isAgreementsActive}
+                        tooltip="Familias"
+                        aria-label="Familias"
+                        isActive={isFamiliesActive && !pathname.startsWith("/dashboard/families/rubrics")}
                         className={sidebarMenuButtonClass}
-                        render={<Link href="/dashboard/acuerdos-seguimiento" />}
+                        render={<Link href="/dashboard/families" />}
                       >
-                        <NotebookPen />
-                        <span>Acuerdos de Seguimiento</span>
+                        <Users />
+                        <span>Familias</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                  ) : null}
+                  {can("families.view") ? (
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        isActive={isReportsActive}
+                        tooltip="Rubros"
+                        aria-label="Rubros"
+                        isActive={pathname.startsWith("/dashboard/families/rubrics")}
                         className={sidebarMenuButtonClass}
-                        render={<Link href="/dashboard/reportes" />}
+                        render={<Link href="/dashboard/families/rubrics" />}
                       >
-                        <FileText />
-                        <span>Reportes</span>
+                        <HandCoins />
+                        <span>Rubros</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                  ) : null}
+                  {isSuperAdmin ? (
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        isActive={isPsychopedagogyActive}
-                        className={sidebarMenuButtonClass}
-                        render={<Link href="/dashboard/psicopedagogia" />}
-                      >
-                        <NotebookPen />
-                        <span>Psicopedagogía</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </>
-                ) : null}
-
-                {isSuperAdmin ? (
-                  <>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
+                        tooltip="Docentes"
+                        aria-label="Docentes"
                         isActive={isTeachersActive}
                         className={sidebarMenuButtonClass}
                         render={<Link href="/dashboard/teachers" />}
@@ -555,29 +316,364 @@ export function DashboardShell({
                         <span>Docentes</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                  ) : null}
+                  {canViewBasecamp ? (
                     <SidebarMenuItem>
                       <SidebarMenuButton
+                        tooltip="Basecamp"
+                        aria-label="Basecamp"
+                        isActive={isBasecampActive}
                         className={sidebarMenuButtonClass}
-                        render={<Link href="#" />}
+                        render={<Link href="/dashboard/basecamp" />}
+                      >
+                        <MountainSnow />
+                        <span>Basecamp</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      tooltip="Calendario"
+                      aria-label="Calendario"
+                      hidden={!can("calendar.view")}
+                      isActive={isCalendarActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/calendar" />}
+                    >
+                      <CalendarDays />
+                      <span>Calendario</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  {userRole === "TEACHER" || userRole === "ADMIN_TEACHER" ? (
+                    <>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          tooltip="Acuerdos de Seguimiento"
+                          aria-label="Acuerdos de Seguimiento"
+                          isActive={isAgreementsActive}
+                          className={sidebarMenuButtonClass}
+                          render={
+                            <Link href="/dashboard/acuerdos-seguimiento" />
+                          }
+                        >
+                          <NotebookPen />
+                          <span>Acuerdos de Seguimiento</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          tooltip="Mis acuerdos de seguimiento"
+                          aria-label="Mis acuerdos de seguimiento"
+                          isActive={isOwnAgreementsActive}
+                          className={sidebarMenuButtonClass}
+                          render={<Link href="/dashboard/mis-acuerdos-seguimiento" />}
+                        >
+                          <NotebookPen />
+                          <span>Mis acuerdos de seguimiento</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          tooltip="Reportes"
+                          aria-label="Reportes"
+                          isActive={isReportsActive}
+                          className={sidebarMenuButtonClass}
+                          render={<Link href="/dashboard/reportes" />}
+                        >
+                          <FileText />
+                          <span>Reportes</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          tooltip="Psicopedagogía"
+                          aria-label="Psicopedagogía"
+                          isActive={isPsychopedagogyActive}
+                          className={sidebarMenuButtonClass}
+                          render={<Link href="/dashboard/psicopedagogia" />}
+                        >
+                          <NotebookPen />
+                          <span>Psicopedagogía</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </>
+                  ) : null}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ) : null}
+          {isSuperAdmin ||
+          can("cash-fund.view") ||
+          can("inventory.view") ||
+          can("documents.view") ? (
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-slate-500">
+                Operaciones
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-1">
+                  {isSuperAdmin ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Administración"
+                        aria-label="Administración"
+                        isActive={isAdministrationActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/administracion" />}
+                      >
+                        <SlidersHorizontal />
+                        <span>Administración</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      tooltip="Caja chica"
+                      aria-label="Caja chica"
+                      hidden={!can("cash-fund.view")}
+                      isActive={isCashFundActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/caja-chica" />}
+                    >
+                      <HandCoins />
+                      <span>Caja chica</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      tooltip="Inventario"
+                      aria-label="Inventario"
+                      hidden={!can("inventory.view")}
+                      isActive={isInventoryActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/inventario" />}
+                    >
+                      <PackageSearch />
+                      <span>Inventario</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  {can("documents.view") ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Documentos"
+                        aria-label="Documentos"
+                        isActive={isDocumentsActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/documentos" />}
+                      >
+                        <FolderOpen />
+                        <span>Documentos</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ) : null}
+          {can("mailing.view") || can("blog.view") || can("content.view") ? (
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-slate-500">
+                Comunicación y web
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-1">
+                  {can("mailing.view") ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Mailing"
+                        aria-label="Mailing"
+                        isActive={isMailingActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/mailing" />}
+                      >
+                        <Mail />
+                        <span>Mailing</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
+                  <SidebarMenuItem className="hidden md:block">
+                    <SidebarMenuButton
+                      tooltip="Blog"
+                      aria-label="Blog"
+                      hidden={!can("blog.view")}
+                      isActive={isBlogActive}
+                      className={sidebarMenuButtonClass}
+                      render={<Link href="/dashboard/blog" />}
+                    >
+                      <NotebookPen />
+                      <span>Blog</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  {showCmsNavigation && can("content.view") ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="CMS"
+                        aria-label="CMS"
+                        isActive={isCmsActive}
+                        className={sidebarMenuButtonClass}
+                        onClick={() => setCmsOpen((previous) => !previous)}
+                      >
+                        <LayoutDashboard />
+                        <span>CMS</span>
+                        <ChevronDown
+                          className={`ml-auto transition-transform ${cmsOpen ? "rotate-180" : ""}`}
+                        />
+                      </SidebarMenuButton>
+
+                      {cmsOpen ? (
+                        <SidebarMenuSub>
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              isActive={isLayoutActive}
+                              render={<Link href="/dashboard/diseno" />}
+                            >
+                              <LayoutDashboard />
+                              <span>Layout</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              isActive={isLandingActive || isPageEditorActive}
+                              onClick={() =>
+                                setPagesOpen((previous) => !previous)
+                              }
+                            >
+                              <FileText />
+                              <span>Pages</span>
+                              <ChevronDown
+                                className={`ml-auto transition-transform ${pagesOpen ? "rotate-180" : ""}`}
+                              />
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                          {pagesOpen ? (
+                            <SidebarMenuSub className="mx-6">
+                              {cmsPages.map((page) => {
+                                const href =
+                                  page.slug === "/"
+                                    ? "/dashboard/pages/landing"
+                                    : `/dashboard/pages/${encodeURIComponent(page.slug.slice(1))}`;
+                                const isCurrent =
+                                  (pathname === "/dashboard/pages/edit" &&
+                                    decodeURIComponent(currentEditorSlug) ===
+                                      page.slug) ||
+                                  currentPathSlug === page.slug;
+
+                                return (
+                                  <SidebarMenuSubItem key={page.slug}>
+                                    <SidebarMenuSubButton
+                                      isActive={isCurrent}
+                                      render={<Link href={href} />}
+                                    >
+                                      <FileText />
+                                      <span>
+                                        {page.slug === "/"
+                                          ? "Landing"
+                                          : page.slug}
+                                      </span>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                );
+                              })}
+                            </SidebarMenuSub>
+                          ) : null}
+                        </SidebarMenuSub>
+                      ) : null}
+                    </SidebarMenuItem>
+                  ) : null}
+                  {can("content.view") ? (
+                    <SidebarMenuItem className="hidden md:block">
+                      <SidebarMenuButton
+                        tooltip="Contenido"
+                        aria-label="Contenido"
+                        isActive={isContentActive}
+                        className={sidebarMenuButtonClass}
+                        aria-expanded={contentOpen}
+                        aria-controls={
+                          contentOpen
+                            ? "dashboard-content-navigation"
+                            : undefined
+                        }
+                        onClick={() => setContentOpen((previous) => !previous)}
+                      >
+                        <FileText />
+                        <span>Contenido</span>
+                        <ChevronDown
+                          className={`ml-auto transition-transform ${contentOpen ? "rotate-180" : ""}`}
+                        />
+                      </SidebarMenuButton>
+
+                      {contentOpen ? (
+                        <SidebarMenuSub
+                          id="dashboard-content-navigation"
+                          className="koru-scrollbar-minimal max-h-[55dvh] overflow-y-auto pr-1"
+                        >
+                          {contentNavigationItems.map(
+                            ({ key, label, parent }) => (
+                              <SidebarMenuSubItem key={key}>
+                                <SidebarMenuSubButton
+                                  isActive={
+                                    pathname === `/dashboard/content/${key}`
+                                  }
+                                  className={parent ? "pl-6" : undefined}
+                                  render={
+                                    <Link href={`/dashboard/content/${key}`} />
+                                  }
+                                >
+                                  <FileText />
+                                  <span className="truncate">
+                                    {parent ? `↳ ${label}` : label}
+                                  </span>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ),
+                          )}
+                        </SidebarMenuSub>
+                      ) : null}
+                    </SidebarMenuItem>
+                  ) : null}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ) : null}
+          {can("users.view") || can("roles.view") ? (
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-slate-500">
+                Sistema
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-1">
+                  {can("users.view") ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Usuarios"
+                        aria-label="Usuarios"
+                        isActive={isUsersActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/users" />}
+                      >
+                        <Users />
+                        <span>Usuarios</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
+                  {can("roles.view") ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Roles"
+                        aria-label="Roles"
+                        isActive={isRolesActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/roles" />}
                       >
                         <ShieldCheck />
-                        <span>Seguridad</span>
+                        <span>Roles</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        className={sidebarMenuButtonClass}
-                        render={<Link href="#" />}
-                      >
-                        <Settings />
-                        <span>Configuracion</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </>
-                ) : null}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                  ) : null}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ) : null}
         </SidebarContent>
 
         <SidebarFooter>

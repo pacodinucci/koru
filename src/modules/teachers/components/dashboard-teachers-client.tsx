@@ -3,13 +3,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { EllipsisVertical } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -23,6 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { teacherFormSchema, type TeacherFormInput } from "@/modules/teachers/schemas/teacher.schema";
 import { updateTeacherProfileAction } from "@/modules/teachers/server/teacher.actions";
+import { TeacherInvitationActions } from "@/modules/teachers/components/teacher-invitation-actions";
 
 type StudentGroup = {
   id: string;
@@ -47,6 +51,7 @@ type Teacher = {
 type DashboardTeachersClientProps = {
   teachers: Teacher[];
   groups: StudentGroup[];
+  canManageReports?: boolean;
 };
 
 const emptyValues: TeacherFormInput = {
@@ -59,7 +64,7 @@ const emptyValues: TeacherFormInput = {
   groupIds: [],
 };
 
-export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersClientProps) {
+export function DashboardTeachersClient({ teachers, groups, canManageReports = false }: DashboardTeachersClientProps) {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -123,14 +128,12 @@ export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersC
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-[family-name:var(--font-montserrat)] text-2xl font-semibold text-slate-900">Docentes</h1>
+        <TeacherInvitationActions />
+      </div>
       <Card size="sm" className="min-w-0">
-        <CardHeader>
-          <CardTitle>Docentes</CardTitle>
-        </CardHeader>
         <CardContent className="min-w-0 space-y-3">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-muted-foreground">
-            Invitá docentes desde esta pantalla. Una vez que creen su cuenta, podés editar su perfil y asignarles grupos responsables.
-          </div>
           <Table className="min-w-[980px]">
             <TableHeader>
               <TableRow>
@@ -140,7 +143,7 @@ export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersC
                 <TableHead>Alumnos</TableHead>
                 <TableHead>Grupos</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Acciones</TableHead>
+                <TableHead aria-label="Acciones" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -170,9 +173,26 @@ export function DashboardTeachersClient({ teachers, groups }: DashboardTeachersC
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button type="button" variant="outline" size="sm" className="h-auto max-w-full whitespace-normal px-2 py-1" onClick={() => editTeacher(teacher)}>
-                        Editar perfil
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger render={
+                          <Button type="button" variant="ghost" size="icon-sm" aria-label={`Acciones para ${teacher.displayName}`}>
+                            <EllipsisVertical aria-hidden="true" />
+                          </Button>
+                        } />
+                        <DropdownMenuContent align="end" className="w-max">
+                          <DropdownMenuItem onClick={() => editTeacher(teacher)}>Editar perfil</DropdownMenuItem>
+                          {canManageReports ? (
+                            <DropdownMenuItem render={<Link href={`/dashboard/teachers/${encodeURIComponent(teacher.id)}/reports`} />}>
+                              Reportes
+                            </DropdownMenuItem>
+                          ) : null}
+                          {canManageReports ? (
+                            <DropdownMenuItem render={<Link href={`/dashboard/teachers/${encodeURIComponent(teacher.id)}/follow-up-agreements`} />}>
+                              Acuerdos de seguimiento
+                            </DropdownMenuItem>
+                          ) : null}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))

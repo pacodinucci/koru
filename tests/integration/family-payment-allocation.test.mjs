@@ -14,13 +14,14 @@ function harness(seed = []) {
   let state = { entries: structuredClone(seed), payments: [], receipts: [], allocations: [], counters: { payment: 0, entry: 0, allocation: 0 } };
   let revision = 0;
   let conflict = false;
-  const options = [];
+  const options = [], locks = [];
   const db = {
     async $transaction(work, option) {
       options.push(option);
       const initialRevision = revision;
       const draft = structuredClone(state);
       const tx = {
+        $queryRaw: async (strings, ...values) => { assert.match(strings.join("?"), /pg_advisory_xact_lock/); locks.push(values[0]); return [{ "?column?": 1 }]; },
         family: { findUnique: async ({ where }) => where.id === "family" ? { id: "family" } : null },
         familyAccountEntry: {
           findMany: async ({ where }) => draft.entries.filter((entry) => entry.familyId === where.familyId).map((entry) => ({
@@ -67,7 +68,7 @@ function harness(seed = []) {
     summary: () => buildAllocationSummary(state.entries.map((entry) => ({ ...entry, payment: state.payments.find((payment) => payment.id === entry.paymentId) ?? entry.payment, allocationsAsCredit: state.allocations.filter((row) => row.creditEntryId === entry.id) }))),
     conflict: () => { conflict = true; },
     seedPayment(payment, entry, receipt) { state.payments.push(payment); state.entries.push(entry); if (receipt) state.receipts.push(receipt); },
-    options,
+    options, locks,
   };
 }
 const charge = (id = "charge", amount = "100.00", familyId = "family", type = "MONTHLY_CHARGE") => ({ id, familyId, amount, type, description: id, occurredAt: new Date("2026-10-01T03:00:00Z") });
@@ -115,6 +116,7 @@ test("explicit payment splits across charges, preserves partial debt, and uses A
   assert.deepEqual(h.summary().unallocatedCredits, []);
   assert.equal(state.allocations.length, 2);
   assert.deepEqual(h.options, [{ isolationLevel: "Serializable" }]);
+  assert.deepEqual(h.locks, ["family"], "payments share the rubric editor/generator family lock");
 });
 
 test("maximum decimal payment is exact, and overallocated targets reject without writes", async () => {
@@ -204,6 +206,15 @@ test("serialization failures return actionable errors without blind retries or m
     await rejectedUnchanged(h, calls[operation], "La cuenta cambió mientras guardabas. Actualizá la ficha, revisá los pendientes y volvé a intentar.");
     assert.deepEqual(h.options, [{ isolationLevel: "Serializable" }]);
   }
+});
+
+test("foreign-key races report refresh feedback without retrying or mutating records", async () => {
+  const h = harness([charge()]);
+  const db = { $transaction: async () => { throw Object.assign(new Error("foreign key"), { code: "P2003" }); } };
+  const before = h.snapshot();
+  const result = await createFamilyPaymentService(db).register(payment(), "admin");
+  assert.deepEqual(result, { ok: false, message: "La cuenta cambió mientras guardabas. Actualizá la ficha, revisá los pendientes y volvé a intentar." });
+  assert.deepEqual(h.snapshot(), before);
 });
 
 test("simultaneous payment allocation, waiver and void conflict rather than overspend", async () => {

@@ -53,11 +53,11 @@ export async function registerFamilyEventualChargeAction(formData: FormData) {
   const parsed = eventualChargeSchema.safeParse({ familyId: field(formData, "familyId"), eventualChargeItemId: field(formData, "eventualChargeItemId") || undefined, description: field(formData, "description"), amount: field(formData, "amount") });
   if (!parsed.success) return { ok: false, message: "Revisá el concepto y el importe del cargo." };
 
-  const family = await prisma.family.findUnique({ where: { id: parsed.data.familyId }, select: { students: { select: { planId: true } } } });
+  const family = await prisma.family.findUnique({ where: { id: parsed.data.familyId }, select: { id: true } });
   if (!family) return { ok: false, message: "No encontramos la familia." };
 
   if (parsed.data.eventualChargeItemId) {
-    return { ok: false, message: "Los rubros se cobran por alumno desde su plan. Revisá y confirmá los cargos en Cargos por alumno; no los apliques nuevamente como cargo familiar." };
+    return { ok: false, message: "Los rubros se asignan por alumno con sus cuotas y mes de inicio; no los apliques nuevamente como cargo familiar." };
   } else {
     if (parsed.data.amount <= 0) return { ok: false, message: "Ingresá un importe mayor a cero para el cargo libre." };
     await prisma.familyAccountEntry.create({ data: {
