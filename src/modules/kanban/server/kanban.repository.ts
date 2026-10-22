@@ -24,15 +24,19 @@ export async function withBoard<T>(boardId: string, operation: (tx: Prisma.Trans
   }, { isolationLevel: "ReadCommitted", maxWait: 5000, timeout: 15000 });
 }
 
-export async function requireStatus(tx: Prisma.TransactionClient, boardId: string, id: string) {
+export const isActiveStatus = (status: { archivedAt: Date | null; trashedAt: Date | null }) => !status.archivedAt && !status.trashedAt;
+
+export async function requireStatus(tx: Prisma.TransactionClient, boardId: string, id: string, active = true) {
   const status = await tx.kanbanStatus.findFirst({ where: { id: identifier(id), boardId } });
   if (!status) throw new Error("El estado no pertenece a este tablero.");
+  if (active && !isActiveStatus(status)) throw new Error("La columna está archivada o en la papelera.");
   return status;
 }
 
 export async function requireCard(tx: Prisma.TransactionClient, boardId: string, id: string) {
   const card = await tx.kanbanCard.findFirst({ where: { id: identifier(id), boardId } });
   if (!card) throw new Error("La tarjeta no pertenece a este tablero.");
+  await requireStatus(tx, boardId, card.statusId);
   return card;
 }
 

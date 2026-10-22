@@ -384,19 +384,21 @@ export function DashboardShell({
                           <span>Reportes</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton
-                          tooltip="Psicopedagogía"
-                          aria-label="Psicopedagogía"
-                          isActive={isPsychopedagogyActive}
-                          className={sidebarMenuButtonClass}
-                          render={<Link href="/dashboard/psicopedagogia" />}
-                        >
-                          <NotebookPen />
-                          <span>Psicopedagogía</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
                     </>
+                  ) : null}
+                  {isSuperAdmin || userRole === "TEACHER" || userRole === "ADMIN_TEACHER" ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Psicopedagogía"
+                        aria-label="Psicopedagogía"
+                        isActive={isPsychopedagogyActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/psicopedagogia" />}
+                      >
+                        <NotebookPen />
+                        <span>Psicopedagogía</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   ) : null}
                 </SidebarMenu>
               </SidebarGroupContent>

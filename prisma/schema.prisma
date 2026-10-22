@@ -36,6 +36,8 @@ model User {
   family                     Family?                     @relation(fields: [familyId], references: [id], onDelete: SetNull)
   followUpConsents           FollowUpAgreementFamily[]  @relation("FollowUpConsentActor")
   kanbanAssignedCards        KanbanCard[]
+  kanbanStatusWatches        KanbanStatusWatch[]
+  kanbanNotifications        KanbanNotification[]
   authoredTeacherReports     TeacherReport[]
   authoredTeacherAgreements  TeacherFollowUpAgreement[] @relation("TeacherAgreementAuthor")
   acceptedTeacherAgreements  TeacherFollowUpAgreement[] @relation("TeacherAgreementAcceptance")
@@ -1562,25 +1564,30 @@ model InventoryMovement {
 }
 
 model KanbanBoard {
-  id          String         @id @default(cuid())
-  name        String
-  description String?
-  statuses    KanbanStatus[]
-  cards       KanbanCard[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id            String               @id @default(cuid())
+  name          String
+  description   String?
+  statuses      KanbanStatus[]
+  cards         KanbanCard[]
+  notifications KanbanNotification[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 }
 
 model KanbanStatus {
-  id        String       @id @default(cuid())
-  boardId   String
-  board     KanbanBoard  @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  name      String
-  color     String
-  position  Int
-  cards     KanbanCard[]
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id          String              @id @default(cuid())
+  boardId     String
+  board       KanbanBoard         @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  name        String
+  color       String
+  position    Int
+  cards       KanbanCard[]
+  archivedAt  DateTime?
+  trashedAt   DateTime?
+  holdEnabled Boolean             @default(false)
+  watches     KanbanStatusWatch[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 
   @@unique([id, boardId])
   @@index([boardId, position])
@@ -1597,6 +1604,7 @@ model KanbanCard {
   assigneeId  String?
   assignee    User?        @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
   dueDate     DateTime?
+  onHold      Boolean      @default(false)
   position    Int
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -1604,4 +1612,34 @@ model KanbanCard {
   @@index([boardId])
   @@index([statusId, boardId, position])
   @@index([assigneeId])
+}
+
+model KanbanStatusWatch {
+  id       String       @id @default(cuid())
+  boardId  String
+  statusId String
+  status   KanbanStatus @relation(fields: [statusId, boardId], references: [id, boardId], onDelete: Cascade, onUpdate: Restrict)
+  userId   String
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([statusId, userId])
+  @@index([userId])
+  @@index([boardId])
+}
+
+model KanbanNotification {
+  id        String      @id @default(cuid())
+  boardId   String
+  board     KanbanBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  // Historical targets survive card/column deletion; the board owns their lifetime.
+  statusId  String
+  cardId    String?
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  createdAt DateTime    @default(now())
+  readAt    DateTime?
+
+  @@index([userId, createdAt, id])
+  @@index([boardId])
 }

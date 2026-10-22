@@ -25,9 +25,10 @@ Objetivo: tener una guía clara de arquitectura sin entrar en detalle fino de ca
 
 ### 1.3 `GET|POST /api/teacher/students/{id}/psychopedagogy`
 - Pantalla: `/dashboard/psicopedagogia`, desde el menú **Psicopedagogía**.
-- Acceso: `TEACHER` y `ADMIN_TEACHER`, con perfil docente activo y alumno activo asignado a un grupo activo del docente.
-- `GET`: devuelve `{ entries }` con las bitácoras propias del alumno seleccionado, ordenadas por fecha descendente. No se cachea.
-- `POST`: recibe JSON `{ date: "2026-02-28", title: "Seguimiento", body: "Texto libre" }`.
+- Acceso docente: `TEACHER` y `ADMIN_TEACHER`, con perfil docente activo y alumno activo asignado a un grupo activo del docente. Mantienen la consulta y creación de bitácoras propias.
+- Acceso de supervisión: `SUPERADMIN` ve la sección y puede seleccionar cualquier alumno registrado, sin necesitar perfil ni asignaciones docentes. Es solo lectura: no se muestran el botón ni el formulario de creación y el servidor rechaza los intentos de `POST`, incluso si el superadmin tiene perfil docente. No se habilitan otras secciones exclusivas de docentes.
+- `GET`: devuelve `{ entries }` ordenadas por fecha descendente. Para docentes, solo las bitácoras propias del alumno asignado. Para `SUPERADMIN`, todas las bitácoras del alumno seleccionado, de cualquier docente, incluidas las históricas aunque el alumno, grupo o docente ya no estén activos. Se responde con `Cache-Control: private, no-store`.
+- `POST`: solo para docentes autorizados; recibe JSON `{ date: "2026-02-28", title: "Seguimiento", body: "Texto libre" }`. `SUPERADMIN`, los demás roles y las solicitudes sin sesión no pueden crear entradas.
 - Campos obligatorios: fecha calendario válida `YYYY-MM-DD`, título de hasta 160 caracteres y texto de hasta 10.000 caracteres. Se recortan espacios al inicio/final; el texto conserva sus saltos de línea y no interpreta HTML.
 - Respuestas: `201 { ok: true }` al crear; `400 { error }` para datos inválidos; `404 { error }` si el alumno no está disponible; `503 { error }` si falta aplicar la migración; `500 { error }` ante otros errores.
 - Persistencia: modelo independiente `PsychopedagogyEntry`; no crea reportes ni comparte contenido con familias. La fecha de la entrada es independiente del momento de creación.

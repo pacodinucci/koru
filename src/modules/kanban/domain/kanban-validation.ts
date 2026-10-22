@@ -3,7 +3,7 @@ import { z } from "zod";
 export const identifierSchema = z.string().min(1).max(200).regex(/^\S+$/);
 const description = z.string().trim().max(5000).optional().transform((value) => value || null);
 export const boardSchema = z.object({ name: z.string().trim().min(1).max(120), description });
-export const statusSchema = z.object({ name: z.string().trim().min(1).max(80), color: z.string().regex(/^#[0-9a-fA-F]{6}$/) });
+export const statusSchema = z.object({ name: z.string().trim().min(1).max(80), color: z.string().regex(/^(?:#[0-9a-fA-F]{6})?$/) });
 export const cardSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description,

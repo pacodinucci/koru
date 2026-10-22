@@ -4,12 +4,12 @@ import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.r
 import { PsychopedagogyView } from "@/modules/psychopedagogy/views/psychopedagogy-view";
 
 export default async function PsychopedagogyPage() {
-  const user = await requireRole(["TEACHER", "ADMIN_TEACHER"]);
+  const user = await requireRole(["TEACHER", "ADMIN_TEACHER", "SUPERADMIN"]);
   const cmsPages = (await discoverPagesGroupRoutes()).filter((page) => !page.isDynamic);
   return (
     <DashboardShell userEmail={user.email} userRole={user.role} userPermissions={user.permissionKeys}
       cmsPages={cmsPages} breadcrumbPage="Psicopedagogía">
-      <PsychopedagogyView userId={user.id} />
+      <PsychopedagogyView userId={user.id} readOnly={user.role === "SUPERADMIN"} />
     </DashboardShell>
   );
 }
