@@ -11,7 +11,7 @@ Los rubros reemplazan la selección de un único plan. El catálogo guarda el no
 5. Usá el botón con ícono de lápiz **Editar rubro [nombre]** para abrir el diálogo con los valores actuales. **Guardar cambios** recalcula y reemplaza únicamente los cargos asociados impagos. El mes puede cambiar, pero se conserva el año original que indica el formulario.
 6. Dentro del mismo diálogo, **Eliminar rubro** muestra una confirmación explícita. **Confirmar eliminación** quita esa asignación, su programación y sus cargos asociados impagos; **Cancelar eliminación** vuelve a la edición. No elimina el rubro del catálogo ni afecta otras asignaciones. Si algún cargo tiene pagos imputados, incluso parciales, el servidor bloquea tanto la edición como la eliminación y muestra el motivo sin cambiar los datos.
 
-Durante el guardado o la eliminación se deshabilitan ambas operaciones y el cierre del diálogo para evitar envíos superpuestos. La respuesta del servidor permanece visible; no se presupone que una respuesta sea exitosa.
+Durante el guardado o la eliminación se deshabilitan ambas operaciones y el cierre del diálogo para evitar envíos superpuestos. Al agregar un rubro correctamente, el diálogo se cierra y la próxima apertura muestra un formulario limpio para agregar otro. Si el alta falla, el diálogo permanece abierto con el error y los valores del formulario. El cierre depende de una confirmación explícita de éxito del servidor, no del texto del mensaje. Los diálogos de edición y eliminación conservan su respuesta visible.
 
 Quienes solo tienen acceso de consulta pueden ver el catálogo y las asignaciones, pero no sus formularios de modificación. Solo los rubros activos aparecen como opciones nuevas.
 
@@ -48,6 +48,7 @@ Las filas **Futuro** son solo una proyección: no se guardan como movimientos, n
 - **Agregar cargo** conserva los conceptos libres. Los identificadores de `BillingRubric` nunca se envían como `eventualChargeItemId`, que pertenece al catálogo heredado de otro modelo.
 - La migración `20261021120000_student_billing_rubrics` elimina únicamente el catálogo anterior de planes y conceptos. Exige que no haya movimientos, pagos, recibos, programaciones ni planes asignados; si encuentra alguno, aborta sin completar cambios. No convierte los planes en rubros: el catálogo nuevo comienza vacío.
 - La generación automática usa las programaciones explícitas; no vuelve a crear cargos a partir de planes heredados. No se reinicia la numeración global de recibos ni se eliminan archivos externos.
+- Al asignar o editar, la programación y sus cargos vencidos se guardan en una sola transacción con bloqueo de la cuenta familiar: si falla un cargo, se revierte toda esa operación. El generador usa `createDueEventualInstallmentChargesInTransaction` cuando el llamador ya posee la transacción y el bloqueo; no vuelve a abrir transacciones por detectar una propiedad `$transaction` en el cliente. La generación periódica adquiere su propia transacción y bloqueo antes de llamar al mismo generador.
 
 ## Verificación
 

@@ -20,7 +20,7 @@ function today() {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function PsychopedagogyClient({ students }: { students: StudentOption[] }) {
+export function PsychopedagogyClient({ students, readOnly = false }: { students: StudentOption[]; readOnly?: boolean }) {
   const [studentId, setStudentId] = useState(students[0]?.id ?? "");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(Boolean(studentId));
@@ -56,6 +56,7 @@ export function PsychopedagogyClient({ students }: { students: StudentOption[] }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (readOnly) return;
     const form = event.currentTarget;
     const data = new FormData(form);
     setSaving(true);
@@ -87,11 +88,11 @@ export function PsychopedagogyClient({ students }: { students: StudentOption[] }
           <select id="psychopedagogy-student" value={studentId} disabled={saving || students.length === 0}
             onChange={(event) => { setStudentId(event.target.value); setEntries([]); setLoading(true); setLoadError(null); }}
             className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm">
-            {students.length === 0 ? <option value="">Sin alumnos asignados</option> : null}
+            {students.length === 0 ? <option value="">{readOnly ? "Sin alumnos registrados" : "Sin alumnos asignados"}</option> : null}
             {students.map((item) => <option key={item.id} value={item.id}>{item.lastName}, {item.firstName} · {item.group.name}</option>)}
           </select>
         </div>
-        <ResponsiveDialog open={open} onOpenChange={(value) => { if (!saving) { setOpen(value); setSaveError(null); } }}>
+        {!readOnly ? <ResponsiveDialog open={open} onOpenChange={(value) => { if (!saving) { setOpen(value); setSaveError(null); } }}>
           <ResponsiveDialogTrigger render={<Button type="button" disabled={!studentId} />}>
             <Plus className="size-4" /> Nueva bitácora
           </ResponsiveDialogTrigger>
@@ -123,12 +124,12 @@ export function PsychopedagogyClient({ students }: { students: StudentOption[] }
               </ResponsiveDialogFooter>
             </form>
           </ResponsiveDialogContent>
-        </ResponsiveDialog>
+        </ResponsiveDialog> : null}
       </div>
-      {students.length === 0 ? <p className="text-sm text-muted-foreground">No tenés alumnos asignados.</p>
+      {students.length === 0 ? <p className="text-sm text-muted-foreground">{readOnly ? "No hay alumnos registrados." : "No tenés alumnos asignados."}</p>
         : loading ? <p role="status" className="text-sm text-muted-foreground">Cargando bitácoras…</p>
         : loadError ? <div role="alert" className="space-y-2 text-sm text-red-700"><p>{loadError}</p><Button variant="outline" onClick={() => setRevision((value) => value + 1)}>Reintentar</Button></div>
-        : entries.length === 0 ? <p className="text-sm text-muted-foreground">Este alumno todavía no tiene bitácoras tuyas.</p>
+        : entries.length === 0 ? <p className="text-sm text-muted-foreground">{readOnly ? "Este alumno todavía no tiene bitácoras." : "Este alumno todavía no tiene bitácoras tuyas."}</p>
         : <div className="space-y-3">{entries.map((entry) => (
           <article key={entry.id} className="space-y-2 rounded-xl border border-slate-200 bg-white p-4">
             <time dateTime={entry.entryDate.slice(0, 10)} className="text-sm text-muted-foreground">{entry.entryDate.slice(0, 10).split("-").reverse().join("/")}</time>

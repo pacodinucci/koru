@@ -34,16 +34,18 @@ function load(path, overrides = {}) {
   return compiledModule.exports;
 }
 const { DashboardShell } = load("modules/dashboard/components/dashboard-shell.tsx");
-test("Psicopedagogía has a teacher-only active navigation entry without changing Reportes", () => {
-  for (const role of ["TEACHER", "ADMIN_TEACHER"]) {
+test("Psicopedagogía is visible for teachers and Superadmin without granting other teacher sections", () => {
+  for (const role of ["TEACHER", "ADMIN_TEACHER", "SUPERADMIN"]) {
     for (const path of ["/dashboard/psicopedagogia", "/dashboard/psicopedagogia/nuevo"]) {
       pathname = path;
       const html = renderToStaticMarkup(React.createElement(DashboardShell, { userEmail: "teacher@example.com", userRole: role }, "Content"));
       assert.match(html, /href="\/dashboard\/psicopedagogia" data-active="true"[^>]*>.*?Psicopedagogía/);
-      assert.match(html, /href="\/dashboard\/reportes" data-active="false"/);
+      if (role !== "SUPERADMIN") assert.match(html, /href="\/dashboard\/reportes" data-active="false"/);
+      else for (const route of ["reportes", "acuerdos-seguimiento", "mis-acuerdos-seguimiento"]) assert.ok(!html.includes(`href="/dashboard/${route}"`));
+      assert.equal((html.match(/href="\/dashboard\/psicopedagogia"/g) ?? []).length, 1);
     }
   }
-  for (const role of ["PARENT", "ADMIN", "SUPERADMIN"]) {
+  for (const role of ["PARENT", "ADMIN", "ADMIN_OPERATOR"]) {
     const html = renderToStaticMarkup(React.createElement(DashboardShell, { userEmail: "user@example.com", userRole: role }, "Content"));
     assert.doesNotMatch(html, /href="\/dashboard\/psicopedagogia"/);
   }
@@ -75,4 +77,36 @@ test("view passes assigned students to the dedicated client", async () => {
   assert.equal(receivedUser, "user-1");
   assert.equal(receivedStudents, students);
   assert.match(html, />Psicopedagogía<\/h1>/);
+});
+
+
+test("read-only client retains the student selector and hides every creation control", () => {
+  const html = renderToStaticMarkup(React.createElement(PsychopedagogyClient, {
+    readOnly: true,
+    students: [{ id: "student-other-teacher", firstName: "Ana", lastName: "Pérez", group: { name: "Grupo B" } }],
+  }));
+  assert.match(html, /value="student-other-teacher" selected="">Pérez, Ana · Grupo B/);
+  assert.doesNotMatch(html, /Nueva bitácora|Guardar bitácora|<form|<textarea|name="date"|name="title"/);
+  const empty = renderToStaticMarkup(React.createElement(PsychopedagogyClient, { readOnly: true, students: [] }));
+  assert.match(empty, /No hay alumnos registrados/);
+  assert.doesNotMatch(empty, /asignados|tuyas/);
+});
+
+test("read-only view loads all students without consulting teacher assignments", async () => {
+  let received;
+  let teacherCalls = 0;
+  let globalCalls = 0;
+  const students = [{ id: "student-other-teacher", firstName: "Ana", lastName: "Pérez", group: { name: "Grupo B" } }];
+  const { PsychopedagogyView } = load("modules/psychopedagogy/views/psychopedagogy-view.tsx", {
+    "@/modules/teachers/server/teachers.repository": { listTeacherHomeData: async () => { teacherCalls++; return { students: [] }; } },
+    "@/modules/psychopedagogy/server/psychopedagogy.repository": { listPsychopedagogyStudentsForSuperadmin: async () => { globalCalls++; return students; } },
+    "@/modules/psychopedagogy/components/psychopedagogy-client": { PsychopedagogyClient: (props) => { received = props; return null; } },
+  });
+  const html = renderToStaticMarkup(await PsychopedagogyView({ userId: "superadmin-user", readOnly: true }));
+  assert.equal(teacherCalls, 0);
+  assert.equal(globalCalls, 1);
+  assert.equal(received.students, students);
+  assert.equal(received.readOnly, true);
+  assert.match(html, /todos los alumnos/);
+  assert.match(html, /solo lectura/);
 });

@@ -5,6 +5,8 @@ import { getAssignedTeacherStudent } from "@/modules/teachers/server/student-rep
 import {
   createPsychopedagogyEntry,
   listStudentPsychopedagogyEntries,
+  getPsychopedagogyStudentForSuperadmin,
+  listStudentPsychopedagogyEntriesForSuperadmin,
 } from "@/modules/psychopedagogy/server/psychopedagogy.repository";
 
 type Context = { params: Promise<{ id: string }> };
@@ -29,7 +31,15 @@ function unavailable(error: unknown) {
 export async function GET(_request: Request, { params }: Context) {
   try {
     const { id } = await params;
-    const assignment = await getAssignment(id);
+    const user = await getAuthenticatedUser();
+    if (user?.role === "SUPERADMIN") {
+      const student = await getPsychopedagogyStudentForSuperadmin(id);
+      if (!student) return NextResponse.json({ error: "Alumno no disponible." }, { status: 404 });
+      const entries = await listStudentPsychopedagogyEntriesForSuperadmin(id);
+      return NextResponse.json({ entries }, { headers: { "Cache-Control": "private, no-store" } });
+    }
+    const assignment = user && (user.role === "TEACHER" || user.role === "ADMIN_TEACHER")
+      ? await getAssignedTeacherStudent(user.id, id) : null;
     if (!assignment) return NextResponse.json({ error: "Alumno no disponible." }, { status: 404 });
     const entries = await listStudentPsychopedagogyEntries(id, assignment.teacherId);
     return NextResponse.json({ entries }, { headers: { "Cache-Control": "private, no-store" } });
