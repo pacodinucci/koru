@@ -5,7 +5,7 @@ import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { BillingRubricInputError } from "@/modules/families/lib/billing-rubrics";
 import { createBillingRubric, updateBillingRubric, assignRubricToStudent, updateStudentRubricAssignment, deleteStudentRubricAssignment } from "@/modules/families/server/rubrics.service";
 
-type RubricActionState = { message: string | null };
+type RubricActionState = { message: string | null; success?: boolean };
 
 function field(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -61,8 +61,18 @@ export async function assignRubricToStudentAction(_previousState: RubricActionSt
     const familyId = field(formData, "familyId");
     await assignRubricToStudent({ familyId, studentId: field(formData, "studentId"), rubricId: field(formData, "rubricId"), installmentCount: integerField(formData, "installmentCount"), startMonth: integerField(formData, "startMonth"), discountPercent: formData.has("discountPercent") ? field(formData, "discountPercent") : "0" }, admin.id);
     revalidateRubrics(familyId);
-    return { message: "Rubro asignado. Los cargos vencidos se registraron y las cuotas futuras quedaron programadas." };
-  } catch (error) { return { message: errorMessage(error) }; }
+    return { message: "Rubro asignado. Los cargos vencidos se registraron y las cuotas futuras quedaron programadas.", success: true };
+  } catch (error) {
+    if (!(error instanceof BillingRubricInputError)) {
+      const code = error && typeof error === "object" && "code" in error
+        && typeof error.code === "string" && /^P\d{4}$/.test(error.code) ? error.code : "UNKNOWN";
+      // Prisma errors can contain queries and values. Keep full diagnostics local
+      // to development; never return them to the browser or log them in production.
+      console.error("[families.assignRubricToStudent] Assignment failed.",
+        process.env.NODE_ENV === "development" ? error : { code });
+    }
+    return { message: errorMessage(error), success: false };
+  }
 }
 
 export async function updateStudentRubricAssignmentAction(_previousState: RubricActionState, formData: FormData): Promise<RubricActionState> {

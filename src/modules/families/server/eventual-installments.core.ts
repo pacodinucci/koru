@@ -3,7 +3,8 @@ import { AccountEntryType, Prisma, type PrismaClient } from "@prisma/client";
 import { formatBillingPeriod } from "../lib/monthly-billing.ts";
 import { dueInstallmentIndexes, installmentPeriod, splitInstallmentAmounts } from "../lib/eventual-installments.ts";
 
-type InstallmentDatabase = Pick<PrismaClient, "eventualChargeSchedule" | "familyAccountEntry"> & Partial<Pick<PrismaClient, "$transaction">>;
+type InstallmentTransaction = Pick<Prisma.TransactionClient, "eventualChargeSchedule" | "familyAccountEntry">;
+type InstallmentDatabase = InstallmentTransaction & Partial<Pick<PrismaClient, "$transaction">>;
 
 export async function lockFamilyBilling(tx: Pick<Prisma.TransactionClient, "$queryRaw">, familyId: string) {
   // SELECT 1 avoids returning PostgreSQL's void type through the PrismaPg adapter.
@@ -23,15 +24,20 @@ export async function createDueEventualInstallmentCharges(prisma: InstallmentDat
     for (const candidate of candidates) {
       const result = await prisma.$transaction(async tx => {
         await lockFamilyBilling(tx, candidate.familyId);
-        return createDueEventualInstallmentCharges(tx, now, currentPeriod, candidate.id);
+        return createDueEventualInstallmentChargesInTransaction(tx, now, currentPeriod, candidate.id);
       }, { isolationLevel: "Serializable", timeout: 30000 });
       total.due += result.due;
       total.created += result.created;
     }
     return total;
   }
-  // Transaction callers own the family lock for the entire read/write operation.
-  const schedules = await prisma.eventualChargeSchedule.findMany({
+  return createDueEventualInstallmentChargesInTransaction(prisma, now, currentPeriod, scheduleId);
+}
+
+// Callers must already own the family billing lock. Never infer transaction
+// ownership from $transaction: runtime proxies may expose it on an open transaction.
+export async function createDueEventualInstallmentChargesInTransaction(tx: InstallmentTransaction, now: Date, currentPeriod: Date, scheduleId?: string): Promise<{ due: number; created: number }> {
+  const schedules = await tx.eventualChargeSchedule.findMany({
     where: { startPeriod: { lte: currentPeriod }, ...(scheduleId ? { id: scheduleId } : {}) },
     include: { student: { select: { firstName: true, lastName: true, familyId: true } }, accountEntries: { select: { installmentNumber: true } } },
   });
@@ -63,6 +69,6 @@ export async function createDueEventualInstallmentCharges(prisma: InstallmentDat
     });
   });
   if (entries.length === 0) return { due: 0, created: 0 };
-  const result = await prisma.familyAccountEntry.createMany({ data: entries, skipDuplicates: true });
+  const result = await tx.familyAccountEntry.createMany({ data: entries, skipDuplicates: true });
   return { due: entries.length, created: result.count };
 }

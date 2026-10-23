@@ -8,17 +8,17 @@ import { Prisma } from "@prisma/client";
 
 const require = createRequire(import.meta.url);
 const source = path => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
-function load(path, mocks) {
+function load(path, mocks, globals = {}) {
   const compiled = ts.transpileModule(source(path), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const exports = {};
-  vm.runInNewContext(compiled, { exports, Date, require: name => name in mocks ? mocks[name] : require(name) });
+  vm.runInNewContext(compiled, { exports, Date, process, ...globals, require: name => name in mocks ? mocks[name] : require(name) });
   return exports;
 }
 const now = new Date("2026-10-07T12:00:00Z");
 const validators = require("../../src/modules/families/lib/billing-rubrics.ts");
 const period = { getBillingPeriod: () => new Date("2026-10-01T00:00:00Z") };
 const installments = require("../../src/modules/families/server/eventual-installments.core.ts");
-async function setup({ inactive = false, foreign = false, failCharges = false } = {}) {
+async function setup({ inactive = false, foreign = false, failCharges = false, transactionMethodVisible = false } = {}) {
   const rubrics = [{ id: "rubric", name: "Materiales", amount: new Prisma.Decimal("120000"), isActive: !inactive }];
   const schedules = [], entries = [], events = [];
   let next = 0;
@@ -61,6 +61,11 @@ async function setup({ inactive = false, foreign = false, failCharges = false } 
       assert.equal(options.isolationLevel, "Serializable");
       const before = { schedules: schedules.map(s => ({ ...s })), entries: entries.map(e => ({ ...e })), next };
       const tx = { ...db }; delete tx.$transaction;
+      if (transactionMethodVisible) {
+        // Reproduce the runtime shape from the recursive P2028 failure without
+        // letting a regression open nested transactions until the test times out.
+        tx.$transaction = async () => { throw new Error("unexpected_nested_transaction"); };
+      }
       try { const result = await callback(tx); if (conflict) throw Object.assign(new Error("conflict"), { code: conflict }); return result; }
       catch (e) { schedules.splice(0, schedules.length, ...before.schedules); entries.splice(0, entries.length, ...before.entries); next = before.next; throw e; }
     },
@@ -83,6 +88,35 @@ async function setup({ inactive = false, foreign = false, failCharges = false } 
     amendSchedule: (id, data) => Object.assign(schedules.find(s => s.id === id), data),
   };
 }
+
+test("assignment and edit reuse the open transaction even when it exposes $transaction", async () => {
+  const f = await setup({ transactionMethodVisible: true });
+  const first = await f.service.assignRubricToStudent({ ...f.input, installmentCount: 1, startMonth: 1 }, "admin");
+  const originalEntries = f.entries.map(entry => ({ ...entry }));
+  const rubric = await f.service.createBillingRubric({ name: "Seguro", amount: "600" });
+  const second = await f.service.assignRubricToStudent({ ...f.input, rubricId: rubric.id, installmentCount: 1, startMonth: 1 }, "admin");
+  assert.deepEqual(f.entries.slice(0, originalEntries.length), originalEntries);
+  assert.deepEqual(f.entries.map(entry => [entry.eventualChargeScheduleId, entry.amount]), [[first.id, "120000.00"], [second.id, "600.00"]]);
+  await f.service.updateStudentRubricAssignment({ ...f.input, rubricId: rubric.id, assignmentId: second.id, installmentCount: 1, startMonth: 1, discountPercent: "10" }, "admin");
+  assert.deepEqual(f.entries.slice(0, originalEntries.length), originalEntries);
+  assert.equal(f.entries.at(-1).amount, "540.00");
+  assert.equal((await f.repository.listStudentRubricAssignments("family")).length, 2);
+  assert.equal(f.events.filter(event => event === "lock").length, 3);
+  f.failGeneration();
+  const before = f.snapshot();
+  await assert.rejects(f.service.assignRubricToStudent({ ...f.input, startMonth: 1 }, "admin"), /charge_failure/);
+  assert.equal(f.snapshot(), before, "a failed charge rolls back its assignment and counters");
+});
+
+test("periodic generation never rediscovers work recursively inside its transaction", async () => {
+  const f = await setup({ transactionMethodVisible: true });
+  const schedule = await f.service.assignRubricToStudent({ ...f.input, installmentCount: 1, startMonth: 12 }, "admin");
+  const december = new Date("2026-12-01T00:00:00Z");
+  assert.deepEqual(await f.generate(f.db, december, december, schedule.id), { due: 1, created: 1 });
+  assert.deepEqual(await f.generate(f.db, december, december, schedule.id), { due: 0, created: 0 });
+  assert.deepEqual(f.entries.map(entry => [entry.eventualChargeScheduleId, entry.amount]), [[schedule.id, "120000.00"]]);
+  assert.equal(f.events.filter(event => event === "lock").length, 3);
+});
 
 test("S2 catalog public services create/update ordered rubrics without legacy plans", async () => {
   const f = await setup();
@@ -451,4 +485,51 @@ test("S1/S5 actions expose discounted add/edit/delete, exact feedback and bounde
     });
     for (const action of [errors.updateStudentRubricAssignmentAction, errors.deleteStudentRubricAssignmentAction]) assert.equal((await action({ message: null }, form)).message, conflictError);
   }
+});
+
+
+test("assignment failures retain server diagnostics without exposing internals to the client", async () => {
+  const internal = Object.assign(new Error("database diagnostic with private context"), { code: "P2028" });
+  for (const environment of ["development", "production", "test"]) {
+    const logs = [], paths = [];
+    let failure = internal;
+    const actions = load("src/modules/families/server/rubrics.actions.ts", {
+      "@/modules/auth/server/auth-guards": permission,
+      "@/modules/families/lib/billing-rubrics": validators,
+      "@/modules/families/server/rubrics.service": { assignRubricToStudent: async () => { throw failure; } },
+      "next/cache": { revalidatePath: path => paths.push(path) },
+    }, { console: { error: (...args) => logs.push(args) }, process: { env: { NODE_ENV: environment } } });
+    const form = new FormData();
+    const response = await actions.assignRubricToStudentAction({ message: null }, form);
+    assert.equal(response.message, "No pudimos guardar el rubro. Intentá nuevamente.");
+    assert.deepEqual(paths, []);
+    assert.equal(logs.length, 1);
+    assert.equal(logs[0][0], "[families.assignRubricToStudent] Assignment failed.");
+    if (environment === "development") assert.equal(logs[0][1], internal);
+    else assert.deepEqual(JSON.parse(JSON.stringify(logs[0][1])), { code: "P2028" });
+    assert.doesNotMatch(JSON.stringify(response), /private context|P2028/);
+    failure = new validators.BillingRubricInputError("El alumno no pertenece a esta familia.");
+    assert.equal((await actions.assignRubricToStudentAction({ message: null }, form)).message, failure.message);
+    assert.equal(logs.length, 1, "expected validation failures must not log personal input");
+    failure = { code: "private-non-Prisma-code", message: "private context" };
+    await actions.assignRubricToStudentAction({ message: null }, form);
+    if (environment !== "development") assert.deepEqual(JSON.parse(JSON.stringify(logs[1][1])), { code: "UNKNOWN" });
+    assert.deepEqual(paths, []);
+  }
+});
+
+test("two distinct rubrics remain assigned to one student with independent due charges", async () => {
+  const f = await setup();
+  const first = await f.service.assignRubricToStudent({ ...f.input, installmentCount: 1, startMonth: 1 }, "admin");
+  const before = f.entries.map(entry => ({ ...entry }));
+  const secondRubric = await f.service.createBillingRubric({ name: "Seguro", amount: "600" });
+  const second = await f.service.assignRubricToStudent({ ...f.input, rubricId: secondRubric.id, installmentCount: 1, startMonth: 1 }, "admin");
+  const assignments = await f.repository.listStudentRubricAssignments("family");
+  assert.deepEqual(Array.from(assignments, row => [row.id, row.studentId, row.rubricId, row.totalAmount.toString()]), [
+    [first.id, "student", "rubric", "120000"], [second.id, "student", secondRubric.id, "600"],
+  ]);
+  assert.deepEqual(f.entries.slice(0, before.length), before);
+  assert.deepEqual(f.entries.map(row => [row.eventualChargeScheduleId, row.amount, row.installmentNumber]), [
+    [first.id, "120000.00", 1], [second.id, "600.00", 1],
+  ]);
 });

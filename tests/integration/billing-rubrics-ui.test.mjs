@@ -22,7 +22,7 @@ const assignments = [
 ];
 
 // Executes real public components and callbacks with deterministic hooks, not a browser or database.
-function harness({ rubrics = [rubric, inactive], records = assignments, schedules = [], pending = false, message = null, response = "Respuesta del servidor", defer = false } = {}) {
+function harness({ rubrics = [rubric, inactive], records = assignments, schedules = [], pending = false, message = null, response = "Respuesta del servidor", success = false, defer = false } = {}) {
   const cache = new Map();
   const slots = new Map();
   const calls = [];
@@ -53,7 +53,7 @@ function harness({ rubrics = [rubric, inactive], records = assignments, schedule
   const action = (name) => async (previousState, data) => {
     calls.push({ name, previousState, fields: Object.fromEntries(data) });
     if (defer) await new Promise((resolve) => { release = resolve; });
-    return { message: response };
+    return name === "assign" ? { message: response, success } : { message: response };
   };
   const pass = ({ children }) => React.createElement("div", null, children);
   function load(path) {
@@ -153,6 +153,42 @@ function harness({ rubrics = [rubric, inactive], records = assignments, schedule
   return api;
 }
 const component = (ui, file, name, props) => React.createElement(ui.load(file)[name], props);
+
+test("successful assignment closes the dialog and reopens a fresh form for another rubric", async () => {
+  const ui = harness({ success: true });
+  ui.render(component(ui, "components/student-rubric-assignment-form", "StudentRubricAssignmentForm", { familyId: "family", studentId: "ana", rubrics: [rubric] }));
+  ui.button("Agregar rubro").props.onClick();
+  ui.render();
+  ui.find(node => node.type === "select" && node.props.name === "rubricId").props.onChange({ target: { value: "materials" } });
+  ui.find(node => node.type === "input" && node.props.name === "installmentCount").props.onChange({ target: { value: "3" } });
+  ui.render();
+  await ui.submit("Agregar rubro al alumno", { startMonth: "3" });
+  assert.equal(ui.find(node => node.props.role === "dialog"), undefined);
+  assert.equal(ui.form("Agregar rubro al alumno"), undefined);
+  assert.equal(ui.calls.length, 1);
+  assert.equal(ui.calls[0].fields.installmentCount, "3");
+  ui.button("Agregar rubro").props.onClick();
+  ui.render();
+  assert.ok(ui.form("Agregar rubro al alumno"));
+  assert.equal(ui.find(node => node.type === "select" && node.props.name === "rubricId").props.value, "");
+  assert.equal(ui.find(node => node.type === "input" && node.props.name === "installmentCount").props.value, "1");
+  assert.equal(ui.find(node => node.props.role === "alert"), undefined);
+});
+
+test("failed assignment keeps the dialog open with its values and server error", async () => {
+  const ui = harness({ success: false, response: "No pudimos guardar el rubro. Intentá nuevamente." });
+  ui.render(component(ui, "components/student-rubric-assignment-form", "StudentRubricAssignmentForm", { familyId: "family", studentId: "ana", rubrics: [rubric] }));
+  ui.button("Agregar rubro").props.onClick();
+  ui.render();
+  ui.find(node => node.type === "select" && node.props.name === "rubricId").props.onChange({ target: { value: "materials" } });
+  ui.render();
+  await ui.submit("Agregar rubro al alumno");
+  assert.ok(ui.find(node => node.props.role === "dialog"));
+  assert.ok(ui.form("Agregar rubro al alumno"));
+  assert.equal(ui.find(node => node.type === "select" && node.props.name === "rubricId").props.value, "materials");
+  assert.match(ui.text(ui.find(node => node.props.role === "alert")), /No pudimos guardar el rubro/);
+  assert.equal(ui.calls.length, 1);
+});
 
 // Catalog regressions remain independent from student-assignment editing.
 test("catalog exposes create/edit total amounts, active state and server feedback", async () => {

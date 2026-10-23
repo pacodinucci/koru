@@ -92,7 +92,11 @@ export function StudentRubricAssignmentFields({ rubrics, assignment, pending, di
 
 function AssignmentCreationDialog({ familyId, studentId, rubrics, onClose }: StudentRubricAssignmentProps & { onClose: () => void }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(assignRubricToStudentAction, { message: null as string | null });
+  const [state, formAction, pending] = useActionState(async (previousState: { message: string | null; success?: boolean }, formData: FormData) => {
+    const result = await assignRubricToStudentAction(previousState, formData);
+    if (result.success) onClose();
+    return result;
+  }, { message: null as string | null });
   return (
     <ResponsiveDialog open={open} onOpenChange={(nextOpen) => {
       if (!nextOpen && pending) return;

@@ -6,7 +6,7 @@ import { BillingRubricInputError, parseBillingRubric, parseRubricAssignment, par
 import { splitInstallmentAmounts } from "@/modules/families/lib/eventual-installments";
 import { calculatePlanDiscount } from "@/modules/families/lib/plan-discounts";
 import { getBillingPeriod } from "@/modules/families/lib/monthly-billing";
-import { createDueEventualInstallmentCharges, lockFamilyBilling } from "@/modules/families/server/eventual-installments.core";
+import { createDueEventualInstallmentChargesInTransaction, lockFamilyBilling } from "@/modules/families/server/eventual-installments.core";
 
 type AssignmentInput = { familyId: string; studentId: string; rubricId: string; installmentCount: number; startMonth: number; discountPercent?: string };
 type AssignmentIdentity = { familyId: string; studentId: string; assignmentId: string };
@@ -79,7 +79,7 @@ export async function assignRubricToStudent(input: AssignmentInput, createdById:
       createdById: actorId,
       isBase: false,
     } });
-    await createDueEventualInstallmentCharges(tx, now, currentPeriod, assignment.id);
+    await createDueEventualInstallmentChargesInTransaction(tx, now, currentPeriod, assignment.id);
     return assignment;
   });
 }
@@ -141,7 +141,7 @@ export async function updateStudentRubricAssignment(input: AssignmentInput & { a
       installmentCount: terms.installmentCount,
       startPeriod: new Date(Date.UTC(schedule.startPeriod.getUTCFullYear(), terms.startMonth - 1, 1)),
     } });
-    await createDueEventualInstallmentCharges(tx, now, currentPeriod, assignment.id);
+    await createDueEventualInstallmentChargesInTransaction(tx, now, currentPeriod, assignment.id);
     return assignment;
   });
 }
