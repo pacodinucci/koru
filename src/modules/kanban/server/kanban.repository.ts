@@ -46,7 +46,8 @@ const assigneeSelect = {
 } as const;
 type AssigneeRecord = Prisma.UserGetPayload<{ select: typeof assigneeSelect }>;
 function hasDashboardAccess(user: AssigneeRecord) {
-  // Mirror requireDashboardUser: assigned inactive roles do NOT fall back to legacy roles.
+  if (user.role === "PSYCHOPEDAGOGY_TEACHER") return false;
+  // Mirror the Kanban guard: assigned inactive roles do NOT fall back to legacy roles.
   return user.accessRole?.isActive
     ? user.accessRole.permissions.some(({ permission }) => permission.key === "dashboard.access")
     : !user.accessRoleId && legacyRolePermissions[user.role].includes("dashboard.access");

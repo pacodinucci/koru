@@ -21,6 +21,9 @@ const destinations: Array<[PermissionKey, string]> = [
 
 export default async function DashboardPage() {
   const user = await requireDashboardUser();
+  if (user.role === "PSYCHOPEDAGOGY_TEACHER") {
+    redirect("/dashboard/psicopedagogia");
+  }
   if (user.role === "SUPERADMIN") {
     redirect("/dashboard/administracion");
   }

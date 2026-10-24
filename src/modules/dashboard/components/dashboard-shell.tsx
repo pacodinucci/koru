@@ -235,7 +235,7 @@ export function DashboardShell({
                       <span>Inicio</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
+                  {userRole !== "PSYCHOPEDAGOGY_TEACHER" ? <SidebarMenuItem>
                     <SidebarMenuButton
                       tooltip="Kanban"
                       aria-label="Kanban"
@@ -246,7 +246,7 @@ export function DashboardShell({
                       <LayoutDashboard />
                       <span>Kanban</span>
                     </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  </SidebarMenuItem> : null}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -254,6 +254,7 @@ export function DashboardShell({
           {can("students.view") ||
           can("families.view") ||
           isSuperAdmin ||
+          userRole === "PSYCHOPEDAGOGY_TEACHER" ||
           canViewBasecamp ||
           can("calendar.view") ? (
             <SidebarGroup>
@@ -386,7 +387,7 @@ export function DashboardShell({
                       </SidebarMenuItem>
                     </>
                   ) : null}
-                  {isSuperAdmin || userRole === "TEACHER" || userRole === "ADMIN_TEACHER" ? (
+                  {isSuperAdmin || userRole === "PSYCHOPEDAGOGY_TEACHER" ? (
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         tooltip="Psicopedagogía"

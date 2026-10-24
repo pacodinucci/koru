@@ -38,6 +38,11 @@ model User {
   kanbanAssignedCards        KanbanCard[]
   kanbanStatusWatches        KanbanStatusWatch[]
   kanbanNotifications        KanbanNotification[]
+  updatedPsychopedagogyLearningProfiles PsychopedagogyLearningProfile[] @relation("LearningProfileUserEditor")
+  authoredPsychopedagogyEntries PsychopedagogyEntry[] @relation("ObservationUserAuthor")
+  authoredPsychopedagogyAccompaniments PsychopedagogyAccompaniment[] @relation("AccompanimentUserAuthor")
+  authoredPsychopedagogyInterventions PsychopedagogyIntervention[] @relation("InterventionUserAuthor")
+  authoredPsychopedagogyInstruments PsychopedagogyInstrument[] @relation("InstrumentUserAuthor")
   authoredTeacherReports     TeacherReport[]
   authoredTeacherAgreements  TeacherFollowUpAgreement[] @relation("TeacherAgreementAuthor")
   acceptedTeacherAgreements  TeacherFollowUpAgreement[] @relation("TeacherAgreementAcceptance")
@@ -183,6 +188,7 @@ enum UserRole {
   ADMIN_TEACHER
   SUPERADMIN
   TEACHER
+  PSYCHOPEDAGOGY_TEACHER
   PARENT
 }
 
@@ -853,6 +859,10 @@ model TeacherProfile {
   isActive              Boolean               @default(true)
   groupResponsibilities StudentGroupTeacher[]
   psychopedagogyEntries PsychopedagogyEntry[]
+  updatedPsychopedagogyProfiles PsychopedagogyLearningProfile[]
+  psychopedagogyAccompaniments PsychopedagogyAccompaniment[]
+  psychopedagogyInterventions PsychopedagogyIntervention[]
+  psychopedagogyInstruments PsychopedagogyInstrument[]
   studentReports        StudentReport[]
   teacherReports        TeacherReport[]
   followUpAgreements    FollowUpAgreement[]
@@ -909,6 +919,10 @@ model Student {
   billingSchedules  EventualChargeSchedule[]
   examGrades        ExamGrade[]
   psychopedagogyEntries PsychopedagogyEntry[]
+  psychopedagogyLearningProfile PsychopedagogyLearningProfile?
+  psychopedagogyAccompaniments PsychopedagogyAccompaniment[]
+  psychopedagogyInterventions PsychopedagogyIntervention[]
+  psychopedagogyInstruments PsychopedagogyInstrument[]
   reports           StudentReport[]
   followUpAgreements FollowUpAgreementStudent[]
   createdAt         DateTime               @default(now())
@@ -981,8 +995,10 @@ model PsychopedagogyEntry {
   id        String         @id @default(cuid())
   studentId String
   student   Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  teacherId String
-  teacher   TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  teacherId String?
+  teacher   TeacherProfile? @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  authorUserId String?
+  authorUser User? @relation("ObservationUserAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
   entryDate DateTime       @db.Date
   title     String
   body      String
@@ -990,6 +1006,96 @@ model PsychopedagogyEntry {
 
   @@index([studentId, entryDate])
   @@index([teacherId])
+  @@index([authorUserId])
+}
+
+model PsychopedagogyLearningProfile {
+  id          String         @id @default(cuid())
+  studentId   String         @unique
+  student     Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  description String
+  updatedById String?
+  updatedBy   TeacherProfile? @relation(fields: [updatedById], references: [id], onDelete: Restrict)
+  updatedByUserId String?
+  updatedByUser User? @relation("LearningProfileUserEditor", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([updatedById])
+  @@index([updatedByUserId])
+}
+
+enum PsychopedagogyAccompanimentKind {
+  INDIVIDUAL
+  FAMILY
+}
+
+model PsychopedagogyAccompaniment {
+  id        String                         @id @default(cuid())
+  studentId String
+  student   Student                        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId String?
+  teacher   TeacherProfile?                @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  authorUserId String?
+  authorUser User? @relation("AccompanimentUserAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
+  entryDate DateTime                       @db.Date
+  kind      PsychopedagogyAccompanimentKind
+  title     String
+  body      String
+  createdAt DateTime                       @default(now())
+
+  @@index([studentId, entryDate])
+  @@index([teacherId])
+  @@index([authorUserId])
+}
+
+model PsychopedagogyIntervention {
+  id                  String         @id @default(cuid())
+  studentId           String
+  student             Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId           String?
+  teacher             TeacherProfile? @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  authorUserId        String?
+  authorUser          User? @relation("InterventionUserAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
+  entryDate           DateTime       @db.Date
+  title               String
+  observationAnalysis String
+  strategyFeedback    String
+  workPlan            String
+  implementation      String
+  evaluationResults   String
+  createdAt           DateTime       @default(now())
+
+  @@index([studentId, entryDate])
+  @@index([teacherId])
+  @@index([authorUserId])
+}
+
+enum PsychopedagogyInstrumentKind {
+  QUESTIONNAIRE
+  ASSESSMENT
+  INTERVIEW
+  TEST
+  OTHER
+}
+
+model PsychopedagogyInstrument {
+  id        String         @id @default(cuid())
+  studentId String
+  student   Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId String?
+  teacher   TeacherProfile? @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  authorUserId String?
+  authorUser User? @relation("InstrumentUserAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
+  entryDate DateTime       @db.Date
+  kind      PsychopedagogyInstrumentKind?
+  name      String
+  body      String
+  createdAt DateTime       @default(now())
+
+  @@index([studentId, entryDate])
+  @@index([teacherId])
+  @@index([authorUserId])
 }
 
 enum FollowUpAgreementStatus {

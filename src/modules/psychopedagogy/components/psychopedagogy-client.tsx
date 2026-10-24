@@ -1,142 +1,120 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { Plus } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { Brain, NotebookPen, ClipboardList, ListChecks } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ResponsiveDialog, ResponsiveDialogBody, ResponsiveDialogContent,
-  ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader,
-  ResponsiveDialogTitle, ResponsiveDialogTrigger,
+  ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle,
 } from "@/components/ui/responsive-dialog";
+import type { StudentOption, PsychopedagogyProfileSection as SectionKey } from "../lib/profile-contract";
+import { PsychopedagogyProfileSection, profileSectionLabels, type LearningEditorState, type FollowupActions } from "./psychopedagogy-profile";
 
-type StudentOption = { id: string; firstName: string; lastName: string; group: { name: string } };
-type Entry = { id: string; entryDate: string; title: string; body: string };
+const sectionIcons = [
+  { section: "learning", Icon: Brain }, { section: "followups", Icon: NotebookPen },
+  { section: "interventions", Icon: ClipboardList }, { section: "instruments", Icon: ListChecks },
+] as const;
 
-function today() {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
+export function PsychopedagogyClient({ students, readOnly = false, canEditLearning = false, canEditFollowups = false, canEditInterventions = false, canEditInstruments = false }: { students: StudentOption[]; readOnly?: boolean; canEditLearning?: boolean; canEditFollowups?: boolean; canEditInterventions?: boolean; canEditInstruments?: boolean }) {
+  const [filter, setFilter] = useState("");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [selection, setSelection] = useState<{ student: StudentOption; section: SectionKey } | null>(null);
+  const [learningState, setLearningState] = useState<LearningEditorState>({ editing: false, saving: false });
+  const [followupActions, setFollowupActions] = useState<FollowupActions | null>(null);
+  const [interventionActions, setInterventionActions] = useState<FollowupActions | null>(null);
+  const [instrumentActions, setInstrumentActions] = useState<FollowupActions | null>(null);
+  const isTableModal = selection?.section === "followups" || selection?.section === "interventions" || selection?.section === "instruments";
+  const isReportModal = selection?.section === "learning" || isTableModal;
+  const learningFormId = selection?.section === "learning" ? `psychopedagogy-modal-${selection.student.id}-learning` : undefined;
+  const query = filter.trim().toLocaleLowerCase("es");
+  const filteredStudents = students.filter((student) =>
+    `${student.firstName} ${student.lastName} ${student.firstName}`.toLocaleLowerCase("es").includes(query));
+  const pageCount = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
+  const currentPage = Math.min(pageIndex, pageCount - 1);
+  const pageStudents = filteredStudents.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
 
-export function PsychopedagogyClient({ students, readOnly = false }: { students: StudentOption[]; readOnly?: boolean }) {
-  const [studentId, setStudentId] = useState(students[0]?.id ?? "");
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(Boolean(studentId));
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [revision, setRevision] = useState(0);
-
-  useEffect(() => {
-    if (!studentId) return;
-    const controller = new AbortController();
-    async function load() {
-      setLoading(true);
-      setLoadError(null);
-      setEntries([]);
-      try {
-        const response = await fetch(`/api/teacher/students/${encodeURIComponent(studentId)}/psychopedagogy`, {
-          cache: "no-store", signal: controller.signal,
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error ?? "No pudimos cargar las bitácoras.");
-        if (!controller.signal.aborted) setEntries(result.entries);
-      } catch (cause) {
-        if (!controller.signal.aborted) setLoadError(cause instanceof Error ? cause.message : "No pudimos cargar las bitácoras.");
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    }
-    void load();
-    return () => controller.abort();
-  }, [studentId, revision]);
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (readOnly) return;
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const response = await fetch(`/api/teacher/students/${encodeURIComponent(studentId)}/psychopedagogy`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: data.get("date"), title: data.get("title"), body: data.get("body") }),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.ok) throw new Error(result.error ?? "No pudimos guardar la bitácora.");
-      form.reset();
-      setOpen(false);
-      setRevision((value) => value + 1);
-    } catch (cause) {
-      setSaveError(cause instanceof Error ? cause.message : "No pudimos guardar la bitácora.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  const student = students.find((item) => item.id === studentId);
-  return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="w-full space-y-1.5 sm:max-w-sm">
-          <Label htmlFor="psychopedagogy-student">Alumno</Label>
-          <select id="psychopedagogy-student" value={studentId} disabled={saving || students.length === 0}
-            onChange={(event) => { setStudentId(event.target.value); setEntries([]); setLoading(true); setLoadError(null); }}
-            className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm">
-            {students.length === 0 ? <option value="">{readOnly ? "Sin alumnos registrados" : "Sin alumnos asignados"}</option> : null}
-            {students.map((item) => <option key={item.id} value={item.id}>{item.lastName}, {item.firstName} · {item.group.name}</option>)}
-          </select>
-        </div>
-        {!readOnly ? <ResponsiveDialog open={open} onOpenChange={(value) => { if (!saving) { setOpen(value); setSaveError(null); } }}>
-          <ResponsiveDialogTrigger render={<Button type="button" disabled={!studentId} />}>
-            <Plus className="size-4" /> Nueva bitácora
-          </ResponsiveDialogTrigger>
-          <ResponsiveDialogContent className="[font-family:var(--font-montserrat)]">
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>Nueva bitácora</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>Registrá el seguimiento de {student?.firstName} {student?.lastName}.</ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
-            <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
-              <ResponsiveDialogBody className="space-y-4">
-                {saveError ? <p role="alert" className="text-sm text-red-700">{saveError}</p> : null}
-                <div className="space-y-1.5">
-                  <Label htmlFor="psychopedagogy-date">Fecha</Label>
-                  <Input id="psychopedagogy-date" name="date" type="date" defaultValue={today()} required disabled={saving} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="psychopedagogy-title">Título</Label>
-                  <Input id="psychopedagogy-title" name="title" maxLength={160} required disabled={saving} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="psychopedagogy-body">Texto</Label>
-                  <textarea id="psychopedagogy-body" name="body" maxLength={10000} required disabled={saving}
-                    rows={8} className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm" />
-                </div>
-              </ResponsiveDialogBody>
-              <ResponsiveDialogFooter>
-                <Button type="button" variant="outline" disabled={saving} onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={saving}>{saving ? "Guardando…" : "Guardar bitácora"}</Button>
-              </ResponsiveDialogFooter>
-            </form>
-          </ResponsiveDialogContent>
-        </ResponsiveDialog> : null}
+  return <div className="min-w-0 space-y-5">
+    <div className="space-y-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Input type="search" aria-label="Buscar alumnos por nombre o apellido" placeholder="Buscar por nombre o apellido"
+          className="sm:max-w-sm" value={filter} onChange={(event) => { setFilter(event.target.value); setPageIndex(0); }} />
+        <p className="text-sm text-slate-600" role="status">{filteredStudents.length} {filteredStudents.length === 1 ? "alumno" : "alumnos"}</p>
       </div>
-      {students.length === 0 ? <p className="text-sm text-muted-foreground">{readOnly ? "No hay alumnos registrados." : "No tenés alumnos asignados."}</p>
-        : loading ? <p role="status" className="text-sm text-muted-foreground">Cargando bitácoras…</p>
-        : loadError ? <div role="alert" className="space-y-2 text-sm text-red-700"><p>{loadError}</p><Button variant="outline" onClick={() => setRevision((value) => value + 1)}>Reintentar</Button></div>
-        : entries.length === 0 ? <p className="text-sm text-muted-foreground">{readOnly ? "Este alumno todavía no tiene bitácoras." : "Este alumno todavía no tiene bitácoras tuyas."}</p>
-        : <div className="space-y-3">{entries.map((entry) => (
-          <article key={entry.id} className="space-y-2 rounded-xl border border-slate-200 bg-white p-4">
-            <time dateTime={entry.entryDate.slice(0, 10)} className="text-sm text-muted-foreground">{entry.entryDate.slice(0, 10).split("-").reverse().join("/")}</time>
-            <h2 className="break-words font-semibold text-slate-900">{entry.title}</h2>
-            <p className="whitespace-pre-wrap break-words text-sm text-slate-700">{entry.body}</p>
-          </article>
-        ))}</div>}
+      <div className="min-w-0 overflow-x-auto rounded-xl border border-slate-200">
+        <Table className="min-w-[760px] table-fixed">
+          <colgroup>
+            <col style={{ width: "36%" }} /><col style={{ width: "26%" }} />
+            <col style={{ width: "14%" }} /><col style={{ width: "24%" }} />
+          </colgroup>
+          <TableHeader><TableRow>
+            <TableHead>Apellido y nombre</TableHead><TableHead>Curso</TableHead>
+            <TableHead className="text-center">Estado</TableHead>
+            <TableHead className="text-center"><span className="sr-only">Perfil psicopedagógico</span></TableHead>
+          </TableRow></TableHeader>
+          <TableBody>
+            {pageStudents.length === 0 ? <TableRow><TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+              {students.length === 0 ? "No hay alumnos registrados." : "No encontramos alumnos con esa búsqueda."}
+            </TableCell></TableRow> : null}
+            {pageStudents.map((student) => <TableRow key={student.id}>
+              <TableCell className="whitespace-normal break-words"><Link href={`/dashboard/students/${student.id}`}
+                className="font-medium text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                {student.lastName}, {student.firstName}
+              </Link></TableCell>
+              <TableCell className="whitespace-normal break-words">{student.group.name}</TableCell>
+              <TableCell className="text-center"><span aria-label="Sin estado de seguimiento" title="El estado de seguimiento todavía no está definido.">—</span></TableCell>
+              <TableCell className="text-center">
+                <div className="mx-auto flex min-w-[160px] items-center justify-center gap-1" role="group" aria-label={`Perfil psicopedagógico de ${student.firstName} ${student.lastName}`}>
+                  {sectionIcons.map(({ section, Icon }) => <Button key={section} type="button" size="icon" variant="ghost" className="size-9 shrink-0"
+                    aria-label={`Ver ${profileSectionLabels[section].toLocaleLowerCase("es")} de ${student.firstName} ${student.lastName}`}
+                    title={profileSectionLabels[section]} onClick={() => { setLearningState({ editing: false, saving: false }); setFollowupActions(null); setInterventionActions(null); setInstrumentActions(null); setSelection({ student, section }); }}>
+                    <Icon className="size-4" aria-hidden="true" />
+                  </Button>)}
+                </div>
+              </TableCell>
+            </TableRow>)}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+        <span>Página {currentPage + 1} de {pageCount}</span>
+        <div className="flex items-center gap-2">
+          <select aria-label="Filas por página" className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+            value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPageIndex(0); }}>
+            {[10, 20, 50].map((size) => <option key={size} value={size}>{size} por página</option>)}
+          </select>
+          <Button type="button" size="sm" variant="outline" disabled={currentPage === 0} onClick={() => setPageIndex(currentPage - 1)}>Anterior</Button>
+          <Button type="button" size="sm" variant="outline" disabled={currentPage >= pageCount - 1} onClick={() => setPageIndex(currentPage + 1)}>Siguiente</Button>
+        </div>
+      </div>
     </div>
-  );
+    <ResponsiveDialog open={Boolean(selection)} onOpenChange={(open) => { if (!open) setSelection(null); }}>
+      <ResponsiveDialogContent className={isReportModal
+        ? "[font-family:var(--font-montserrat)] md:w-[min(calc(100vw-2rem),44rem)]"
+        : "[font-family:var(--font-montserrat)]"}>
+        <ResponsiveDialogHeader className={isReportModal ? "px-6 pt-6 pb-3" : undefined}>
+          <ResponsiveDialogTitle className={isReportModal ? "[font-family:var(--font-montserrat)] text-lg text-primary" : "[font-family:var(--font-montserrat)]"}>{selection ? profileSectionLabels[selection.section] : "Perfil psicopedagógico"}</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>{selection?.student.firstName} {selection?.student.lastName} · {selection?.student.group.name}{readOnly && !((canEditLearning && selection?.section === "learning") || (canEditFollowups && selection?.section === "followups") || (canEditInterventions && selection?.section === "interventions") || (canEditInstruments && selection?.section === "instruments")) ? " · Solo lectura" : ""}</ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
+        <ResponsiveDialogBody className={isTableModal ? "px-0 pt-3 pb-6" : isReportModal ? "px-6 pt-3 pb-6" : undefined}>
+          {selection ? <PsychopedagogyProfileSection student={selection.student} section={selection.section} readOnly={readOnly} canEditLearning={canEditLearning} canEditFollowups={canEditFollowups} canEditInterventions={canEditInterventions} canEditInstruments={canEditInstruments}
+            onInstrumentActionsChange={selection.section === "instruments" ? setInstrumentActions : undefined}
+            onInterventionActionsChange={selection.section === "interventions" ? setInterventionActions : undefined}
+            followupsTabs={selection.section === "followups"} onFollowupActionsChange={selection.section === "followups" ? setFollowupActions : undefined} learningFormId={learningFormId} onLearningStateChange={selection.section === "learning" ? setLearningState : undefined} /> : null}
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter columns={1} data-followup-actions={selection?.section === "followups" || undefined} data-intervention-actions={selection?.section === "interventions" || undefined} data-instrument-actions={selection?.section === "instruments" || undefined} className={isReportModal ? "flex flex-nowrap items-center justify-end gap-2 border-t-0 px-6 pt-0" : undefined}>
+          {selection?.section === "followups" && followupActions ? <Button type="button" onClick={followupActions.create}>{followupActions.label}</Button> : null}
+          {selection?.section === "interventions" && interventionActions ? <Button type="button" onClick={interventionActions.create}>{interventionActions.label}</Button> : null}
+          {selection?.section === "instruments" && instrumentActions ? <Button type="button" onClick={instrumentActions.create}>{instrumentActions.label}</Button> : null}
+          {selection?.section === "learning" && learningState.editing ? <Button type="submit" form={learningFormId} disabled={learningState.saving}>
+            {learningState.saving ? "Guardando…" : "Guardar descripción"}
+          </Button> : <Button type="button" variant="outline" onClick={() => setSelection(null)}>Cerrar</Button>}
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
+  </div>;
 }

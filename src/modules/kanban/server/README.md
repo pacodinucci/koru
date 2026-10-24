@@ -4,8 +4,12 @@
 
 `kanban.actions.ts` conserva las acciones de L5 de `odd/tasks/internal-kanban.md`
 y agrega las opciones de columna de L7 de `odd/tasks/kanban-column-options.md`.
-Cada acción llama a `requireDashboardUser` antes de acceder a datos. Los tableros son
-compartidos: no hay filtros por creador ni cambios a los permisos del dashboard.
+Cada acción llama a `requireDashboardUser(undefined, "kanban")` antes de acceder a
+datos, mediante un wrapper local compartido por todas las acciones. La página usa
+el mismo scope. Este scope excluye a `PSYCHOPEDAGOGY_TEACHER`: su acceso al dashboard
+no habilita Kanban, ni siquiera mediante llamadas directas a acciones.
+Los demás roles conservan sus reglas anteriores. Los tableros son compartidos:
+no hay filtros por creador.
 Los DTO públicos están en `../types.ts`; las acciones lanzan errores legibles en español.
 La interfaz debe volver a cargar los datos después de una mutación exitosa.
 
@@ -13,8 +17,9 @@ La creación de tableros incluye tres estados editables: **Pendiente**, **En cur
 **Hecho**. Los nombres de tablero admiten 1–120 caracteres; los estados, 1–80;
 los títulos, 1–200; las descripciones opcionales, hasta 5000. Se recortan los espacios.
 Los colores son hexadecimales `#RRGGBB` o `""` para **Sin color**. Los identificadores no pueden estar vacíos.
-Las personas responsables deben tener `dashboard.access`, calculado con la misma
-precedencia de roles activos/asignados y permisos heredados que el guard existente.
+Las personas responsables deben tener `dashboard.access` y no pueden tener el rol
+`PSYCHOPEDAGOGY_TEACHER`, con la misma precedencia de roles activos/asignados y
+permisos heredados que el guard de Kanban.
 No se usan emails como etiquetas ni se devuelven datos de permisos al cliente.
 
 ## Orden, movimientos y eliminación
