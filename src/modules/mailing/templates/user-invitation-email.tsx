@@ -25,6 +25,7 @@ const roleLabels: Record<UserRole, string> = {
   ADMIN_TEACHER: "administrador docente",
   SUPERADMIN: "superadministrador",
   TEACHER: "docente",
+  PSYCHOPEDAGOGY_TEACHER: "docente psicopedagógico",
   PARENT: "familia",
 };
 

@@ -66,6 +66,7 @@ export const legacyRolePermissions: Record<UserRole, readonly PermissionKey[]> =
     "inventory.view",
     "students.view",
   ],
+  PSYCHOPEDAGOGY_TEACHER: ["dashboard.access", "students.view"],
   PARENT: [],
 };
 

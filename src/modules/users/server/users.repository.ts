@@ -3,7 +3,7 @@ import "server-only";
 import { InvitationStatus, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { isTeacherRole } from "@/modules/auth/roles";
+import { isTeacherRole, needsTeacherProfile } from "@/modules/auth/roles";
 import {
   cancelStaleInvitationDeliveryJobs,
   createInvitationDeliveryJob,
@@ -112,7 +112,7 @@ export async function reconcileUserInvitationAfterSignup(email: string, token: s
       });
     }
 
-    if (isTeacherRole(invitation.role)) {
+    if (needsTeacherProfile(invitation.role)) {
       const teacherProfile = {
         displayName: invitation.teacherName || user.name || user.email,
         email: user.email,
@@ -278,14 +278,14 @@ export async function updateUserRole({ userId, accessRoleId }: UpdateUserRoleInp
       },
       select: { id: true, name: true, email: true, role: true },
     });
-    if (isTeacherRole(nextRole.baseRole)) {
+    if (needsTeacherProfile(nextRole.baseRole)) {
       await tx.teacherProfile.upsert({
         where: { userId },
         create: { userId, displayName: updatedUser.name || updatedUser.email, email: updatedUser.email, isActive: true },
         update: { displayName: updatedUser.name || updatedUser.email, email: updatedUser.email, isActive: true },
       });
     }
-    if (isTeacherRole(existingUser.role) && !isTeacherRole(nextRole.baseRole)) {
+    if (needsTeacherProfile(existingUser.role) && !needsTeacherProfile(nextRole.baseRole)) {
       await tx.teacherProfile.updateMany({ where: { userId }, data: { isActive: false } });
     }
     return updatedUser;

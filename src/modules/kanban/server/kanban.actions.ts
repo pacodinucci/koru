@@ -2,12 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireDashboardUser } from "@/modules/auth/server/auth-guards";
+import { requireDashboardUser as requireDashboardAccess } from "@/modules/auth/server/auth-guards";
 import { boardSchema, cardSchema, parseDueDate, statusSchema } from "@/modules/kanban/domain/kanban-validation";
 import { identifier, isActiveStatus, listInternalAssignees, normalizeCards, positionOrder, requireAssignee, requireCard, requireStatus, withBoard } from "@/modules/kanban/server/kanban.repository";
 import { notifyCardMove, notifyColumn } from "@/modules/kanban/server/kanban-notifications";
 import type { KanbanAssignee, KanbanBoard, KanbanBoardSummary, KanbanNotification } from "@/modules/kanban/types";
 
+// Keep every action behind the Kanban-specific scope, including notifications.
+const requireDashboardUser = () => requireDashboardAccess(undefined, "kanban");
 const refresh = () => revalidatePath("/dashboard/kanban");
 const defaultStatuses = [
   { name: "Pendiente", color: "#64748b", position: 0 },

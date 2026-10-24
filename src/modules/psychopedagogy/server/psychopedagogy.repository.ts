@@ -37,12 +37,21 @@ export async function listStudentPsychopedagogyEntriesForSuperadmin(studentId: s
   });
 }
 
+export async function getPsychopedagogyTeacherForUser(userId: string) {
+  return prisma.teacherProfile.findFirst({
+    where: { userId, isActive: true },
+    select: { id: true },
+  });
+}
+
 export async function createPsychopedagogyEntry(data: {
   studentId: string;
-  teacherId: string;
+  teacherId: string | null;
+  authorUserId?: string;
   entryDate: Date;
   title: string;
   body: string;
 }) {
+  if (!data.teacherId && !data.authorUserId) throw new Error("Missing observation author");
   return prisma.psychopedagogyEntry.create({ data, select: { id: true } });
 }

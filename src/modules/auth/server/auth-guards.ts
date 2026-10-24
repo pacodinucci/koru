@@ -204,15 +204,22 @@ export async function requireRole(
 ) {
   const user = await requireUser();
 
-  if (!roles.includes(user.role)) {
+  if (!roles.includes(user.role) ||
+    (user.role === "PSYCHOPEDAGOGY_TEACHER" && !user.permissionKeys.includes("dashboard.access"))) {
     redirect(forbiddenRedirectTo);
   }
 
   return user;
 }
 
+/** Dashboard entry does not imply access to the shared Kanban workspace. */
 export async function requireDashboardUser(
   forbiddenRedirectTo = "/dashboard?error=forbidden",
+  scope: "dashboard" | "kanban" = "dashboard",
 ) {
-  return requirePermission("dashboard.access", forbiddenRedirectTo);
+  const user = await requirePermission("dashboard.access", forbiddenRedirectTo);
+  if (scope === "kanban" && user.role === "PSYCHOPEDAGOGY_TEACHER") {
+    redirect(forbiddenRedirectTo);
+  }
+  return user;
 }

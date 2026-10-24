@@ -2,6 +2,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, UserRole } from "@prisma/client";
 import { readFileSync, existsSync } from "node:fs";
 import { Pool } from "pg";
+import { buildRoleBackfillPlan } from "./role-defaults.mjs";
 
 function normalizePostgresUrl(connectionString) {
   const aliasModes = new Set(["prefer", "require", "verify-ca"]);
@@ -68,39 +69,38 @@ async function main() {
   const adminEmails = parseEmailList(process.env.ADMIN_EMAILS);
   const teacherEmails = parseEmailList(process.env.TEACHER_EMAILS);
 
-  const totals = {
-    [UserRole.ADMIN]: 0,
-    [UserRole.TEACHER]: 0,
-    [UserRole.PARENT]: 0,
-  };
-
-  if (adminEmails.length > 0) {
-    const result = await prisma.user.updateMany({
-      where: { email: { in: adminEmails } },
-      data: { role: UserRole.ADMIN },
-    });
-    totals.ADMIN = result.count;
-  }
-
-  if (teacherEmails.length > 0) {
-    const result = await prisma.user.updateMany({
-      where: { email: { in: teacherEmails } },
-      data: { role: UserRole.TEACHER },
-    });
-    totals.TEACHER = result.count;
-  }
-
-  const explicitEmails = Array.from(
-    new Set([...adminEmails, ...teacherEmails]),
-  );
-
-  const resultParents = await prisma.user.updateMany({
-    where: explicitEmails.length
-      ? { email: { notIn: explicitEmails } }
-      : {},
-    data: { role: UserRole.PARENT },
+  const psychopedagogyTeacherEmails = parseEmailList(process.env.PSYCHOPEDAGOGY_TEACHER_EMAILS);
+  const plan = buildRoleBackfillPlan({ adminEmails, teacherEmails, psychopedagogyTeacherEmails });
+  const roles = await prisma.role.findMany({
+    where: { key: { in: plan.map(({ role }) => role) }, isActive: true },
+    select: { id: true, key: true },
   });
-  totals.PARENT = resultParents.count;
+  const roleIds = new Map(roles.map(({ key, id }) => [key, id]));
+  for (const { role } of plan) {
+    if (!roleIds.has(role)) throw new Error(`Falta el rol ${role}. Aplicá las migraciones antes del backfill.`);
+  }
+  const totals = {};
+  await prisma.$transaction(async (tx) => {
+    for (const { role, where } of plan) {
+      const result = await tx.user.updateMany({
+        where,
+        data: { role: UserRole[role], accessRoleId: roleIds.get(role) },
+      });
+      totals[role] = result.count;
+    }
+    // The specialized role needs authorship profiles, never classroom assignments.
+    const specialists = await tx.user.findMany({
+      where: { role: UserRole.PSYCHOPEDAGOGY_TEACHER },
+      select: { id: true, name: true, email: true },
+    });
+    for (const user of specialists) {
+      await tx.teacherProfile.upsert({
+        where: { userId: user.id },
+        create: { userId: user.id, displayName: user.name || user.email, email: user.email, isActive: true },
+        update: {},
+      });
+    }
+  });
 
   const grouped = await prisma.user.groupBy({
     by: ["role"],
