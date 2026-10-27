@@ -14,6 +14,7 @@ const destinations: Array<[PermissionKey, string]> = [
   ["inventory.view", "/dashboard/inventario"],
   ["documents.view", "/dashboard/documentos"],
   ["families.view", "/dashboard/families"],
+  ["psychopedagogy.view", "/dashboard/psicopedagogia"],
   ["students.view", "/dashboard/students"],
   ["users.view", "/dashboard/users"],
   ["roles.view", "/dashboard/roles"],
@@ -21,7 +22,7 @@ const destinations: Array<[PermissionKey, string]> = [
 
 export default async function DashboardPage() {
   const user = await requireDashboardUser();
-  if (user.role === "PSYCHOPEDAGOGY_TEACHER") {
+  if (user.role === "PSYCHOPEDAGOGY_TEACHER" && user.permissionKeys.includes("psychopedagogy.view")) {
     redirect("/dashboard/psicopedagogia");
   }
   if (user.role === "SUPERADMIN") {

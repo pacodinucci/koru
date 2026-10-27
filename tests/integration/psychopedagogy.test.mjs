@@ -26,7 +26,7 @@ function load(path, mocks) {
 }
 const role = "PSYCHOPEDAGOGY_TEACHER";
 const routePath = "app/api/teacher/students/[id]/psychopedagogy/route.ts";
-function setup({ userRole = role, exists = true, activeProfile = true, permissionKeys = ["dashboard.access", "students.view"] } = {}) {
+function setup({ userRole = role, exists = true, activeProfile = true, permissionKeys = [role, "SUPERADMIN"].includes(userRole) ? ["dashboard.access", "students.view", "psychopedagogy.view", "psychopedagogy.manage"] : ["dashboard.access", "students.view"] } = {}) {
   const writes = [], assignmentCalls = [], privateReads = [], globalReads = [], studentReads = [], profileReads = [];
   const routes = load(routePath, {
     "next/server": { NextResponse: { json: (data, init) => Response.json(data, init) } },
@@ -168,20 +168,20 @@ test("specialist without an active authorship profile cannot create", async () =
   assert.deepEqual(api.assignmentCalls, []);
 });
 
-test("section admits exactly specialists and Superadmin and derives read-only mode on server", async () => {
+test("section checks view permission and derives editing mode on server", async () => {
   for (const userRole of [role, "SUPERADMIN"]) {
     let received;
     const { default: Page } = load("app/(dashboard)/dashboard/psicopedagogia/page.tsx", {
-      "@/modules/auth/server/auth-guards": { requireRole: async (allowed) => {
-        assert.equal(JSON.stringify(allowed), JSON.stringify([role, "SUPERADMIN"]));
-        return { id: "user-1", role: userRole, email: "user@example.test", permissionKeys: [] };
+      "@/modules/auth/server/auth-guards": { requirePermission: async (permission) => {
+        assert.equal(permission, "psychopedagogy.view");
+        return { id: "user-1", role: userRole, email: "user@example.test", permissionKeys: ["psychopedagogy.view", "psychopedagogy.manage"] };
       } },
       "@/modules/dashboard/components/dashboard-shell": { DashboardShell: ({ children }) => React.createElement("div", null, children) },
       "@/modules/dashboard/server/cms-pages.repository": { discoverPagesGroupRoutes: async () => [] },
       "@/modules/psychopedagogy/views/psychopedagogy-view": { PsychopedagogyView: (props) => { received = props; return null; } },
     });
     renderToStaticMarkup(await Page());
-    assert.equal(received.readOnly, userRole === "SUPERADMIN");
+    assert.equal(received.readOnly, false);
   }
 });
 
@@ -206,7 +206,7 @@ test("global GET uses real repository to retain inactive authors' history but ne
   for (const userRole of [role, "SUPERADMIN"]) {
     const api = load(routePath, {
       "next/server": { NextResponse: { json: (data, init) => Response.json(data, init) } },
-      "@/modules/auth/server/auth-guards": { getAuthenticatedUser: async () => ({ id: "user-1", role: userRole, permissionKeys: ["dashboard.access", "students.view"] }) },
+      "@/modules/auth/server/auth-guards": { getAuthenticatedUser: async () => ({ id: "user-1", role: userRole, permissionKeys: ["dashboard.access", "students.view", "psychopedagogy.view", "psychopedagogy.manage"] }) },
       "@/modules/psychopedagogy/server/psychopedagogy.repository": repository,
       "@/modules/teachers/server/student-reports.repository": { getAssignedTeacherStudent: async () => { throw new Error("Assignments must not be read"); } },
     });

@@ -2,13 +2,12 @@ import "server-only";
 
 import {
   CalendarAttendanceStatus,
-  CalendarAudienceType,
   CalendarEventStatus,
   Prisma,
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { getAudienceTypesForViewer } from "@/modules/calendar/lib/calendar-audience";
+import { getCalendarReadWhere, canUserReadCalendarEvent } from "@/modules/calendar/server/calendar-access";
 
 export async function createManualCalendarEventAttendance({
   eventId,
@@ -20,7 +19,7 @@ export async function createManualCalendarEventAttendance({
   email: string;
 }) {
   const event = await prisma.calendarEvent.findFirst({
-    where: { id: eventId, status: CalendarEventStatus.PUBLISHED, attendanceConfirmationEnabled: true },
+    where: { id: eventId, accessScope: "LEGACY", status: CalendarEventStatus.PUBLISHED, attendanceConfirmationEnabled: true },
     select: { id: true },
   });
   if (!event) throw new Error("event_not_available");
@@ -42,7 +41,7 @@ export async function getExternalCalendarEventAttendance(attendanceId: string) {
     where: {
       id: attendanceId,
       userId: null,
-      event: { status: CalendarEventStatus.PUBLISHED, attendanceConfirmationEnabled: true },
+      event: { accessScope: "LEGACY", status: CalendarEventStatus.PUBLISHED, attendanceConfirmationEnabled: true },
     },
     include: {
       event: { select: { id: true, title: true, startsAt: true, endsAt: true, timeZone: true, location: true } },
@@ -59,7 +58,7 @@ export async function respondToExternalCalendarEvent(attendanceId: string, statu
 }
 
 export async function listUnsentCalendarEventAttendances(eventId: string, attendanceId?: string) {
-  return prisma.calendarEventAttendance.findMany({
+  const rows = await prisma.calendarEventAttendance.findMany({
     where: {
       eventId,
       ...(attendanceId ? { id: attendanceId } : {}),
@@ -74,6 +73,7 @@ export async function listUnsentCalendarEventAttendances(eventId: string, attend
     include: {
       event: {
         select: {
+          accessScope: true,
           id: true,
           title: true,
           startsAt: true,
@@ -84,6 +84,8 @@ export async function listUnsentCalendarEventAttendances(eventId: string, attend
       },
     },
   });
+  const allowed = await Promise.all(rows.map(async row => row.event.accessScope === "LEGACY" || (row.userId ? await canUserReadCalendarEvent(eventId, row.userId) : false)));
+  return rows.filter((_, index) => allowed[index]);
 }
 
 export async function markCalendarInvitationSent(attendanceId: string) {
@@ -142,13 +144,7 @@ export async function respondToCalendarEvent({
         status: CalendarEventStatus.PUBLISHED,
         attendanceConfirmationEnabled: true,
         createdById: { not: userId },
-        OR: [
-          { audienceType: { in: getAudienceTypesForViewer(user.role) } },
-          {
-            audienceType: CalendarAudienceType.PRIVATE,
-            audiences: { some: { userId } },
-          },
-        ],
+        ...await getCalendarReadWhere(user),
       },
       select: { id: true },
     });

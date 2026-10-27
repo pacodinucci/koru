@@ -25,7 +25,7 @@ export async function GET(_request: Request, { params }: Context) {
   try {
     const { id } = await params;
     const user = await getAuthenticatedUser();
-    if (user?.role !== "SUPERADMIN" && !(user?.role === "PSYCHOPEDAGOGY_TEACHER" && user.permissionKeys.includes("dashboard.access"))) {
+    if (!user?.permissionKeys.includes("psychopedagogy.view")) {
       return NextResponse.json({ error: "Alumno no disponible." }, { status: 404 });
     }
     const student = await getPsychopedagogyStudentForSuperadmin(id);
@@ -41,14 +41,13 @@ export async function POST(request: Request, { params }: Context) {
   try {
     const { id } = await params;
     const user = await getAuthenticatedUser();
-    const isSuperadmin = user?.role === "SUPERADMIN";
-    if (!user || (!isSuperadmin && !(user.role === "PSYCHOPEDAGOGY_TEACHER" && user.permissionKeys.includes("dashboard.access")))) {
+    if (!user?.permissionKeys.includes("psychopedagogy.view") || !user.permissionKeys.includes("psychopedagogy.manage")) {
       return NextResponse.json({ error: "Alumno no disponible." }, { status: 404 });
     }
     const student = await getPsychopedagogyStudentForSuperadmin(id);
     if (!student) return NextResponse.json({ error: "Alumno no disponible." }, { status: 404 });
-    const teacher = isSuperadmin ? null : await getPsychopedagogyTeacherForUser(user.id);
-    if (!isSuperadmin && !teacher) return NextResponse.json({ error: "Alumno no disponible." }, { status: 404 });
+    const teacher = user.role === "SUPERADMIN" ? null : await getPsychopedagogyTeacherForUser(user.id);
+    if (user.role === "PSYCHOPEDAGOGY_TEACHER" && !teacher) return NextResponse.json({ error: "Alumno no disponible." }, { status: 404 });
     const input: unknown = await request.json().catch(() => null);
     const data = input && typeof input === "object" && !Array.isArray(input) ? input as Record<string, unknown> : {};
     const title = typeof data.title === "string" ? data.title.trim() : "";
@@ -59,7 +58,7 @@ export async function POST(request: Request, { params }: Context) {
       || !title || title.length > 160 || !body || body.length > 10000) {
       return NextResponse.json({ error: "Ingresá una fecha válida, un título (máximo 160 caracteres) y un texto (máximo 10.000 caracteres)." }, { status: 400 });
     }
-    await createPsychopedagogyEntry({ studentId: id, teacherId: teacher?.id ?? null, ...(isSuperadmin ? { authorUserId: user.id } : {}), entryDate, title, body });
+    await createPsychopedagogyEntry({ studentId: id, teacherId: teacher?.id ?? null, ...(!teacher ? { authorUserId: user.id } : {}), entryDate, title, body });
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     return unavailable(error);

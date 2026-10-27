@@ -140,7 +140,8 @@ export function DashboardShell({
   const isHomeActive = pathname === "/dashboard";
   const isKanbanActive = pathname.startsWith("/dashboard/kanban");
   const isBlogActive = pathname.startsWith("/dashboard/blog");
-  const isCalendarActive = pathname.startsWith("/dashboard/calendar");
+  const isCalendarActive = pathname === "/dashboard/calendar" || pathname.startsWith("/dashboard/calendar/");
+  const isCalendarPermissionsActive = pathname.startsWith("/dashboard/calendar-permissions");
   const isBasecampActive = pathname.startsWith("/dashboard/basecamp");
   const isUsersActive = pathname.startsWith("/dashboard/users");
   const isRolesActive = pathname.startsWith("/dashboard/roles");
@@ -254,7 +255,7 @@ export function DashboardShell({
           {can("students.view") ||
           can("families.view") ||
           isSuperAdmin ||
-          userRole === "PSYCHOPEDAGOGY_TEACHER" ||
+          can("psychopedagogy.view") ||
           canViewBasecamp ||
           can("calendar.view") ? (
             <SidebarGroup>
@@ -387,7 +388,7 @@ export function DashboardShell({
                       </SidebarMenuItem>
                     </>
                   ) : null}
-                  {isSuperAdmin || userRole === "PSYCHOPEDAGOGY_TEACHER" ? (
+                  {can("psychopedagogy.view") ? (
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         tooltip="Psicopedagogía"
@@ -638,7 +639,7 @@ export function DashboardShell({
               </SidebarGroupContent>
             </SidebarGroup>
           ) : null}
-          {can("users.view") || can("roles.view") ? (
+          {can("users.view") || can("roles.view") || can("calendar.permissions.manage") ? (
             <SidebarGroup>
               <SidebarGroupLabel className="text-slate-500">
                 Sistema
@@ -656,6 +657,20 @@ export function DashboardShell({
                       >
                         <Users />
                         <span>Usuarios</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
+                  {can("calendar.permissions.manage") ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Permisos del calendario"
+                        aria-label="Permisos del calendario"
+                        isActive={isCalendarPermissionsActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/calendar-permissions" />}
+                      >
+                        <CalendarDays />
+                        <span>Permisos del calendario</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ) : null}

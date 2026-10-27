@@ -205,7 +205,7 @@ test("private edit preserves audience selection, duration and cancellation actio
   assert.match(html, /Guardar cambios/);
 });
 
-test("guest picker separates available and invited users and places search in the right container", () => {
+test("guest picker places search on the left and uses an accessible icon-only add button", () => {
   const html = renderToStaticMarkup(createElement(CalendarEventGuestPicker, {
     triggerId: "guests", selectedIds: ["selected"], onChange: () => {},
     users: [{ id: "available", name: "Ana", roleLabel: "Maestro" }, { id: "selected", name: "José", roleLabel: "Familia" }],
@@ -214,11 +214,31 @@ test("guest picker separates available and invited users and places search in th
   assert.equal(sections.length, 2);
   assert.match(sections[0], /Personas disponibles/);
   assert.match(sections[0], /Agregar a Ana/);
-  assert.doesNotMatch(sections[0], /Agregar a José|type="search"/);
+  assert.doesNotMatch(sections[0], /Agregar a José/);
+  assert.match(sections[0], /type="search"/);
+  assert.doesNotMatch(sections[0], /<label\b/);
+  assert.match(sections[0], /<input(?=[^>]*aria-label="Buscar personas disponibles")(?=[^>]*class="[^"]*\bp-0\b[^"]*")[^>]*>/);
+  assert.match(sections[0], /<svg(?=[^>]*aria-hidden="true")(?=[^>]*class="[^"]*lucide-search)[^>]*>/);
+  const addButton = sections[0].match(/<button[^>]*aria-label="Agregar a Ana"[^>]*>([\s\S]*?)<\/button>/);
+  assert.ok(addButton);
+  assert.match(addButton[1], /<svg\b/);
+  assert.doesNotMatch(addButton[1], /Agregar|→/);
   assert.match(sections[1], /Invitados seleccionados/);
   assert.match(sections[1], /Quitar a José/);
+  const removeButton = sections[1].match(/<button[^>]*aria-label="Quitar a José"[^>]*>([\s\S]*?)<\/button>/);
+  assert.ok(removeButton);
+  assert.match(removeButton[1], /lucide-arrow-left/);
+  assert.doesNotMatch(removeButton[1], /Quitar|←/);
+  for (const section of sections) {
+    assert.match(section, /<ul[^>]*class="[^"]*\bp-0\b[^"]*"/);
+    assert.match(section, /<li[^>]*class="[^"]*\bmin-h-8\b[^"]*\bw-full\b[^"]*\bp-0\b/);
+    assert.match(section, /<button[^>]*class="[^"]*\bsize-8\b[^"]*\bp-0\b/);
+  }
   assert.doesNotMatch(sections[1], /Quitar a Ana/);
-  assert.match(sections[1], /type="search"/);
+  assert.doesNotMatch(sections[1], /type="search"/);
+  assert.doesNotMatch(html, /Buscá y agregá personas desde la lista izquierda/);
+  assert.match(html, /class="pb-2"/);
+  assert.match(html, /class="pt-0"/);
   assert.match(html, /md:grid-cols-2/);
   assert.match(html, /Aplicar selección/);
   assert.match(html, /Cancelar/);

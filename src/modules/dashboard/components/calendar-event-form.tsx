@@ -1,5 +1,7 @@
 "use client";
 
+import type { CalendarAccessScope } from "@/modules/calendar/lib/calendar-access";
+import type { CalendarEventAreaFields, CalendarAreaFormOptions } from "@/modules/calendar/lib/calendar-area-types";
 import { useId, useMemo, useState, type FormEvent } from "react";
 import type {
   CalendarAudienceType,
@@ -21,7 +23,7 @@ import {
   cancelCalendarEventAction,
 } from "@/modules/dashboard/server/calendar.actions";
 
-type EventItem = {
+type EventItem = CalendarEventAreaFields & {
   id: string;
   title: string;
   startsAt: Date;
@@ -48,7 +50,7 @@ type EventItem = {
   audiences?: Array<{ userId: string }>;
 };
 
-type Props = {
+type Props = CalendarAreaFormOptions & {
   users: Array<{ id: string; name: string; role: UserRole }>;
   ok?: string;
   error?: string;
@@ -70,6 +72,11 @@ const visibilityOptions: Array<{ value: CalendarEventVisibility; label: string }
 
 const saveErrorMessages: Record<string, string> = {
   invalid_date: "La fecha u hora no es válida en Ciudad de México.",
+  event_forbidden: "No tenés permiso para modificar este evento.",
+  invalid_event_areas: "Seleccioná un área responsable y las áreas involucradas.",
+  missing_audience_areas: "Seleccioná al menos un área autorizada para consultar.",
+  organizer_must_be_authorized: "Tu usuario debe tener acceso a la audiencia elegida para guardar el evento.",
+  institutional_event_members_only: "Los eventos institucionales no se pueden publicar para visitantes.",
   ambiguous_date: "Esa hora ocurre dos veces en Ciudad de México por el cambio de horario. Elegí otra hora.",
 };
 
@@ -82,7 +89,12 @@ function roleLabel(role: UserRole) {
   return "Familia";
 }
 
-export function CalendarEventForm({ users, ok, error, event, mode = "create" }: Props) {
+export function CalendarEventForm({ users, ok, error, event, mode = "create", areas = [], editableAreaIds = [], canManageCalendar = false, currentUserId }: Props) {
+  const [accessScope, setAccessScope] = useState<CalendarAccessScope>(event?.accessScope ?? (areas.length ? "AREAS" : "LEGACY"));
+  const [responsibleAreaId, setResponsibleAreaId] = useState(event?.responsibleAreaId ?? editableAreaIds[0] ?? "");
+  const [involvedAreaIds, setInvolvedAreaIds] = useState<string[]>(event?.areaLinks?.map(link => link.areaId) ?? (editableAreaIds[0] ? [editableAreaIds[0]] : []));
+  const [audienceAreaIds, setAudienceAreaIds] = useState<string[]>(event?.audienceAreas?.map(link => link.areaId) ?? (editableAreaIds[0] ? [editableAreaIds[0]] : []));
+  const toggleArea = (ids: string[], id: string) => ids.includes(id) ? ids.filter(value => value !== id) : [...ids, id];
   const formId = useId();
   const fieldId = (name: string) => `${formId}-${name}`;
   const timeZone = DEFAULT_CALENDAR_TIME_ZONE;
@@ -105,7 +117,7 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
   }, [event]);
 
   const [privateAudienceUserIds, setPrivateAudienceUserIds] = useState<string[]>(
-    () => [...new Set(event?.audiences?.map((a) => a.userId) ?? [])],
+    () => [...new Set(event?.audiences?.map((a) => a.userId) ?? (currentUserId ? [currentUserId] : []))],
   );
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -174,6 +186,31 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
           <div className="min-w-0 space-y-6">
             <fieldset className="space-y-3">
               <legend className="mb-3 text-sm font-semibold text-slate-900">Visibilidad y audiencia</legend>
+              <label htmlFor={fieldId("accessScope")} className="block text-sm font-medium text-slate-700">Quién puede verlo</label>
+              <select id={fieldId("accessScope")} name="accessScope" value={accessScope} onChange={e => setAccessScope(e.target.value as CalendarAccessScope)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                {canManageCalendar || event?.accessScope === "LEGACY" || areas.length === 0 ? <option value="LEGACY">Publicación y audiencias existentes</option> : null}
+                {areas.length > 0 ? <>
+                  <option value="INTERNAL">Todo el equipo interno</option>
+                  <option value="AREAS">Áreas autorizadas</option>
+                  <option value="PEOPLE">Personas específicas (restringido)</option>
+                </> : null}
+              </select>
+              {accessScope !== "LEGACY" ? <>
+                <input type="hidden" name="visibility" value="MEMBERS" />
+                <input type="hidden" name="audienceType" value="PRIVATE" />
+                <label htmlFor={fieldId("responsibleAreaId")} className="block text-sm font-medium text-slate-700">Área responsable de la organización y edición</label>
+                <select id={fieldId("responsibleAreaId")} name="responsibleAreaId" value={responsibleAreaId} required onChange={e => { setResponsibleAreaId(e.target.value); setInvolvedAreaIds(ids => [...new Set([...ids, e.target.value])]); }} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                  <option value="">Seleccioná un área</option>
+                  {areas.filter(area => canManageCalendar || editableAreaIds.includes(area.id)).map(area => <option key={area.id} value={area.id}>{area.name}</option>)}
+                </select>
+                <fieldset className="space-y-2"><legend className="text-sm font-medium">Áreas involucradas</legend>
+                  {areas.map(area => <label key={area.id} className="flex items-center gap-2 text-sm"><input type="checkbox" name="involvedAreaIds" value={area.id} checked={involvedAreaIds.includes(area.id) || area.id === responsibleAreaId} onChange={() => setInvolvedAreaIds(ids => toggleArea(ids, area.id))} /><span className="size-2 rounded-full" style={{ backgroundColor: area.color }} />{area.name}</label>)}
+                </fieldset>
+                {accessScope === "AREAS" ? <fieldset className="space-y-2"><legend className="text-sm font-medium">Áreas autorizadas para consultar</legend>
+                  {areas.map(area => <label key={area.id} className="flex items-center gap-2 text-sm"><input type="checkbox" name="audienceAreaIds" value={area.id} checked={audienceAreaIds.includes(area.id)} onChange={() => setAudienceAreaIds(ids => toggleArea(ids, area.id))} />{area.name}</label>)}
+                </fieldset> : null}
+                <p className="text-xs text-slate-600">{accessScope === "INTERNAL" ? "Visible para el equipo interno. No se publica para familias ni visitantes." : accessScope === "AREAS" ? "Visible solo para personas con acceso a las áreas autorizadas. Las áreas involucradas no conceden acceso por sí solas." : "Solo las personas seleccionadas podrán verlo, incluso si otras administran el calendario. Incluite para conservar acceso."}</p>
+              </> : <>
               <label htmlFor={fieldId("visibility")} className="block text-sm font-medium text-slate-700">Visibilidad</label>
               <select id={fieldId("visibility")} name="visibility" value={visibility} onChange={(e) => {
                 const nextVisibility = e.target.value as CalendarEventVisibility;
@@ -190,7 +227,8 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
                   </select>
                 </div>
               )}
-              {visibility !== "PUBLIC" && audienceType === "PRIVATE" ? (
+              </>}
+              {(accessScope === "PEOPLE" || (accessScope === "LEGACY" && visibility !== "PUBLIC" && audienceType === "PRIVATE")) ? (
                 <div className="space-y-2">
                   <label htmlFor={fieldId("privateAudienceUserIds")} className="block text-sm font-medium text-slate-700">Personas autorizadas</label>
                   {privateAudienceUserIds.map((id) => <input key={id} type="hidden" name="privateAudienceUserIds" value={id} />)}
@@ -209,7 +247,7 @@ export function CalendarEventForm({ users, ok, error, event, mode = "create" }: 
                 <input name="registrationsEnabled" type="checkbox" checked={registrationsEnabled} onChange={(event) => setRegistrationsEnabled(event.target.checked)} />
                 Permitir inscripciones
               </label>
-              {registrationsEnabled ? <p className="text-xs text-slate-500">{visibility === "PUBLIC" ? "La inscripción será pública." : "La inscripción será privada para miembros autorizados."}</p> : null}
+              {registrationsEnabled ? <p className="text-xs text-slate-500">{accessScope === "LEGACY" && visibility === "PUBLIC" ? "La inscripción será pública." : "La inscripción será privada para miembros autorizados."}</p> : null}
               <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
                 <input name="attendanceConfirmationEnabled" type="checkbox" checked={attendanceConfirmationEnabled} onChange={(changeEvent) => setAttendanceConfirmationEnabled(changeEvent.target.checked)} />
                 Solicitar confirmación de asistencia

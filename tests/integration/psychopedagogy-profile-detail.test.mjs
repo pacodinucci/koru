@@ -25,7 +25,7 @@ const student = {
   id: "student-1", firstName: "Ana", lastName: "Pérez", birthDate: new Date("2020-01-01"), updatedAt: new Date("2026-01-01"),
   group: { name: "Grupo A" }, guardians: [], responsibles: [], recordStatus: "SUBMITTED",
 };
-async function renderDetail(role, permissionKeys = ["dashboard.access", "students.view"]) {
+async function renderDetail(role, permissionKeys = ["PSYCHOPEDAGOGY_TEACHER", "SUPERADMIN"].includes(role) ? ["dashboard.access", "students.view", "psychopedagogy.view", "psychopedagogy.manage"] : ["dashboard.access", "students.view"]) {
   const profileCalls = []; let classroomProps;
   const { default: Page } = load("app/(dashboard)/dashboard/students/[id]/page.tsx", {
     "lucide-react": { ArrowLeft: () => null },

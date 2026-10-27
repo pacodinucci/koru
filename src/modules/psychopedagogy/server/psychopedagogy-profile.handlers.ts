@@ -23,7 +23,7 @@ function unavailable(error: unknown) {
 export async function GET(_request: Request, { params }: Context) {
   try {
     const user = await getAuthenticatedUser();
-    if (user?.role !== "SUPERADMIN" && !(user?.role === "PSYCHOPEDAGOGY_TEACHER" && user.permissionKeys.includes("dashboard.access"))) {
+    if (!user?.permissionKeys.includes("psychopedagogy.view")) {
       return denied();
     }
     const { id } = await params;
@@ -38,19 +38,17 @@ export async function GET(_request: Request, { params }: Context) {
 export async function POST(request: Request, { params }: Context) {
   try {
     const user = await getAuthenticatedUser();
-    const isSuperadmin = user?.role === "SUPERADMIN";
-    if (!user || (!isSuperadmin && !(user.role === "PSYCHOPEDAGOGY_TEACHER" && user.permissionKeys.includes("dashboard.access")))) return denied();
+    if (!user?.permissionKeys.includes("psychopedagogy.view") || !user.permissionKeys.includes("psychopedagogy.manage")) return denied();
     const { id } = await params;
     if (!await getPsychopedagogyStudentForSuperadmin(id)) return denied();
     const input = await request.json().catch(() => null);
-    if (isSuperadmin && input?.section !== "learning" && input?.section !== "accompaniment" && input?.section !== "intervention" && input?.section !== "instrument") return denied();
-    const teacher = isSuperadmin ? null : await getPsychopedagogyTeacherForUser(user.id);
-    if (!isSuperadmin && !teacher) return denied();
+    const teacher = user.role === "SUPERADMIN" ? null : await getPsychopedagogyTeacherForUser(user.id);
+    if (user.role === "PSYCHOPEDAGOGY_TEACHER" && !teacher) return denied();
     const parsed = psychopedagogyProfileSchema.safeParse(input);
     if (!parsed.success) {
       return NextResponse.json({ error: "Revisá la sección, la fecha y los campos requeridos (títulos de hasta 160 caracteres y textos de hasta 10.000 caracteres)." }, { status: 400, headers });
     }
-    await savePsychopedagogyProfileSection(id, teacher?.id ?? null, parsed.data, isSuperadmin ? user.id : null);
+    await savePsychopedagogyProfileSection(id, teacher?.id ?? null, parsed.data, teacher ? null : user.id);
     return NextResponse.json({ ok: true }, { status: 201, headers });
   } catch (error) {
     return unavailable(error);

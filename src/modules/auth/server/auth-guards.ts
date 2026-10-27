@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
+import { isInternalCalendarRole } from "@/modules/calendar/lib/calendar-access";
 import {
   legacyRolePermissions,
   type PermissionKey,
@@ -75,6 +76,7 @@ export async function getActualAuthenticatedUser(): Promise<AuthenticatedUser | 
       role: true,
       familyId: true,
       accessRoleId: true,
+      calendarAreaGrants: { select: { areaId: true } },
       accessRole: {
         select: {
           name: true,
@@ -95,6 +97,7 @@ export async function getActualAuthenticatedUser(): Promise<AuthenticatedUser | 
 
 function authenticatedUserFromRecord(user: {
   id: string; name: string; email: string; role: AppUserRole; familyId: string | null; accessRoleId: string | null;
+  calendarAreaGrants?: Array<{ areaId: string }>;
   accessRole: { name: string; key: string; isActive: boolean; permissions: Array<{ permission: { key: string } }> } | null;
 }): AuthenticatedUser {
   const assignedPermissionKeys =
@@ -108,7 +111,7 @@ function authenticatedUserFromRecord(user: {
       ? ["calendar.view", "calendar.manage"]
       : [];
   const permissionKeys = Array.from(
-    new Set([...assignedPermissionKeys, ...guaranteedCalendarPermissions]),
+    new Set([...assignedPermissionKeys, ...guaranteedCalendarPermissions, ...(isInternalCalendarRole(user.role) && user.calendarAreaGrants?.length ? ["calendar.view" as PermissionKey] : [])]),
   );
 
   return {
@@ -133,7 +136,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
 
   const target = await prisma.user.findFirst({
     where: { id: targetUserId, OR: [{ role: UserRole.PARENT, familyId: { not: null } }, { role: { in: [UserRole.TEACHER, UserRole.ADMIN_TEACHER] }, teacherProfile: { is: { isActive: true } } }] },
-    select: { id: true, name: true, email: true, role: true, familyId: true, accessRoleId: true, accessRole: { select: { name: true, key: true, isActive: true, permissions: { select: { permission: { select: { key: true } } } } } } },
+    select: { id: true, name: true, email: true, role: true, familyId: true, accessRoleId: true, calendarAreaGrants: { select: { areaId: true } }, accessRole: { select: { name: true, key: true, isActive: true, permissions: { select: { permission: { select: { key: true } } } } } } },
   });
 
   return target ? authenticatedUserFromRecord(target) : actualUser;

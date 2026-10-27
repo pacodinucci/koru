@@ -56,8 +56,7 @@ export default async function DashboardStudentRecordPage({ params }: { params: P
   };
   const isTeacher = user.role === "TEACHER" || user.role === "ADMIN_TEACHER";
   const isPsychopedagogyTeacher = user.role === "PSYCHOPEDAGOGY_TEACHER";
-  const canViewPsychopedagogy = user.role === "SUPERADMIN" ||
-    (isPsychopedagogyTeacher && user.permissionKeys.includes("dashboard.access"));
+  const canViewPsychopedagogy = user.permissionKeys.includes("psychopedagogy.view");
   return (
     <DashboardShell userEmail={user.email}
       userRole={user.role}

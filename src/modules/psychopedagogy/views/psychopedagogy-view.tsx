@@ -8,10 +8,10 @@ export async function PsychopedagogyView({ readOnly = false }: { userId: string;
       <div>
         <h1 className="text-xl font-semibold text-slate-900">Psicopedagogía</h1>
         <p className="mt-1 text-sm text-muted-foreground">{readOnly
-          ? "Podés editar el estilo de aprendizaje y temperamento y crear bitácoras de observación y acompañamientos e intervenciones e instrumentos."
+          ? "Consulta de perfiles psicopedagógicos de todos los alumnos. Solo lectura."
           : "Reportes psicopedagógicos de todos los alumnos, con fecha, título y texto libre."}</p>
       </div>
-      <PsychopedagogyClient students={students} readOnly={readOnly} canEditLearning={readOnly} canEditFollowups={readOnly} canEditInterventions={readOnly} canEditInstruments={readOnly} />
+      <PsychopedagogyClient students={students} readOnly={readOnly} />
     </div>
   );
 }

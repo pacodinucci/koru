@@ -120,22 +120,24 @@ test("pagination keeps all students reachable and search resets the current page
   ui.search(""); ui.find((node) => node.type === "select").props.onChange({ target: { value: "20" } }); assert.match(ui.html(), /Página 1 de 1/); assert.match(ui.html(), /href="\/dashboard\/students\/s-11"/);
 });
 
-test("section navigation is restricted to psychopedagogical teachers and Superadmin", () => {
+test("section navigation follows view permission, including custom roles and revoked legacy access", () => {
   const { DashboardShell } = load("modules/dashboard/components/dashboard-shell.tsx");
   for (const role of ["PSYCHOPEDAGOGY_TEACHER", "SUPERADMIN"]) {
     for (const path of ["/dashboard/psicopedagogia", "/dashboard/psicopedagogia/nuevo"]) {
       pathname = path;
-      const html = renderToStaticMarkup(React.createElement(DashboardShell, { userEmail: "teacher@example.com", userRole: role }, "Content"));
+      const html = renderToStaticMarkup(React.createElement(DashboardShell, { userEmail: "teacher@example.com", userRole: role, userPermissions: ["psychopedagogy.view"] }, "Content"));
       assert.match(html, /href="\/dashboard\/psicopedagogia" data-active="true"[^>]*>.*?Psicopedagogía/);
       assert.equal((html.match(/href="\/dashboard\/psicopedagogia"/g) ?? []).length, 1);
       for (const route of ["reportes", "acuerdos-seguimiento", "mis-acuerdos-seguimiento"]) assert.ok(!html.includes(`href="/dashboard/${route}"`));
     }
   }
-  for (const role of ["PARENT", "ADMIN", "ADMIN_OPERATOR", "TEACHER", "ADMIN_TEACHER"]) {
-    const html = renderToStaticMarkup(React.createElement(DashboardShell, { userEmail: "user@example.com", userRole: role }, "Content"));
+  for (const role of ["PARENT", "ADMIN", "ADMIN_OPERATOR", "TEACHER", "ADMIN_TEACHER", "PSYCHOPEDAGOGY_TEACHER", "SUPERADMIN"]) {
+    const html = renderToStaticMarkup(React.createElement(DashboardShell, { userEmail: "user@example.com", userRole: role, userPermissions: [] }, "Content"));
     assert.doesNotMatch(html, /href="\/dashboard\/psicopedagogia"/);
     if (["TEACHER", "ADMIN_TEACHER"].includes(role)) assert.match(html, /href="\/dashboard\/reportes"/);
   }
+  const customHtml = renderToStaticMarkup(React.createElement(DashboardShell, { userEmail: "custom@example.com", userRole: "ADMIN", userPermissions: ["psychopedagogy.view"] }, "Content"));
+  assert.match(customHtml, /href="\/dashboard\/psicopedagogia"/);
 });
 
 test("view loads every student for both requested roles without teacher assignments", async () => {
@@ -148,15 +150,14 @@ test("view loads every student for both requested roles without teacher assignme
     });
     const html = renderToStaticMarkup(await PsychopedagogyView({ userId: "user-1", readOnly }));
     assert.equal(teacherCalls, 0); assert.equal(globalCalls, 1); assert.equal(received.students, students); assert.equal(received.readOnly, readOnly);
-    assert.equal(received.canEditFollowups, readOnly);
-    assert.equal(received.canEditLearning, readOnly);
-    assert.equal(received.canEditInterventions, readOnly);
-    assert.equal(received.canEditInstruments, readOnly);
+    assert.equal(received.canEditFollowups ?? false, false);
+    assert.equal(received.canEditLearning ?? false, false);
+    assert.equal(received.canEditInterventions ?? false, false);
+    assert.equal(received.canEditInstruments ?? false, false);
     if (readOnly) {
-      assert.match(html, /intervenciones/);
-      assert.match(html, /instrumentos/);
-      assert.doesNotMatch(html, /instrumentos son de solo lectura/);
+      assert.match(html, /Solo lectura/);
+      assert.doesNotMatch(html, /Podés editar|crear bitácoras/);
     }
-    assert.match(html, />Psicopedagogía<\/h1>/); if (readOnly) assert.match(html, /crear bitácoras de observación y acompañamientos/);
+    assert.match(html, />Psicopedagogía<\/h1>/); if (readOnly) assert.match(html, /Solo lectura/);
   }
 });

@@ -22,6 +22,7 @@ model User {
   blogLikes                  BlogPostLike[]
   createdCalendarEvents      CalendarEvent[]             @relation("CalendarEventCreator")
   calendarEventAudiences     CalendarEventAudience[]
+  calendarAreaGrants         CalendarAreaGrant[]
   calendarEventRegistrations CalendarEventRegistration[]
   calendarEventAttendances   CalendarEventAttendance[]
   googleCalendarConnection   GoogleCalendarConnection?
@@ -354,6 +355,13 @@ enum CalendarEventStatus {
 enum CalendarEventVisibility {
   PUBLIC
   MEMBERS
+}
+
+enum CalendarAccessScope {
+  LEGACY
+  INTERNAL
+  AREAS
+  PEOPLE
 }
 
 enum CalendarAudienceType {
@@ -1286,6 +1294,11 @@ model CalendarEvent {
   status                        CalendarEventStatus         @default(DRAFT)
   visibility                    CalendarEventVisibility     @default(MEMBERS)
   audienceType                  CalendarAudienceType        @default(ALL)
+  accessScope                   CalendarAccessScope         @default(LEGACY)
+  responsibleAreaId             String?
+  responsibleArea               CalendarArea?               @relation("CalendarResponsibleArea", fields: [responsibleAreaId], references: [id], onDelete: Restrict)
+  areaLinks                     CalendarEventArea[]
+  audienceAreas                 CalendarEventAudienceArea[]
   kind                          CalendarEventKind           @default(EVENT)
   registrationsEnabled          Boolean                     @default(false)
   attendanceConfirmationEnabled Boolean                     @default(false)
@@ -1303,6 +1316,49 @@ model CalendarEvent {
   @@index([startsAt, endsAt])
   @@index([status, audienceType])
   @@index([status, visibility, startsAt])
+  @@index([responsibleAreaId])
+}
+
+model CalendarArea {
+  id                String                      @id @default(cuid())
+  name              String                      @unique
+  color             String
+  grants            CalendarAreaGrant[]
+  responsibleEvents CalendarEvent[]             @relation("CalendarResponsibleArea")
+  eventLinks        CalendarEventArea[]
+  audienceEvents    CalendarEventAudienceArea[]
+}
+
+model CalendarAreaGrant {
+  id      String       @id @default(cuid())
+  userId  String
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areaId  String
+  area    CalendarArea @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  canEdit Boolean      @default(false)
+
+  @@unique([areaId, userId])
+  @@index([userId])
+}
+
+model CalendarEventArea {
+  eventId String
+  areaId  String
+  event   CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  area    CalendarArea  @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, areaId])
+  @@index([areaId])
+}
+
+model CalendarEventAudienceArea {
+  eventId String
+  areaId  String
+  event   CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  area    CalendarArea  @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, areaId])
+  @@index([areaId])
 }
 
 model MediaAsset {

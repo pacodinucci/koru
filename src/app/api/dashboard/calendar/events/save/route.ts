@@ -1,3 +1,4 @@
+import { calendarAreaFields } from "@/modules/calendar/lib/calendar-area-form";
 import {
   CalendarAudienceType,
   CalendarEventStatus,
@@ -31,7 +32,7 @@ function parseDurationMinutes(value: string) {
 
 export async function POST(request: Request) {
   const user = await getAuthenticatedUser();
-  if (!user?.permissionKeys.includes("calendar.manage")) {
+  if (!user) {
     return NextResponse.redirect(new URL("/dashboard/calendar?error=forbidden", request.url), 303);
   }
 
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
         .filter(Boolean);
 
     const event = await saveCalendarEvent({
+      ...calendarAreaFields(formData),
       id: id || undefined,
       title,
       description: getString(formData, "description").trim(),
