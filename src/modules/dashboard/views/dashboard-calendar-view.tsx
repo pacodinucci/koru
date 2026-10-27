@@ -1,3 +1,4 @@
+import type { CalendarEventAreaFields, CalendarAreaFormOptions } from "@/modules/calendar/lib/calendar-area-types";
 import type {
   CalendarAudienceType,
   CalendarEventVisibility,
@@ -17,7 +18,7 @@ import { CalendarEventForm } from "@/modules/dashboard/components/calendar-event
 import { ResponsiveEventSheet } from "@/modules/dashboard/components/responsive-event-sheet";
 import { calendarDateValue, calendarTimeValue, calendarTimeZoneLabel, DEFAULT_CALENDAR_TIME_ZONE } from "@/modules/calendar/lib/calendar-time-zone";
 
-type CalendarEventItem = {
+type CalendarEventItem = CalendarEventAreaFields & {
   id: string;
   title: string;
   startsAt: Date;
@@ -46,7 +47,7 @@ type CalendarEventItem = {
   audiences?: Array<{ userId: string }>;
 };
 
-type Props = {
+type Props = CalendarAreaFormOptions & {
   events: CalendarEventItem[];
   users: Array<{ id: string; name: string; role: UserRole }>;
   ok?: string;
@@ -330,7 +331,7 @@ export function DashboardCalendarGrid({
                         onClick={() => onSelectEvent(event.id)}
                         className={`block w-full rounded border px-1 py-0.5 text-left text-[11px] ${cardPalette[i % cardPalette.length]} ${selectedEventId === event.id ? "ring-2 ring-emerald-500" : ""}`}
                       >
-                        {event.title}
+                        {event.title}{event.areaLinks?.length ? <span className="mt-1 flex flex-wrap gap-1">{event.areaLinks.map(link => <span key={link.areaId} className="rounded border px-1 text-[10px]" style={{ borderColor: link.area.color, color: link.area.color }}>{link.area.name}</span>)}</span> : null}
                       </button>
                     ) : (
                       <Link
@@ -338,7 +339,7 @@ export function DashboardCalendarGrid({
                         href={hrefWith(dateCursor, viewMode, event.id)}
                         className={`block rounded border px-1 py-0.5 text-[11px] ${cardPalette[i % cardPalette.length]} ${selectedEventId === event.id ? "ring-2 ring-emerald-500" : ""}`}
                       >
-                        {event.title}
+                        {event.title}{event.areaLinks?.length ? <span className="mt-1 flex flex-wrap gap-1">{event.areaLinks.map(link => <span key={link.areaId} className="rounded border px-1 text-[10px]" style={{ borderColor: link.area.color, color: link.area.color }}>{link.area.name}</span>)}</span> : null}
                       </Link>
                     ),
                   )}
@@ -406,7 +407,7 @@ export function DashboardCalendarGrid({
                             )}
                           </p>
                           <p className="mt-1.5 text-[11px] font-semibold leading-tight">
-                            {event.title}
+                            {event.title}{event.areaLinks?.length ? <span className="mt-1 flex flex-wrap gap-1">{event.areaLinks.map(link => <span key={link.areaId} className="rounded border px-1 text-[10px]" style={{ borderColor: link.area.color, color: link.area.color }}>{link.area.name}</span>)}</span> : null}
                           </p>
                         </button>
                       ) : (
@@ -422,7 +423,7 @@ export function DashboardCalendarGrid({
                             )}
                           </p>
                           <p className="mt-1.5 text-[11px] font-semibold leading-tight">
-                            {event.title}
+                            {event.title}{event.areaLinks?.length ? <span className="mt-1 flex flex-wrap gap-1">{event.areaLinks.map(link => <span key={link.areaId} className="rounded border px-1 text-[10px]" style={{ borderColor: link.area.color, color: link.area.color }}>{link.area.name}</span>)}</span> : null}
                           </p>
                         </Link>
                       ),
@@ -447,6 +448,7 @@ export function DashboardCalendarTopBar({
   dateCursor,
   viewMode,
   onCloseSelectedEvent,
+  areas, editableAreaIds, canManageCalendar, currentUserId,
 }: Pick<
   Props,
   | "users"
@@ -457,6 +459,7 @@ export function DashboardCalendarTopBar({
   | "dateCursor"
   | "viewMode"
   | "onCloseSelectedEvent"
+  | "areas" | "editableAreaIds" | "canManageCalendar" | "currentUserId"
 >) {
   const selectedEvent = events.find((e) => e.id === selectedEventId);
   const closeHref = hrefWith(dateCursor, viewMode);
@@ -468,7 +471,7 @@ export function DashboardCalendarTopBar({
       </h1>
 
       <div className="flex items-center gap-2">
-        <ResponsiveEventSheet
+        {canManageCalendar || (editableAreaIds?.length ?? 0) > 0 ? <ResponsiveEventSheet
           title="Crear evento"
           description="Completa los datos del evento"
           trigger={
@@ -479,28 +482,30 @@ export function DashboardCalendarTopBar({
           }
         >
           <CalendarEventForm
+            areas={areas} editableAreaIds={editableAreaIds} canManageCalendar={canManageCalendar} currentUserId={currentUserId}
             users={users}
             ok={ok}
             error={error}
             mode="create"
           />
-        </ResponsiveEventSheet>
+        </ResponsiveEventSheet> : null}
 
         {selectedEvent ? (
           <ResponsiveEventSheet
-            title="Editar evento"
+            title={selectedEvent.canEdit === false ? "Detalle del evento" : "Editar evento"}
             description="Actualiza los datos del evento"
             openOnMount
             closeHref={closeHref}
             onClose={onCloseSelectedEvent}
           >
-            <CalendarEventForm
+            {selectedEvent.canEdit === false ? <div className="space-y-3 p-6"><h2 className="font-semibold">{selectedEvent.title}</h2><p>{selectedEvent.description}</p><p>{selectedEvent.location}</p><p>{formatRange(selectedEvent.startsAt, selectedEvent.endsAt)} · Ciudad de México</p><p className="text-sm text-slate-500">Tenés acceso de consulta, sin permiso de edición.</p></div> : <CalendarEventForm
+              areas={areas} editableAreaIds={editableAreaIds} canManageCalendar={canManageCalendar} currentUserId={currentUserId}
               users={users}
               ok={ok}
               error={error}
               event={selectedEvent}
               mode="edit"
-            />
+            />}
           </ResponsiveEventSheet>
         ) : null}
       </div>
@@ -655,7 +660,7 @@ export function DashboardCalendarSidePanel({
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate font-semibold text-slate-900">
-                      {event.title}
+                      {event.title}{event.areaLinks?.length ? <span className="mt-1 flex flex-wrap gap-1">{event.areaLinks.map(link => <span key={link.areaId} className="rounded border px-1 text-[10px]" style={{ borderColor: link.area.color, color: link.area.color }}>{link.area.name}</span>)}</span> : null}
                     </span>
                     {event.location ? (
                       <span className="block truncate text-[11px] text-slate-500">
@@ -687,7 +692,7 @@ export function DashboardCalendarSidePanel({
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate font-semibold text-slate-900">
-                      {event.title}
+                      {event.title}{event.areaLinks?.length ? <span className="mt-1 flex flex-wrap gap-1">{event.areaLinks.map(link => <span key={link.areaId} className="rounded border px-1 text-[10px]" style={{ borderColor: link.area.color, color: link.area.color }}>{link.area.name}</span>)}</span> : null}
                     </span>
                     {event.location ? (
                       <span className="block truncate text-[11px] text-slate-500">
@@ -760,14 +765,14 @@ export function DashboardCalendarUpcomingTable({
                         onClick={() => onSelectEvent(event.id)}
                         className="text-left hover:underline"
                       >
-                        {event.title}
+                        {event.title}{event.areaLinks?.length ? <span className="mt-1 flex flex-wrap gap-1">{event.areaLinks.map(link => <span key={link.areaId} className="rounded border px-1 text-[10px]" style={{ borderColor: link.area.color, color: link.area.color }}>{link.area.name}</span>)}</span> : null}
                       </button>
                     ) : (
                       <Link
                         href={`/dashboard/calendar/${event.id}`}
                         className="hover:underline"
                       >
-                        {event.title}
+                        {event.title}{event.areaLinks?.length ? <span className="mt-1 flex flex-wrap gap-1">{event.areaLinks.map(link => <span key={link.areaId} className="rounded border px-1 text-[10px]" style={{ borderColor: link.area.color, color: link.area.color }}>{link.area.name}</span>)}</span> : null}
                       </Link>
                     )}
                   </td>

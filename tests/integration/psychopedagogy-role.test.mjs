@@ -37,6 +37,7 @@ function guardsFor(role, { accessRole = null, accessRoleId = null } = {}) {
     "next/navigation": { redirect },
     "@/lib/auth": { auth: { api: { getSession: async () => ({ user: { email: "test@example.test" } }) } } },
     "@/lib/prisma": { prisma: { user: { findUnique: async () => ({ id: "user-1", name: "Test", email: "test@example.test", role, familyId: null, accessRoleId, accessRole }) } } },
+    "@/modules/calendar/lib/calendar-access": { isInternalCalendarRole: (role) => role !== "PARENT" },
     "@/modules/auth/permissions/permission-catalog": permissions,
     "@/modules/auth/roles": roles,
   });
@@ -60,7 +61,7 @@ test("specialist is a dashboard role, not a broad teacher or administrator, with
   assert.equal(roles.isAdminRole(specialist), false);
   const guards = guardsFor(specialist);
   const user = await guards.requireDashboardUser();
-  assert.deepEqual(plain(user.permissionKeys), ["dashboard.access", "students.view"]);
+  assert.deepEqual(plain(user.permissionKeys), ["dashboard.access", "students.view", "psychopedagogy.view", "psychopedagogy.manage"]);
   assert.equal(await guards.getAdminUser(), null);
   for (const permission of ["students.manage", "families.view", "families.payments", "teachers.manage", "users.manage", "calendar.view", "cash-fund.view", "inventory.view", "roles.manage"]) {
     await assert.rejects(guards.requirePermission(permission), /redirect:\/dashboard\?error=forbidden/);
@@ -129,7 +130,7 @@ test("dashboard landing sends specialist to psychopedagogy, preserving Superadmi
   for (const [role, path] of [[specialist, "/dashboard/psicopedagogia"], ["SUPERADMIN", "/dashboard/administracion"]]) {
     const { default: Page } = load("app/(dashboard)/dashboard/page.tsx", {
       "next/navigation": { redirect },
-      "@/modules/auth/server/auth-guards": { requireDashboardUser: async () => ({ role, permissionKeys: [] }) },
+      "@/modules/auth/server/auth-guards": { requireDashboardUser: async () => ({ role, permissionKeys: ["psychopedagogy.view"] }) },
       "@/modules/dashboard/components/dashboard-shell": {},
       "@/modules/dashboard/server/cms-pages.repository": {},
       "@/modules/teachers/views/teacher-home-view": {},

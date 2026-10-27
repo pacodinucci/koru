@@ -1,5 +1,6 @@
 "use client";
 
+import { filterCalendarEventsByAreas, type CalendarEventAreaFields, type CalendarAreaFormOptions } from "@/modules/calendar/lib/calendar-area-types";
 import { createContext, useContext, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type {
@@ -24,7 +25,7 @@ import {
   DashboardCalendarUpcomingTable,
 } from "@/modules/dashboard/views/dashboard-calendar-view";
 
-type CalendarEventItem = {
+type CalendarEventItem = CalendarEventAreaFields & {
   id: string;
   title: string;
   startsAt: string | Date;
@@ -53,7 +54,9 @@ type CalendarEventItem = {
   audiences?: Array<{ userId: string }>;
 };
 
-type CalendarClientContextValue = {
+type CalendarClientContextValue = CalendarAreaFormOptions & {
+  selectedAreaIds: string[];
+  toggleArea: (id: string) => void;
   events: Array<CalendarEventItem & { startsAt: Date; endsAt: Date }>;
   upcomingEvents: Array<CalendarEventItem & { startsAt: Date; endsAt: Date }>;
   users: Array<{ id: string; name: string; role: UserRole }>;
@@ -81,6 +84,7 @@ function normalizeEvents(events: CalendarEventItem[]) {
 
 export function DashboardCalendarClientProvider({
   initialEvents,
+  areas = [], editableAreaIds = [], canManageCalendar = false, currentUserId,
   initialDateCursor,
   initialViewMode,
   initialSelectedEventId,
@@ -89,7 +93,7 @@ export function DashboardCalendarClientProvider({
   ok,
   error,
   children,
-}: {
+}: CalendarAreaFormOptions & {
   initialEvents: CalendarEventItem[];
   initialDateCursor: Date | string;
   initialViewMode: CalendarViewMode;
@@ -100,6 +104,8 @@ export function DashboardCalendarClientProvider({
   error?: string;
   children: ReactNode;
 }) {
+  const [selectedAreaIds, setSelectedAreaIds] = useState<string[]>([]);
+  const filtered = (items: ReturnType<typeof normalizeEvents>) => filterCalendarEventsByAreas(items, selectedAreaIds);
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [dateCursor, setDateCursor] = useState(() => {
@@ -176,8 +182,11 @@ export function DashboardCalendarClientProvider({
   return (
     <CalendarClientContext.Provider
       value={{
-        events,
-        upcomingEvents,
+        events: filtered(events),
+        upcomingEvents: filtered(upcomingEvents),
+        areas, editableAreaIds, canManageCalendar, currentUserId,
+        selectedAreaIds,
+        toggleArea: id => setSelectedAreaIds(ids => ids.includes(id) ? ids.filter(value => value !== id) : [...ids, id]),
         users,
         ok,
         error,
@@ -203,13 +212,13 @@ function useCalendarClient() {
 }
 
 export function DashboardCalendarTopBarClient() {
-  const { users, ok, error, events, upcomingEvents, dateCursor, viewMode, selectedEventId, clearSelectedEvent } = useCalendarClient();
+  const { users, ok, error, events, upcomingEvents, dateCursor, viewMode, selectedEventId, clearSelectedEvent, areas, editableAreaIds, canManageCalendar, currentUserId, selectedAreaIds, toggleArea } = useCalendarClient();
   const selectableEvents = [
     ...events,
     ...upcomingEvents.filter((upcomingEvent) => !events.some((event) => event.id === upcomingEvent.id)),
   ];
 
-  return <DashboardCalendarTopBar users={users} ok={ok} error={error} events={selectableEvents} dateCursor={dateCursor} viewMode={viewMode} selectedEventId={selectedEventId} onCloseSelectedEvent={clearSelectedEvent} />;
+  return <div><div className="flex flex-wrap items-center gap-2 border-b px-4 py-2"><span className="text-xs text-slate-500">Filtrar por área · sin selección: todos los eventos autorizados</span>{areas?.map(area => <button key={area.id} type="button" aria-pressed={selectedAreaIds.includes(area.id)} onClick={() => toggleArea(area.id)} className={`rounded-full border px-3 py-1 text-xs ${selectedAreaIds.includes(area.id) ? "bg-slate-100 font-semibold" : ""}`} style={{ borderColor: area.color }}>{area.name}</button>)}</div><DashboardCalendarTopBar areas={areas} editableAreaIds={editableAreaIds} canManageCalendar={canManageCalendar} currentUserId={currentUserId} users={users} ok={ok} error={error} events={selectableEvents} dateCursor={dateCursor} viewMode={viewMode} selectedEventId={selectedEventId} onCloseSelectedEvent={clearSelectedEvent} /></div>;
 }
 
 export function DashboardCalendarGridClient() {

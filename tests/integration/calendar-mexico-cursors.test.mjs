@@ -19,6 +19,7 @@ function load(path) {
   const mocks = {
     "@/modules/auth/server/auth-guards": { getAuthenticatedUser: async () => null, requirePermission: async () => ({ email: "admin@example.com", role: "ADMIN", permissionKeys: [] }) },
     "@/modules/dashboard/server/calendar.repository": repo,
+    "@/modules/calendar/server/calendar-areas.repository": repo,
     "@/modules/dashboard/server/cms-pages.repository": { discoverPagesGroupRoutes: async () => [] },
   };
   vm.runInNewContext(compiled, { Date: Clock, URLSearchParams, module: loaded, exports: loaded.exports, require: (id) => {

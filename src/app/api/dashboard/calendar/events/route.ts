@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAdminUser } from "@/modules/auth/server/auth-guards";
+import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import { type CalendarViewMode } from "@/modules/dashboard/lib/calendar-range";
 import { listCalendarEventsForAdminByRange } from "@/modules/dashboard/server/calendar.repository";
 
@@ -9,9 +9,9 @@ function parseView(view: string | null): CalendarViewMode {
 }
 
 export async function GET(request: Request) {
-  const user = await getAdminUser();
+  const user = await getAuthenticatedUser();
 
-  if (!user) {
+  if (!user?.permissionKeys.includes("calendar.view")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

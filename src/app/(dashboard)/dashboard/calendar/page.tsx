@@ -1,3 +1,4 @@
+import { listCalendarAreaOptions, getCalendarAreaGrants } from "@/modules/calendar/server/calendar-areas.repository";
 import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { calendarTodayCursor, serializeDate } from "@/modules/dashboard/lib/calendar-range";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
@@ -33,16 +34,24 @@ export default async function DashboardCalendarPage({
   const parsedDate = date ? new Date(`${date}T12:00:00`) : calendarTodayCursor();
   const dateCursor = Number.isNaN(parsedDate.getTime()) ? calendarTodayCursor() : parsedDate;
   const viewMode = view === "day" || view === "month" ? view : "week";
-  const [events, upcomingEvents, users, cmsPages] = await Promise.all([
+  const [events, upcomingEvents, cmsPages, areas, grants] = await Promise.all([
     listCalendarEventsForAdminByRange(dateCursor, viewMode),
     listUpcomingCalendarEventsForAdmin(6),
-    listAudienceUsers(),
     discoverPagesGroupRoutes(),
+    listCalendarAreaOptions(),
+    getCalendarAreaGrants(user.id),
   ]);
+  const users = user.permissionKeys.includes("calendar.manage") || grants.some(grant => grant.canEdit)
+    ? await listAudienceUsers()
+    : [];
 
   return (
     <DashboardCalendarClientProvider
       key={dateCursor.toISOString() + "-" + viewMode + "-" + (ok ?? "") + "-" + (error ?? "")}
+      areas={areas}
+      editableAreaIds={grants.filter(grant => grant.canEdit).map(grant => grant.areaId)}
+      canManageCalendar={user.permissionKeys.includes("calendar.manage")}
+      currentUserId={user.id}
       initialEvents={events}
       initialDateCursor={serializeDate(dateCursor)}
       initialViewMode={viewMode}

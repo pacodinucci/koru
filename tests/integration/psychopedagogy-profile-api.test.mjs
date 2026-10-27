@@ -38,7 +38,7 @@ function load(path, mocks) {
   return compiled.exports;
 }
 
-function setup({ role = specialist, permissionKeys = ["dashboard.access"], activeProfile = true, exists = true, history = false, interventionHistory = false, instrumentHistory = false, failure = null } = {}) {
+function setup({ role = specialist, permissionKeys = [specialist, "SUPERADMIN"].includes(role) ? ["dashboard.access", "psychopedagogy.view", "psychopedagogy.manage"] : ["dashboard.access"], activeProfile = true, exists = true, history = false, interventionHistory = false, instrumentHistory = false, failure = null } = {}) {
   const state = { learning: [], observations: [], accompaniments: [], interventions: [], instruments: [], nextId: 1, writes: 0 };
   const calls = [];
   if (history) state.observations.push(

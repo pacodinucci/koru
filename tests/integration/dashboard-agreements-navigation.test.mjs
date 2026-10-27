@@ -205,6 +205,22 @@ test("admin navigation is grouped by work area, with no duplicates or dead links
   }
 });
 
+test("calendar permission administration is a permission-gated System entry independent of event management", () => {
+  const path = "/dashboard/calendar-permissions";
+  const allowed = renderShell("TEACHER", path, { userPermissions: ["calendar.permissions.manage"] });
+  assert.match(allowed, /Sistema/);
+  assert.match(allowed, /href="\/dashboard\/calendar-permissions" data-active="true"[^>]*>.*?Permisos del calendario<\/span><\/a>/);
+  assert.ok(allowed.indexOf('>Sistema<') < allowed.indexOf('>Permisos del calendario<'));
+  assert.doesNotMatch(allowed, /href="\/dashboard\/calendar"/);
+  for (const permissions of [[], ["calendar.view"], ["calendar.manage"]]) {
+    const denied = renderShell("ADMIN", path, { userPermissions: permissions });
+    assert.doesNotMatch(denied, /href="\/dashboard\/calendar-permissions"|>Sistema</);
+  }
+  const calendar = renderShell("TEACHER", "/dashboard/calendar", { userPermissions: ["calendar.view", "calendar.permissions.manage"] });
+  assert.match(calendar, /href="\/dashboard\/calendar" data-active="true"/);
+  assert.match(calendar, /href="\/dashboard\/calendar-permissions" data-active="false"/);
+});
+
 test("navigation omits empty groups and preserves explicit permissions and role-only entries", () => {
   const empty = renderShell("PARENT", "/dashboard", { userPermissions: [] });
   assert.doesNotMatch(

@@ -26,6 +26,7 @@ function load(path) {
     if (specifier === "next/navigation") return { useRouter: () => ({ replace() {} }) };
     if (specifier === "@/modules/dashboard/views/dashboard-calendar-view") return load("modules/dashboard/views/dashboard-calendar-view.tsx");
     if (specifier === "@/modules/calendar/lib/calendar-time-zone") return load("modules/calendar/lib/calendar-time-zone.ts");
+    if (specifier === "@/modules/calendar/lib/calendar-area-types") return load("modules/calendar/lib/calendar-area-types.ts");
     if (specifier === "@/modules/dashboard/lib/calendar-range") return load("modules/dashboard/lib/calendar-range.ts");
     return new Proxy({}, { get: () => passthrough });
   };

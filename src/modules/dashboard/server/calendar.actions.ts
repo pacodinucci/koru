@@ -1,5 +1,7 @@
 "use server";
 
+import { calendarAreaFields } from "@/modules/calendar/lib/calendar-area-form";
+
 import {
   CalendarAudienceType,
   CalendarEventStatus,
@@ -51,7 +53,7 @@ function parseDurationMinutes(value: string) {
 }
 
 export async function saveCalendarEventAction(formData: FormData) {
-  const user = await requirePermission("calendar.manage", "/dashboard/calendar?error=forbidden");
+  const user = await requirePermission("calendar.view", "/dashboard/calendar?error=forbidden");
   let savedEventId: string;
   let shouldNotify = false;
 
@@ -82,6 +84,7 @@ export async function saveCalendarEventAction(formData: FormData) {
           .filter(Boolean);
 
     const savedEvent = await saveCalendarEvent({
+      ...calendarAreaFields(formData),
       id: id || undefined,
       title,
       description,
@@ -123,7 +126,7 @@ export async function saveCalendarEventAction(formData: FormData) {
 }
 
 export async function cancelCalendarEventAction(formData: FormData) {
-  await requirePermission("calendar.manage", "/dashboard/calendar?error=forbidden");
+  await requirePermission("calendar.view", "/dashboard/calendar?error=forbidden");
   const id = getString(formData, "id").trim();
   if (!id) redirect("/dashboard/calendar?error=missing_event_id");
 
@@ -135,10 +138,12 @@ export async function cancelCalendarEventAction(formData: FormData) {
 }
 
 export async function retryCalendarEventInvitationsAction(formData: FormData) {
-  await requirePermission("calendar.manage", "/dashboard/calendar?error=forbidden");
+  const user = await requirePermission("calendar.view", "/dashboard/calendar?error=forbidden");
   const id = getString(formData, "id").trim();
   if (!id) redirect("/dashboard/calendar?error=missing_event_id");
 
+  const { assertCalendarEventEditable } = await import("@/modules/calendar/server/calendar-access");
+  await assertCalendarEventEditable(id, user);
   after(async () => {
     await sendPendingCalendarEventInvitations(id);
   });
@@ -146,7 +151,7 @@ export async function retryCalendarEventInvitationsAction(formData: FormData) {
 }
 
 export async function inviteExternalCalendarEventAttendeeAction(formData: FormData) {
-  await requirePermission("calendar.manage", "/dashboard/calendar?error=forbidden");
+  const user = await requirePermission("calendar.view", "/dashboard/calendar?error=forbidden");
   const eventId = getString(formData, "eventId").trim();
   const name = getString(formData, "name").trim();
   const email = getString(formData, "email").trim().toLowerCase();
@@ -162,6 +167,8 @@ export async function inviteExternalCalendarEventAttendeeAction(formData: FormDa
 
   let attendanceId: string;
   try {
+    const { assertCalendarEventEditable } = await import("@/modules/calendar/server/calendar-access");
+    await assertCalendarEventEditable(eventId, user);
     const attendance = await createManualCalendarEventAttendance({ eventId, name, email });
     attendanceId = attendance.id;
   } catch (error) {
