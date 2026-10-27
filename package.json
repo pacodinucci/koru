@@ -10,6 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "share:generate": "node scripts/generate-share-preview.mjs",
+    "test:share": "node --test tests/share-preview.test.mjs",
     "cloudinary:migrate:assets": "node scripts/cloudinary-migrate-assets.mjs",
     "perf:images:check": "node scripts/check-image-budgets.mjs",
     "perf:images:report": "node scripts/image-metrics-report.mjs",

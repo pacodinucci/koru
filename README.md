@@ -61,6 +61,17 @@ npm run dev
 - `npm run prisma:migrate`
 - `npm run prisma:studio`
 
+## Vista previa al compartir
+
+La web publica un collage estático de cuatro fotos de espacios y naturaleza, sin fotos del equipo. Open Graph y Twitter usan la misma imagen; los artículos del blog conservan su foto propia y usan el collage solo como respaldo.
+
+- `npm run share:generate`: sortea cuatro fotos distintas de la lista revisada en `scripts/generate-share-preview.mjs`, genera un JPEG de 1200 × 630 y actualiza `src/lib/share-preview.json`.
+- `npm run test:share`: verifica selección, composición y metadatos.
+
+La imagen generada y el JSON deben incluirse juntos en el despliegue. No se regenera en cada visita ni automáticamente en cada build: así los rastreadores reciben siempre una imagen completa y estable. El generador usa Sharp, incluido por Next.js. Si falla la lectura o composición, se conserva la imagen publicada anteriormente.
+
+Para renovar las fotos, ejecutar el generador y desplegar los cambios. Cada imagen tiene una URL basada en su contenido; las anteriores se conservan para enlaces que ya estén en caché. WhatsApp decide el formato final de la tarjeta y puede conservar vistas previas antiguas, por lo que no se garantiza una actualización inmediata de enlaces ya compartidos. `APP_URL` (o, en su defecto, `BETTER_AUTH_URL`) debe apuntar al dominio público HTTPS en producción, accesible sin autenticación.
+
 ## Documentación
 
 - [Roadmap](docs/roadmap.md)

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import sharePreview from "@/lib/share-preview.json";
 
 import { BlogPostView } from "@/modules/blog/views/blog-post-view";
 import { getPublicPublishedPostMetadataBySlug } from "@/modules/blog/server/blog.repository";
 
 export const dynamic = "force-dynamic";
 
-const defaultShareImage = "/branding/koru-logo.png";
+const defaultShareImage = sharePreview.url;
 
 type BlogPostPageProps = {
   params: Promise<{
