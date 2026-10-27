@@ -82,8 +82,8 @@ export function StudentRubricAssignmentFields({ rubrics, assignment, pending, di
         </label>
       </fieldset>
       <p className="text-xs text-slate-600">{startPeriod ? `Se conserva el año de inicio ${startPeriod.getUTCFullYear()}.` : "El mes elegido es el primer mes de cobro del año actual."} Las cuotas se imputan en meses consecutivos; con una sola cuota, el total se imputa ese mismo mes. El porcentaje se aplica al total antes de dividir las cuotas.</p>
-      {assignment ? <p className="text-xs text-slate-600">Al mantener el rubro se conservan su nombre e importe bruto originales. Al cambiarlo se usa el importe actual del catálogo.</p> : <p className="text-xs text-slate-600">Cada rubro se agrega sin reemplazar los anteriores.</p>}
-      {preview ? <p role="status" className="rounded-md bg-slate-50 p-3 text-sm text-slate-700">Bruto: {currency(preview.grossAmount)} · Descuento ({discountPercent}%): {currency(preview.discountAmount)} · Neto: {currency(preview.netAmount)} · {preview.installments}. El cálculo definitivo se valida al guardar.</p> : null}
+      {assignment ? <p className="text-xs text-slate-600">Al mantener el rubro se conservan su nombre e importe bruto originales. Al cambiarlo se usa el importe actual del catálogo. Si hay pagos imputados, solo se puede cambiar el descuento de las cuotas sin pagos; las pagadas o parcialmente pagadas quedan intactas.</p> : <p className="text-xs text-slate-600">Cada rubro se agrega sin reemplazar los anteriores.</p>}
+      {preview ? <p role="status" className="rounded-md bg-slate-50 p-3 text-sm text-slate-700">{assignment ? "Referencia sin pagos previos: " : ""}Bruto: {currency(preview.grossAmount)} · Descuento ({discountPercent}%): {currency(preview.discountAmount)} · Neto: {currency(preview.netAmount)} · {preview.installments}. El cálculo definitivo se valida al guardar.</p> : null}
       {!options.length ? <p className="text-sm text-slate-600">No hay rubros activos para agregar. Cargá un rubro en el catálogo primero.</p> : null}
       <Button type="submit" disabled={pending || disabled || !preview} className="w-full">{pending ? "Guardando..." : submitLabel}</Button>
     </>

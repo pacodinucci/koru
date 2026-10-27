@@ -387,11 +387,68 @@ test("S5/S7 ownership, cancelled and non-rubric schedules reject edit/delete ato
   await unchanged(f, () => f.service.updateStudentRubricAssignment(editing(f, a, { rubricId: "missing" }), "admin"), "Seleccioná un rubro activo.");
 });
 
-test("S5/S7 any partial/full/voided allocation history, credit allocation or non-generated entry blocks both operations", async () => {
+test("paid and partially paid installments stay unchanged while unpaid installments receive the discount", async () => {
+  for (const [amount, status] of [["40000", "REGISTERED"], ["1", "REGISTERED"], ["1", "VOIDED"]]) {
+    const f = await setup(); const a = await assigned(f);
+    f.amendEntry(f.entries[0].id, { allocationsAsCharge: [{ amount, creditEntry: { payment: { status } } }] });
+    const protectedRow = JSON.stringify(f.entries[0]);
+    const updated = await f.service.updateStudentRubricAssignment(editing(f, a, { discountPercent: "10" }), "admin");
+    assert.equal(JSON.stringify(f.entries[0]), protectedRow);
+    assert.deepEqual(f.entries.map(e => e.amount), ["40000.00", "36000.00", "36000.00"]);
+    assert.equal(Number(updated.totalAmount), 112000);
+    assert.equal(Number(updated.discountAmount), 8000);
+    await f.service.updateStudentRubricAssignment(editing(f, a, { discountPercent: "20" }), "admin");
+    assert.equal(JSON.stringify(f.entries[0]), protectedRow);
+    assert.deepEqual(f.entries.map(e => e.amount), ["40000.00", "32000.00", "32000.00"]);
+    assert.equal(Number(updated.totalAmount), 104000);
+    await unchanged(f, () => f.service.deleteStudentRubricAssignment({ familyId: "family", studentId: "student", assignmentId: a.id }, "admin"), protectedError);
+  }
+});
+
+test("editing with payments freezes future unpaid terms and periodic generation stays idempotent", async () => {
+  const f = await setup(); const a = await assigned(f, { startMonth: 10 });
+  assert.equal(f.entries.length, 2);
+  f.amendEntry(f.entries[0].id, { allocationsAsCharge: [{ amount: "1" }] });
+  const protectedRow = JSON.stringify(f.entries[0]);
+  await f.service.updateStudentRubricAssignment(editing(f, a, { startMonth: 10, discountPercent: "10" }), "admin");
+  assert.equal(JSON.stringify(f.entries[0]), protectedRow);
+  assert.deepEqual(f.entries.map(e => e.amount), ["40000.00", "36000.00", "36000.00"]);
+  assert.equal((await f.generate(f.db, new Date("2027-01-01"), new Date("2027-01-01"), a.id)).created, 0);
+});
+
+test("a full discount preserves a paid cent and leaves zero future installments without redistributing the mixed total", async () => {
+  const f = await setup();
+  await f.service.updateBillingRubric({ rubricId: "rubric", name: "Centavos", amount: "0.03" });
+  const a = await assigned(f, { startMonth: 10 });
+  f.amendEntry(f.entries[0].id, { allocationsAsCharge: [{ amount: "0.01" }] });
+  const protectedRow = JSON.stringify(f.entries[0]);
+  const updated = await f.service.updateStudentRubricAssignment(editing(f, a, { startMonth: 10, discountPercent: "100" }), "admin");
+  assert.equal(JSON.stringify(f.entries[0]), protectedRow);
+  assert.deepEqual(f.entries.map(e => e.amount), ["0.01", "0.00", "0.00"]);
+  assert.equal(Number(updated.totalAmount), 0.01);
+  assert.equal(Number(updated.discountAmount), 0.02);
+  const future = new Date("2027-01-01");
+  assert.deepEqual(await f.generate(f.db, future, future, a.id), { due: 0, created: 0 });
+  const { projectFutureFamilyCharges } = require("../../src/modules/families/lib/family-charge-projections.ts");
+  const schedules = await f.db.eventualChargeSchedule.findMany({ where: { id: a.id } });
+  assert.deepEqual(projectFutureFamilyCharges(schedules, now, true), []);
+  const preview = require("../../src/modules/families/server/student-billing.core.ts").previewStudentBilling;
+  const db = { ...f.db, family: { findUniqueOrThrow: async () => ({ status: "ACTIVE", students: [{ id: "student", familyId: "family", firstName: "Ana", lastName: "Familia", plan: null }] }) }, familyAccountEntry: { ...f.db.familyAccountEntry, count: async () => 0 } };
+  assert.deepEqual((await preview(db, "family", now)).charges, []);
+});
+
+test("paid installment dates, numbering and rubric cannot be changed; failed edits roll back", async () => {
+  const f = await setup(); const a = await assigned(f);
+  f.amendEntry(f.entries[0].id, { allocationsAsCharge: [{ amount: "1" }] });
+  for (const patch of [{ startMonth: 2 }, { installmentCount: 2 }, { rubricId: "other" }]) {
+    await unchanged(f, () => f.service.updateStudentRubricAssignment(editing(f, a, patch), "admin"), "Con pagos imputados solo podés cambiar el descuento. Se conservan el rubro, las cuotas y el mes de inicio.");
+  }
+  f.failGeneration();
+  await unchanged(f, () => f.service.updateStudentRubricAssignment(editing(f, a, { discountPercent: "10" }), "admin"), "charge_failure");
+});
+
+test("S5/S7 credit allocation or non-generated entry blocks both operations", async () => {
   for (const patch of [
-    { allocationsAsCharge: [{ amount: "1", creditEntry: { payment: { status: "REGISTERED" } } }] },
-    { allocationsAsCharge: [{ amount: "40000", creditEntry: { payment: { status: "REGISTERED" } } }] },
-    { allocationsAsCharge: [{ amount: "1", creditEntry: { payment: { status: "VOIDED" } } }] },
     { allocationsAsCredit: [{ amount: "1" }] }, { type: "PAYMENT" }, { type: "PAYMENT_REVERSAL" },
     { type: "BALANCE_WAIVER" }, { type: "MONTHLY_CHARGE" }, { amount: "-1" },
     { paymentId: "payment" }, { installmentNumber: null }, { installmentNumber: 4 }, { billingPeriod: new Date("2026-01-01") }, { familyId: "other" },
@@ -457,7 +514,7 @@ test("S1/S5 actions expose discounted add/edit/delete, exact feedback and bounde
   const [a] = await f.repository.listStudentRubricAssignments("family");
   assert.equal(Number(a.discountPercent), 10);
   form.set("assignmentId", a.id); form.set("discountPercent", "25");
-  assert.equal((await actions.updateStudentRubricAssignmentAction({ message: null }, form)).message, "Rubro actualizado. Los cargos impagos se recalcularon y las cuotas futuras quedaron programadas.");
+  assert.equal((await actions.updateStudentRubricAssignmentAction({ message: null }, form)).message, "Rubro actualizado. Se recalcularon solo las cuotas sin pagos; las pagadas o parcialmente pagadas quedaron intactas.");
   const before = f.snapshot(); const pathCount = paths.length;
   for (const [key, value, message] of [["installmentCount", "3e0", "Seleccioná entre 1 y 120 cuotas enteras."], ["startMonth", "1.2", "Seleccioná un mes entre 1 y 12."], ["discountPercent", "101", discountError]]) {
     const original = form.get(key); form.set(key, value);
@@ -472,11 +529,12 @@ test("S1/S5 actions expose discounted add/edit/delete, exact feedback and bounde
   const protectedAssignment = await assigned(f);
   form.set("assignmentId", protectedAssignment.id);
   f.amendEntry(f.entries.at(-1).id, { allocationsAsCharge: [{ amount: "1" }] });
+  const paidRow = JSON.stringify(f.entries.at(-1));
+  assert.equal((await actions.updateStudentRubricAssignmentAction({ message: null }, form)).message, "Rubro actualizado. Se recalcularon solo las cuotas sin pagos; las pagadas o parcialmente pagadas quedaron intactas.");
+  assert.equal(JSON.stringify(f.entries.find(e => e.allocationsAsCharge?.length)), paidRow);
   const protectedBefore = f.snapshot(), protectedPaths = paths.length;
-  for (const action of [actions.updateStudentRubricAssignmentAction, actions.deleteStudentRubricAssignmentAction]) {
-    assert.equal((await action({ message: null }, form)).message, protectedError);
-    assert.equal(f.snapshot(), protectedBefore); assert.equal(paths.length, protectedPaths);
-  }
+  assert.equal((await actions.deleteStudentRubricAssignmentAction({ message: null }, form)).message, protectedError);
+  assert.equal(f.snapshot(), protectedBefore); assert.equal(paths.length, protectedPaths);
   for (const code of ["P2034", "P2003"]) {
     const errors = load("src/modules/families/server/rubrics.actions.ts", {
       "@/modules/auth/server/auth-guards": permission, "@/modules/families/lib/billing-rubrics": validators,

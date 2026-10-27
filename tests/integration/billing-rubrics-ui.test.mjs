@@ -480,7 +480,9 @@ test("S3/S5/S6 editor prefills snapshot, preserves year and posts only assignmen
   assert.match(ui.text(), /2024/);
   assert.match(ui.text(), /Bruto:.*90\.000,00/);
   assert.match(ui.text(), /Neto:.*81\.000,00/);
-  assert.match(ui.text(), /impagos/);
+  assert.match(ui.text(), /solo a las cuotas sin pagos/);
+  assert.match(ui.text(), /parcialmente pagadas conservan sus importes y su saldo pendiente/);
+  assert.match(ui.text(), /Referencia sin pagos previos/);
   change(ui, "rubricId", "new");
   assert.match(ui.text(), /Bruto:.*150\.000,00/);
   change(ui, "rubricId", "materials");

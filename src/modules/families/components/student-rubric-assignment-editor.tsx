@@ -40,7 +40,7 @@ function AssignmentEditorDialog({ familyId, studentId, assignment, rubrics, onCl
       <ResponsiveDialogContent className="font-montserrat md:max-w-lg" showCloseButton={!pending}>
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle style={{ fontFamily: "var(--font-montserrat)" }}>Editar rubro · {assignment.itemName}</ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>Los cambios recalculan y reemplazan los cargos asociados impagos. Si existen pagos imputados, no se permite editar ni eliminar.</ResponsiveDialogDescription>
+          <ResponsiveDialogDescription>El descuento se aplica solo a las cuotas sin pagos. Las cuotas pagadas o parcialmente pagadas conservan sus importes y su saldo pendiente. Con pagos imputados se conservan el rubro, la cantidad de cuotas y el mes de inicio; no se permite eliminar.</ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <ResponsiveDialogBody className="space-y-4">
           {open ? <>

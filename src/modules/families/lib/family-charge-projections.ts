@@ -36,9 +36,10 @@ export type FutureFamilyCharge = {
 export function projectFutureFamilyCharges(schedules: ScheduledFamilyCharge[], now: Date, includeDue = false): FutureFamilyCharge[] {
   return schedules.flatMap((schedule) => {
     if (schedule.student && schedule.student.familyId !== schedule.familyId) return [];
+    const emitted = new Set(schedule.accountEntries.map((entry) => entry.installmentNumber));
+    if (Array.from({ length: schedule.installmentCount }, (_, index) => index + 1).every(number => emitted.has(number))) return [];
     const amounts = splitInstallmentAmounts(schedule.totalAmount.toString(), schedule.installmentCount);
     const gross = schedule.grossAmount === null ? null : splitInstallmentAmounts(schedule.grossAmount.toString(), schedule.installmentCount);
-    const emitted = new Set(schedule.accountEntries.map((entry) => entry.installmentNumber));
     return amounts.flatMap((amount, index): FutureFamilyCharge[] => {
       const period = installmentPeriod(schedule.startPeriod, index);
       const imputationDate = installmentImputationDate(schedule.startPeriod, index);

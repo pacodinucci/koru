@@ -48,8 +48,9 @@ export async function previewStudentBilling(db: BillingClient, familyId: string,
  for (const schedule of existing.filter(s => s.studentId)) {
   const student = family.students.find(s => s.id === schedule.studentId);
   if (!student || student.familyId !== familyId) continue;
-  const amounts = splitInstallmentAmounts(schedule.totalAmount.toString(), schedule.installmentCount);
   const emitted = new Set(schedule.accountEntries.flatMap(e => e.installmentNumber === null ? [] : [e.installmentNumber]));
+  if (Array.from({ length: schedule.installmentCount }, (_, index) => index + 1).every(number => emitted.has(number))) continue;
+  const amounts = splitInstallmentAmounts(schedule.totalAmount.toString(), schedule.installmentCount);
   for (const index of dueInstallmentIndexes(schedule.startPeriod, schedule.installmentCount, now, emitted)) {
    const period = installmentPeriod(schedule.startPeriod, index);
    if (schedule.effectiveFrom && period < schedule.effectiveFrom || schedule.cancelledFrom && period >= schedule.cancelledFrom) continue;

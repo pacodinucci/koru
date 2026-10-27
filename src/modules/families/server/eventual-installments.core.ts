@@ -43,9 +43,12 @@ export async function createDueEventualInstallmentChargesInTransaction(tx: Insta
   });
   const entries = schedules.flatMap((schedule) => {
     if (schedule.student && schedule.student.familyId !== schedule.familyId) return [];
+    const emitted = new Set(schedule.accountEntries.flatMap((entry) => entry.installmentNumber === null ? [] : [entry.installmentNumber]));
+    // Fully materialized schedules can have mixed historical/discounted amounts
+    // that cannot be evenly split (e.g. one paid cent and two free installments).
+    if (Array.from({ length: schedule.installmentCount }, (_, index) => index + 1).every(number => emitted.has(number))) return [];
     const amounts = splitInstallmentAmounts(schedule.totalAmount.toString(), schedule.installmentCount);
     const grossAmounts = schedule.grossAmount === null ? null : splitInstallmentAmounts(schedule.grossAmount.toString(), schedule.installmentCount);
-    const emitted = new Set(schedule.accountEntries.flatMap((entry) => entry.installmentNumber === null ? [] : [entry.installmentNumber]));
     return dueInstallmentIndexes(schedule.startPeriod, schedule.installmentCount, now, emitted).filter(index => {
       const period = installmentPeriod(schedule.startPeriod, index);
       return (!schedule.effectiveFrom || period >= schedule.effectiveFrom) && (!schedule.cancelledFrom || period < schedule.cancelledFrom);
