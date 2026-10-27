@@ -85,7 +85,7 @@ export async function updateStudentRubricAssignmentAction(_previousState: Rubric
       startMonth: integerField(formData, "startMonth"), discountPercent: formData.has("discountPercent") ? field(formData, "discountPercent") : "0",
     }, admin.id);
     revalidateRubrics(familyId);
-    return { message: "Rubro actualizado. Los cargos impagos se recalcularon y las cuotas futuras quedaron programadas." };
+    return { message: "Rubro actualizado. Se recalcularon solo las cuotas sin pagos; las pagadas o parcialmente pagadas quedaron intactas." };
   } catch (error) { return { message: errorMessage(error) }; }
 }
 

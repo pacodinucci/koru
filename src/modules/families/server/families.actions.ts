@@ -7,9 +7,9 @@ import { z } from "zod";
 import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { getFamilyDetailForAdmin } from "@/modules/families/server/families.repository";
-import { buildAllocationSummary } from "@/modules/families/lib/payment-allocation";
-import { projectFutureFamilyCharges } from "@/modules/families/lib/family-charge-projections";
-import { getBillingPeriod } from "@/modules/families/lib/monthly-billing";
+import { buildFamilyFinancialSummary } from "@/modules/families/lib/family-financial-summary";
+
+
 import { runInvitationDeliveryWorker } from "@/modules/mailing/server/invitation-delivery-worker.service";
 import { invitationErrorState, type UserInvitationActionState } from "@/modules/users/lib/user-invitation-feedback";
 import { createUserInvitation } from "@/modules/users/server/users.repository";
@@ -185,10 +185,8 @@ export async function getFamilyDetailAction(familyId: string) {
   const family = await getFamilyDetailForAdmin(parsed.data);
   if (!family) return null;
 
-  const balance = family.accountEntries.reduce(
-    (total, entry) => total + Number(entry.amount),
-    0,
-  );
+  const summary = buildFamilyFinancialSummary(family.accountEntries, family.eventualChargeSchedules);
+  const normalizedById = new Map(summary.entries.map(entry => [entry.id, entry]));
   const eventualChargeItems = await prisma.billingRubric.findMany({
     where: { isActive: true },
     select: { id: true, name: true, amount: true },
@@ -197,9 +195,10 @@ export async function getFamilyDetailAction(familyId: string) {
   return {
     id: family.id,
     name: family.name,
-    balance: balance.toFixed(2),
-    ...buildAllocationSummary(family.accountEntries),
-    futureCharges: projectFutureFamilyCharges(family.eventualChargeSchedules, getBillingPeriod()),
+    balance: summary.balance,
+    pendingCharges: summary.pendingCharges,
+    unallocatedCredits: summary.unallocatedCredits,
+    futureCharges: summary.projectedCharges,
     eventualChargeItems: eventualChargeItems.map((item) => ({
       id: item.id,
       name: item.name,
@@ -210,13 +209,14 @@ export async function getFamilyDetailAction(familyId: string) {
     })),
     canManagePayments: user.permissionKeys.includes("families.payments"),
     entries: family.accountEntries.map((entry) => ({
+      isFuture: normalizedById.get(entry.id)!.isFuture,
       id: entry.id,
       type: entry.type,
       amount: entry.amount.toString(),
       grossAmount: entry.grossAmount?.toString() ?? null,
       discountAmount: entry.discountAmount?.toString() ?? null,
       description: entry.description,
-      occurredAt: entry.occurredAt.toISOString(),
+      occurredAt: normalizedById.get(entry.id)!.occurredAt.toISOString(),
       payment: entry.payment
         ? {
             id: entry.payment.id,

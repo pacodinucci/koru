@@ -106,7 +106,7 @@ export async function saveCalendarEventAction(formData: FormData) {
     });
 
     savedEventId = savedEvent.id;
-    shouldNotify = attendanceConfirmationEnabled;
+    shouldNotify = attendanceConfirmationEnabled && getBoolean(formData, "sendEmails");
   } catch (error) {
     const code = error instanceof Error ? error.message : "unknown";
     redirect(`/dashboard/calendar?error=${encodeURIComponent(code)}`);

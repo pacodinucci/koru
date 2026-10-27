@@ -19,7 +19,7 @@ import { argentinaToday, formatFamilyEntryDate } from "./family-payment-allocati
 import { FamilyPaymentDialog } from "./family-payment-dialog";
 import { FamilyCreditReconciliation } from "./family-credit-reconciliation";
 
-type FinancialEntry = { id: string; type: "MONTHLY_CHARGE" | "EVENTUAL_CHARGE" | "PAYMENT" | "PAYMENT_REVERSAL" | "BALANCE_WAIVER"; amount: string; grossAmount: string | null; discountAmount: string | null; description: string; occurredAt: string; payment: { id: string; method: "CASH" | "BANK_TRANSFER" | "CARD" | "OTHER"; reference: string | null; status: "REGISTERED" | "VOIDED"; receipt: { id: string; status: "ACTIVE" | "VOIDED"; pdfUrl: string | null; number: number } | null } | null };
+type FinancialEntry = { isFuture?: boolean; id: string; type: "MONTHLY_CHARGE" | "EVENTUAL_CHARGE" | "PAYMENT" | "PAYMENT_REVERSAL" | "BALANCE_WAIVER"; amount: string; grossAmount: string | null; discountAmount: string | null; description: string; occurredAt: string; payment: { id: string; method: "CASH" | "BANK_TRANSFER" | "CARD" | "OTHER"; reference: string | null; status: "REGISTERED" | "VOIDED"; receipt: { id: string; status: "ACTIVE" | "VOIDED"; pdfUrl: string | null; number: number } | null } | null };
 type FamilyFinancialCardProps = { family: { id: string; name: string; balance: string; entries: FinancialEntry[]; futureCharges?: FutureFamilyCharge[]; pendingCharges: PendingFamilyCharge[]; unallocatedCredits: UnallocatedFamilyCredit[] }; eventualChargeItems: Array<{ id: string; name: string; suggestedAmount: string; discountPercent: string; installmentCount: number; startMonth: number }>; canManagePayments: boolean; canWaive: boolean; onFinancialChange?: () => void };
 
 const typeLabels: Record<FinancialEntry["type"], string> = { MONTHLY_CHARGE: "Cuota básica", EVENTUAL_CHARGE: "Cargo eventual", PAYMENT: "Pago", PAYMENT_REVERSAL: "Anulación", BALANCE_WAIVER: "Condonación" };
@@ -32,9 +32,9 @@ export function FamilyFinancialCard({ family, eventualChargeItems, canManagePaym
   const [chargeFilter, setChargeFilter] = useState("all");
   const pendingById = new Map(family.pendingCharges.map((charge) => [charge.id, charge]));
   const tableEntries = [
-    ...family.entries.map((entry) => ({ ...entry, isFuture: false })),
+    ...family.entries.map((entry) => ({ ...entry, isFuture: entry.isFuture ?? false })),
     ...(family.futureCharges ?? []),
-  ].filter((entry) => chargeFilter === "all" || (chargeFilter === "future" ? entry.isFuture : !entry.isFuture && pendingById.has(entry.id)))
+  ].filter((entry) => chargeFilter === "all" || (chargeFilter === "future" ? entry.isFuture : pendingById.has(entry.id)))
     .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
@@ -191,7 +191,7 @@ export function FamilyFinancialCard({ family, eventualChargeItems, canManagePaym
     </ResponsiveDialog> : null}
     {message ? <p className="text-sm text-slate-700" role="status">{message}</p> : null}
     <div className="flex flex-wrap items-end justify-between gap-3">
-      <div><h4 className="font-medium text-slate-900">Cargos y movimientos</h4><p className="text-xs text-slate-600">Las cuotas futuras son una proyección y no se suman al saldo actual.</p></div>
+      <div><h4 className="font-medium text-slate-900">Cargos y movimientos</h4><p className="text-xs text-slate-600">Cada cuota se imputa el día 25 del mes anterior a su período. Las cuotas futuras no se suman al saldo actual y pueden pagarse por adelantado, en orden y sin saltos.</p></div>
       <label className="grid gap-1 text-xs font-medium text-slate-700">Mostrar
         <select aria-label="Filtrar cargos" value={chargeFilter} onChange={(event) => setChargeFilter(event.target.value)} className="h-9 rounded-md border border-input bg-background px-3 text-sm">
           <option value="all">Todos</option><option value="pending">Pendientes</option><option value="future">Futuros</option>
@@ -213,7 +213,7 @@ export function FamilyFinancialCard({ family, eventualChargeItems, canManagePaym
               {entry.payment ? <p className="text-xs text-slate-500">{methodLabels[entry.payment.method]}{entry.payment.reference ? ` · ${entry.payment.reference}` : ""}</p> : null}
             </td>
             <td className={`px-3 py-2 text-right font-medium ${entry.isFuture ? "text-slate-600" : Number(entry.amount) > 0 ? "text-amber-700" : "text-emerald-700"}`}>{currency(entry.amount)}</td>
-            <td className="px-3 py-2">{entry.isFuture ? <Badge variant="special">Futuro</Badge> : isCharge ? <Badge variant={pendingCharge ? "warning" : "success"}>{pendingCharge ? "Pendiente" : "Saldado"}</Badge> : <EntryStatus entry={entry}/>}</td>
+            <td className="px-3 py-2">{entry.isFuture ? <Badge variant={pendingCharge ? "special" : "success"}>{pendingCharge || Number(entry.amount) === 0 ? "Futuro" : "Pagado por adelantado"}</Badge> : isCharge ? <Badge variant={pendingCharge ? "warning" : "success"}>{pendingCharge ? "Pendiente" : "Saldado"}</Badge> : <EntryStatus entry={entry}/>}</td>
             <td className="px-3 py-2"><div className="flex flex-wrap gap-2">
               {entry.payment?.receipt?.pdfUrl && entry.payment.receipt.status === "ACTIVE" ? <Button nativeButton={false} render={<a href={`/api/receipts/${entry.payment.receipt.id}/download`} target="_blank" rel="noreferrer"/>} size="sm" variant="outline"><ExternalLink/>Recibo #{entry.payment.receipt.number}</Button> : null}
               {canManagePayments && entry.payment?.status === "REGISTERED" ? <form onSubmit={voidPayment} className="flex gap-1"><input type="hidden" name="paymentId" value={entry.payment.id}/><Input name="reason" minLength={2} maxLength={300} required placeholder="Motivo" className="h-8 w-32"/><Button disabled={isPending} type="submit" size="sm" variant="destructive">Anular</Button></form> : null}

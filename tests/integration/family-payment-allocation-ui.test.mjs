@@ -6,6 +6,7 @@ import vm from "node:vm";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
+import * as paymentAllocation from "../../src/modules/families/lib/payment-allocation.ts";
 
 const require = createRequire(import.meta.url);
 const base = "@/modules/families/components/";
@@ -71,6 +72,7 @@ function loader(overrides = {}, globals = {}) {
             ? ({ open, children, onOpenChange }) => open ? React.createElement("dialog", { open, onOpenChange }, children) : null
             : pass,
         });
+        if (id.endsWith("lib/payment-allocation")) return paymentAllocation;
         if (id.endsWith("annual-plan")) return { BILLING_MONTHS: [] };
         if (id.endsWith("plan-discounts")) return { calculatePlanDiscount: () => null };
         return new Proxy({}, { get: () => pass });
@@ -711,4 +713,54 @@ test("charge filter has specific empty states and future rows never become payab
   empty.find((n) => n.props["aria-label"] === "Filtrar cargos").props.onChange({ target: { value: "future" } });
   empty.render();
   assert.ok(empty.text().includes("No hay cargos futuros."));
+});
+
+
+test("advance selection accepts November/December/January and rejects gaps or incomplete prior installments", () => {
+  const pending = [1, 2, 3].map((number) => ({ id: `installment-${number}`, description: `Cuota ${number}`, occurredAt: "2026-10-25T03:00:00Z", amount: "2000.00", outstandingAmount: "2000.00", eventualChargeScheduleId: "annual", installmentNumber: number, isFuture: number > 1 }));
+  const { allocationSummary } = fields();
+  assert.equal(allocationSummary(pending, { "installment-1": "2000", "installment-2": "2000", "installment-3": "2000" }, "6000").valid, true);
+  for (const [draft, amount] of [
+    [{ "installment-1": "2000", "installment-3": "2000" }, "4000"],
+    [{ "installment-2": "2000" }, "2000"],
+    [{ "installment-1": "1000", "installment-2": "2000" }, "3000"],
+  ]) {
+    const summary = allocationSummary(pending, draft, amount);
+    assert.equal(summary.valid, false);
+    assert.match(summary.error, /correlativas/);
+  }
+});
+
+
+test("selector only enables the next installment and clears later selections when an earlier one is removed", async () => {
+  const pending = [1, 2, 3].map(number => ({ id: `i${number}`, description: `Cuota ${number}`, occurredAt: "2026-10-25T03:00:00Z", amount: "2000.00", outstandingAmount: "2000.00", eventualChargeScheduleId: "annual", installmentNumber: number, isFuture: number > 1 }));
+  const ui = harness({ chargeList: pending });
+  ui.form.values.amount = "6000";
+  await ui.submit(paymentForm(ui));
+  const box = id => ui.find(node => node.type === "input" && node.props.type === "checkbox" && node.props.value === id);
+  assert.equal(box("i1").props.disabled, false);
+  assert.equal(box("i2").props.disabled, true);
+  assert.equal(box("i3").props.disabled, true);
+  for (const id of ["i1", "i2", "i3"]) {
+    assert.equal(box(id).props.disabled, false);
+    box(id).props.onChange({ target: { checked: true } });
+    ui.render();
+  }
+  assert.equal(ui.button("Confirmar pago").props.disabled, false);
+  box("i2").props.onChange({ target: { checked: false } });
+  ui.render();
+  assert.equal(box("i1").props.checked, true);
+  assert.equal(box("i2").props.checked, false);
+  assert.equal(box("i3").props.checked, false);
+  assert.equal(ui.button("Confirmar pago").props.disabled, true);
+  assert.equal(ui.calls.length, 0);
+});
+
+test("persisted future installments paid in advance remain future and show paid status", () => {
+  const ui = harness({ chargeList: [], entries: [{ id: "advanced", type: "EVENTUAL_CHARGE", amount: "2000", grossAmount: null, discountAmount: null, description: "Cuota de enero", occurredAt: "2026-12-25T03:00:00Z", payment: null, isFuture: true }] });
+  assert.ok(ui.text().includes("Pagado por adelantado"));
+  const filter = ui.find(node => node.type === "select" && node.props["aria-label"] === "Filtrar cargos");
+  filter.props.onChange({ target: { value: "future" } });
+  ui.render();
+  assert.ok(ui.text().includes("Cuota de enero"));
 });
