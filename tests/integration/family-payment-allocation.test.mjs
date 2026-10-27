@@ -10,7 +10,7 @@ import { buildAllocationSummary } from "../../src/modules/families/lib/payment-a
 import { formatReceiptDate } from "../../src/modules/mailing/lib/email-copy.ts";
 
 // In-memory transaction adapter: no Prisma client, network, environment, or database.
-function harness(seed = []) {
+function harness(seed = [], schedules = []) {
   let state = { entries: structuredClone(seed), payments: [], receipts: [], allocations: [], counters: { payment: 0, entry: 0, allocation: 0 } };
   let revision = 0;
   let conflict = false;
@@ -23,6 +23,7 @@ function harness(seed = []) {
       const tx = {
         $queryRaw: async (strings, ...values) => { assert.match(strings.join("?"), /pg_advisory_xact_lock/); locks.push(values[0]); return [{ "?column?": 1 }]; },
         family: { findUnique: async ({ where }) => where.id === "family" ? { id: "family" } : null },
+        eventualChargeSchedule: { findMany: async ({ where }) => structuredClone(schedules).filter(schedule => schedule.familyId === where.familyId).map(schedule => ({ ...schedule, accountEntries: draft.entries.filter(entry => entry.eventualChargeScheduleId === schedule.id).map(entry => ({ installmentNumber: entry.installmentNumber })) })) },
         familyAccountEntry: {
           findMany: async ({ where }) => draft.entries.filter((entry) => entry.familyId === where.familyId).map((entry) => ({
             ...entry,
@@ -307,4 +308,41 @@ test("public reconciliation action requires payment and waiver permissions and n
   assert.deepEqual(allowed.permissions, ["families.payments", "families.waive-balance"]);
   assert.deepEqual(allowed.receipts, []);
   assert.deepEqual(allowed.revalidated, ["/dashboard/families", "/dashboard/families/family"]);
+});
+
+const advanceSchedule = () => ({ id: "annual", familyId: "family", itemName: "Cuota anual", isBase: false, totalAmount: "6000", grossAmount: "6000", installmentCount: 3, startPeriod: new Date("2026-11-01T00:00:00Z"), effectiveFrom: null, cancelledFrom: null, student: { firstName: "Ana", lastName: "Pérez", familyId: "family" }, accountEntries: [], createdById: "admin", eventualChargeItemId: null });
+
+test("public action accepts 6000 for consecutive November, December and January, with a separate payment date", async () => {
+  const h = harness([], [advanceSchedule()]);
+  const a = actionHarness(h);
+  const result = await a.actions.registerFamilyPaymentAction(form(payment({ amount: "6000", paidAt: "2026-10-25", allocations: allocations(["future:annual:1", "2000"], ["future:annual:2", "2000"], ["future:annual:3", "2000"]) })));
+  assert.equal(result.ok, true);
+  assert.equal(result.message, "Pago registrado.");
+  const state = h.snapshot();
+  assert.equal(state.payments[0].paidAt.toISOString(), "2026-10-25T15:00:00.000Z");
+  const charges = state.entries.filter(entry => entry.eventualChargeScheduleId);
+  assert.deepEqual(charges.map(entry => [entry.installmentNumber, entry.amount, entry.occurredAt.toISOString()]), [
+    [1, "2000.00", "2026-10-25T03:00:00.000Z"], [2, "2000.00", "2026-11-25T03:00:00.000Z"], [3, "2000.00", "2026-12-25T03:00:00.000Z"],
+  ]);
+  assert.deepEqual(state.allocations.map(row => row.chargeEntryId), charges.map(entry => entry.id));
+  assert.deepEqual(h.summary().pendingCharges, []);
+  assert.equal(state.counters.payment, 1);
+  assert.equal(state.counters.entry, 4);
+  assert.equal(state.counters.allocation, 3);
+  assert.equal(a.receipts.length, 1);
+});
+
+test("skipping or partially covering an earlier installment rejects the entire payment without changing records or counters", async () => {
+  const h = harness([], [advanceSchedule()]);
+  for (const rows of [
+    [["future:annual:2", "2000"]],
+    [["future:annual:1", "2000"], ["future:annual:3", "2000"]],
+    [["future:annual:1", "1000"], ["future:annual:2", "2000"]],
+  ]) {
+    const amount = String(rows.reduce((sum, [, amount]) => sum + Number(amount), 0));
+    await rejectedUnchanged(h, () => h.service.register(payment({ amount, allocations: allocations(...rows) }), "admin"), "Seleccioná cuotas correlativas y completá las anteriores antes de adelantar la siguiente.");
+  }
+  assert.equal((await h.service.register(payment({ amount: "2000", allocations: allocations(["future:annual:1", "2000"]) }), "admin")).ok, true);
+  assert.equal((await h.service.register(payment({ amount: "4000", allocations: allocations(["future:annual:2", "2000"], ["future:annual:3", "2000"]) }), "admin")).ok, true);
+  assert.equal(h.snapshot().entries.filter(entry => entry.eventualChargeScheduleId).length, 3);
 });

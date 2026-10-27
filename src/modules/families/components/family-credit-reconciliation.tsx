@@ -29,7 +29,7 @@ export function FamilyCreditReconciliation({ familyId, credits, charges, canMana
 
   return <section aria-label="Conciliación de movimientos anteriores" className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
     <h4 className="font-medium text-amber-950">Conciliación pendiente</h4>
-    <p className="text-sm text-amber-950">Hay pagos o condonaciones anteriores sin conceptos asignados. Conciliá estos importes antes de registrar nuevos pagos. La conciliación no modifica los movimientos ni el saldo de la cuenta.</p>
+    <p className="text-sm text-amber-950">Hay pagos o condonaciones anteriores sin conceptos asignados. Conciliá estos importes antes de registrar nuevos pagos. La conciliación conserva los movimientos y sus fechas. Si asignás un pago a cuotas futuras, ese importe queda reservado para ellas.</p>
     {unallocatedCents > outstandingCents ? <p className="text-sm font-medium text-amber-950">Los conceptos pendientes no alcanzan para conciliar todo el importe anterior. Se requiere revisión manual; no se crearán deudas ni condonaciones automáticamente.</p> : null}
     <ul className="space-y-2">
       {credits.map((credit) => {
@@ -44,7 +44,7 @@ export function FamilyCreditReconciliation({ familyId, credits, charges, canMana
       })}
     </ul>
     {message ? <p className="text-sm" role="status">{message}</p> : null}
-    {activeCredit ? <FamilyPaymentDialog key={activeCredit.id} title={activeCredit.type === "BALANCE_WAIVER" ? "Conciliar condonación anterior" : "Conciliar pago anterior"} description="Asigná únicamente a deudas que correspondan a este movimiento anterior." total={activeCredit.unallocatedAmount} charges={charges} allowPartial onClose={() => setActiveCredit(null)} onConfirm={(allocations) => {
+    {activeCredit ? <FamilyPaymentDialog key={activeCredit.id} title={activeCredit.type === "BALANCE_WAIVER" ? "Conciliar condonación anterior" : "Conciliar pago anterior"} description="Asigná únicamente a deudas que correspondan a este movimiento anterior." total={activeCredit.unallocatedAmount} charges={activeCredit.type === "BALANCE_WAIVER" ? charges.filter(charge => !charge.isFuture) : charges} allowPartial onClose={() => setActiveCredit(null)} onConfirm={(allocations) => {
       const data = new FormData();
       data.set("familyId", familyId);
       data.set("creditEntryId", activeCredit.id);

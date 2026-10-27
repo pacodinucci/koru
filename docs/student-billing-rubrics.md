@@ -23,7 +23,7 @@ Quienes solo tienen acceso de consulta pueden ver el catálogo y las asignacione
 | Materiales por $120.000 con 10% de descuento y 3 cuotas | Descuento de $12.000 sobre el total; neto $108.000, dividido en 3 cuotas de $36.000. |
 | Rubro con 100% de descuento | Neto $0 y cuotas de $0, sin error de división. |
 | Rubro de $100 en 3 cuotas, sin descuento | $33,33, $33,33 y $33,34; el ajuste de centavos conserva el total. |
-| Matrícula por $25.000 en 1 cuota desde abril | El total se imputa en abril. |
+| Matrícula por $25.000 en 1 cuota desde abril | El total se imputa el 25 de marzo. |
 | Rubro en varias cuotas desde diciembre | Los meses siguen consecutivamente, también al pasar al año siguiente. |
 
 Al agregar, el selector indica el primer mes de cobro **del año actual**. Al editar, indica el **año original de la asignación**, que no cambia. Las cuotas admiten de 1 a 120; el descuento se calcula sobre el total y recién después se divide el neto, distribuyendo centavos sin alterar su suma. La vista previa reutiliza los cálculos monetarios del proyecto, pero no reemplaza la validación del servidor. Los pagos se registran por separado.
@@ -35,10 +35,10 @@ Editar el catálogo no recalcula asignaciones existentes: el nombre, bruto, desc
 La **Ficha financiera** agrupa saldo, menú de opciones, registro de pagos, filtros y tabla **Cargos y movimientos** en un único contenedor de fondo blanco. La tabla abre con el filtro **Todos**. También está disponible al abrir la ficha desde el diálogo de administración de familias. El bloque de revisión **Cargos por alumno** ya no se muestra; las asignaciones se mantienen en **Hij@s · Rubros por alumno**.
 
 - **Todos** conserva los cargos registrados (incluidos los saldados), los pagos, las condonaciones y las anulaciones del historial, y agrega las cuotas futuras proyectadas.
-- **Pendientes** muestra únicamente cargos generados con importe todavía sin cubrir, incluidos los pagos parciales. Cada fila indica el importe original y su saldo **Pendiente**.
-- **Futuros** muestra las cuotas de cronogramas ya guardados para meses posteriores al actual en Argentina que todavía no se generaron. Respeta el inicio efectivo, las cancelaciones y los números de cuota ya emitidos; utiliza los importes netos guardados, sin recalcular desde el catálogo actual.
+- **Pendientes** muestra todas las cuotas con importe todavía sin cubrir, incluidas las futuras y los pagos parciales. Cada fila indica el importe original y su saldo **Pendiente**.
+- **Futuros** muestra las cuotas cuya fecha de imputación todavía no llegó, incluidas las pagadas por adelantado. Respeta el inicio efectivo, las cancelaciones y los números de cuota ya emitidos; utiliza los importes netos guardados, sin recalcular desde el catálogo actual.
 
-Las filas **Futuro** son solo una proyección: no se guardan como movimientos, no se suman al saldo actual ni se ofrecen como conceptos para imputar pagos. Los cargos generados sin saldo pendiente figuran como **Saldado**. Los filtros no modifican los datos y muestran un mensaje específico cuando no hay cargos pendientes o futuros.
+Cada cuota se imputa al saldo a las 00:00 de Argentina del **día 25 del mes anterior a su período**: noviembre se imputa el 25 de octubre, y enero el 25 de diciembre del año anterior. Al asignar el rubro ya aparecen todas las cuotas pendientes, pero las futuras no aumentan el saldo actual. Se pueden seleccionar para adelantar pagos, en orden y sin saltos dentro del rubro del alumno; antes de avanzar se completa la cuota anterior. Por ejemplo, el 25 de octubre un pago de $6.000 cubre noviembre, diciembre y enero de $2.000 cada una, pero no permite omitir diciembre. Los pagos conservan su fecha real. El importe adelantado queda aplicado a esas cuotas sin cancelar deuda de otros conceptos; las futuras cubiertas se muestran como **Pagado por adelantado**. Al llegar su fecha se imputan sin generar nueva deuda. Las cuotas futuras seleccionadas se guardan junto al pago en una misma transacción; las demás siguen como proyección. Los saldos también contemplan las imputaciones que correspondan aunque no se haya ejecutado el generador ese día. Los cargos generados sin saldo pendiente figuran como **Saldado**. Los filtros no modifican los datos y muestran un mensaje específico cuando no hay cargos pendientes o futuros.
 
 ## Compatibilidad y preservación
 

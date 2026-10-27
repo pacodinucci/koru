@@ -347,8 +347,8 @@ test("S5/S7 editing preserves historical gross/name/year, rebuilds only own unpa
   assert.equal(Number(updated.totalAmount), 90000);
   assert.equal(updated.startPeriod.toISOString(), "2025-12-01T00:00:00.000Z");
   const rows = await f.db.familyAccountEntry.findMany({ where: { eventualChargeScheduleId: a.id } });
-  assert.equal(rows.length, 11, "only December 2025 through October 2026 is due");
-  assert.deepEqual(rows.map(e => e.installmentNumber), Array.from({ length: 11 }, (_, i) => i + 1));
+  assert.equal(rows.length, 12, "December 2025 through November 2026 accrues by October 25");
+  assert.deepEqual(rows.map(e => e.installmentNumber), Array.from({ length: 12 }, (_, i) => i + 1));
   assert.ok(rows.every(e => e.amount === "3750.00"));
   assert.equal(JSON.stringify((await f.db.familyAccountEntry.findMany({ where: {} })).filter(e => e.eventualChargeScheduleId !== a.id)), unrelated);
   assert.equal((await f.generate(f.db, now, period.getBillingPeriod(), a.id)).created, 0);

@@ -57,6 +57,7 @@ export async function POST(request: Request) {
         ? audienceValue as CalendarAudienceType
         : CalendarAudienceType.ALL;
     const attendanceConfirmationEnabled = getBoolean(formData, "attendanceConfirmationEnabled");
+    const shouldNotify = attendanceConfirmationEnabled && getBoolean(formData, "sendEmails");
     const privateAudienceUserIds = visibility === CalendarEventVisibility.PUBLIC
       ? []
       : formData.getAll("privateAudienceUserIds")
@@ -89,12 +90,12 @@ export async function POST(request: Request) {
     });
 
     after(async () => {
-      if (attendanceConfirmationEnabled) await sendPendingCalendarEventInvitations(event.id);
+      if (shouldNotify) await sendPendingCalendarEventInvitations(event.id);
       await syncEventForConfirmedUsers(event.id);
     });
 
     return NextResponse.redirect(
-      new URL(`/dashboard/calendar?ok=${attendanceConfirmationEnabled ? "invitation_scheduled" : "saved"}`, request.url),
+      new URL(`/dashboard/calendar?ok=${shouldNotify ? "invitation_scheduled" : "saved"}`, request.url),
       303,
     );
   } catch (error) {

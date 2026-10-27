@@ -1,9 +1,10 @@
 import type { Prisma } from "@prisma/client";
+import { buildFamilyFinancialSummary } from "../lib/family-financial-summary.ts";
 import { lockFamilyBilling } from "./eventual-installments.core.ts";
 
 import {
   AllocationInputError, argentinaPaymentDate, buildAllocationSummary, centsToMoney,
-  isActiveCredit, moneyToCents, parseAllocations, signedMoneyToCents,
+  isActiveCredit, moneyToCents, parseAllocations, validateConsecutiveAllocations,
 } from "../lib/payment-allocation.ts";
 
 type TransactionDatabase = {
@@ -34,7 +35,11 @@ async function loadAccount(tx: Prisma.TransactionClient, familyId: string) {
   const entries = await tx.familyAccountEntry.findMany({
     where: { familyId }, include: { payment: true, allocationsAsCredit: true },
   });
-  return { entries, ...buildAllocationSummary(entries) };
+  const schedules = await tx.eventualChargeSchedule.findMany({ where: { familyId }, include: {
+    student: { select: { firstName: true, lastName: true, familyId: true } },
+    accountEntries: { select: { installmentNumber: true } },
+  } });
+  return { ...buildFamilyFinancialSummary(entries, schedules), schedules };
 }
 
 function validateTargets(rows: ReturnType<typeof parseAllocations>, pending: ReturnType<typeof buildAllocationSummary>["pendingCharges"]) {
@@ -43,6 +48,25 @@ function validateTargets(rows: ReturnType<typeof parseAllocations>, pending: Ret
     const outstanding = targets.get(row.chargeEntryId);
     if (outstanding === undefined || row.cents > outstanding) reject(targetMessage);
   }
+  validateConsecutiveAllocations(rows, pending);
+}
+
+async function materializeTargets(tx: Prisma.TransactionClient, account: Awaited<ReturnType<typeof loadAccount>>, rows: ReturnType<typeof parseAllocations>) {
+  const resolved = [];
+  for (const row of rows) {
+    const projected = account.projectedCharges.find(charge => charge.id === row.chargeEntryId);
+    if (!projected) { resolved.push(row); continue; }
+    const schedule = account.schedules.find(schedule => schedule.id === projected.eventualChargeScheduleId)!;
+    const entry = await tx.familyAccountEntry.create({ data: {
+      familyId: schedule.familyId, type: projected.type, amount: projected.amount,
+      grossAmount: projected.grossAmount, discountAmount: projected.discountAmount,
+      description: projected.description, occurredAt: new Date(projected.occurredAt),
+      eventualChargeScheduleId: schedule.id, installmentNumber: projected.installmentNumber,
+      eventualChargeItemId: schedule.eventualChargeItemId, createdById: schedule.createdById,
+    } });
+    resolved.push({ ...row, chargeEntryId: entry.id });
+  }
+  return resolved;
 }
 
 async function appendAllocations(tx: Prisma.TransactionClient, creditEntryId: string, rows: ReturnType<typeof parseAllocations>, createdById: string) {
@@ -59,7 +83,7 @@ export function createFamilyPaymentService(db: TransactionDatabase) {
   async function transaction(work: (tx: Prisma.TransactionClient) => Promise<Result>): Promise<Result> {
     try { return await db.$transaction(work, { isolationLevel: "Serializable" }); } catch (error) {
       if (error instanceof AllocationInputError) return { ok: false, message: error.message };
-      if (error && typeof error === "object" && "code" in error && (error.code === "P2034" || error.code === "P2003")) return { ok: false, message: conflictMessage };
+      if (error && typeof error === "object" && "code" in error && (error.code === "P2034" || error.code === "P2003" || error.code === "P2002")) return { ok: false, message: conflictMessage };
       throw error;
     }
   }
@@ -86,7 +110,7 @@ export function createFamilyPaymentService(db: TransactionDatabase) {
           familyId: input.familyId, type: "PAYMENT", amount: centsToMoney(-cents), description: "Pago registrado",
           occurredAt: paidAt, paymentId: payment.id, createdById: actorId,
         } });
-        await appendAllocations(tx, entry.id, rows, actorId);
+        await appendAllocations(tx, entry.id, await materializeTargets(tx, account, rows), actorId);
         return { ok: true, message: "Pago registrado.", familyId: input.familyId, paymentId: payment.id };
       });
     },
@@ -104,8 +128,9 @@ export function createFamilyPaymentService(db: TransactionDatabase) {
         const remainder = account.unallocatedCredits.find((entry) => entry.id === credit.id);
         const assigned = rows.reduce((sum, row) => sum + row.cents, 0);
         if (!Number.isSafeInteger(assigned) || !remainder || assigned > moneyToCents(remainder.unallocatedAmount)) reject("La asignación supera el crédito disponible.");
-        validateTargets(rows, account.pendingCharges);
-        await appendAllocations(tx, credit.id, rows, actorId);
+        const pending = credit.type === "BALANCE_WAIVER" ? account.pendingCharges.filter(charge => !charge.isFuture) : account.pendingCharges;
+        validateTargets(rows, pending);
+        await appendAllocations(tx, credit.id, await materializeTargets(tx, account, rows), actorId);
         return { ok: true, message: "Crédito conciliado.", familyId: input.familyId };
       });
     },
@@ -136,8 +161,8 @@ export function createFamilyPaymentService(db: TransactionDatabase) {
           return moneyToCents(input.amount);
         }, "Revisá el importe y el motivo de la condonación.");
         const account = await loadAccount(tx, input.familyId);
-        const balance = account.entries.reduce((sum, entry) => sum + BigInt(signedMoneyToCents(entry.amount.toString())), BigInt(0));
-        if (BigInt(cents) > balance) reject("La condonación no puede superar el saldo pendiente.");
+        const balance = Number(account.balance);
+        if (cents > Math.round(balance * 100)) reject("La condonación no puede superar el saldo pendiente.");
         // No targets are collected by the waiver form; require explicit manual reconciliation.
         await tx.familyAccountEntry.create({ data: {
           familyId: input.familyId, type: "BALANCE_WAIVER", amount: centsToMoney(-cents),

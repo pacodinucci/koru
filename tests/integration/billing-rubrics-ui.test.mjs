@@ -6,6 +6,7 @@ import vm from "node:vm";
 import React from "react";
 import ts from "typescript";
 import { projectFutureFamilyCharges } from "../../src/modules/families/lib/family-charge-projections.ts";
+import { buildFamilyFinancialSummary } from "../../src/modules/families/lib/family-financial-summary.ts";
 
 const require = createRequire(import.meta.url);
 const root = "@/modules/families/";
@@ -88,6 +89,7 @@ function harness({ rubrics = [rubric, inactive], records = assignments, schedule
         if (id.endsWith("server/rubrics.actions")) return { createBillingRubricAction: action("create"), updateBillingRubricAction: action("update"), assignRubricToStudentAction: action("assign"), updateStudentRubricAssignmentAction: action("editAssignment"), deleteStudentRubricAssignmentAction: action("deleteAssignment") };
         if (id.endsWith("server/rubrics.repository")) return { listBillingRubricsForAdmin: async () => rubrics, listStudentRubricAssignments: async (id) => { assert.equal(id, family.id); return records; } };
         if (id.endsWith("family-financial.repository")) return { getFamilyFinancialRecord: async () => ({ ...family, eventualChargeSchedules: schedules }) };
+        if (id.endsWith("family-financial-summary")) return { buildFamilyFinancialSummary: (entries, schedules) => buildFamilyFinancialSummary(entries.map(entry => ({ ...entry, allocationsAsCredit: entry.allocationsAsCredit ?? [] })), schedules, new Date("2026-10-01T12:00:00Z")) };
         if (id.endsWith("family-charge-projections")) return { projectFutureFamilyCharges };
         if (id.endsWith("monthly-billing")) return { getBillingPeriod: () => new Date("2026-10-01T00:00:00Z") };
         if (id.endsWith("family-responsibles")) return { buildFamilyResponsibles: () => [] };
@@ -582,6 +584,6 @@ test("family route supplies read-only future rows while keeping persisted balanc
   assert.equal(data.entries.length, 1);
   assert.equal(data.entries[0].id, "entry");
   assert.deepEqual(data.futureCharges.map((r) => r.amount), ["40.00", "40.00"]);
-  assert.equal(data.pendingCharges.length, 0);
+  assert.equal(data.pendingCharges.length, 3);
   assert.equal(ui.calls.length, 0);
 });

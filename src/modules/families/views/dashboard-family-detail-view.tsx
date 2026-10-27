@@ -10,9 +10,7 @@ import { FamilyResponsiblesList } from "@/modules/families/components/family-res
 import { buildFamilyResponsibles } from "@/modules/families/lib/family-responsibles";
 import { StudentRubricAssignmentForm } from "@/modules/families/components/student-rubric-assignment-form";
 import { StudentRubricAssignmentEditor } from "@/modules/families/components/student-rubric-assignment-editor";
-import { buildAllocationSummary } from "@/modules/families/lib/payment-allocation";
-import { projectFutureFamilyCharges } from "@/modules/families/lib/family-charge-projections";
-import { getBillingPeriod } from "@/modules/families/lib/monthly-billing";
+import { buildFamilyFinancialSummary } from "@/modules/families/lib/family-financial-summary";
 import { getFamilyFinancialRecord } from "@/modules/families/server/family-financial.repository";
 import { listBillingRubricsForAdmin, listStudentRubricAssignments } from "@/modules/families/server/rubrics.repository";
 
@@ -28,20 +26,25 @@ export async function DashboardFamilyDetailView({ familyId, canManageFamily, can
   ]);
   const rubricOptions = rubrics.map((rubric) => ({ id: rubric.id, name: rubric.name, amount: rubric.amount.toString(), isActive: rubric.isActive }));
   if (!family) notFound();
-  const balance = family.accountEntries.reduce((total, entry) => total + Number(entry.amount), 0);
+  const summary = buildFamilyFinancialSummary(family.accountEntries, family.eventualChargeSchedules);
+  const normalizedById = new Map(summary.entries.map(entry => [entry.id, entry]));
   const financialFamily = {
     id: family.id,
     name: family.name,
-    balance: balance.toFixed(2),
-    ...buildAllocationSummary(family.accountEntries),
-    futureCharges: projectFutureFamilyCharges(family.eventualChargeSchedules, getBillingPeriod()),
+    balance: summary.balance,
+    pendingCharges: summary.pendingCharges,
+    unallocatedCredits: summary.unallocatedCredits,
+    futureCharges: summary.projectedCharges,
     // Rubrics are student assignments, not legacy PlanEventualChargeItem IDs.
     // An empty list keeps the financial card's manual free-charge flow available.
     eventualChargeItems: [],
-    entries: family.accountEntries.map((entry) => ({
-      id: entry.id, type: entry.type, amount: entry.amount.toString(), grossAmount: entry.grossAmount?.toString() ?? null, discountAmount: entry.discountAmount?.toString() ?? null, description: entry.description, occurredAt: entry.occurredAt.toISOString(),
+    entries: family.accountEntries.map((entry) => {
+      const normalized = normalizedById.get(entry.id)!;
+      return {
+      id: entry.id, isFuture: normalized.isFuture, type: entry.type, amount: entry.amount.toString(), grossAmount: entry.grossAmount?.toString() ?? null, discountAmount: entry.discountAmount?.toString() ?? null, description: entry.description, occurredAt: normalized.occurredAt.toISOString(),
       payment: entry.payment ? { id: entry.payment.id, method: entry.payment.method, reference: entry.payment.reference, status: entry.payment.status, receipt: entry.payment.receipt ? { id: entry.payment.receipt.id, status: entry.payment.receipt.status, pdfUrl: entry.payment.receipt.pdfUrl, number: entry.payment.receipt.number } : null } : null,
-    })),
+      };
+    }),
   };
   const responsibles = buildFamilyResponsibles(family.users, family.students).map((responsible) => ({
     id: responsible.id,
