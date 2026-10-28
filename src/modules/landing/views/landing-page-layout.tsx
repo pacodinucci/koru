@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Suspense,
   useEffect,
   useRef,
   useState,
@@ -9,7 +10,7 @@ import {
 } from "react";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LandingNav } from "@/modules/landing/components/landing-nav";
+import { PublicNavigationSession } from "@/modules/landing/components/public-navigation-session";
 import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 import { getSiteChromeNavLinks } from "@/modules/cms/site-chrome-content";
 import { SiteFooter } from "@/modules/landing/components/site-footer";
@@ -266,11 +267,19 @@ function parseFooterContainerChildren(
   return [...legacyElements, ...legacyContainers];
 }
 
-export function LandingPageLayout({
+export function LandingPageLayout(props: LandingPageLayoutProps) {
+  return (
+    <Suspense fallback={props.children}>
+      <LandingPageLayoutContent {...props} />
+    </Suspense>
+  );
+}
+
+function LandingPageLayoutContent({
   textMap,
   imageMap,
   previewViewportHeight,
-  user = null,
+  user,
   onSignOut,
   hideChrome = false,
   previewMode,
@@ -733,7 +742,7 @@ export function LandingPageLayout({
           className="relative"
           data-preview-layout-section-id="layout-navbar"
         >
-          <LandingNav
+          <PublicNavigationSession
             backgroundColor={navBackgroundColor}
             textColor={navTextColor}
             heightPx={navHeight}

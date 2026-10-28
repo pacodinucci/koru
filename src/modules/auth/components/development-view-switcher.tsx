@@ -20,6 +20,8 @@ export function DevelopmentViewSwitcher() {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+
     fetch("/api/development/view", { cache: "no-store" })
       .then(async (response) => response.ok ? response.json() as Promise<ViewData> : null)
       .then((result) => {
@@ -47,7 +49,7 @@ export function DevelopmentViewSwitcher() {
     }
   }
 
-  if (!data?.enabled) return null;
+  if (process.env.NODE_ENV === "production" || !data?.enabled) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1.5 text-xs text-amber-950">

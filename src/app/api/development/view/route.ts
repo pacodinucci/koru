@@ -13,6 +13,8 @@ function unavailable() { return NextResponse.json({ ok: false }, { status: 404 }
 function redirectFor(kind: "own" | "teacher" | "family") { return kind === "family" ? "/family-dashboard?view=dashboard" : "/dashboard"; }
 
 export async function GET() {
+  if (process.env.NODE_ENV === "production") return unavailable();
+
   const viewer = await getActualAuthenticatedUser();
   if (!viewer || !isDevelopmentViewController(viewer)) return unavailable();
 
@@ -39,6 +41,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV === "production") return unavailable();
+
   const viewer = await getActualAuthenticatedUser();
   if (!viewer || !isDevelopmentViewController(viewer)) return unavailable();
   const input = await request.json().catch(() => null) as { kind?: "own" | "teacher" | "family"; targetUserId?: string } | null;
