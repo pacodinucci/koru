@@ -33,6 +33,12 @@ Interpretation:
 - Lower total CPU alone is inconclusive if traffic dropped or errors increased.
 - Bot traffic, generated deployment URLs and preview environments must be examined before attributing all usage to production users.
 
+## Public calendar date window
+
+The public `/calendario` page accepts dates from January 1 of the current Mexico City year minus five through December 31 of that year plus two, inclusive. The window advances automatically with the Mexico City calendar year. Both `date` and `day` must be real civil dates in `YYYY-MM-DD` format within that window; malformed, repeated or out-of-range values produce a not-found response before identity, event or Google connection queries. Omitting `date` still selects today in Mexico City.
+
+Month/year controls at the window boundaries are disabled and have no links outside the window. Event detail URLs and the dashboard/family calendars are unchanged. This closes the unbounded date-link graph but does not block incoming requests at the edge: rejected requests may still invoke the function, and shared layout work may still run. Use Vercel Firewall separately to address observed automated traffic before compute; inspect the actual traffic pattern and available plan controls before changing rules. No firewall configuration or deployment is performed by this code change.
+
 ## Deployment storage checklist
 
 - Identify which deployments and environments own the stored bytes.

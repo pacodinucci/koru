@@ -28,6 +28,7 @@ function load(path) {
     if (specifier === "@/modules/calendar/lib/calendar-time-zone") return load("modules/calendar/lib/calendar-time-zone.ts");
     if (specifier === "@/modules/calendar/lib/calendar-area-types") return load("modules/calendar/lib/calendar-area-types.ts");
     if (specifier === "@/modules/calendar/lib/calendar-navigation") return load("modules/calendar/lib/calendar-navigation.ts");
+    if (specifier === "@/modules/calendar/lib/public-calendar-window") return load("modules/calendar/lib/public-calendar-window.ts");
     if (specifier === "@/modules/calendar/lib/calendar-range-loader") return load("modules/calendar/lib/calendar-range-loader.ts");
     if (specifier === "@/modules/dashboard/lib/calendar-range") return load("modules/dashboard/lib/calendar-range.ts");
     return new Proxy({}, { get: () => passthrough });
