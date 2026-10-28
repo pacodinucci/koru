@@ -54,6 +54,8 @@ test('revoked Google access removes an existing copy without reading or sending 
 test('institutional area grants add calendar consultation but never global management or parent permissions', async () => {
   let record;
   const { getActualAuthenticatedUser } = load('src/modules/auth/server/auth-guards.ts', {
+    // Each invocation below models a separate request, outside a React dispatcher.
+    'react': { cache: fn => fn },
     'next/headers': { headers: async () => ({}) },
     'next/navigation': {},
     '@/lib/auth': { auth: { api: { getSession: async () => ({ user: { email: 'person@example.test' } }) } } },

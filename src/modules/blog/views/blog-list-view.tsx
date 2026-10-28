@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
+import { BLOG_PAGE_SIZE, blogPageHref } from "@/modules/blog/lib/blog-pagination";
 import { BlogLikeButton } from "@/modules/blog/components/blog-like-button";
 import { BlogPageHeader } from "@/modules/blog/components/blog-page-header";
 import { BlogEventDialog } from "@/modules/blog/components/blog-event-dialog";
@@ -29,11 +30,6 @@ function formatDate(date: Date | null) {
     month: "short",
     day: "numeric",
   });
-}
-
-function extractFirstImage(html: string) {
-  const match = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
-  return match?.[1] ?? null;
 }
 
 function initials(name: string | null) {
@@ -124,18 +120,21 @@ function BlogEventsSidebar({ events, isAuthenticated }: { events: BlogCalendarEv
 
 type BlogListViewProps = {
   tagSlug?: string;
+  page?: number;
   textMap?: Record<string, string>;
 };
 
-export async function BlogListView({ tagSlug, textMap = {} }: BlogListViewProps) {
+export async function BlogListView({ tagSlug, page = 1, textMap = {} }: BlogListViewProps) {
   const user = await getAuthenticatedUser();
-  const [posts, tags, events] = await Promise.all([
-    getPublishedPosts({ userId: user?.id, tagSlug }),
+  const [postRows, tags, events] = await Promise.all([
+    getPublishedPosts({ userId: user?.id, tagSlug, page }),
     getPublishedBlogTags(user?.id),
     listUpcomingPublicCalendarEvents({
       viewer: user ? { id: user.id, role: user.role } : undefined,
     }),
   ]);
+  const hasNext = postRows.length > BLOG_PAGE_SIZE;
+  const posts = postRows.slice(0, BLOG_PAGE_SIZE);
 
   return (
     <main className="mx-auto w-full max-w-7xl bg-white px-6 pb-16 pt-10 md:px-10 lg:px-14">
@@ -156,7 +155,7 @@ export async function BlogListView({ tagSlug, textMap = {} }: BlogListViewProps)
           {tags.map((tag) => (
             <Link
               key={tag.id}
-              href={`/blog?tag=${tag.slug}`}
+              href={blogPageHref(1, tag.slug)}
               className={`rounded-full border px-3 py-1.5 text-sm ${
                 tagSlug === tag.slug
                   ? "border-[var(--brand-900)] bg-[var(--brand-900)] text-white"
@@ -177,7 +176,7 @@ export async function BlogListView({ tagSlug, textMap = {} }: BlogListViewProps)
         ) : (
           <div className="space-y-9 [font-family:var(--font-montserrat)]">
             {posts.map((post) => {
-              const coverImage = extractFirstImage(post.content);
+              const coverImage = post.thumbnailUrl;
 
               return (
                 <article
@@ -238,7 +237,7 @@ export async function BlogListView({ tagSlug, textMap = {} }: BlogListViewProps)
                       {post.tags.map(({ tag }) => (
                         <Link
                           key={tag.id}
-                          href={`/blog?tag=${tag.slug}`}
+                          href={blogPageHref(1, tag.slug)}
                           className="rounded-full border border-black/10 px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground"
                         >
                           {tag.name}
@@ -278,6 +277,22 @@ export async function BlogListView({ tagSlug, textMap = {} }: BlogListViewProps)
           </div>
         </div>
       </div>
+
+      {page > 1 || hasNext ? (
+        <nav aria-label="Paginación del blog" className="mx-auto mt-10 flex max-w-6xl items-center gap-5 text-sm">
+          {page > 1 ? (
+            <Link href={blogPageHref(page - 1, tagSlug)} rel="prev" className="underline underline-offset-4">
+              Anterior
+            </Link>
+          ) : null}
+          <span aria-current="page">Página {page}</span>
+          {hasNext ? (
+            <Link href={blogPageHref(page + 1, tagSlug)} rel="next" className="underline underline-offset-4">
+              Siguiente
+            </Link>
+          ) : null}
+        </nav>
+      ) : null}
     </main>
   );
 }

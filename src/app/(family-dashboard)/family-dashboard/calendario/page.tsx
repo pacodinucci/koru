@@ -4,7 +4,8 @@ import {
 } from "@/components/ui/sidebar";
 import { GoogleCalendarConnectionCard } from "@/modules/calendar/components/google-calendar-connection-card";
 import { getGoogleCalendarConnectionState } from "@/modules/calendar/server/google-calendar/google-calendar.repository";
-import { type CalendarViewMode } from "@/modules/dashboard/lib/calendar-range";
+import { serializeDate } from "@/modules/dashboard/lib/calendar-range";
+import { parseCalendarNavigation } from "@/modules/calendar/lib/calendar-navigation";
 import {
   listUpcomingVisibleEventsForUser,
   listVisibleEventsForUserByRange,
@@ -28,18 +29,15 @@ type FamilyCalendarPageProps = {
   }>;
 };
 
-function parseView(view?: string): CalendarViewMode {
-  return view === "day" || view === "month" ? view : "week";
-}
-
 export default async function FamilyCalendarPage({
   searchParams,
 }: FamilyCalendarPageProps) {
   const { viewer, familyUser } = await requireFamilyDashboardAccess();
   const { date, view, event, ok, error } = await searchParams;
-  const parsedDate = date ? new Date(`${date}T00:00:00`) : new Date();
-  const dateCursor = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
-  const viewMode = parseView(view);
+  const params = new URLSearchParams();
+  if (date) params.set("date", date);
+  if (view) params.set("view", view);
+  const { dateCursor, viewMode } = parseCalendarNavigation(params, "event");
   const [events, upcomingEvents, googleConnection] = await Promise.all([
     listVisibleEventsForUserByRange(familyUser.id, familyUser.role, dateCursor, viewMode),
     listUpcomingVisibleEventsForUser(familyUser.id, familyUser.role, 6),
@@ -54,7 +52,7 @@ export default async function FamilyCalendarPage({
         <FamilyCalendarClientProvider
           initialEvents={events}
           initialUpcomingEvents={upcomingEvents}
-          initialDateCursor={dateCursor}
+          initialDateCursor={serializeDate(dateCursor)}
           initialViewMode={viewMode}
           initialSelectedEventId={event}
           initialFeedback={{ ok, error }}

@@ -1,6 +1,7 @@
 import { BlogPostStatus, BlogPostVisibility } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { BLOG_PAGE_SIZE, normalizeBlogPage } from "@/modules/blog/lib/blog-pagination";
 
 const blogTagSelect = {
   tag: {
@@ -14,14 +15,17 @@ const blogTagSelect = {
   },
 };
 
+// Includes one lookahead row so the list can show Next without a count query.
 export async function getPublishedPosts({
   userId,
   tagSlug,
+  page,
 }: {
   userId?: string;
   tagSlug?: string;
+  page?: number;
 } = {}) {
-  return prisma.blogPost.findMany({
+  const posts = await prisma.blogPost.findMany({
     where: {
       status: BlogPostStatus.PUBLISHED,
       ...(userId ? {} : { visibility: BlogPostVisibility.PUBLIC }),
@@ -37,7 +41,9 @@ export async function getPublishedPosts({
           }
         : {}),
     },
-    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+    skip: (normalizeBlogPage(page) - 1) * BLOG_PAGE_SIZE,
+    take: BLOG_PAGE_SIZE + 1,
     select: {
       id: true,
       slug: true,
@@ -72,6 +78,13 @@ export async function getPublishedPosts({
         : false,
     },
   });
+
+  // Content is still read for these bounded rows to preserve the legacy cover
+  // rule without a schema change, but is not passed to the list renderer.
+  return posts.map(({ content, ...post }) => ({
+    ...post,
+    thumbnailUrl: content.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i)?.[1] ?? null,
+  }));
 }
 
 export async function getPublishedPostBySlug(slug: string, userId?: string) {

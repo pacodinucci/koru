@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -35,11 +36,12 @@ function normalizeEmail(email: unknown) {
   return typeof email === "string" ? email.trim().toLowerCase() : "";
 }
 
-export async function getSession() {
+// React cache is request-scoped in server renders, never a shared identity cache.
+export const getSession = cache(async function getSession() {
   return auth.api.getSession({
     headers: await headers(),
   });
-}
+});
 
 export async function requireSession(redirectTo = "/sign-in") {
   const session = await getSession();
@@ -59,7 +61,7 @@ export async function getDevelopmentViewTargetId() {
   return (await cookies()).get(DEVELOPMENT_VIEW_COOKIE)?.value ?? null;
 }
 
-export async function getActualAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+export const getActualAuthenticatedUser = cache(async function getActualAuthenticatedUser(): Promise<AuthenticatedUser | null> {
   const session = await getSession();
   const email = normalizeEmail(session?.user?.email);
 
@@ -93,7 +95,7 @@ export async function getActualAuthenticatedUser(): Promise<AuthenticatedUser | 
   if (!user) return null;
 
   return authenticatedUserFromRecord(user);
-}
+});
 
 function authenticatedUserFromRecord(user: {
   id: string; name: string; email: string; role: AppUserRole; familyId: string | null; accessRoleId: string | null;
@@ -127,7 +129,7 @@ function authenticatedUserFromRecord(user: {
   };
 }
 
-export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+export const getAuthenticatedUser = cache(async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
   const actualUser = await getActualAuthenticatedUser();
   if (!actualUser || !isDevelopmentViewController(actualUser)) return actualUser;
 
@@ -140,7 +142,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
   });
 
   return target ? authenticatedUserFromRecord(target) : actualUser;
-}
+});
 
 export async function requireUser(redirectTo = "/sign-in") {
   const user = await getAuthenticatedUser();
