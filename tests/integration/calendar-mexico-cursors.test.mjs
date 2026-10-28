@@ -31,6 +31,7 @@ function load(path, overrides = {}) {
     if (id === "@/modules/dashboard/lib/calendar-range") return load("../../src/modules/dashboard/lib/calendar-range.ts", overrides);
     if (id === "@/modules/calendar/lib/calendar-time-zone") return load("../../src/modules/calendar/lib/calendar-time-zone.ts", overrides);
     if (id === "@/modules/calendar/lib/calendar-navigation") return load("../../src/modules/calendar/lib/calendar-navigation.ts", overrides);
+    if (id === "@/modules/calendar/lib/public-calendar-window") return load("../../src/modules/calendar/lib/public-calendar-window.ts", overrides);
     return mocks[id] ?? new Proxy({}, { get: () => () => null });
   } });
   return loaded.exports;
@@ -54,7 +55,8 @@ test("calendar entry pages use Mexico today and serialize dashboard/family civil
       const DashboardPage = load("../../src/app/(dashboard)/dashboard/calendar/page.tsx").default;
       const FamilyPage = load("../../src/app/(family-dashboard)/family-dashboard/calendario/page.tsx").default;
       for (const date of [undefined, "invalid", "2026-10-30"]) {
-        const publicTree = await PublicPage({ searchParams: Promise.resolve({ date }) });
+        // The public page now rejects malformed dates; internal calendars retain their fallback.
+        const publicTree = await PublicPage({ searchParams: Promise.resolve({ date: date === "invalid" ? undefined : date }) });
         const dashboardTree = await DashboardPage({ searchParams: Promise.resolve({ date }) });
         const familyTree = findProvider(await FamilyPage({ searchParams: Promise.resolve({ date, event: "direct-event" }) }));
         const expected = date === "2026-10-30" ? "2026-10-30" : "2026-12-31";
