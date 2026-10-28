@@ -256,3 +256,16 @@ test("specialist invitation email renders its role label and preserves existing 
     assert.match(html, /new@example.test/);
   }
 });
+
+ test("SUPERADMIN always retains role management without granting unrelated capabilities", async () => {
+  for (const isActive of [true, false]) {
+    const guards = guardsFor("SUPERADMIN", { accessRoleId: "custom", accessRole: { name: "Custom", key: "CUSTOM", isActive, permissions: [] } });
+    for (const permission of ["dashboard.access", "roles.view", "roles.manage"]) {
+      assert.equal((await guards.requirePermission(permission)).role, "SUPERADMIN");
+    }
+    assert.equal((await guards.requireDashboardUser()).role, "SUPERADMIN");
+    assert.ok(!(await guards.requireUser()).permissionKeys.includes("psychopedagogy.manage"));
+  }
+  const guards = guardsFor("ADMIN", { accessRoleId: "custom", accessRole: { name: "Custom", key: "SUPERADMIN", isActive: true, permissions: [] } });
+  await assert.rejects(guards.requirePermission("roles.manage"), /redirect:/);
+});

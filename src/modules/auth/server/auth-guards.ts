@@ -112,8 +112,10 @@ function authenticatedUserFromRecord(user: {
     user.role === "ADMIN" || user.role === "SUPERADMIN"
       ? ["calendar.view", "calendar.manage"]
       : [];
+  const guaranteedRoleManagementPermissions: PermissionKey[] =
+    user.role === "SUPERADMIN" ? ["dashboard.access", "roles.view", "roles.manage"] : [];
   const permissionKeys = Array.from(
-    new Set([...assignedPermissionKeys, ...guaranteedCalendarPermissions, ...(isInternalCalendarRole(user.role) && user.calendarAreaGrants?.length ? ["calendar.view" as PermissionKey] : [])]),
+    new Set([...assignedPermissionKeys, ...guaranteedRoleManagementPermissions, ...guaranteedCalendarPermissions, ...(isInternalCalendarRole(user.role) && user.calendarAreaGrants?.length ? ["calendar.view" as PermissionKey] : [])]),
   );
 
   return {
