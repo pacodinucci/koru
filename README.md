@@ -72,6 +72,14 @@ La imagen generada y el JSON deben incluirse juntos en el despliegue. No se rege
 
 Para renovar las fotos, ejecutar el generador y desplegar los cambios. Cada imagen tiene una URL basada en su contenido; las anteriores se conservan para enlaces que ya estén en caché. WhatsApp decide el formato final de la tarjeta y puede conservar vistas previas antiguas, por lo que no se garantiza una actualización inmediata de enlaces ya compartidos. `APP_URL` (o, en su defecto, `BETTER_AUTH_URL`) debe apuntar al dominio público HTTPS en producción, accesible sin autenticación.
 
+## Avatar de usuario
+
+Al registrarse con Google, Better Auth guarda la foto del perfil en `User.image`. La navegación pública y los dashboards muestran esa imagen; si no existe o no carga, conservan las iniciales como respaldo. No se descargan copias de la foto ni se agregan permisos de Google.
+
+La foto se importa al crear la cuenta: este cambio no completa imágenes faltantes de cuentas existentes ni agrega sincronización en cada inicio de sesión. La identidad de la navegación pública se obtiene mediante una respuesta privada sin caché, nunca desde el contenido público compartido.
+
+Pruebas: `node --test tests/integration/google-avatar.test.mjs`.
+
 ## Documentación
 
 - [Roadmap](docs/roadmap.md)

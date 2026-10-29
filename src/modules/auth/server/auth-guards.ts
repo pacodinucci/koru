@@ -24,6 +24,7 @@ export type AuthenticatedUser = {
   id: string;
   name: string;
   email: string;
+  image?: string | null;
   role: AppUserRole;
   familyId: string | null;
   accessRoleId: string | null;
@@ -75,6 +76,7 @@ export const getActualAuthenticatedUser = cache(async function getActualAuthenti
       id: true,
       name: true,
       email: true,
+      image: true,
       role: true,
       familyId: true,
       accessRoleId: true,
@@ -98,7 +100,7 @@ export const getActualAuthenticatedUser = cache(async function getActualAuthenti
 });
 
 function authenticatedUserFromRecord(user: {
-  id: string; name: string; email: string; role: AppUserRole; familyId: string | null; accessRoleId: string | null;
+  id: string; name: string; email: string; image?: string | null; role: AppUserRole; familyId: string | null; accessRoleId: string | null;
   calendarAreaGrants?: Array<{ areaId: string }>;
   accessRole: { name: string; key: string; isActive: boolean; permissions: Array<{ permission: { key: string } }> } | null;
 }): AuthenticatedUser {
@@ -122,6 +124,7 @@ function authenticatedUserFromRecord(user: {
     id: user.id,
     name: user.name,
     email: user.email,
+    image: user.image ?? null,
     role: user.role,
     familyId: user.familyId,
     accessRoleId: user.accessRoleId,
@@ -140,7 +143,7 @@ export const getAuthenticatedUser = cache(async function getAuthenticatedUser():
 
   const target = await prisma.user.findFirst({
     where: { id: targetUserId, OR: [{ role: UserRole.PARENT, familyId: { not: null } }, { role: { in: [UserRole.TEACHER, UserRole.ADMIN_TEACHER] }, teacherProfile: { is: { isActive: true } } }] },
-    select: { id: true, name: true, email: true, role: true, familyId: true, accessRoleId: true, calendarAreaGrants: { select: { areaId: true } }, accessRole: { select: { name: true, key: true, isActive: true, permissions: { select: { permission: { select: { key: true } } } } } } },
+    select: { id: true, name: true, email: true, image: true, role: true, familyId: true, accessRoleId: true, calendarAreaGrants: { select: { areaId: true } }, accessRole: { select: { name: true, key: true, isActive: true, permissions: { select: { permission: { select: { key: true } } } } } } },
   });
 
   return target ? authenticatedUserFromRecord(target) : actualUser;

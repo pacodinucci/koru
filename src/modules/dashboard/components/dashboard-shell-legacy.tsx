@@ -9,6 +9,7 @@ import { useRef } from "react";
 import type { ReactNode } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CurrentUserAvatarImage } from "@/components/current-user-avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -116,6 +117,7 @@ function DashboardMain({
                 }
               >
                 <Avatar className="size-6 ring-1 ring-slate-200">
+                  <CurrentUserAvatarImage alt={userEmail} />
                   <AvatarFallback>
                     {userEmail.slice(0, 2).toUpperCase()}
                   </AvatarFallback>

@@ -33,6 +33,7 @@ import {
   useDashboardEditorPanel,
 } from "@/modules/dashboard/components/dashboard-editor-panel";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CurrentUserAvatarImage } from "@/components/current-user-avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -705,6 +706,7 @@ export function DashboardShell({
               }
             >
               <Avatar className="size-6">
+                <CurrentUserAvatarImage alt={userEmail} />
                 <AvatarFallback>
                   {userEmail.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
