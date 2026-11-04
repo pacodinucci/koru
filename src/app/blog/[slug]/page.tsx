@@ -22,21 +22,25 @@ export async function generateMetadata({
 
   if (!post) return {};
 
+  const postUrl = `/blog/${encodeURIComponent(slug)}`;
+
   return {
+    alternates: { canonical: postUrl },
     title: `${post.title} | Koru`,
     description: post.excerpt,
     openGraph: {
       type: "article",
+      url: postUrl,
       siteName: "Koru",
       title: post.title,
       description: post.excerpt,
-      images: [{ url: post.imageUrl, alt: post.title }],
+      images: post.imageUrl ? [{ url: post.imageUrl, alt: post.title }] : [],
     },
     twitter: {
-      card: "summary_large_image",
+      card: post.imageUrl ? "summary_large_image" : "summary",
       title: post.title,
       description: post.excerpt,
-      images: [post.imageUrl],
+      images: post.imageUrl ? [post.imageUrl] : [],
     },
   };
 }

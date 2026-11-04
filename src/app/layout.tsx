@@ -17,7 +17,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ToastProvider } from "@/components/ui/toast";
 import { WhatsAppFloatingButton } from "@/components/whatsapp-floating-button";
 import { env } from "@/lib/env";
-import sharePreview from "@/lib/share-preview.json";
 
 import "./globals.css";
 
@@ -65,19 +64,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(env.APP_URL ?? env.BETTER_AUTH_URL),
   title: "Koru",
   description: "Koru OSA. Tepoztlán.",
-  openGraph: {
-    type: "website",
-    siteName: "Koru",
-    title: "Koru",
-    description: "Koru OSA. Tepoztlán.",
-    images: [{ url: sharePreview.url, width: sharePreview.width, height: sharePreview.height, alt: sharePreview.alt }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Koru",
-    description: "Koru OSA. Tepoztlán.",
-    images: [sharePreview.url],
-  },
   verification: {
     google: "UDUOf2t_5Nd1NTBMD7dBC6llOi9I2yoDjfZx2bP1r8M",
   },

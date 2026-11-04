@@ -101,6 +101,8 @@ test("metadata is article-specific for restricted and public published posts and
       const result = await metadata(repo);
       assert.equal(result.title, `${post.title} | Koru`);
       assert.equal(result.description, post.excerpt);
+      assert.equal(result.alternates.canonical, `/blog/${post.slug}`);
+      assert.equal(result.openGraph.url, `/blog/${post.slug}`);
       assert.equal(result.openGraph.type, "article");
       assert.equal(result.openGraph.title, post.title);
       assert.equal(result.openGraph.description, post.excerpt);
@@ -135,17 +137,24 @@ test("existing full-body access stays public for public posts and authenticated-
   }
 });
 
-test("posts without usable images retain the existing collage fallback and HTTPS images remain unchanged", async () => {
+test("posts without usable images never advertise the homepage collage and HTTPS images remain unchanged", async () => {
   for (const [content, expected] of [
-    ["<p>No images</p>", sharePreview.url],
-    ['<img src="javascript:alert(1)">', sharePreview.url],
-    ['<img src="data:image/png;base64,abc">', sharePreview.url],
+    ["<p>No images</p>", null],
+    ['<img src="javascript:alert(1)">', null],
+    ['<img src="data:image/png;base64,abc">', null],
     ['<img src="https://example.com/first.jpg">', "https://example.com/first.jpg"],
   ]) {
     const { repo } = repository({ ...post, content });
     const result = await metadata(repo);
-    assert.equal(result.openGraph.images[0].url, expected);
-    assert.equal(result.twitter.images[0], expected);
+    assert.deepEqual(plain(result.openGraph.images), expected ? [{ url: expected, alt: post.title }] : []);
+    assert.deepEqual(plain(result.twitter.images), expected ? [expected] : []);
+    assert.doesNotMatch(JSON.stringify(result), /koru-share-|branding/);
+    if (!expected) {
+      const element = await view(repo)({ slug: post.slug });
+      const html = renderToStaticMarkup(element);
+      assert.doesNotMatch(html, /<img|koru-share-/);
+      assert.match(html, /Inicia sesión/);
+    }
   }
 });
 

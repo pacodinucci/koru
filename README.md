@@ -63,7 +63,7 @@ npm run dev
 
 ## Vista previa al compartir
 
-La página principal publica un collage estático de cuatro fotos de espacios y naturaleza, sin fotos del equipo. Los posts publicados, tanto públicos como restringidos, exponen una vista previa pública con su título, descripción y primera imagen en el orden del artículo, aunque esté después del texto o dentro de una galería. Open Graph y Twitter usan esa misma imagen; si el post no tiene una imagen utilizable, usan el collage como respaldo.
+La página principal publica un collage estático de cuatro fotos de espacios y naturaleza, sin fotos del equipo. Los posts publicados, tanto públicos como restringidos, exponen una vista previa pública con su título, descripción y primera imagen en el orden del artículo, aunque esté después del texto o dentro de una galería. Open Graph y Twitter usan esa misma imagen; si el post no tiene una imagen utilizable, su vista previa no anuncia ninguna imagen. El collage pertenece exclusivamente a la página principal: no se hereda desde el layout global ni se usa como respaldo del blog. Cada post declara su propia URL canónica y `og:url`, distintas de la portada.
 
 Los posts restringidos mantienen protegido el contenido completo, los comentarios y las interacciones. Sin sesión, su URL muestra solo la vista previa y un enlace para iniciar sesión y volver al artículo, sin redirigir automáticamente a la página de acceso. Los borradores y los posts inexistentes no exponen vista previa. No se otorgan excepciones de acceso por el identificador del rastreador.
 

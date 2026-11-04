@@ -67,14 +67,16 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
           <main className="mx-auto w-full max-w-3xl space-y-6 px-6 py-10">
             <h1 className="text-4xl font-semibold">{preview.title}</h1>
             <p className="text-lg text-muted-foreground">{preview.excerpt}</p>
-            <Image
-              src={preview.imageUrl}
-              alt={preview.title}
-              width={1200}
-              height={630}
-              unoptimized
-              className="max-h-[480px] w-full rounded-lg object-contain"
-            />
+            {preview.imageUrl ? (
+              <Image
+                src={preview.imageUrl}
+                alt={preview.title}
+                width={1200}
+                height={630}
+                unoptimized
+                className="max-h-[480px] w-full rounded-lg object-contain"
+              />
+            ) : null}
             <p>Este artículo está disponible para miembros de la comunidad Koru.</p>
             <Link
               href={`/sign-in?returnTo=${encodeURIComponent(`/blog/${slug}`)}`}
