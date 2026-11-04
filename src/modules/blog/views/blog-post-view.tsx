@@ -1,6 +1,6 @@
-import { BlogPostVisibility } from "@prisma/client";
+import Image from "next/image";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { MessageCircleIcon } from "lucide-react";
 import { headers } from "next/headers";
 
@@ -10,7 +10,7 @@ import { BlogLikeButton } from "@/modules/blog/components/blog-like-button";
 import { Textarea } from "@/components/ui/textarea";
 import { createBlogCommentAction } from "@/modules/blog/server/blog.actions";
 import {
-  getPublishedPostAccessBySlug,
+  getPublicPublishedPostMetadataBySlug,
   getPublishedPostBySlug,
 } from "@/modules/blog/server/blog.repository";
 import { sanitizeBlogHtml } from "@/modules/blog/lib/sanitize-blog-html";
@@ -61,9 +61,29 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
 
   if (!post) {
     if (!session) {
-      const access = await getPublishedPostAccessBySlug(slug);
-      if (access?.visibility === BlogPostVisibility.MEMBERS) {
-        redirect("/sign-in");
+      const preview = await getPublicPublishedPostMetadataBySlug(slug);
+      if (preview) {
+        return (
+          <main className="mx-auto w-full max-w-3xl space-y-6 px-6 py-10">
+            <h1 className="text-4xl font-semibold">{preview.title}</h1>
+            <p className="text-lg text-muted-foreground">{preview.excerpt}</p>
+            <Image
+              src={preview.imageUrl}
+              alt={preview.title}
+              width={1200}
+              height={630}
+              unoptimized
+              className="max-h-[480px] w-full rounded-lg object-contain"
+            />
+            <p>Este artículo está disponible para miembros de la comunidad Koru.</p>
+            <Link
+              href={`/sign-in?returnTo=${encodeURIComponent(`/blog/${slug}`)}`}
+              className="inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+            >
+              Inicia sesión para leer el artículo completo
+            </Link>
+          </main>
+        );
       }
     }
     notFound();

@@ -34,6 +34,7 @@ function repository() {
   const repo = load("modules/blog/server/blog.repository.ts", {
     "@prisma/client": { BlogPostStatus: { PUBLISHED: "PUBLISHED" }, BlogPostVisibility: { PUBLIC: "PUBLIC" } },
     "@/modules/blog/lib/blog-pagination": pagination(),
+    "@/modules/blog/lib/blog-share-image": {},
     "@/lib/prisma": { prisma: { blogPost: {
       findMany: async (query) => {
         queries.push(query);
