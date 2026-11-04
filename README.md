@@ -63,10 +63,12 @@ npm run dev
 
 ## Vista previa al compartir
 
-La web publica un collage estático de cuatro fotos de espacios y naturaleza, sin fotos del equipo. Open Graph y Twitter usan la misma imagen; los artículos del blog conservan su foto propia y usan el collage solo como respaldo.
+La página principal publica un collage estático de cuatro fotos de espacios y naturaleza, sin fotos del equipo. Los posts publicados, tanto públicos como restringidos, exponen una vista previa pública con su título, descripción y primera imagen en el orden del artículo, aunque esté después del texto o dentro de una galería. Open Graph y Twitter usan esa misma imagen; si el post no tiene una imagen utilizable, usan el collage como respaldo.
+
+Los posts restringidos mantienen protegido el contenido completo, los comentarios y las interacciones. Sin sesión, su URL muestra solo la vista previa y un enlace para iniciar sesión y volver al artículo, sin redirigir automáticamente a la página de acceso. Los borradores y los posts inexistentes no exponen vista previa. No se otorgan excepciones de acceso por el identificador del rastreador.
 
 - `npm run share:generate`: sortea cuatro fotos distintas de la lista revisada en `scripts/generate-share-preview.mjs`, genera un JPEG de 1200 × 630 y actualiza `src/lib/share-preview.json`.
-- `npm run test:share`: verifica selección, composición y metadatos.
+- `npm run test:share`: verifica selección, composición, metadatos y acceso a las vistas previas de los posts.
 
 La imagen generada y el JSON deben incluirse juntos en el despliegue. No se regenera en cada visita ni automáticamente en cada build: así los rastreadores reciben siempre una imagen completa y estable. El generador usa Sharp, incluido por Next.js. Si falla la lectura o composición, se conserva la imagen publicada anteriormente.
 

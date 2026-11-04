@@ -1,6 +1,7 @@
 import { BlogPostStatus, BlogPostVisibility } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { getBlogShareImage } from "@/modules/blog/lib/blog-share-image";
 import { BLOG_PAGE_SIZE, normalizeBlogPage } from "@/modules/blog/lib/blog-pagination";
 
 const blogTagSelect = {
@@ -119,12 +120,12 @@ export async function getPublishedPostBySlug(slug: string, userId?: string) {
   });
 }
 
+// Published previews are public; article bodies still use getPublishedPostBySlug.
 export async function getPublicPublishedPostMetadataBySlug(slug: string) {
-  return prisma.blogPost.findFirst({
+  const post = await prisma.blogPost.findFirst({
     where: {
       slug,
       status: BlogPostStatus.PUBLISHED,
-      visibility: BlogPostVisibility.PUBLIC,
     },
     select: {
       title: true,
@@ -132,6 +133,14 @@ export async function getPublicPublishedPostMetadataBySlug(slug: string) {
       content: true,
     },
   });
+
+  if (!post) return null;
+
+  return {
+    title: post.title,
+    excerpt: post.excerpt,
+    imageUrl: getBlogShareImage(post.content),
+  };
 }
 
 export async function getPublishedPostAccessBySlug(slug: string) {

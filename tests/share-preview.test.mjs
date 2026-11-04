@@ -49,7 +49,9 @@ test("published metadata points to an existing content-versioned image", async (
   assert.match(layout, /url: sharePreview\.url/);
   assert.match(layout, /images: \[sharePreview\.url\]/);
   const blog = await readFile("src/app/blog/[slug]/page.tsx", "utf8");
-  assert.match(blog, /const defaultShareImage = sharePreview\.url/);
-  // Existing article-specific images still override the fallback.
-  assert.match(blog, /images: \[\{ url: getShareImage\(post\.content\), alt: post\.title \}\]/);
+  const helper = await readFile("src/modules/blog/lib/blog-share-image.ts", "utf8");
+  assert.match(helper, /return sharePreview\.url/);
+  // Both social formats use the server-selected article image.
+  assert.match(blog, /images: \[\{ url: post\.imageUrl, alt: post\.title \}\]/);
+  assert.match(blog, /images: \[post\.imageUrl\]/);
 });
