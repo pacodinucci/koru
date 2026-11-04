@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { BlogEventToast } from "@/modules/blog/components/blog-event-toast";
+import { BlogCopyLinkButton } from "@/modules/blog/components/blog-copy-link-button";
 import { BlogLikeButton } from "@/modules/blog/components/blog-like-button";
 import { Textarea } from "@/components/ui/textarea";
 import { createBlogCommentAction } from "@/modules/blog/server/blog.actions";
@@ -65,7 +66,10 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
       if (preview) {
         return (
           <main className="mx-auto w-full max-w-3xl space-y-6 px-6 py-10">
-            <h1 className="text-4xl font-semibold">{preview.title}</h1>
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="text-4xl font-semibold">{preview.title}</h1>
+              <BlogCopyLinkButton slug={slug} />
+            </div>
             <p className="text-lg text-muted-foreground">{preview.excerpt}</p>
             {preview.imageUrl ? (
               <Image
@@ -118,9 +122,12 @@ export async function BlogPostView({ slug, commentStatus }: BlogPostViewProps) {
               </p>
             </div>
 
-            <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
-              {post.title}
-            </h1>
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
+                {post.title}
+              </h1>
+              <BlogCopyLinkButton slug={post.slug} />
+            </div>
 
             {post.editorialAuthorName ? (
               <p className="text-xl font-semibold leading-snug text-[var(--brand-900)] md:text-2xl">

@@ -62,7 +62,7 @@ for (const path of ["modules/psychopedagogy/server/psychopedagogy-profile.handle
     }
   });
 }
-test("role editor renders psychopedagogy checkboxes in create and edit forms", () => {
+for (const actorRole of ["SUPERADMIN", "ADMIN"]) test(`role editor respects ${actorRole} grant authority in create and edit forms`, () => {
   const catalog = load("modules/auth/permissions/permission-catalog.ts");
   const pass = ({ children }) => React.createElement("div", null, children);
   const { DashboardRolesView } = load("modules/roles/views/dashboard-roles-view.tsx", {
@@ -75,15 +75,20 @@ test("role editor renders psychopedagogy checkboxes in create and edit forms", (
   const html = renderToStaticMarkup(React.createElement(DashboardRolesView, {
     roles: [{ id: "custom", key: "CUSTOM", name: "Custom", description: null, baseRole: "ADMIN", isProtected: false, isActive: true,
       permissions: [{ permission: { key: view } }], _count: { users: 0, invitations: 0 } }],
-    canManage: true, actorPermissions: [view, manage], currentRoleKey: "SUPERADMIN",
+    canManage: actorRole !== "SUPERADMIN", actorPermissions: [], actorRole,
   }));
+  if (actorRole === "ADMIN") {
+    assert.match(html, /disabled=""[^>]*value="psychopedagogy.manage"|value="psychopedagogy.manage"[^>]*disabled=""/);
+    return;
+  }
   assert.equal((html.match(/<legend[^>]*>Psicopedagogía<\/legend>/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /disabled=""/);
   for (const key of [view, manage]) assert.equal((html.match(new RegExp(`value="${key}"`, "g")) ?? []).length, 2);
   assert.match(html, /checked=""[^>]*value="psychopedagogy.view"|value="psychopedagogy.view"[^>]*checked=""/);
 });
 
 test("role actions save selected psychopedagogy permissions and reject unauthorized grants before writes", async () => {
-  for (const method of ["createRoleAction", "updateRoleAction"]) for (const canGrant of [true, false]) {
+  for (const method of ["createRoleAction", "updateRoleAction"]) for (const actorRole of ["SUPERADMIN", "ADMIN"]) for (const canGrant of [true, false]) {
     let writes = 0, invalidations = 0;
     const stored = [];
     const mutation = async (args) => { writes++; stored.push(args); return {}; };
@@ -93,7 +98,7 @@ test("role actions save selected psychopedagogy permissions and reject unauthori
       "@/modules/auth/permissions/permission-catalog": load("modules/auth/permissions/permission-catalog.ts"),
       "@/modules/auth/server/auth-guards": { requirePermission: async (permission) => {
         assert.equal(permission, "roles.manage");
-        return { accessRoleId: "actor", accessRoleKey: "SUPERADMIN", permissionKeys: canGrant ? [view, manage] : [] };
+        return { role: actorRole, accessRoleId: "actor", accessRoleKey: "CUSTOM", permissionKeys: canGrant ? [view, manage] : [] };
       } },
       "@/lib/prisma": { prisma: {
         permission: { findMany: async ({ where }) => where.key.in.map((key) => ({ id: key })) },
@@ -104,7 +109,7 @@ test("role actions save selected psychopedagogy permissions and reject unauthori
     });
     const data = new FormData();
     for (const [key, value] of [["id", "custom"], ["name", "Psychopedagogy"], ["baseRole", "ADMIN"], ["permissions", view], ["permissions", manage], ["isActive", "on"]]) data.append(key, value);
-    if (!canGrant) {
+    if (!canGrant && actorRole !== "SUPERADMIN") {
       await assert.rejects(action(data), /invalid_permission/);
       assert.equal(writes, 0); assert.equal(invalidations, 0); assert.deepEqual(stored, []);
     } else {

@@ -45,6 +45,7 @@ type LandingPageLayoutProps = {
   user?: {
     name: string;
     email: string;
+    image?: string | null;
     canAccessDashboard: boolean;
   } | null;
   onSignOut?: (formData: FormData) => void;

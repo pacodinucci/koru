@@ -16,6 +16,7 @@ export async function GET() {
       user: user ? {
         name: user.name?.trim() || "Usuario",
         email: user.email,
+        image: user.image ?? null,
         canAccessDashboard: user.permissionKeys.includes("dashboard.access"),
       } : null,
     }, { headers });

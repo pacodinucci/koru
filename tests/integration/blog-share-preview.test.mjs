@@ -55,6 +55,7 @@ function view(repo, session = null) {
     "next/headers": { headers: async () => ({}) },
     "lucide-react": { MessageCircleIcon: pass },
     "@/lib/auth": { auth: { api: { getSession: async () => session } } },
+    "@/modules/blog/components/blog-copy-link-button": { BlogCopyLinkButton: ({ slug }) => React.createElement("button", { "data-copy-post": slug }, "Copy") },
     "@/modules/blog/components/blog-event-toast": { BlogEventToast: pass },
     "@/modules/blog/components/blog-like-button": { BlogLikeButton: pass },
     "@/components/ui/textarea": { Textarea: pass },
@@ -85,6 +86,8 @@ test("anonymous restricted post renders preview and login return link without re
   const html = renderToStaticMarkup(element);
   assert.match(html, /Celebrar la cosecha/);
   assert.match(html, /A public summary/);
+  assert.match(html, /data-copy-post="celebrar-la-cosecha"/);
+  assert.ok(html.indexOf("data-copy-post") < html.indexOf("A public summary"));
   assert.ok(html.includes(`src="${firstShareImage}"`));
   assert.match(html, /href="\/sign-in\?returnTo=%2Fblog%2Fcelebrar-la-cosecha"/);
   assert.doesNotMatch(html + JSON.stringify(element), /SECRET|second.jpg|Comentarios|private-id/);
@@ -131,6 +134,8 @@ test("existing full-body access stays public for public posts and authenticated-
     const { repo, queries } = repository({ ...post, visibility });
     const html = renderToStaticMarkup(await view(repo, session)({ slug: post.slug }));
     assert.match(html, /SECRET ARTICLE BODY/);
+    assert.match(html, /data-copy-post="celebrar-la-cosecha"/);
+    assert.ok(html.indexOf("data-copy-post") < html.indexOf("SECRET ARTICLE BODY"));
     assert.match(html, /SECRET COMMENT/);
     assert.match(html, /Comentarios/);
     assert.equal(queries[0].where.visibility, session ? undefined : "PUBLIC");

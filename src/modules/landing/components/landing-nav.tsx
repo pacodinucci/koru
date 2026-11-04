@@ -6,7 +6,7 @@ import { ChevronDown, LogOut, ShieldCheck, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
 import { siteChromeImageSlots, siteChromeNavbarSlots, siteChromeSlotIds } from "@/modules/cms/site-chrome-content";
 import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
@@ -85,6 +85,7 @@ type LandingNavProps = {
   user?: {
     name: string;
     email: string;
+    image?: string | null;
     canAccessDashboard: boolean;
   } | null;
   onSignOut?: (formData: FormData) => void;
@@ -356,6 +357,7 @@ export function LandingNav({
             }
           >
             <Avatar className="h-9 w-9 border border-black/5">
+              {user?.image && <AvatarImage src={user.image} alt={userDisplay} />}
               <AvatarFallback className="bg-[#f3d889] text-xs font-semibold text-slate-950">
                 {userInitials}
               </AvatarFallback>
@@ -378,6 +380,7 @@ export function LandingNav({
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex flex-col items-center px-3 pt-2 pb-5 text-center">
                   <Avatar className="h-16 w-16 border border-black/5 shadow-sm">
+                    {user?.image && <AvatarImage src={user.image} alt={userDisplay} />}
                     <AvatarFallback className="bg-[#f3d889] text-base font-semibold text-slate-950">
                       {userInitials}
                     </AvatarFallback>
@@ -396,7 +399,7 @@ export function LandingNav({
             <DropdownMenuGroup className="space-y-2">
               <DropdownMenuItem
                 render={<Link href="/family-dashboard" />}
-                className="h-12 rounded-md px-4 text-sm font-medium text-slate-950 focus:bg-slate-100 focus:text-slate-950"
+                className="h-12 cursor-pointer rounded-md px-4 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-100 focus:bg-slate-100 focus:text-slate-950 data-highlighted:bg-slate-100"
               >
                 <Users />
                 Family dashboard
@@ -404,7 +407,7 @@ export function LandingNav({
               {canAccessDashboard ? (
                 <DropdownMenuItem
                   render={<Link href="/dashboard" />}
-                  className="h-12 rounded-md px-4 text-sm font-medium text-slate-950 focus:bg-slate-100 focus:text-slate-950"
+                  className="h-12 cursor-pointer rounded-md px-4 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-100 focus:bg-slate-100 focus:text-slate-950 data-highlighted:bg-slate-100"
                 >
                   <ShieldCheck />
                   Admin dashboard
@@ -417,7 +420,7 @@ export function LandingNav({
                 <form action={onSignOut} className="px-1 pb-1">
                   <button
                     type="submit"
-                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border border-black/10 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:outline-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
+                    className="inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-black/10 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:outline-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
                   >
                     <LogOut />
                     Cerrar sesión
@@ -444,6 +447,7 @@ export function LandingNav({
             aria-label="Abrir menú de usuario"
           >
             <Avatar className="h-9 w-9 border border-black/5">
+              {user?.image && <AvatarImage src={user.image} alt={userDisplay} />}
               <AvatarFallback className="bg-[#f3d889] text-xs font-semibold text-slate-950">
                 {userInitials}
               </AvatarFallback>
@@ -455,6 +459,7 @@ export function LandingNav({
         <DrawerContent className="rounded-t-lg border-t border-black/10 bg-white font-['Montserrat'] text-slate-950">
           <DrawerHeader className="items-center px-6 pt-6 pb-3 text-center">
             <Avatar className="h-16 w-16 border border-black/5 shadow-sm">
+              {user?.image && <AvatarImage src={user.image} alt={userDisplay} />}
               <AvatarFallback className="bg-[#f3d889] text-base font-semibold text-slate-950">
                 {userInitials}
               </AvatarFallback>
@@ -470,7 +475,7 @@ export function LandingNav({
             <Link
               href="/family-dashboard"
               onClick={() => setIsMobileUserDrawerOpen(false)}
-              className="flex h-12 items-center gap-2 rounded-md px-4 text-sm font-medium text-slate-950 transition hover:bg-slate-100"
+              className="flex h-12 cursor-pointer items-center gap-2 rounded-md px-4 text-sm font-medium text-slate-950 transition hover:bg-slate-100"
             >
               <Users className="h-4 w-4" />
               Family dashboard
@@ -479,7 +484,7 @@ export function LandingNav({
               <Link
                 href="/dashboard"
                 onClick={() => setIsMobileUserDrawerOpen(false)}
-                className="flex h-12 items-center gap-2 rounded-md px-4 text-sm font-medium text-slate-950 transition hover:bg-slate-100"
+                className="flex h-12 cursor-pointer items-center gap-2 rounded-md px-4 text-sm font-medium text-slate-950 transition hover:bg-slate-100"
               >
                 <ShieldCheck className="h-4 w-4" />
                 Admin dashboard
@@ -491,7 +496,7 @@ export function LandingNav({
               <form action={onSignOut}>
                 <button
                   type="submit"
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border border-black/10 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:outline-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
+                  className="inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-black/10 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:outline-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
                 >
                   <LogOut />
                   Cerrar sesión

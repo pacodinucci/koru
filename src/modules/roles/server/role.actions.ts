@@ -63,10 +63,13 @@ export async function createRoleAction(formData: FormData) {
     baseRole: formData.get("baseRole"),
   });
   if (!parsed.success) return;
-  if (parsed.data.baseRole === UserRole.SUPERADMIN && actor.accessRoleKey !== "SUPERADMIN") return;
+  if (parsed.data.baseRole === UserRole.SUPERADMIN && actor.role !== UserRole.SUPERADMIN) return;
 
   const selectedKeys = values(formData, "permissions");
-  const permissionIds = await validatedPermissionIds(selectedKeys, actor.permissionKeys);
+  const permissionIds = await validatedPermissionIds(
+    selectedKeys,
+    actor.role === UserRole.SUPERADMIN ? [...permissionKeys] : actor.permissionKeys,
+  );
   const baseKey = roleKey(parsed.data.name);
   if (!baseKey) return;
 
@@ -108,8 +111,8 @@ export async function updateRoleAction(formData: FormData) {
     },
   });
   if (!role) return;
-  if (role.key === "SUPERADMIN" && actor.accessRoleKey !== "SUPERADMIN") return;
-  if (parsed.data.baseRole === UserRole.SUPERADMIN && actor.accessRoleKey !== "SUPERADMIN") return;
+  if (role.key === "SUPERADMIN" && actor.role !== UserRole.SUPERADMIN) return;
+  if (parsed.data.baseRole === UserRole.SUPERADMIN && actor.role !== UserRole.SUPERADMIN) return;
 
   let selectedKeys = values(formData, "permissions");
   if (role.key === "SUPERADMIN") {
@@ -118,7 +121,7 @@ export async function updateRoleAction(formData: FormData) {
   const existingKeys = role.permissions.map(({ permission }) => permission.key);
   const permissionIds = await validatedPermissionIds(
     selectedKeys,
-    actor.permissionKeys,
+    actor.role === UserRole.SUPERADMIN ? [...permissionKeys] : actor.permissionKeys,
     existingKeys,
   );
 
