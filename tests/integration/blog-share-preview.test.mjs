@@ -22,6 +22,7 @@ function load(file, mocks = {}) {
 }
 const sharePreview = JSON.parse(readFileSync("src/lib/share-preview.json", "utf8"));
 const pass = ({ children }) => React.createElement("div", null, children);
+const firstShareImage = "https://res.cloudinary.com/demo/image/upload/c_limit,w_1200,h_630,f_jpg,q_70/first.jpg";
 const post = {
   id: "private-id", slug: "celebrar-la-cosecha", status: "PUBLISHED", visibility: "MEMBERS",
   title: "Celebrar la cosecha", excerpt: "A public summary", content: '<p>SECRET ARTICLE BODY</p><div data-type="masonry-gallery"><img src="https://res.cloudinary.com/demo/image/upload/first.jpg"><img src="/second.jpg"></div>',
@@ -54,6 +55,7 @@ function view(repo, session = null) {
     "next/headers": { headers: async () => ({}) },
     "lucide-react": { MessageCircleIcon: pass },
     "@/lib/auth": { auth: { api: { getSession: async () => session } } },
+    "@/modules/blog/components/blog-copy-link-button": { BlogCopyLinkButton: ({ slug }) => React.createElement("button", { "data-copy-post": slug }, "Copy") },
     "@/modules/blog/components/blog-event-toast": { BlogEventToast: pass },
     "@/modules/blog/components/blog-like-button": { BlogLikeButton: pass },
     "@/components/ui/textarea": { Textarea: pass },
@@ -73,7 +75,7 @@ function metadata(repo) {
 test("published restricted previews expose only approved fields, never article HTML or engagement", async () => {
   const { repo, queries } = repository();
   const preview = await repo.getPublicPublishedPostMetadataBySlug(post.slug);
-  assert.deepEqual(plain(preview), { title: post.title, excerpt: post.excerpt, imageUrl: "https://res.cloudinary.com/demo/image/upload/first.jpg" });
+  assert.deepEqual(plain(preview), { title: post.title, excerpt: post.excerpt, imageUrl: firstShareImage });
   assert.deepEqual(queries[0].where, { slug: post.slug, status: "PUBLISHED" });
   assert.doesNotMatch(JSON.stringify(preview), /SECRET|private-id|comments|likes|content/);
 });
@@ -84,7 +86,9 @@ test("anonymous restricted post renders preview and login return link without re
   const html = renderToStaticMarkup(element);
   assert.match(html, /Celebrar la cosecha/);
   assert.match(html, /A public summary/);
-  assert.match(html, /src="https:\/\/res.cloudinary.com\/demo\/image\/upload\/first.jpg"/);
+  assert.match(html, /data-copy-post="celebrar-la-cosecha"/);
+  assert.ok(html.indexOf("data-copy-post") < html.indexOf("A public summary"));
+  assert.ok(html.includes(`src="${firstShareImage}"`));
   assert.match(html, /href="\/sign-in\?returnTo=%2Fblog%2Fcelebrar-la-cosecha"/);
   assert.doesNotMatch(html + JSON.stringify(element), /SECRET|second.jpg|Comentarios|private-id/);
 });
@@ -101,6 +105,8 @@ test("metadata is article-specific for restricted and public published posts and
       const result = await metadata(repo);
       assert.equal(result.title, `${post.title} | Koru`);
       assert.equal(result.description, post.excerpt);
+      assert.equal(result.alternates.canonical, `/blog/${post.slug}`);
+      assert.equal(result.openGraph.url, `/blog/${post.slug}`);
       assert.equal(result.openGraph.type, "article");
       assert.equal(result.openGraph.title, post.title);
       assert.equal(result.openGraph.description, post.excerpt);
@@ -128,6 +134,8 @@ test("existing full-body access stays public for public posts and authenticated-
     const { repo, queries } = repository({ ...post, visibility });
     const html = renderToStaticMarkup(await view(repo, session)({ slug: post.slug }));
     assert.match(html, /SECRET ARTICLE BODY/);
+    assert.match(html, /data-copy-post="celebrar-la-cosecha"/);
+    assert.ok(html.indexOf("data-copy-post") < html.indexOf("SECRET ARTICLE BODY"));
     assert.match(html, /SECRET COMMENT/);
     assert.match(html, /Comentarios/);
     assert.equal(queries[0].where.visibility, session ? undefined : "PUBLIC");
@@ -135,17 +143,40 @@ test("existing full-body access stays public for public posts and authenticated-
   }
 });
 
-test("posts without usable images retain the existing collage fallback and HTTPS images remain unchanged", async () => {
+test("posts without usable images never advertise the homepage collage and HTTPS images remain unchanged", async () => {
   for (const [content, expected] of [
-    ["<p>No images</p>", sharePreview.url],
-    ['<img src="javascript:alert(1)">', sharePreview.url],
-    ['<img src="data:image/png;base64,abc">', sharePreview.url],
+    ["<p>No images</p>", null],
+    ['<img src="javascript:alert(1)">', null],
+    ['<img src="data:image/png;base64,abc">', null],
     ['<img src="https://example.com/first.jpg">', "https://example.com/first.jpg"],
   ]) {
     const { repo } = repository({ ...post, content });
     const result = await metadata(repo);
+    assert.deepEqual(plain(result.openGraph.images), expected ? [{ url: expected, alt: post.title }] : []);
+    assert.deepEqual(plain(result.twitter.images), expected ? [expected] : []);
+    assert.doesNotMatch(JSON.stringify(result), /koru-share-|branding/);
+    if (!expected) {
+      const element = await view(repo)({ slug: post.slug });
+      const html = renderToStaticMarkup(element);
+      assert.doesNotMatch(html, /<img|koru-share-/);
+      assert.match(html, /Inicia sesión/);
+    }
+  }
+});
+
+test("Cloudinary previews use a bounded JPEG of the first photo without changing article images", async () => {
+  for (const content of [
+    '<img src="https://res.cloudinary.com/demo/image/upload/v123/first.png"><p>Text</p><img src="/second.jpg">',
+    '<p>Text</p><div data-type="masonry-gallery"><img src="https://res.cloudinary.com/demo/image/upload/v123/first.png"><img src="/second.jpg"></div>',
+  ]) {
+    const { repo } = repository({ ...post, content });
+    const result = await metadata(repo);
+    const expected = "https://res.cloudinary.com/demo/image/upload/c_limit,w_1200,h_630,f_jpg,q_70/v123/first.jpg";
     assert.equal(result.openGraph.images[0].url, expected);
     assert.equal(result.twitter.images[0], expected);
+    const html = renderToStaticMarkup(await view(repo, { user: { id: "reader" } })({ slug: post.slug }));
+    assert.match(html, /src="https:\/\/res.cloudinary.com\/demo\/image\/upload\/v123\/first.png"/);
+    assert.doesNotMatch(html, /c_limit|f_jpg/);
   }
 });
 
@@ -162,7 +193,7 @@ test("complete publication, visibility and authentication access matrix", async 
           continue;
         }
 
-        assert.equal(result.openGraph.images[0].url, "https://res.cloudinary.com/demo/image/upload/first.jpg");
+        assert.equal(result.openGraph.images[0].url, firstShareImage);
         assert.doesNotMatch(JSON.stringify(result), /SECRET|private-id|second.jpg|comment/);
 
         const element = await view(repo, session)({ slug: post.slug });

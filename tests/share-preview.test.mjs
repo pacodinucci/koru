@@ -46,12 +46,14 @@ test("published metadata points to an existing content-versioned image", async (
   const hash = createHash("sha256").update(image).digest("hex").slice(0, 12);
   assert.equal(config.url, `/branding/koru-share-${hash}.jpg`);
   const layout = await readFile("src/app/layout.tsx", "utf8");
-  assert.match(layout, /url: sharePreview\.url/);
-  assert.match(layout, /images: \[sharePreview\.url\]/);
+  assert.doesNotMatch(layout, /sharePreview|openGraph:|twitter:/);
+  const home = await readFile("src/app/(pages)/page.tsx", "utf8");
+  assert.match(home, /url: sharePreview\.url/);
+  assert.match(home, /images: \[sharePreview\.url\]/);
   const blog = await readFile("src/app/blog/[slug]/page.tsx", "utf8");
   const helper = await readFile("src/modules/blog/lib/blog-share-image.ts", "utf8");
-  assert.match(helper, /return sharePreview\.url/);
+  assert.doesNotMatch(helper, /sharePreview|koru-share/);
   // Both social formats use the server-selected article image.
-  assert.match(blog, /images: \[\{ url: post\.imageUrl, alt: post\.title \}\]/);
-  assert.match(blog, /images: \[post\.imageUrl\]/);
+  assert.match(blog, /post\.imageUrl \? \[\{ url: post\.imageUrl, alt: post\.title \}\] : \[\]/);
+  assert.match(blog, /post\.imageUrl \? \[post\.imageUrl\] : \[\]/);
 });
