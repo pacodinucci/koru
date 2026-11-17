@@ -482,6 +482,8 @@ test("S3/S5/S6 editor prefills snapshot, preserves year and posts only assignmen
   assert.match(ui.text(), /Neto:.*81\.000,00/);
   assert.match(ui.text(), /solo a las cuotas sin pagos/);
   assert.match(ui.text(), /parcialmente pagadas conservan sus importes y su saldo pendiente/);
+  assert.match(ui.text(), /Si todos los pagos imputados están anulados, podés aumentar la cantidad de cuotas/);
+  assert.match(ui.text(), /sin borrar el historial, manteniendo el rubro y el mes de inicio/);
   assert.match(ui.text(), /Referencia sin pagos previos/);
   change(ui, "rubricId", "new");
   assert.match(ui.text(), /Bruto:.*150\.000,00/);

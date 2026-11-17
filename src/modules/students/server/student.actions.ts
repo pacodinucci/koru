@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { notifyStudentRecordChanges } from "@/modules/students/server/student-record-notification.service";
+
 import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { studentFormSchema, type StudentFormInput } from "@/modules/students/schemas/student.schema";
 import {
@@ -34,6 +36,14 @@ export async function updateStudentRecordStatusAction(formData: FormData) {
   if (typeof studentId !== "string" || (recordStatus !== "SUBMITTED" && recordStatus !== "REVIEWED" && recordStatus !== "NEEDS_CHANGES")) return;
   const result = await updateStudentRecordStatus(studentId, recordStatus, user);
   if (result.count === 0) return;
-  revalidatePath("/dashboard/students");
-  revalidatePath(`/dashboard/students/${studentId}`);
+  try {
+    if (recordStatus === "NEEDS_CHANGES") {
+      await notifyStudentRecordChanges(studentId, user);
+    }
+  } finally {
+    revalidatePath("/dashboard/students");
+    revalidatePath(`/dashboard/students/${studentId}`);
+    revalidatePath("/family-dashboard");
+    revalidatePath("/family-dashboard/expediente");
+  }
 }

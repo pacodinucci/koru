@@ -96,7 +96,7 @@ async function editableAssignment(tx: Prisma.TransactionClient, identity: Assign
   }
   const entries = await tx.familyAccountEntry.findMany({
     where: { eventualChargeScheduleId: schedule.id },
-    include: { allocationsAsCharge: true, allocationsAsCredit: true },
+    include: { allocationsAsCharge: { include: { creditEntry: { include: { payment: true } } } }, allocationsAsCredit: true },
   });
   // A schedule link alone is insufficient proof that a row can be removed. Check
   // its generated terms and all allocation history, even allocations of voided payments.
@@ -137,7 +137,17 @@ export async function updateStudentRubricAssignment(input: AssignmentInput & { a
   const currentPeriod = getBillingPeriod(now);
   return assignmentTransaction(identity.familyId, async tx => {
     const { schedule, entryIds, protectedEntries } = await editableAssignment(tx, identity, true);
-    if (protectedEntries.length && (schedule.rubricId !== terms.rubricId
+    // A voided payment contributes no credit, but its allocation must retain the
+    // same charge ID. Increasing the count can reprice those unpaid charges in
+    // place instead of deleting history (or hitting the allocation foreign key).
+    const previousInstallmentCount = schedule.installmentCount;
+    const repriceVoidedCharges = protectedEntries.length > 0
+      && terms.installmentCount > schedule.installmentCount
+      && schedule.rubricId === terms.rubricId
+      && schedule.startPeriod.getUTCMonth() + 1 === terms.startMonth
+      && protectedEntries.every(entry => entry.allocationsAsCharge.every(allocation =>
+        allocation.creditEntry?.type === "PAYMENT" && allocation.creditEntry.payment?.status === "VOIDED"));
+    if (protectedEntries.length && !repriceVoidedCharges && (schedule.rubricId !== terms.rubricId
       || schedule.installmentCount !== terms.installmentCount || schedule.startPeriod.getUTCMonth() + 1 !== terms.startMonth)) {
       throw new BillingRubricInputError("Con pagos imputados solo podés cambiar el descuento. Se conservan el rubro, las cuotas y el mes de inicio.");
     }
@@ -154,6 +164,23 @@ export async function updateStudentRubricAssignment(input: AssignmentInput & { a
       installmentCount: terms.installmentCount,
       startPeriod: new Date(Date.UTC(schedule.startPeriod.getUTCFullYear(), terms.startMonth - 1, 1)),
     } });
+    if (repriceVoidedCharges) {
+      const amounts = splitInstallmentAmounts(discount.totalAmount, terms.installmentCount);
+      const gross = splitInstallmentAmounts(discount.grossAmount, terms.installmentCount);
+      for (const entry of protectedEntries) {
+        const index = entry.installmentNumber! - 1;
+        await tx.familyAccountEntry.update({ where: { id: entry.id }, data: {
+          amount: amounts[index], grossAmount: gross[index],
+          discountAmount: new Prisma.Decimal(gross[index]).minus(amounts[index]),
+          description: entry.description.replace(
+            ` · cuota ${entry.installmentNumber}/${previousInstallmentCount} · `,
+            ` · cuota ${entry.installmentNumber}/${terms.installmentCount} · `,
+          ),
+        } });
+      }
+      await createDueEventualInstallmentChargesInTransaction(tx, now, currentPeriod, assignment.id);
+      return assignment;
+    }
     if (protectedEntries.length) {
       // Freeze every unpaid installment, including future ones, using the new
       // nominal terms before storing the actual mixed total. Existing rows stop
