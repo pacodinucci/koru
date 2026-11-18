@@ -30,12 +30,18 @@ function EntryStatus({ entry }: { entry: FinancialEntry }) { if (entry.payment?.
 export function FamilyFinancialCard({ family, eventualChargeItems, canManagePayments, canWaive, onFinancialChange }: FamilyFinancialCardProps) {
   const router = useRouter();
   const [chargeFilter, setChargeFilter] = useState("all");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const pendingById = new Map(family.pendingCharges.map((charge) => [charge.id, charge]));
   const tableEntries = [
     ...family.entries.map((entry) => ({ ...entry, isFuture: entry.isFuture ?? false })),
     ...(family.futureCharges ?? []),
   ].filter((entry) => chargeFilter === "all" || (chargeFilter === "future" ? entry.isFuture : pendingById.has(entry.id)))
     .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+  const pageCount = Math.max(1, Math.ceil(tableEntries.length / pageSize));
+  const currentPage = Math.min(pageIndex, pageCount - 1);
+  const pageStart = currentPage * pageSize;
+  const visibleEntries = tableEntries.slice(pageStart, pageStart + pageSize);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [paymentDraft, setPaymentDraft] = useState<{ data: FormData; form: HTMLFormElement } | null>(null);
@@ -193,7 +199,7 @@ export function FamilyFinancialCard({ family, eventualChargeItems, canManagePaym
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div><h4 className="font-medium text-slate-900">Cargos y movimientos</h4><p className="text-xs text-slate-600">Cada cuota se imputa el día 25 del mes anterior a su período. Las cuotas futuras no se suman al saldo actual y pueden pagarse por adelantado, en orden y sin saltos.</p></div>
       <label className="grid gap-1 text-xs font-medium text-slate-700">Mostrar
-        <select aria-label="Filtrar cargos" value={chargeFilter} onChange={(event) => setChargeFilter(event.target.value)} className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+        <select aria-label="Filtrar cargos" value={chargeFilter} onChange={(event) => { setChargeFilter(event.target.value); setPageIndex(0); }} className="h-9 rounded-md border border-input bg-background px-3 text-sm">
           <option value="all">Todos</option><option value="pending">Pendientes</option><option value="future">Futuros</option>
         </select>
       </label>
@@ -201,7 +207,7 @@ export function FamilyFinancialCard({ family, eventualChargeItems, canManagePaym
     <div className="overflow-x-auto rounded-xl border border-slate-200">
       <table className="w-full min-w-[720px] text-sm">
         <thead className="bg-slate-50 text-left text-xs text-slate-600"><tr><th className="px-3 py-2 font-medium">Fecha</th><th className="px-3 py-2 font-medium">Tipo</th><th className="px-3 py-2 font-medium">Detalle</th><th className="px-3 py-2 text-right font-medium">Importe</th><th className="px-3 py-2 font-medium">Estado</th><th className="px-3 py-2 font-medium">Acciones</th></tr></thead>
-        <tbody>{tableEntries.length === 0 ? <tr><td colSpan={6} className="px-3 py-6 text-center text-slate-600">{chargeFilter === "all" ? "Todavía no hay movimientos registrados." : chargeFilter === "pending" ? "No hay cargos pendientes." : "No hay cargos futuros."}</td></tr> : tableEntries.map((entry) => {
+        <tbody>{tableEntries.length === 0 ? <tr><td colSpan={6} className="px-3 py-6 text-center text-slate-600">{chargeFilter === "all" ? "Todavía no hay movimientos registrados." : chargeFilter === "pending" ? "No hay cargos pendientes." : "No hay cargos futuros."}</td></tr> : visibleEntries.map((entry) => {
           const pendingCharge = pendingById.get(entry.id);
           const isCharge = entry.type === "MONTHLY_CHARGE" || entry.type === "EVENTUAL_CHARGE";
           return <tr key={entry.id} className="border-t border-slate-100">
@@ -222,5 +228,15 @@ export function FamilyFinancialCard({ family, eventualChargeItems, canManagePaym
         })}</tbody>
       </table>
     </div>
+    <nav aria-label="Paginación de cargos y movimientos" className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+      <p role="status" aria-live="polite">Mostrando {tableEntries.length === 0 ? 0 : pageStart + 1}–{Math.min(pageStart + pageSize, tableEntries.length)} de {tableEntries.length} · Página {currentPage + 1} de {pageCount}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <select aria-label="Movimientos por página" value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPageIndex(0); }} className="h-9 rounded-md border border-input bg-background px-2 text-sm">
+          {[10, 20, 50].map(size => <option key={size} value={size}>{size} por página</option>)}
+        </select>
+        <Button type="button" size="sm" variant="outline" disabled={currentPage === 0} onClick={() => setPageIndex(currentPage - 1)}>Anterior</Button>
+        <Button type="button" size="sm" variant="outline" disabled={currentPage >= pageCount - 1} onClick={() => setPageIndex(currentPage + 1)}>Siguiente</Button>
+      </div>
+    </nav>
   </section>;
 }

@@ -138,11 +138,12 @@ export async function updateStudentRubricAssignment(input: AssignmentInput & { a
   return assignmentTransaction(identity.familyId, async tx => {
     const { schedule, entryIds, protectedEntries } = await editableAssignment(tx, identity, true);
     // A voided payment contributes no credit, but its allocation must retain the
-    // same charge ID. Increasing the count can reprice those unpaid charges in
-    // place instead of deleting history (or hitting the allocation foreign key).
+    // same charge ID. Changing the count can reprice those unpaid charges in
+    // place as long as every historically linked installment still exists.
     const previousInstallmentCount = schedule.installmentCount;
     const repriceVoidedCharges = protectedEntries.length > 0
-      && terms.installmentCount > schedule.installmentCount
+      && terms.installmentCount !== schedule.installmentCount
+      && protectedEntries.every(entry => entry.installmentNumber! <= terms.installmentCount)
       && schedule.rubricId === terms.rubricId
       && schedule.startPeriod.getUTCMonth() + 1 === terms.startMonth
       && protectedEntries.every(entry => entry.allocationsAsCharge.every(allocation =>
