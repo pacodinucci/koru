@@ -479,12 +479,58 @@ test("11 to 12 installments reprices voided-payment charges in place and preserv
   assert.ok(summary.pendingCharges.every(e => e.outstandingAmount === "7450.00"));
   assert.deepEqual(summary.unallocatedCredits, []);
   assert.equal(calculateFamilyBalance(ledger, end), 89400, "voided payments and reversals cancel without duplicating debt");
-  for (const patch of [{ installmentCount: 11 }, { startMonth: 10 }, { rubricId: "other" }]) {
+  for (const patch of [{ startMonth: 10 }, { rubricId: "other" }]) {
     await unchanged(f, () => f.service.updateStudentRubricAssignment(editing(f, updated, { startMonth: 9, installmentCount: 12, ...patch }), "admin"), "Con pagos imputados solo podés cambiar el descuento. Se conservan el rubro, las cuotas y el mes de inicio.");
   }
 });
 
-test("increasing installments still rejects active, unknown or non-payment credit allocations atomically", async () => {
+test("11 to 12 to 11 preserves voided allocation history, cents and the reduced future schedule", async () => {
+  const f = await setup();
+  await f.service.updateBillingRubric({ rubricId: "rubric", name: "Mensualidad Helechos", amount: "89400" });
+  const a = await assigned(f, { startMonth: 9, installmentCount: 11 });
+  const firstId = f.entries[0].id;
+  const allocations = ["7520.00", "8120.00"].map((amount, i) => ({ id: `allocation${i}`, amount, creditEntry: { type: "PAYMENT", payment: { status: "VOIDED" } } }));
+  f.amendEntry(firstId, { allocationsAsCharge: allocations });
+  const history = JSON.stringify(f.entries[0].allocationsAsCharge);
+  const other = await assigned(f, { startMonth: 9, installmentCount: 1 });
+  const unrelated = JSON.stringify(f.entries.filter(e => e.eventualChargeScheduleId === other.id));
+  await f.service.updateStudentRubricAssignment(editing(f, a, { startMonth: 9, installmentCount: 12 }), "admin");
+  // Even an already emitted, unallocated twelfth charge must disappear.
+  const end = new Date("2027-09-01T00:00:00Z");
+  await f.generate(f.db, end, end, a.id);
+  assert.equal(f.entries.filter(e => e.eventualChargeScheduleId === a.id).length, 12);
+  const updated = await f.service.updateStudentRubricAssignment(editing(f, a, { startMonth: 9, installmentCount: 11 }), "admin");
+  assert.equal(updated.installmentCount, 11);
+  assert.equal(Number(updated.totalAmount), 89400);
+  const retained = f.entries.find(e => e.id === firstId);
+  assert.equal(JSON.stringify(retained.allocationsAsCharge), history);
+  assert.equal(Number(retained.amount), 8127.27);
+  assert.match(retained.description, /cuota 1\/11/);
+  assert.equal(f.entries.some(e => e.eventualChargeScheduleId === a.id && e.installmentNumber === 12), false);
+  assert.equal(JSON.stringify(f.entries.filter(e => e.eventualChargeScheduleId === other.id)), unrelated);
+  assert.equal((await f.generate(f.db, end, end, a.id)).created, 8);
+  assert.equal((await f.generate(f.db, end, end, a.id)).created, 0);
+  const rows = f.entries.filter(e => e.eventualChargeScheduleId === a.id).sort((x, y) => x.installmentNumber - y.installmentNumber);
+  assert.equal(rows.length, 11);
+  assert.deepEqual(rows.map(e => Number(e.amount)), [...Array(8).fill(8127.27), ...Array(3).fill(8127.28)]);
+  assert.equal(rows.reduce((sum, e) => sum + Math.round(Number(e.amount) * 100), 0), 8940000);
+  const { buildAllocationSummary } = require("../../src/modules/families/lib/payment-allocation.ts");
+  assert.deepEqual(buildAllocationSummary(rows.map(e => ({ ...e, allocationsAsCredit: [] }))).pendingCharges.map(e => e.outstandingAmount).sort(), [...Array(8).fill("8127.27"), ...Array(3).fill("8127.28")].sort());
+});
+
+test("reductions retain the last linked installment but reject removing a historically allocated installment", async () => {
+  const f = await setup(); const a = await assigned(f);
+  const secondId = f.entries[1].id;
+  f.amendEntry(secondId, { allocationsAsCharge: [{ amount: "1", creditEntry: { type: "PAYMENT", payment: { status: "VOIDED" } } }] });
+  const history = JSON.stringify(f.entries[1].allocationsAsCharge);
+  await unchanged(f, () => f.service.updateStudentRubricAssignment(editing(f, a, { installmentCount: 1 }), "admin"), "Con pagos imputados solo podés cambiar el descuento. Se conservan el rubro, las cuotas y el mes de inicio.");
+  const updated = await f.service.updateStudentRubricAssignment(editing(f, a, { installmentCount: 2 }), "admin");
+  assert.equal(updated.installmentCount, 2);
+  assert.equal(JSON.stringify(f.entries.find(e => e.id === secondId).allocationsAsCharge), history);
+  assert.ok(f.entries.every(e => Number(e.amount) === 60000));
+});
+
+test("changing installments still rejects active, unknown or non-payment credit allocations atomically", async () => {
   for (const credits of [
     [{ type: "PAYMENT", payment: { status: "REGISTERED" } }],
     [{ type: "PAYMENT", payment: { status: "VOIDED" } }, { type: "PAYMENT", payment: { status: "REGISTERED" } }],
@@ -493,16 +539,18 @@ test("increasing installments still rejects active, unknown or non-payment credi
   ]) {
     const f = await setup(); const a = await assigned(f);
     f.amendEntry(f.entries[0].id, { allocationsAsCharge: credits.map(creditEntry => ({ amount: "1", creditEntry })) });
-    await unchanged(f, () => f.service.updateStudentRubricAssignment(editing(f, a, { installmentCount: 4 }), "admin"), "Con pagos imputados solo podés cambiar el descuento. Se conservan el rubro, las cuotas y el mes de inicio.");
+    for (const installmentCount of [4, 2]) {
+      await unchanged(f, () => f.service.updateStudentRubricAssignment(editing(f, a, { installmentCount }), "admin"), "Con pagos imputados solo podés cambiar el descuento. Se conservan el rubro, las cuotas y el mes de inicio.");
+    }
   }
 });
 
 test("voided-payment installment repricing rolls back charges, history and counters on failure", async () => {
-  for (const failure of ["generation", "P2034", "P2003"]) {
+  for (const [failure, installmentCount] of ["generation", "P2034", "P2003"].flatMap(failure => [4, 2].map(count => [failure, count]))) {
     const f = await setup(); const a = await assigned(f);
     f.amendEntry(f.entries[0].id, { allocationsAsCharge: [{ amount: "1", creditEntry: { type: "PAYMENT", payment: { status: "VOIDED" } } }] });
     if (failure === "generation") f.failGeneration(); else f.conflict(failure);
-    await unchanged(f, () => f.service.updateStudentRubricAssignment(editing(f, a, { installmentCount: 4 }), "admin"), failure === "generation" ? "charge_failure" : conflictError);
+    await unchanged(f, () => f.service.updateStudentRubricAssignment(editing(f, a, { installmentCount }), "admin"), failure === "generation" ? "charge_failure" : conflictError);
   }
 });
 

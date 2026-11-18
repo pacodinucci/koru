@@ -40,7 +40,7 @@ function AssignmentEditorDialog({ familyId, studentId, assignment, rubrics, onCl
       <ResponsiveDialogContent className="font-montserrat md:max-w-lg" showCloseButton={!pending}>
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle style={{ fontFamily: "var(--font-montserrat)" }}>Editar rubro · {assignment.itemName}</ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>El descuento se aplica solo a las cuotas sin pagos. Las cuotas pagadas o parcialmente pagadas conservan sus importes y su saldo pendiente. Con pagos imputados se conservan el rubro, la cantidad de cuotas y el mes de inicio; no se permite eliminar. Si todos los pagos imputados están anulados, podés aumentar la cantidad de cuotas: se recalculan sus importes sin borrar el historial, manteniendo el rubro y el mes de inicio.</ResponsiveDialogDescription>
+          <ResponsiveDialogDescription>El descuento se aplica solo a las cuotas sin pagos. Las cuotas pagadas o parcialmente pagadas conservan sus importes y su saldo pendiente. Con pagos imputados se conservan el rubro, la cantidad de cuotas y el mes de inicio; no se permite eliminar. Si todos los pagos imputados están anulados, podés aumentar o reducir la cantidad de cuotas, siempre que ninguna cuota vinculada al historial quede fuera del nuevo cronograma. Se recalculan sus importes sin borrar el historial, manteniendo el rubro y el mes de inicio.</ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
         <ResponsiveDialogBody className="space-y-4">
           {open ? <>

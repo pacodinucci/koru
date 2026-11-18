@@ -74,6 +74,12 @@ function harness({ rubrics = [rubric, inactive], records = assignments, schedule
         if (id.endsWith("ui/input")) return { Input: (props) => React.createElement("input", props) };
         if (id.endsWith("ui/button")) return { Button: ({ children, nativeButton, render, ...props }) => render ? React.cloneElement(render, props, children) : React.createElement("button", props, children) };
         if (id.endsWith("ui/card")) return { Card: pass, CardHeader: pass, CardTitle: pass, CardContent: pass };
+        if (id.endsWith("ui/accordion")) return {
+          Accordion: ({ children, ...props }) => React.createElement("div", { ...props, "data-slot": "accordion" }, children),
+          AccordionItem: ({ children, render, ...props }) => React.cloneElement(render ?? React.createElement("div"), { ...props, "data-slot": "accordion-item" }, children),
+          AccordionTrigger: ({ children, ...props }) => React.createElement("h3", null, React.createElement("button", { ...props, "data-slot": "accordion-trigger" }, children)),
+          AccordionContent: ({ children, ...props }) => React.createElement("div", { ...props, "data-slot": "accordion-content" }, children),
+        };
         if (id === "lucide-react") return { PlusIcon: () => null, PencilIcon: () => null, ArrowLeft: () => React.createElement("svg", { "data-icon": "arrow-left" }) };
         if (id.endsWith("ui/badge")) return { Badge: ({ children }) => React.createElement("span", null, children) };
         if (id.endsWith("ui/table")) return Object.fromEntries(Object.entries({ Table: "table", TableHeader: "thead", TableBody: "tbody", TableRow: "tr", TableHead: "th", TableCell: "td" }).map(([name, tag]) => [name, (props) => React.createElement(tag, props)]));
@@ -335,6 +341,30 @@ test("empty catalog and pending actions cannot submit from the UI", () => {
   }
 });
 
+test("student rubrics use independent shadcn accordion items without nesting profile links in buttons", async () => {
+  const ui = harness();
+  ui.render(await ui.load("views/dashboard-family-detail-view").DashboardFamilyDetailView({ familyId: "family", canManageFamily: true, canManagePayments: true, canWaive: true }));
+  const accordion = ui.find(node => node.props["data-slot"] === "accordion");
+  assert.ok(accordion);
+  assert.equal(accordion.props.multiple, true, "siblings can stay open independently");
+  assert.deepEqual(Array.from(accordion.props.defaultValue), family.students.map(s => s.id), "preserve initially visible student rubrics");
+  for (const student of family.students) {
+    const item = ui.find(node => node.props["data-slot"] === "accordion-item" && node.props.value === student.id);
+    assert.ok(item);
+    const trigger = ui.find(node => node.props["data-slot"] === "accordion-trigger" && node.props["aria-label"] === `Mostrar u ocultar rubros de ${student.firstName} ${student.lastName}`);
+    assert.ok(trigger);
+    assert.equal(trigger.type, "button");
+    assert.equal(ui.text(trigger).includes(student.group.name), true);
+    assert.ok(trigger.props.className.includes("hover:no-underline"), "group toggles do not underline on hover");
+    const link = ui.find(node => node.type === "a" && node.props.href === `/dashboard/students/${student.id}`);
+    assert.ok(link);
+    assert.equal(ui.text(trigger).includes(`${student.lastName}, ${student.firstName}`), false, "profile link stays outside the toggle button");
+  }
+  const panels = ui.nodes().filter(node => node.props["data-slot"] === "accordion-content");
+  assert.equal(panels.length, family.students.length);
+  assert.ok(panels.every(node => node.props.className.includes("h-auto")), "inner content does not override the measured panel height");
+});
+
 test("family detail lists multiple snapshots per student and respects management permissions", async () => {
   for (const canManageFamily of [true, false]) {
     const ui = harness();
@@ -482,8 +512,9 @@ test("S3/S5/S6 editor prefills snapshot, preserves year and posts only assignmen
   assert.match(ui.text(), /Neto:.*81\.000,00/);
   assert.match(ui.text(), /solo a las cuotas sin pagos/);
   assert.match(ui.text(), /parcialmente pagadas conservan sus importes y su saldo pendiente/);
-  assert.match(ui.text(), /Si todos los pagos imputados están anulados, podés aumentar la cantidad de cuotas/);
+  assert.match(ui.text(), /Si todos los pagos imputados están anulados, podés aumentar o reducir la cantidad de cuotas/);
   assert.match(ui.text(), /sin borrar el historial, manteniendo el rubro y el mes de inicio/);
+  assert.match(ui.text(), /ninguna cuota vinculada al historial quede fuera del nuevo cronograma/);
   assert.match(ui.text(), /Referencia sin pagos previos/);
   change(ui, "rubricId", "new");
   assert.match(ui.text(), /Bruto:.*150\.000,00/);

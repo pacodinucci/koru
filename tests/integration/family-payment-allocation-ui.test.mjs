@@ -698,6 +698,79 @@ test("charge table defaults to all and filters pending including partial, future
   assert.equal(JSON.stringify({ entries, futureCharges, chargeList }), before);
 });
 
+test("movement pagination limits sorted rows, navigates boundaries and changes page size without accounting writes", () => {
+  const entries = Array.from({ length: 23 }, (_, i) => ({ id: `row-${i}`, type: "EVENTUAL_CHARGE", amount: "10.00", grossAmount: null, discountAmount: null, description: `Movimiento ${i}`, occurredAt: new Date(Date.UTC(2026, 0, i + 1)).toISOString(), payment: null }));
+  const before = JSON.stringify(entries);
+  const ui = harness({ entries, chargeList: [], canManagePayments: false, canWaive: false });
+  const rows = () => ui.nodes().filter(n => n.type === "tr" && n.props.className === "border-t border-slate-100");
+  assert.equal(rows().length, 10);
+  assert.ok(JSON.stringify(rows()[0]).includes("Movimiento 22"));
+  assert.ok(ui.text().includes("Página 1 de 3"));
+  assert.ok(ui.text().includes("Mostrando 1–10 de 23"));
+  assert.equal(ui.button("Anterior").props.disabled, true);
+  assert.equal(ui.button("Siguiente").props.disabled, false);
+  ui.button("Siguiente").props.onClick(); ui.render();
+  assert.equal(rows().length, 10);
+  assert.ok(JSON.stringify(rows()[0]).includes("Movimiento 12"));
+  assert.ok(ui.text().includes("Página 2 de 3"));
+  ui.button("Siguiente").props.onClick(); ui.render();
+  assert.equal(rows().length, 3);
+  assert.ok(ui.text().includes("Mostrando 21–23 de 23"));
+  assert.equal(ui.button("Siguiente").props.disabled, true);
+  ui.button("Anterior").props.onClick(); ui.render();
+  assert.ok(ui.text().includes("Página 2 de 3"));
+  const size = () => ui.find(n => n.type === "select" && n.props["aria-label"] === "Movimientos por página");
+  assert.deepEqual(ui.nodes().filter(n => n.type === "option" && [10, 20, 50].includes(n.props.value)).map(n => n.props.value), [10, 20, 50]);
+  size().props.onChange({ target: { value: "20" } }); ui.render();
+  assert.equal(rows().length, 20);
+  assert.ok(ui.text().includes("Página 1 de 2"));
+  size().props.onChange({ target: { value: "50" } }); ui.render();
+  assert.equal(rows().length, 23);
+  assert.equal(ui.button("Anterior").props.disabled, true);
+  assert.equal(ui.button("Siguiente").props.disabled, true);
+  assert.equal(JSON.stringify(entries), before);
+  assert.deepEqual(ui.calls, []);
+  assert.equal(ui.refreshes(), 0);
+});
+
+test("movement filters reset pagination and refreshed smaller results clamp the page without hiding payment choices", async () => {
+  const entries = Array.from({ length: 21 }, (_, i) => ({ id: `row-${i}`, type: "EVENTUAL_CHARGE", amount: "10.00", grossAmount: null, discountAmount: null, description: `Movimiento ${i}`, occurredAt: new Date(Date.UTC(2026, 0, i + 1)).toISOString(), payment: null }));
+  const chargeList = entries.map(e => ({ ...e, outstandingAmount: e.amount }));
+  const futureCharges = Array.from({ length: 12 }, (_, i) => ({ ...entries[i], id: `future-${i}`, description: `Proyección ${i}`, isFuture: true }));
+  const ui = harness({ entries, chargeList, futureCharges });
+  const filter = () => ui.find(n => n.props["aria-label"] === "Filtrar cargos");
+  ui.button("Siguiente").props.onClick(); ui.render();
+  assert.ok(ui.text().includes("Página 2 de 4"));
+  filter().props.onChange({ target: { value: "pending" } }); ui.render();
+  assert.ok(ui.text().includes("Página 1 de 3"));
+  ui.button("Siguiente").props.onClick(); ui.render();
+  ui.button("Siguiente").props.onClick(); ui.render();
+  assert.ok(ui.text().includes("Página 3 de 3"));
+  ui.update([], chargeList.slice(0, 2));
+  assert.ok(ui.text().includes("Página 1 de 1"));
+  assert.ok(ui.text().includes("Movimiento 0") && ui.text().includes("Movimiento 1"));
+  assert.equal(ui.button("Anterior").props.disabled, true);
+  assert.equal(ui.button("Siguiente").props.disabled, true);
+  filter().props.onChange({ target: { value: "future" } }); ui.render();
+  assert.ok(ui.text().includes("Página 1 de 2"));
+  ui.button("Siguiente").props.onClick(); ui.render();
+  filter().props.onChange({ target: { value: "all" } }); ui.render();
+  assert.ok(ui.text().includes("Página 1 de 4"));
+  ui.update([], chargeList);
+  await ui.submit(paymentForm(ui));
+  assert.equal(ui.nodes().filter(n => n.type === "input" && n.props.type === "checkbox").length, 21, "payment selection still receives all pending charges, not the table page");
+  assert.deepEqual(ui.calls, []);
+});
+
+test("empty movement pagination displays zero results with both navigation controls disabled", () => {
+  const ui = harness({ entries: [], chargeList: [] });
+  assert.ok(ui.text().includes("Todavía no hay movimientos registrados."));
+  assert.ok(ui.text().includes("Mostrando 0–0 de 0"));
+  assert.ok(ui.text().includes("Página 1 de 1"));
+  assert.equal(ui.button("Anterior").props.disabled, true);
+  assert.equal(ui.button("Siguiente").props.disabled, true);
+});
+
 test("charge filter has specific empty states and future rows never become payable allocation choices", async () => {
   const ui = harness({ chargeList: [], futureCharges: [{ id: "future:s:1", type: "EVENTUAL_CHARGE", amount: "20.00", grossAmount: null, discountAmount: null, description: "Solo futuro", occurredAt: "2027-01-01T00:00:00Z", isFuture: true, payment: null }] });
   const filter = () => ui.find((n) => n.type === "select" && n.props["aria-label"] === "Filtrar cargos");
