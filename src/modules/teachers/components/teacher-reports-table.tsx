@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
@@ -33,6 +35,15 @@ type ReportRow = TeacherReport & {
   student: StudentOption;
   canManageVisibility?: boolean;
 };
+
+// Only text that is already visible in a row participates in search.
+function reportSearchText(report: ReportRow, fixedStudent?: StudentOption) {
+  const typeLabel = report.type === "TEXT" ? "Texto" : report.type;
+  const name = fixedStudent
+    ? report.teacher.displayName
+    : `${report.student.lastName}, ${report.student.firstName}`;
+  return [report.title, name, new Date(report.createdAt).toLocaleDateString("es-AR"), typeLabel].join(" ").toLowerCase();
+}
 
 function ReportDetails({ report }: { report: ReportRow }) {
   return (
@@ -65,6 +76,7 @@ export function TeacherReportsTable({
   const router = useRouter();
   const { toast } = useToast();
   const [studentId, setStudentId] = useState("");
+  const [search, setSearch] = useState("");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [visibilityOverrides, setVisibilityOverrides] = useState<Record<string, boolean>>({});
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
@@ -115,82 +127,101 @@ export function TeacherReportsTable({
   const availableReports = reports.filter((report) => !deletedIds.includes(report.id));
 
   if (availableReports.length === 0) {
-    return <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-muted-foreground">
-      {fixedStudent
-        ? "Todavía no hay reportes de este alumno."
-        : students.length === 0
-          ? "Todavía no tenés alumnos asignados."
-          : "Todavía no cargaste reportes."}
-    </div>;
+    return <Card size="sm" className="min-w-0">
+      <CardContent className="text-sm text-muted-foreground">
+        {fixedStudent
+          ? "Todavía no hay reportes de este alumno."
+          : students.length === 0
+            ? "Todavía no tenés alumnos asignados."
+            : "Todavía no cargaste reportes."}
+      </CardContent>
+    </Card>;
   }
 
   const filtered = fixedStudent
     ? availableReports
     : studentId ? availableReports.filter((report) => report.student.id === studentId) : availableReports;
+  const query = search.trim().toLowerCase();
+  const matching = query ? filtered.filter((report) => reportSearchText(report, fixedStudent).includes(query)) : filtered;
 
   return (
-    <div className="space-y-3">
-      {!fixedStudent ? <div className="space-y-1.5">
-        <Label htmlFor="report-student-filter">Filtrar por alumno</Label>
-        <select id="report-student-filter" value={studentId} onChange={(event) => setStudentId(event.target.value)}
-          className="h-9 w-full max-w-sm rounded-lg border border-input bg-background px-2.5 text-sm">
-          <option value="">Todos los alumnos</option>
-          {students.map((student) => <option key={student.id} value={student.id}>
-            {student.lastName}, {student.firstName} · {student.group.name}
-          </option>)}
-        </select>
-      </div> : null}
-      {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <Table className="min-w-[680px]">
-          <TableHeader>
-            <TableRow className="bg-slate-50">
-              <TableHead className="hidden w-[12%] md:table-cell">Fecha</TableHead>
-              <TableHead className="w-[30%] md:w-[20%]">{fixedStudent ? "Docente" : "Alumno"}</TableHead>
-              <TableHead className="w-[40%] md:w-[28%]">Reporte</TableHead>
-              <TableHead className="hidden w-[10%] md:table-cell">Tipo</TableHead>
-              <TableHead className="hidden w-[14%] md:table-cell">Detalle</TableHead>
-              <TableHead className="w-[30%] md:w-[16%]">Familia</TableHead>
-              <TableHead className="w-[16%]">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">No hay reportes para este alumno.</TableCell></TableRow> : filtered.map((report) => {
-              const visible = visibilityOverrides[report.id] ?? report.visibleToFamily;
-              return <TableRow key={report.id}>
-                <TableCell className="hidden md:table-cell">{new Date(report.createdAt).toLocaleDateString("es-AR")}</TableCell>
-                <TableCell>{fixedStudent ? report.teacher.displayName : `${report.student.lastName}, ${report.student.firstName}`}</TableCell>
-                <TableCell className="font-medium">
-                  {report.title}
-                  <span className="mt-1 block text-xs font-normal text-muted-foreground md:hidden">
-                    {new Date(report.createdAt).toLocaleDateString("es-AR")} · {report.type === "TEXT" ? "Texto" : report.type}
-                  </span>
-                  <div className="mt-2 md:hidden"><ReportDetails report={{ ...report, visibleToFamily: visible }} /></div>
-                </TableCell>
-                <TableCell className="hidden md:table-cell">{report.type === "TEXT" ? "Texto" : report.type}</TableCell>
-                <TableCell className="hidden md:table-cell"><ReportDetails report={{ ...report, visibleToFamily: visible }} /></TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Switch
-                      checked={visible}
-                      aria-label={`Visible para la familia: ${report.title} de ${report.student.firstName} ${report.student.lastName}`}
-                      disabled={pendingId !== null || report.canManageVisibility === false}
-                      onCheckedChange={(checked) => void changeVisibility(report, checked)}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {visible ? "Visible" : "Privado"}
-                      {report.canManageVisibility === false ? <span className="block">Solo el autor puede cambiarlo</span> : null}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {report.canManageVisibility !== false ? <Button type="button" size="icon-sm" variant="destructive" aria-label={`Eliminar reporte ${report.title}`} title={`Eliminar reporte ${report.title}`} disabled={pendingId !== null} onClick={() => setSelectedReport(report)}><Trash2 /></Button> : null}
-                </TableCell>
-              </TableRow>;
-            })}
-          </TableBody>
-        </Table>
+    <div className="min-w-0 space-y-4">
+      <div aria-label="Buscar y filtrar reportes" className="flex flex-wrap items-end gap-x-4 gap-y-3">
+        <div className="w-full min-w-0 space-y-1 lg:w-64 lg:shrink-0">
+          <Label htmlFor="report-search" className="text-sm text-slate-600">Buscar</Label>
+          <Input
+            id="report-search"
+            type="search"
+            placeholder={fixedStudent ? "Buscar por reporte, docente, fecha o tipo" : "Buscar por reporte, alumno, fecha o tipo"}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="min-w-0"
+          />
+        </div>
+        {!fixedStudent ? <div className="w-full min-w-0 space-y-1 lg:w-64 lg:shrink-0">
+          <Label htmlFor="report-student-filter" className="text-sm text-slate-600">Filtrar por alumno</Label>
+          <select id="report-student-filter" value={studentId} onChange={(event) => setStudentId(event.target.value)}
+            className="h-9 w-full min-w-0 rounded-lg border border-input bg-background px-2.5 text-sm">
+            <option value="">Todos los alumnos</option>
+            {students.map((student) => <option key={student.id} value={student.id}>
+              {student.lastName}, {student.firstName} · {student.group.name}
+            </option>)}
+          </select>
+        </div> : null}
       </div>
+      {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
+      <Card size="sm" className="min-w-0 bg-white">
+        <CardContent className="min-w-0">
+          <Table className="min-w-[680px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="hidden w-[12%] md:table-cell">Fecha</TableHead>
+                <TableHead className="w-[30%] md:w-[20%]">{fixedStudent ? "Docente" : "Alumno"}</TableHead>
+                <TableHead className="w-[40%] md:w-[28%]">Reporte</TableHead>
+                <TableHead className="hidden w-[10%] md:table-cell">Tipo</TableHead>
+                <TableHead className="hidden w-[14%] md:table-cell">Detalle</TableHead>
+                <TableHead className="w-[30%] md:w-[16%]">Familia</TableHead>
+                <TableHead className="w-[16%]">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {matching.length === 0 ? <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">{filtered.length === 0 ? "No hay reportes para este alumno." : "No encontramos resultados para esta búsqueda."}</TableCell></TableRow> : matching.map((report) => {
+                const visible = visibilityOverrides[report.id] ?? report.visibleToFamily;
+                return <TableRow key={report.id}>
+                  <TableCell className="hidden md:table-cell">{new Date(report.createdAt).toLocaleDateString("es-AR")}</TableCell>
+                  <TableCell>{fixedStudent ? report.teacher.displayName : `${report.student.lastName}, ${report.student.firstName}`}</TableCell>
+                  <TableCell className="font-medium">
+                    {report.title}
+                    <span className="mt-1 block text-xs font-normal text-muted-foreground md:hidden">
+                      {new Date(report.createdAt).toLocaleDateString("es-AR")} · {report.type === "TEXT" ? "Texto" : report.type}
+                    </span>
+                    <div className="mt-2 md:hidden"><ReportDetails report={{ ...report, visibleToFamily: visible }} /></div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{report.type === "TEXT" ? "Texto" : report.type}</TableCell>
+                  <TableCell className="hidden md:table-cell"><ReportDetails report={{ ...report, visibleToFamily: visible }} /></TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Switch
+                        checked={visible}
+                        aria-label={`Visible para la familia: ${report.title} de ${report.student.firstName} ${report.student.lastName}`}
+                        disabled={pendingId !== null || report.canManageVisibility === false}
+                        onCheckedChange={(checked) => void changeVisibility(report, checked)}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {visible ? "Visible" : "Privado"}
+                        {report.canManageVisibility === false ? <span className="block">Solo el autor puede cambiarlo</span> : null}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {report.canManageVisibility !== false ? <Button type="button" size="icon-sm" variant="destructive" aria-label={`Eliminar reporte ${report.title}`} title={`Eliminar reporte ${report.title}`} disabled={pendingId !== null} onClick={() => setSelectedReport(report)}><Trash2 /></Button> : null}
+                  </TableCell>
+                </TableRow>;
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
       {selectedReport ? <ResponsiveDialog open onOpenChange={(open) => { if (!open && pendingId === null) setSelectedReport(null); }}>
         <ResponsiveDialogContent showCloseButton={pendingId === null} className="md:w-[min(calc(100vw-2rem),28rem)] [font-family:var(--font-montserrat)]">
           <ResponsiveDialogHeader>

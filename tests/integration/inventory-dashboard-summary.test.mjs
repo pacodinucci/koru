@@ -8,6 +8,26 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 
 const require = createRequire(import.meta.url);
+
+/**
+ * The stock listing now renders through the shared DashboardSearchableTable. Load the real
+ * component (real React hooks/renderer) so the listing slots still reach the markup instead
+ * of being swallowed by the primitive UI stand-in below.
+ */
+function loadSearchableTable(primitive) {
+  const source = readFileSync(new URL("../../src/modules/dashboard/components/dashboard-searchable-table.tsx", import.meta.url), "utf8");
+  const output = ts.transpileModule(source, { compilerOptions: {
+    module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX,
+  } }).outputText;
+  const loaded = { exports: {} };
+  vm.runInNewContext(output, { module: loaded, exports: loaded.exports, require: (id) => {
+    if (id.startsWith("@/components/ui/")) return new Proxy({}, { get: () => primitive });
+    if (id === "react" || id === "react/jsx-runtime") return require(id);
+    throw Error(`Unexpected dependency ${id}`);
+  } });
+  return loaded.exports;
+}
+
 async function renderInventory() {
   const source = readFileSync(new URL("../../src/modules/operations/views/inventory-dashboard-view.tsx", import.meta.url), "utf8");
   const output = ts.transpileModule(source, { compilerOptions: {
@@ -15,9 +35,10 @@ async function renderInventory() {
   } }).outputText;
   const primitive = ({ children }) => React.createElement("div", null, children);
   const product = { id: "p1", name: "Lápiz negro", unit: "unidad", stock: 24, minimumStock: 30 };
-  const module = { exports: {} };
+  const viewModule = { exports: {} };
   const mocks = {
     "@/lib/prisma": { prisma: { teacherProfile: { findUnique: async () => null } } },
+    "@/modules/dashboard/components/dashboard-searchable-table": loadSearchableTable(primitive),
     "@/modules/operations/server/inventory.repository": {
       listInventoryProductsWithStock: async () => [product],
       listInventoryProductsBelowMinimum: async () => [product],
@@ -29,7 +50,7 @@ async function renderInventory() {
       InventoryAdminActions: () => React.createElement("button", null, "Registrar ingreso"),
     },
   };
-  vm.runInNewContext(output, { module, exports: module.exports, require: (id) => {
+  vm.runInNewContext(output, { module: viewModule, exports: viewModule.exports, require: (id) => {
     if (Object.hasOwn(mocks, id)) return mocks[id];
     if (id === "react/jsx-runtime") return require(id);
     if (id.startsWith("@/components/ui/") || id.startsWith("@/modules/operations/components/")) {
@@ -37,7 +58,7 @@ async function renderInventory() {
     }
     throw Error(`Unexpected dependency ${id}`);
   } });
-  const tree = await module.exports.InventoryDashboardView({ user: {
+  const tree = await viewModule.exports.InventoryDashboardView({ user: {
     id: "operator", role: "SUPER_ADMIN", permissionKeys: ["inventory.operate", "inventory.configure"],
   } });
   return renderToStaticMarkup(tree);

@@ -40,12 +40,17 @@ export function PsychopedagogyClient({ students, readOnly = false, canEditLearni
 
   return <div className="min-w-0 space-y-5">
     <div className="space-y-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Input type="search" aria-label="Buscar alumnos por nombre o apellido" placeholder="Buscar por nombre o apellido"
-          className="sm:max-w-sm" value={filter} onChange={(event) => { setFilter(event.target.value); setPageIndex(0); }} />
-        <p className="text-sm text-slate-600" role="status">{filteredStudents.length} {filteredStudents.length === 1 ? "alumno" : "alumnos"}</p>
+      <div aria-label="Buscar y filtrar alumnos" className="flex flex-wrap items-end gap-x-4 gap-y-3">
+        <div className="w-full min-w-0 space-y-1 lg:w-64 lg:shrink-0">
+          <label htmlFor="psychopedagogy-search" className="text-sm text-slate-600">Buscar</label>
+          <Input id="psychopedagogy-search" type="search" placeholder="Buscar por nombre o apellido"
+            className="min-w-0" value={filter} onChange={(event) => { setFilter(event.target.value); setPageIndex(0); }} />
+        </div>
+        <div className="ml-auto min-w-0 max-w-full space-y-1">
+          <p className="text-sm text-slate-600" role="status">{filteredStudents.length} {filteredStudents.length === 1 ? "alumno" : "alumnos"}</p>
+        </div>
       </div>
-      <div className="min-w-0 overflow-x-auto rounded-xl border border-slate-200">
+      <div className="min-w-0 overflow-x-auto rounded-xl border border-slate-200 bg-white p-3">
         <Table className="min-w-[760px] table-fixed">
           <colgroup>
             <col style={{ width: "36%" }} /><col style={{ width: "26%" }} />

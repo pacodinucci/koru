@@ -6,6 +6,9 @@ import { Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ResponsiveDialog, ResponsiveDialogBody, ResponsiveDialogContent,
@@ -35,12 +38,29 @@ type Props = { agreements: TeacherFollowUpAgreementRow[] } & (
 
 const formatDate = (value: string) => new Date(value).toLocaleDateString("es-AR");
 
+// Only text that is already visible in a row participates in search.
+function agreementSearchText(agreement: TeacherFollowUpAgreementRow) {
+  const isPublished = agreement.status === "PUBLISHED";
+  return [
+    agreement.title,
+    agreement.body,
+    agreement.authorName,
+    formatDate(agreement.createdAt),
+    isPublished ? "Publicado" : "Borrador",
+    agreement.publishedAt ? formatDate(agreement.publishedAt) : "",
+    agreement.acceptedAt ? `Conformidad registrada el ${formatDate(agreement.acceptedAt)}` : isPublished ? "Pendiente de conformidad" : "Aún no publicado",
+    agreement.acceptedByName ?? "",
+    agreement.attachmentName ?? "",
+  ].join(" ").toLowerCase();
+}
+
 export function TeacherFollowUpAgreementsClient(props: Props) {
   const { agreements, mode } = props;
   const router = useRouter();
   const [editing, setEditing] = useState<TeacherFollowUpAgreementRow | "new" | null>(null);
   const [deleting, setDeleting] = useState<TeacherFollowUpAgreementRow | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const [publishedIds, setPublishedIds] = useState<string[]>([]);
   const [consentedIds, setConsentedIds] = useState<string[]>([]);
@@ -89,9 +109,11 @@ export function TeacherFollowUpAgreementsClient(props: Props) {
 
   const visible = agreements.filter((agreement) => !deletedIds.includes(agreement.id)
     && (mode === "admin" || agreement.status === "PUBLISHED"));
+  const query = search.trim().toLowerCase();
+  const matching = query ? visible.filter((agreement) => agreementSearchText(agreement).includes(query)) : visible;
 
   return (
-    <div className="space-y-4 [font-family:var(--font-montserrat)]">
+    <div className="min-w-0 space-y-4 [font-family:var(--font-montserrat)]">
       {mode === "admin" ? (
         <Button type="button" disabled={pendingId !== null} onClick={() => setEditing("new")}>Nuevo acuerdo</Button>
       ) : <p className="text-sm text-muted-foreground">Leé los acuerdos publicados para vos y registrá tu conformidad. La fecha y la persona que la otorgó se conservan.</p>}
@@ -106,68 +128,87 @@ export function TeacherFollowUpAgreementsClient(props: Props) {
           onCancel={() => setEditing(null)}
         />
       ) : null}
-      {visible.length === 0 ? <p className="rounded-xl border bg-white p-6 text-sm text-muted-foreground">{mode === "admin" ? "Todavía no hay acuerdos de este docente." : "Todavía no hay acuerdos publicados para vos."}</p> : (
-        <div className="overflow-x-auto rounded-xl border bg-white">
-          <Table className="min-w-[800px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Creado</TableHead>
-                <TableHead>Autor</TableHead>
-                <TableHead>Acuerdo</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Conformidad</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visible.map((agreement) => {
-                const isPublished = agreement.status === "PUBLISHED" || publishedIds.includes(agreement.id);
-                return (
-                  <TableRow key={agreement.id}>
-                    <TableCell>{formatDate(agreement.createdAt)}</TableCell>
-                    <TableCell>{agreement.authorName}</TableCell>
-                    <TableCell className="min-w-64 max-w-lg space-y-2">
-                      <h2 className="font-medium">{agreement.title}</h2>
-                      <p className="whitespace-pre-wrap break-words text-sm">{agreement.body}</p>
-                      {agreement.hasAttachment ? (
-                        <a href={`/api/teacher-follow-up-agreements/${encodeURIComponent(agreement.id)}/attachment`} target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-primary underline">
-                          Abrir {agreement.attachmentName ?? "adjunto"}
-                        </a>
-                      ) : null}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{isPublished ? "Publicado" : "Borrador"}</Badge>
-                      {agreement.publishedAt ? <p className="mt-1 text-xs text-muted-foreground">{formatDate(agreement.publishedAt)}</p> : null}
-                    </TableCell>
-                    <TableCell>
-                      {agreement.acceptedAt ? (
-                        <p>Conformidad registrada el {formatDate(agreement.acceptedAt)}{agreement.acceptedByName ? ` por ${agreement.acceptedByName}` : ""}.</p>
-                      ) : isPublished ? "Pendiente de conformidad" : "Aún no publicado"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-2">
-                        {mode === "admin" ? (
-                          <>
-                            {!isPublished ? (
-                              <>
-                                <Button type="button" size="sm" variant="outline" disabled={pendingId !== null} onClick={() => setEditing(agreement)}>Editar</Button>
-                                <Button type="button" size="sm" disabled={pendingId !== null} onClick={() => mutate(agreement, "publish")}>Publicar</Button>
-                              </>
-                            ) : null}
-                            <Button type="button" size="icon-sm" variant="destructive" aria-label={`Eliminar acuerdo ${agreement.title}`} disabled={pendingId !== null} onClick={() => setDeleting(agreement)}><Trash2 /></Button>
-                          </>
-                        ) : !agreement.acceptedAt ? (
-                          <Button type="button" size="sm" disabled={pendingId !== null || consentedIds.includes(agreement.id)} onClick={() => mutate(agreement, "consent")}>Dar conformidad</Button>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+      {visible.length === 0 ? <Card size="sm" className="min-w-0">
+        <CardContent className="text-sm text-muted-foreground">{mode === "admin" ? "Todavía no hay acuerdos de este docente." : "Todavía no hay acuerdos publicados para vos."}</CardContent>
+      </Card> : <>
+        <div aria-label="Buscar acuerdos" className="flex flex-wrap items-end gap-x-4 gap-y-3">
+          <div className="w-full min-w-0 space-y-1 lg:w-64 lg:shrink-0">
+            <Label htmlFor="teacher-follow-up-agreements-search" className="text-sm text-slate-600">Buscar</Label>
+            <Input
+              id="teacher-follow-up-agreements-search"
+              type="search"
+              placeholder="Buscar por acuerdo, autor, estado o fecha"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="min-w-0"
+            />
+          </div>
         </div>
-      )}
+        <Card size="sm" className="min-w-0 bg-white">
+          <CardContent className="min-w-0">
+            <Table className="min-w-[800px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Creado</TableHead>
+                  <TableHead>Autor</TableHead>
+                  <TableHead>Acuerdo</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Conformidad</TableHead>
+                  <TableHead>Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {matching.length === 0 ? (
+                  <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">No encontramos resultados para esta búsqueda.</TableCell></TableRow>
+                ) : matching.map((agreement) => {
+                  const isPublished = agreement.status === "PUBLISHED" || publishedIds.includes(agreement.id);
+                  return (
+                    <TableRow key={agreement.id}>
+                      <TableCell>{formatDate(agreement.createdAt)}</TableCell>
+                      <TableCell>{agreement.authorName}</TableCell>
+                      <TableCell className="min-w-64 max-w-lg space-y-2">
+                        <h2 className="font-medium">{agreement.title}</h2>
+                        <p className="whitespace-pre-wrap break-words text-sm">{agreement.body}</p>
+                        {agreement.hasAttachment ? (
+                          <a href={`/api/teacher-follow-up-agreements/${encodeURIComponent(agreement.id)}/attachment`} target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-primary underline">
+                            Abrir {agreement.attachmentName ?? "adjunto"}
+                          </a>
+                        ) : null}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={isPublished ? "success" : "muted"}>{isPublished ? "Publicado" : "Borrador"}</Badge>
+                        {agreement.publishedAt ? <p className="mt-1 text-xs text-muted-foreground">{formatDate(agreement.publishedAt)}</p> : null}
+                      </TableCell>
+                      <TableCell>
+                        {agreement.acceptedAt ? (
+                          <p>Conformidad registrada el {formatDate(agreement.acceptedAt)}{agreement.acceptedByName ? ` por ${agreement.acceptedByName}` : ""}.</p>
+                        ) : isPublished ? "Pendiente de conformidad" : "Aún no publicado"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-2">
+                          {mode === "admin" ? (
+                            <>
+                              {!isPublished ? (
+                                <>
+                                  <Button type="button" size="sm" variant="outline" disabled={pendingId !== null} onClick={() => setEditing(agreement)}>Editar</Button>
+                                  <Button type="button" size="sm" disabled={pendingId !== null} onClick={() => mutate(agreement, "publish")}>Publicar</Button>
+                                </>
+                              ) : null}
+                              <Button type="button" size="icon-sm" variant="destructive" aria-label={`Eliminar acuerdo ${agreement.title}`} disabled={pendingId !== null} onClick={() => setDeleting(agreement)}><Trash2 /></Button>
+                            </>
+                          ) : !agreement.acceptedAt ? (
+                            <Button type="button" size="sm" disabled={pendingId !== null || consentedIds.includes(agreement.id)} onClick={() => mutate(agreement, "consent")}>Dar conformidad</Button>
+                          ) : null}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </>}
       {mode === "admin" && deleting ? (
         <ResponsiveDialog open onOpenChange={(open) => { if (!open && pendingId === null) setDeleting(null); }}>
           <ResponsiveDialogContent showCloseButton={pendingId === null}>
