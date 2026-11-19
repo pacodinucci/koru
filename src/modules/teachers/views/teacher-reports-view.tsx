@@ -10,10 +10,10 @@ export async function TeacherReportsView({ userId }: { userId: string }) {
   ]);
 
   return (
-    <div className="space-y-5 [font-family:var(--font-montserrat)]">
+    <div className="min-w-0 space-y-6 [font-family:var(--font-montserrat)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Reportes</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">Reportes</h1>
           <p className="mt-1 text-sm text-muted-foreground">Tus reportes por alumno. Sólo los que compartís son visibles para su familia.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

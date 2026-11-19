@@ -126,17 +126,23 @@ export function FamiliesDataTable({
 
   return (
     <div className="min-w-0 space-y-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Input
-          type="search"
-          value={globalFilter}
-          onChange={(event) => table.setGlobalFilter(event.target.value)}
-          placeholder="Buscar familia por nombre"
-          className="sm:max-w-sm"
-        />
-        <p className="text-sm text-slate-600">{table.getPrePaginatedRowModel().rows.length} familias</p>
+      <div aria-label="Buscar y filtrar familias" className="flex flex-wrap items-end gap-x-4 gap-y-3">
+        <div className="w-full min-w-0 space-y-1 lg:w-64 lg:shrink-0">
+          <label htmlFor="families-search" className="text-sm text-slate-600">Buscar</label>
+          <Input
+            id="families-search"
+            type="search"
+            value={globalFilter}
+            onChange={(event) => table.setGlobalFilter(event.target.value)}
+            placeholder="Buscar familia por nombre"
+            className="min-w-0"
+          />
+        </div>
+        <div className="ml-auto min-w-0 max-w-full space-y-1">
+          <p className="text-sm text-slate-600">{table.getPrePaginatedRowModel().rows.length} familias</p>
+        </div>
       </div>
-      <div className="min-w-0 rounded-xl border border-slate-200">
+      <div className="min-w-0 overflow-x-auto rounded-xl border border-slate-200 bg-white p-3">
         <Table className="min-w-[840px]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -146,7 +152,7 @@ export function FamiliesDataTable({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length === 0 ? <TableRow><TableCell colSpan={5} className="py-10 text-center text-slate-600">No encontramos familias con ese nombre.</TableCell></TableRow> : null}
+            {table.getRowModel().rows.length === 0 ? <TableRow><TableCell colSpan={6} className="py-10 text-center text-slate-600">No encontramos familias con ese nombre.</TableCell></TableRow> : null}
             {table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
                 {row.getAllCells().map((cell) => <TableCell key={cell.id}><table.FlexRender cell={cell} /></TableCell>)}

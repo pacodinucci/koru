@@ -2,9 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { notifyStudentRecordChanges } from "@/modules/students/server/student-record-notification.service";
-
 import { requirePermission } from "@/modules/auth/server/auth-guards";
+import { notifyStudentRecordChanges } from "@/modules/students/server/student-record-notification.service";
 import { studentFormSchema, type StudentFormInput } from "@/modules/students/schemas/student.schema";
 import {
   listStudentGroups,

@@ -17,8 +17,8 @@ export default async function OwnTeacherFollowUpAgreementsPage() {
       cmsPages={cmsPages}
       breadcrumbPage="Mis acuerdos de seguimiento"
     >
-      <div className="space-y-5">
-        <h1 className="text-xl font-semibold text-slate-900">Mis acuerdos de seguimiento</h1>
+      <div className="min-w-0 space-y-6">
+        <h1 className="text-2xl font-semibold text-slate-900">Mis acuerdos de seguimiento</h1>
         <TeacherFollowUpAgreementsClient agreements={agreements} mode="recipient" />
       </div>
     </DashboardShell>

@@ -7,6 +7,9 @@ import { FileText, Plus, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -50,10 +53,21 @@ function AgreementDetails({ agreement }: { agreement: Agreement }) {
   </ResponsiveDialog>;
 }
 
+// Only text that is already visible in a row participates in search; the body stays in the detail dialog.
+function agreementSearchText(agreement: Agreement) {
+  return [
+    agreement.title,
+    new Date(agreement.createdAt).toLocaleDateString("es-AR"),
+    agreement.status === "DRAFT" ? "Borrador" : "Publicado",
+    agreement.students.map((student) => student.name).join(", "),
+  ].join(" ").toLowerCase();
+}
+
 export function TeacherAgreementsClient({ agreements }: { agreements: Agreement[] }) {
   const router = useRouter();
   const { toast } = useToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -88,12 +102,16 @@ export function TeacherAgreementsClient({ agreements }: { agreements: Agreement[
   }
 
   const visibleAgreements = agreements.filter((agreement) => !deletedIds.includes(agreement.id));
+  const query = search.trim().toLowerCase();
+  const matchingAgreements = query
+    ? visibleAgreements.filter((agreement) => agreementSearchText(agreement).includes(query))
+    : visibleAgreements;
 
   return (
-    <div className="space-y-5 [font-family:var(--font-montserrat)]">
+    <div className="min-w-0 space-y-6 [font-family:var(--font-montserrat)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Acuerdos de Seguimiento</h1>
+          <h1 className="text-2xl font-semibold">Acuerdos de Seguimiento</h1>
           <p className="mt-1 text-sm text-muted-foreground">Constancias de citas compartidas con las familias involucradas.</p>
         </div>
         <Button nativeButton={false} render={<Link href="/dashboard/acuerdos-seguimiento/nuevo" />}>
@@ -102,28 +120,60 @@ export function TeacherAgreementsClient({ agreements }: { agreements: Agreement[
       </div>
       {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
       {notice ? <p role="status" className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</p> : null}
-      <div className="space-y-3">
+      <div className="min-w-0 space-y-3">
         <h2 className="text-base font-semibold">Acuerdos cargados</h2>
-        {!visibleAgreements.length ? <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-muted-foreground">Todavía no hay acuerdos cargados.</div> :
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-            <Table className="min-w-[640px]">
-              <TableHeader><TableRow className="bg-slate-50"><TableHead>Fecha</TableHead><TableHead>Acuerdo</TableHead><TableHead>Estado</TableHead><TableHead>Niños</TableHead><TableHead>Acciones</TableHead></TableRow></TableHeader>
-              <TableBody>{visibleAgreements.map((agreement) => <TableRow key={agreement.id}>
-                <TableCell>{new Date(agreement.createdAt).toLocaleDateString("es-AR")}</TableCell>
-                <TableCell className="font-medium">{agreement.title}</TableCell>
-                <TableCell><Badge variant="outline">{agreement.status === "DRAFT" ? "Borrador" : "Publicado"}</Badge></TableCell>
-                <TableCell>{agreement.students.map((student) => student.name).join(", ")}</TableCell>
-                <TableCell><div className="flex flex-wrap gap-2">
-                  <AgreementDetails agreement={agreement} />
-                  {agreement.status === "DRAFT" ? <>
-                    <Button nativeButton={false} render={<Link href={`/dashboard/acuerdos-seguimiento/${agreement.id}/editar`} />} variant="outline" size="sm">Editar</Button>
-                    <Button type="button" size="sm" disabled={pendingId !== null} onClick={() => void publish(agreement.id)}>{pendingId === agreement.id ? "Esperá…" : "Publicar"}</Button>
-                  </> : null}
-                  <Button type="button" size="icon-sm" variant="destructive" aria-label={`Eliminar acuerdo ${agreement.title}`} title={`Eliminar acuerdo ${agreement.title}`} disabled={pendingId !== null} onClick={() => setSelectedAgreement(agreement)}><Trash2 /></Button>
-                </div></TableCell>
-              </TableRow>)}</TableBody>
-            </Table>
-          </div>}
+        {!visibleAgreements.length ? <Card size="sm" className="min-w-0">
+          <CardContent className="text-sm text-muted-foreground">Todavía no hay acuerdos cargados.</CardContent>
+        </Card> : <>
+          <div aria-label="Buscar acuerdos" className="flex flex-wrap items-end gap-x-4 gap-y-3">
+            <div className="w-full min-w-0 space-y-1 lg:w-64 lg:shrink-0">
+              <Label htmlFor="teacher-agreements-search" className="text-sm text-slate-600">Buscar</Label>
+              <Input
+                id="teacher-agreements-search"
+                type="search"
+                placeholder="Buscar por acuerdo, estado, niños o fecha"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="min-w-0"
+              />
+            </div>
+          </div>
+          <Card size="sm" className="min-w-0 bg-white">
+            <CardContent className="min-w-0">
+              <Table className="min-w-[640px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Acuerdo</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Niños</TableHead>
+                    <TableHead>Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {matchingAgreements.length === 0 ? <TableRow>
+                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">No encontramos resultados para esta búsqueda.</TableCell>
+                  </TableRow> : matchingAgreements.map((agreement) => <TableRow key={agreement.id}>
+                    <TableCell>{new Date(agreement.createdAt).toLocaleDateString("es-AR")}</TableCell>
+                    <TableCell className="font-medium">{agreement.title}</TableCell>
+                    <TableCell><Badge variant={agreement.status === "DRAFT" ? "muted" : "success"}>{agreement.status === "DRAFT" ? "Borrador" : "Publicado"}</Badge></TableCell>
+                    <TableCell>{agreement.students.map((student) => student.name).join(", ")}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-2">
+                        <AgreementDetails agreement={agreement} />
+                        {agreement.status === "DRAFT" ? <>
+                          <Button nativeButton={false} render={<Link href={`/dashboard/acuerdos-seguimiento/${agreement.id}/editar`} />} variant="outline" size="sm">Editar</Button>
+                          <Button type="button" size="sm" disabled={pendingId !== null} onClick={() => void publish(agreement.id)}>{pendingId === agreement.id ? "Esperá…" : "Publicar"}</Button>
+                        </> : null}
+                        <Button type="button" size="icon-sm" variant="destructive" aria-label={`Eliminar acuerdo ${agreement.title}`} title={`Eliminar acuerdo ${agreement.title}`} disabled={pendingId !== null} onClick={() => setSelectedAgreement(agreement)}><Trash2 /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>)}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>}
       </div>
       {selectedAgreement ? <ResponsiveDialog open onOpenChange={(open) => { if (!open && pendingId === null) setSelectedAgreement(null); }}>
         <ResponsiveDialogContent showCloseButton={pendingId === null} className="md:w-[min(calc(100vw-2rem),28rem)] [font-family:var(--font-montserrat)]">
