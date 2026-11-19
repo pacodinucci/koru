@@ -29,6 +29,8 @@ export const permissionCatalog = [
   { key: "teachers.manage", section: "Docentes", label: "Gestionar" },
   { key: "users.view", section: "Usuarios", label: "Ver" },
   { key: "users.manage", section: "Usuarios", label: "Gestionar" },
+  { key: "contacts.view", section: "Contactos", label: "Ver" },
+  { key: "contacts.manage", section: "Contactos", label: "Gestionar" },
   { key: "mailing.view", section: "Mailing", label: "Ver" },
   { key: "mailing.send", section: "Mailing", label: "Enviar" },
   { key: "roles.view", section: "Roles", label: "Ver" },
@@ -72,6 +74,11 @@ export const legacyRolePermissions: Record<UserRole, readonly PermissionKey[]> =
   PSYCHOPEDAGOGY_TEACHER: ["dashboard.access", "students.view", "psychopedagogy.view", "psychopedagogy.manage"],
   PARENT: [],
 };
+
+/** Superadmin retains every capability even when an assigned role has a partial grant set. */
+export function withSuperAdminPermissions(role: string, permissions: readonly PermissionKey[]): PermissionKey[] {
+  return role === "SUPERADMIN" ? [...allPermissions] : [...permissions];
+}
 
 export function hasPermission(
   permissions: readonly string[],
