@@ -75,6 +75,7 @@ import {
   type AppUserRole,
 } from "@/modules/auth/roles";
 import type { PermissionKey } from "@/modules/auth/permissions/permission-catalog";
+import { authorizeContacts } from "@/modules/contacts/contacts.domain";
 
 const contentNavigationItems = [
   { key: "navbar", label: "Navbar", parent: undefined },
@@ -191,8 +192,9 @@ export function DashboardShell({
     userRole === "TEACHER" ||
     userRole === "ADMIN_TEACHER";
   const permissionSet = new Set(userPermissions);
+  const canViewContacts = authorizeContacts(userRole, userPermissions);
   const can = (permission: PermissionKey) =>
-    userPermissions ? permissionSet.has(permission) : isAdmin;
+    isSuperAdmin || (userPermissions ? permissionSet.has(permission) : isAdmin);
   const showCmsNavigation = false;
   const sidebarMenuButtonClass =
     "h-10 rounded-xl px-3 text-slate-600 hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
@@ -475,13 +477,27 @@ export function DashboardShell({
               </SidebarGroupContent>
             </SidebarGroup>
           ) : null}
-          {can("mailing.view") || can("blog.view") || can("content.view") ? (
+          {canViewContacts || can("mailing.view") || can("blog.view") || can("content.view") ? (
             <SidebarGroup>
               <SidebarGroupLabel className="text-slate-500">
                 Comunicación y web
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu className="gap-1">
+                  {canViewContacts ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Contactos"
+                        aria-label="Contactos"
+                        isActive={pathname.startsWith("/dashboard/contactos")}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/contactos" />}
+                      >
+                        <Mail />
+                        <span>Contactos</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
                   {can("mailing.view") ? (
                     <SidebarMenuItem>
                       <SidebarMenuButton

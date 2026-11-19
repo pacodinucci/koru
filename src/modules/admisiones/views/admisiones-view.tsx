@@ -209,13 +209,12 @@ export function AdmisionesView({
                     </ul>
                     {index === 0 && (
                       <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-base">
-                        <span
-                          role="link"
-                          aria-disabled="true"
-                          className="cursor-not-allowed font-medium text-[#55764d]/70 underline underline-offset-4"
+                        <a
+                          href="/admisiones/cuestionario-inicial"
+                          className="font-medium text-[#55764d] underline underline-offset-4 focus-visible:outline-2"
                         >
                           Completar cuestionario inicial
-                        </span>
+                        </a>
                       </div>
                     )}
                   </div>

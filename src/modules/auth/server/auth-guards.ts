@@ -10,6 +10,7 @@ import { UserRole } from "@prisma/client";
 import { isInternalCalendarRole } from "@/modules/calendar/lib/calendar-access";
 import {
   legacyRolePermissions,
+  withSuperAdminPermissions,
   type PermissionKey,
 } from "@/modules/auth/permissions/permission-catalog";
 import {
@@ -117,7 +118,7 @@ function authenticatedUserFromRecord(user: {
   const guaranteedRoleManagementPermissions: PermissionKey[] =
     user.role === "SUPERADMIN" ? ["dashboard.access", "roles.view", "roles.manage"] : [];
   const permissionKeys = Array.from(
-    new Set([...assignedPermissionKeys, ...guaranteedRoleManagementPermissions, ...guaranteedCalendarPermissions, ...(isInternalCalendarRole(user.role) && user.calendarAreaGrants?.length ? ["calendar.view" as PermissionKey] : [])]),
+    new Set([...withSuperAdminPermissions(user.role, assignedPermissionKeys), ...guaranteedRoleManagementPermissions, ...guaranteedCalendarPermissions, ...(isInternalCalendarRole(user.role) && user.calendarAreaGrants?.length ? ["calendar.view" as PermissionKey] : [])]),
   );
 
   return {

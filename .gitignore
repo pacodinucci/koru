@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/.tmp-admissions-e2e/
 
 # next.js
 /.next/

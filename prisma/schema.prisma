@@ -577,6 +577,25 @@ model BlogComment {
   @@index([postId, approved, createdAt])
 }
 
+model AdmissionInquiry {
+  id                   String               @id @default(cuid())
+  guardianNames        String
+  childName            String
+  email                String
+  phone                String
+  answers              Json
+  questionnaireVersion String
+  idempotencyKey       String               @unique
+  fingerprint          String
+  status               ContactMessageStatus @default(NEW)
+  submittedAt          DateTime             @default(now())
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([status, submittedAt])
+  @@index([submittedAt, id])
+}
+
 model ContactMessage {
   id        String               @id @default(cuid())
   nombre    String
