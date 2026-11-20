@@ -34,6 +34,14 @@ Objetivo: tener una guía clara de arquitectura sin entrar en detalle fino de ca
 - Instalación: revisar y aplicar la migración `20260930120000_add_psychopedagogy_entries` con el procedimiento de despliegue de la base (`npx prisma migrate deploy` aplica **todas** las migraciones pendientes); luego generar el cliente con `npm run prisma:generate`. No se debe ejecutar contra una base sin confirmar primero el destino.
 - Pruebas sin base de datos: `node --test tests/integration/psychopedagogy.test.mjs tests/integration/psychopedagogy-ui.test.mjs`.
 
+### 1.4 `GET /documentos/{slug}`
+- Archivo: `src/app/documentos/[slug]/route.ts`.
+- Solo entrega documentos publicados; devuelve `404` si no existen o no están publicados.
+- Para MP4, redirige con `307` a Cloudinary. El slug `landing-video` agrega la transformación `ac_none` para entregar una versión sin pista de audio, sin modificar el archivo original ni el registro en la base. Los demás videos conservan su URL y audio.
+- Los PDF conservan su descarga como archivo adjunto.
+- La landing mantiene `muted`: silenciar la reproducción por sí solo no evita descargar la pista de audio.
+- Prueba: `node --test tests/integration/landing-video-download.test.mjs`.
+
 ## 2) Operaciones existentes sin endpoint HTTP dedicado
 
 Hoy varias operaciones viven como **Server Actions** (acopladas al frontend), no como API pública:
