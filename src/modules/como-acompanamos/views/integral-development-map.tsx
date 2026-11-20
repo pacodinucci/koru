@@ -2,12 +2,17 @@
 
 import Image from "next/image";
 import { CSSProperties, useState } from "react";
+import bodyIcon from "../../../../public/assets/svg-integral/body-outline-svgrepo-com.svg";
+import cognitiveIcon from "../../../../public/assets/svg-integral/mind-smart-light-bulb-svgrepo-com.svg";
+import heartIcon from "../../../../public/assets/svg-integral/heart-svgrepo-com.svg";
+import socialIcon from "../../../../public/assets/svg-integral/connection-pattern-1105-svgrepo-com.svg";
+import interiorIcon from "../../../../public/assets/svg-integral/mandala-svgrepo-com.svg";
 
 const integralDimensions = [
   {
     label: "Corporal",
     description: "cuerpo y movimiento",
-    icon: "/assets/svg-integral/body-outline-svgrepo-com.svg",
+    icon: bodyIcon,
     color: "bg-[#8bd7e6]",
     x: "15.6%",
     y: "51.8%",
@@ -18,7 +23,7 @@ const integralDimensions = [
   {
     label: "Cognitiva",
     description: "pensamiento y aprendizaje",
-    icon: "/assets/svg-integral/mind-smart-light-bulb-svgrepo-com.svg",
+    icon: cognitiveIcon,
     color: "bg-[#ffe04a]",
     x: "46.3%",
     y: "26.8%",
@@ -29,7 +34,7 @@ const integralDimensions = [
   {
     label: "Emocional",
     description: "gesti\u00f3n y expresi\u00f3n emocional",
-    icon: "/assets/svg-integral/heart-svgrepo-com.svg",
+    icon: heartIcon,
     color: "bg-[#f86ac6]",
     x: "77.6%",
     y: "17.9%",
@@ -40,7 +45,7 @@ const integralDimensions = [
   {
     label: "Social",
     description: "v\u00ednculos y comunidad",
-    icon: "/assets/svg-integral/connection-pattern-1105-svgrepo-com.svg",
+    icon: socialIcon,
     color: "bg-[#ffe04a]",
     x: "73.3%",
     y: "80.4%",
@@ -51,7 +56,7 @@ const integralDimensions = [
   {
     label: "Interior",
     description: "autoconocimiento, intuici\u00f3n, conciencia y prop\u00f3sito",
-    icon: "/assets/svg-integral/mandala-svgrepo-com.svg",
+    icon: interiorIcon,
     color: "bg-[#8bd7e6]",
     x: "58.2%",
     y: "51.8%",
