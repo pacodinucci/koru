@@ -8,7 +8,13 @@ export async function GET(_: Request, { params }: { params: Promise<{ slug: stri
   const { slug } = await params;
   const document = await getPublishedDocumentBySlug(slug);
   if (!document) return new NextResponse("Documento no encontrado.", { status: 404 });
-  if (document.mimeType === "video/mp4") return NextResponse.redirect(document.cloudinaryUrl, 307);
+  if (document.mimeType === "video/mp4") {
+    // Muted playback still downloads audio; strip it only for the landing background.
+    const videoUrl = slug === "landing-video"
+      ? document.cloudinaryUrl.replace("/video/upload/", "/video/upload/ac_none/")
+      : document.cloudinaryUrl;
+    return NextResponse.redirect(videoUrl, 307);
+  }
   try {
     const upstream = await fetch(getDocumentDownloadUrl(document.cloudinaryPublicId), { cache: "no-store" });
     if (!upstream.ok || !upstream.body) return new NextResponse("No pudimos descargar el documento.", { status: 502 });

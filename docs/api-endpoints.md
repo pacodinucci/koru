@@ -55,6 +55,14 @@ Objetivo: tener una guía clara de arquitectura sin entrar en detalle fino de ca
 - Persistencia aditiva: `20261024120000_add_psychopedagogy_profile` y `20261024130000_allow_superadmin_learning_profile`. La segunda conserva las autorías docentes existentes y agrega autoría de usuario para Superadmin sin crear perfiles docentes ficticios; requiere al menos un autor mediante restricción de base de datos. La migración `20261024140000_allow_superadmin_followups` agrega autoría de usuario a bitácoras y acompañamientos, permite `teacherId` nulo solo con otro autor presente y conserva registros y autorías anteriores, sin backfill ni perfiles docentes ficticios. `20261024150000_allow_superadmin_interventions` extiende ese mismo patrón a intervenciones: agrega `authorUserId` nullable con índice y FK a `user` (`ON DELETE RESTRICT`), vuelve opcional `teacherId` y exige al menos uno de los dos autores mediante `CHECK`. No modifica ni rellena registros existentes; conserva sus autores docentes. `20261024160000_classify_psychopedagogy_instruments` agrega el enum nullable `PsychopedagogyInstrumentKind` sin valor predeterminado y extiende el mismo patrón de autoría a instrumentos (`authorUserId`, FK restrictiva, índice y `CHECK` que exige autor docente o usuario). Conserva intactos los registros y autores anteriores; no reclasifica, rellena ni reinicia datos. Generar Prisma con `npm run prisma:generate` antes de compilar y reiniciar el servidor Next si ya estaba ejecutándose: el singleton de Prisma en desarrollo puede conservar el modelo anterior aunque el cliente en disco esté actualizado. Un `PrismaClientValidationError` al guardar con `teacherId: null` después de esta migración requiere revisar ese cliente cargado, no volver a aplicar la migración. Aplicar migraciones al destino configurado con `npx prisma migrate deploy`, sin reset ni backfill de registros anteriores.
 - Pruebas sin base de datos: `node --test tests/integration/psychopedagogy*.test.mjs`.
 
+### 1.4 `GET /documentos/{slug}`
+- Archivo: `src/app/documentos/[slug]/route.ts`.
+- Solo entrega documentos publicados; devuelve `404` si no existen o no están publicados.
+- Para MP4, redirige con `307` a Cloudinary. El slug `landing-video` agrega la transformación `ac_none` para entregar una versión sin pista de audio, sin modificar el archivo original ni el registro en la base. Los demás videos conservan su URL y audio.
+- Los PDF conservan su descarga como archivo adjunto.
+- La landing mantiene `muted`: silenciar la reproducción por sí solo no evita descargar la pista de audio.
+- Prueba: `node --test tests/integration/landing-video-download.test.mjs`.
+
 ## 2) Operaciones existentes sin endpoint HTTP dedicado
 
 Hoy varias operaciones viven como **Server Actions** (acopladas al frontend), no como API pública:
