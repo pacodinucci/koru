@@ -15,6 +15,7 @@ import {
 } from "@/modules/quienes-somos/content-slots";
 
 import { FacilitiesCarousel } from "@/app/(pages)/quienes-somos/facilities-carousel";
+import { AboutVideoSection } from "@/modules/quienes-somos/components/about-video-section";
 
 const contentSlotMap = new Map(
   getQuienesSomosContentSlots().map((slot) => [slot.id, slot]),
@@ -563,6 +564,8 @@ export function QuienesSomosView({
           </div>
         </div>
       </section>
+
+      <AboutVideoSection />
 
       <section className="bg-[#f3f2ef]">
         <div className="mx-auto w-full max-w-7xl px-6 py-14 md:px-10 lg:px-14 lg:py-20">
