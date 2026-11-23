@@ -592,8 +592,38 @@ model AdmissionInquiry {
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
+  appointmentInvitations AppointmentInvitation[]
+
   @@index([status, submittedAt])
   @@index([submittedAt, id])
+}
+
+model AppointmentInvitation {
+  id                      String @id
+  admissionId             String
+  admission               AdmissionInquiry @relation(fields: [admissionId], references: [id], onDelete: Restrict)
+  recipientName           String
+  recipientEmail          String
+  initiatorId             String
+  initiatorEmail          String
+  tokenHash               String @unique
+  tokenCipher             String
+  status                  String
+  expiresAt               DateTime
+  sentAt                  DateTime?
+  durationMinutes         Int
+  mode                    String
+  location                String
+  message                 String?
+  selectedSlotId          String?
+  confirmationEmailFailed Boolean @default(false)
+  resendCount             Int @default(0)
+  slots                   Json
+  lastEndsAt              DateTime
+  createdAt               DateTime @default(now())
+
+  @@index([admissionId, createdAt])
+  @@index([status, lastEndsAt])
 }
 
 model ContactMessage {
