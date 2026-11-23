@@ -1,9 +1,14 @@
+import { installmentImputationDate } from "./eventual-installments.ts";
+
 export type PendingFamilyCharge = {
   id: string;
   description: string;
   occurredAt: string;
   amount: string;
   outstandingAmount: string;
+  eventualChargeScheduleId?: string | null;
+  installmentNumber?: number | null;
+  isFuture?: boolean;
 };
 
 export type UnallocatedFamilyCredit = {
@@ -21,6 +26,9 @@ export type AllocationEntry = {
   amount: { toString(): string } | string;
   description: string;
   occurredAt: Date;
+  eventualChargeScheduleId?: string | null;
+  installmentNumber?: number | null;
+  eventualChargeSchedule?: { startPeriod: Date } | null;
   payment?: { status: string } | null;
   allocationsAsCredit: { chargeEntryId: string; amount: { toString(): string } | string }[];
 };
@@ -100,9 +108,39 @@ export function buildAllocationSummary(entries: AllocationEntry[]): { pendingCha
     const amount = signedMoneyToCents(entry.amount.toString());
     const outstanding = amount - (allocated.get(entry.id) ?? 0);
     if (amount > 0 && outstanding > 0) pendingCharges.push({
-      id: entry.id, description: entry.description, occurredAt: entry.occurredAt.toISOString(),
+      id: entry.id, description: entry.description, occurredAt: chargeImputationDate(entry).toISOString(),
       amount: centsToMoney(amount), outstandingAmount: centsToMoney(outstanding),
+      ...(entry.eventualChargeScheduleId ? { eventualChargeScheduleId: entry.eventualChargeScheduleId, installmentNumber: entry.installmentNumber } : {}),
     });
   }
   return { pendingCharges, unallocatedCredits };
+}
+
+// Derive dates for historical generated charges too, without rewriting the ledger.
+export function chargeImputationDate(entry: Pick<AllocationEntry, "occurredAt" | "installmentNumber" | "eventualChargeSchedule">): Date {
+  return entry.eventualChargeSchedule && entry.installmentNumber
+    ? installmentImputationDate(entry.eventualChargeSchedule.startPeriod, entry.installmentNumber - 1)
+    : entry.occurredAt;
+}
+
+export const consecutiveInstallmentsMessage = "Seleccioná cuotas correlativas y completá las anteriores antes de adelantar la siguiente.";
+
+export function validateConsecutiveAllocations(rows: { chargeEntryId: string; cents: number }[], pending: Pick<PendingFamilyCharge, "id" | "outstandingAmount" | "eventualChargeScheduleId" | "installmentNumber">[]) {
+  const selected = new Map(rows.map(row => [row.chargeEntryId, row.cents]));
+  const groups = new Map<string, typeof pending>();
+  for (const charge of pending) {
+    if (!charge.eventualChargeScheduleId || !charge.installmentNumber) continue;
+    const group = groups.get(charge.eventualChargeScheduleId) ?? [];
+    group.push(charge);
+    groups.set(charge.eventualChargeScheduleId, group);
+  }
+  for (const group of groups.values()) {
+    group.sort((a, b) => a.installmentNumber! - b.installmentNumber!);
+    const last = group.findLastIndex(charge => selected.has(charge.id));
+    for (let index = 0; index < last; index++) {
+      if (selected.get(group[index].id) !== moneyToCents(group[index].outstandingAmount)) {
+        throw new AllocationInputError(consecutiveInstallmentsMessage);
+      }
+    }
+  }
 }

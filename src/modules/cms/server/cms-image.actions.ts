@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
+import { invalidatePublishedCms } from "@/modules/cms/server/published-cms-cache";
 import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { getCmsImageSlotsBySlug } from "@/modules/cms/content-page-config";
 import {
@@ -108,5 +109,6 @@ export async function publishCmsPageContentAction(
     },
   );
 
+  invalidatePublishedCms();
   return { ok: true as const, message: "Contenido publicado." };
 }

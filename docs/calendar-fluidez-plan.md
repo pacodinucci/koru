@@ -1,83 +1,52 @@
-﻿# Plan: Calendario más fluido (navegación Día/Semana/Mes/Fecha)
+# Calendario fluido: SSR inicial y navegación por API
 
-## Objetivo
-Hacer que la navegación del calendario (cambio de fecha, día, semana y mes) se sienta instantánea y sin saltos visuales.
+Los calendarios de dashboard y familias conservan los datos iniciales del servidor. Cambiar fecha o vista consulta sólo la API del rango cuando falta en la caché cliente: ya no combina `router.replace` con un segundo fetch. No se precargan rangos adyacentes, para evitar trabajo no solicitado.
 
-## Problema actual
-- Cada cambio de vista/fecha depende de recarga server-driven.
-- Se percibe latencia y “corte” entre estados.
-- No hay transición visual suave ni prefetch del próximo rango.
+## Comportamiento implementado
 
-## Resultado esperado
-- Cambios de vista/fecha fluidos (UX “instantánea”).
-- Menos bloqueos visuales.
-- Conservación de estado de UI al navegar.
+| Interacción | Datos y URL |
+|---|---|
+| Abrir un enlace directo | SSR autorizado; `date` y `view` inicializan el calendario y su caché. `edit` abre la edición del dashboard y `event` el modal familiar. |
+| Cambiar Día/Semana/Mes/fecha | Estado local inmediato y `history.pushState(null, "", url)`. Un GET de API si el rango no está cacheado; ninguna navegación RSC solicitada por el proveedor. |
+| Volver a un rango visitado | Se reutiliza la caché de esa instancia del calendario, incluida la carga SSR inicial. |
+| Atrás/adelante | `popstate` restaura fecha, vista y evento seleccionado; usa la misma caché/API. Se conservan los demás parámetros y el fragmento de la URL. |
+| Seleccionar/cerrar un evento | Se mantiene `edit` o `event` en la URL. El modal familiar sigue siendo `FamilyEventDetailDialog`, con su `returnTo` civil para las acciones. Cerrar limpia el parámetro de selección. |
+| Fallar una consulta | Se muestra «No se pudieron cargar los eventos.» y el botón «Reintentar». No se cachea el error como un rango vacío. |
+| Recibir nuevos datos SSR tras una mutación/refresh | Se reemplazan eventos y próximos eventos, se reinicializa la caché y se invalidan las solicitudes anteriores. |
 
----
+Los formularios y sus redirecciones existentes no cambian. La edición del dashboard conserva su hoja y su ruta de cierre existentes; no se pretende eliminar todas las navegaciones de formularios/modales, sino la duplicación al cambiar de rango.
 
-## Alcance técnico propuesto
+## Límites de datos y fechas
 
-### 1) Estado local del calendario (Client Component)
-- Convertir la capa de interacción del calendario a componente cliente.
-- Manejar `viewMode` y `dateCursor` con `useState`.
-- Mantener render server para carga inicial de datos.
+- La caché vive en el proveedor cliente, nunca en un almacenamiento global entre usuarios.
+- La clave es `view + start + end`; los límites vienen de `getRangeForView` y representan medianoches de Ciudad de México.
+- Los cursores viajan como `YYYY-MM-DD`, no como instantes ISO. Se reconstruyen al mediodía local para aritmética civil estable, también en UTC, Argentina y Tokio.
+- Fechas ausentes, malformadas o imposibles como `2026-02-30` usan el día actual de México; una vista desconocida usa `week`.
+- Ambos endpoints mantienen sus verificaciones de acceso y sus repositorios autorizados. Las respuestas exitosas llevan `Cache-Control: private, no-store`; el fetch cliente también usa `cache: "no-store"`.
+- Las solicitudes en vuelo del mismo rango se deduplican. Sólo la última selección puede actualizar los eventos visibles; una generación nueva de datos SSR impide que una respuesta anterior vuelva a contaminar la caché.
+- Mientras se carga un rango nuevo, se retiran los eventos del rango anterior y se muestra «Cargando eventos…», en lugar de presentarlos bajo una fecha incorrecta.
 
-### 2) Navegación sin recarga dura
-- Usar `router.replace(...)` para sincronizar URL (`date`, `view`) sin navegación completa.
-- Envolver cambios en `useTransition` para no bloquear interacción.
+### Integración con Next
 
-### 3) Capa de datos por rango
-- Traer eventos por rango (día/semana/mes) mediante endpoint/acción específica.
-- Cachear por clave de rango (`view + start + end`).
-- Evitar refetch de rangos ya visitados.
+Se pasa `null` como estado a la API de historial. Next copia su árbol interno y actualiza la URL canónica sin solicitar otra página. Reutilizar `window.history.state` copiaría la marca interna `__NA`, que hace que Next omita esa actualización y puede dirigir un refresh posterior al rango anterior.
 
-### 4) Prefetch inteligente
-- Prefetch del rango siguiente y anterior al actual.
-- Ejemplo:
-  - Día: mañana y ayer
-  - Semana: próxima y anterior
-  - Mes: próximo y anterior
+## Dónde revisar
 
-### 5) Transiciones visuales cortas
-- Aplicar transición suave entre rangos (fade/slide de 120–180ms).
-- Mostrar skeleton liviano solo cuando no haya datos cacheados.
+1. `src/modules/calendar/lib/calendar-navigation.ts`: parseo civil y preservación de URL.
+2. `src/modules/calendar/lib/calendar-range-loader.ts`: caché inicial, concurrencia, errores y renovación SSR.
+3. Proveedores de dashboard/familias y sus páginas/endpoints: integración, permisos y selección.
+4. `tests/integration/fluid-calendar-navigation.test.mjs`: proveedores reales ejecutados con hooks, red e historial aislados; no requiere DB.
 
-### 6) Consistencia de selección de evento
-- Mantener evento seleccionado al cambiar entre vistas cuando siga en rango.
-- Limpiar selección si queda fuera del rango visible.
+## Verificación reproducible
 
----
+```sh
+node --test tests/integration/fluid-calendar-navigation.test.mjs tests/integration/calendar-mexico-cursors.test.mjs tests/integration/calendar-mexico-policy.test.mjs
+```
 
-## Criterios de aceptación
-1. Cambiar Día/Semana/Mes se percibe inmediato en UI.
-2. Navegar fecha anterior/siguiente no produce “flash” duro.
-3. URL se mantiene sincronizada (`date`, `view`).
-4. Eventos ya visitados reutilizan cache (sin espera perceptible).
-5. No se rompen textos con tildes (validar UTF-8).
+Cubre peticiones únicas sin navegación del router, carga SSR y caché, historial/query, carreras, errores HTTP/red/payload reintentables, renovación tras mutaciones, modal familiar y fechas civiles en UTC/Argentina/Tokio. Las pruebas de políticas ejercitan guardados y efectos secundarios con persistencia simulada, sin acceder a producción.
 
----
+## Fuera de esta unidad
 
-## Riesgos
-- Duplicar lógica entre server/client si no se separa bien el acceso a datos.
-- Inconsistencias de timezone si el rango no se normaliza correctamente.
-
-## Mitigaciones
-- Definir util única para cálculo de rangos por vista.
-- Normalizar fechas en zona horaria objetivo antes de consultar.
-
----
-
-## Plan de implementación (pasos)
-1. Extraer util de rangos (`day/week/month`) compartida.
-2. Crear fetch por rango + cache en cliente.
-3. Migrar controles de navegación a estado local + `router.replace`.
-4. Agregar prefetch adyacente.
-5. Agregar transiciones y skeleton condicional.
-6. QA de navegación + selección + tildes/encoding.
-
----
-
-## Notas para el próximo chat
-- Prioridad: percepción de velocidad por encima de refactor grande.
-- Mantener diseño actual; cambiar solo comportamiento.
-- Evitar introducir librerías nuevas si no son necesarias.
+- Prefetch adyacente y animaciones fade/slide: quedan como opciones futuras, no requisitos de esta optimización de CPU.
+- Caché compartida entre sesiones, actualización en tiempo real y cambios de autorización.
+- Despliegues, cambios de almacenamiento o mediciones de ahorro real. La reducción de peticiones redundantes se verifica en pruebas; el ahorro de CPU en producción requiere métricas comparables.

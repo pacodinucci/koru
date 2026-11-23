@@ -8,6 +8,7 @@ export const permissionCatalog = [
   { key: "content.manage", section: "Contenido y diseño", label: "Gestionar" },
   { key: "calendar.view", section: "Calendario", label: "Ver" },
   { key: "calendar.manage", section: "Calendario", label: "Gestionar" },
+  { key: "calendar.permissions.manage", section: "Permisos del calendario", label: "Administrar accesos por área" },
   { key: "cash-fund.view", section: "Caja chica", label: "Ver" },
   { key: "cash-fund.operate", section: "Caja chica", label: "Operar" },
   { key: "cash-fund.configure", section: "Caja chica", label: "Configurar" },
@@ -22,10 +23,14 @@ export const permissionCatalog = [
   { key: "families.waive-balance", section: "Familias", label: "Condonar saldos" },
   { key: "students.view", section: "Alumnos", label: "Ver" },
   { key: "students.manage", section: "Alumnos", label: "Gestionar" },
+  { key: "psychopedagogy.view", section: "Psicopedagogía", label: "Ver" },
+  { key: "psychopedagogy.manage", section: "Psicopedagogía", label: "Gestionar" },
   { key: "teachers.view", section: "Docentes", label: "Ver" },
   { key: "teachers.manage", section: "Docentes", label: "Gestionar" },
   { key: "users.view", section: "Usuarios", label: "Ver" },
   { key: "users.manage", section: "Usuarios", label: "Gestionar" },
+  { key: "contacts.view", section: "Contactos", label: "Ver" },
+  { key: "contacts.manage", section: "Contactos", label: "Gestionar" },
   { key: "mailing.view", section: "Mailing", label: "Ver" },
   { key: "mailing.send", section: "Mailing", label: "Enviar" },
   { key: "roles.view", section: "Roles", label: "Ver" },
@@ -37,7 +42,7 @@ export type PermissionKey = (typeof permissionCatalog)[number]["key"];
 const allPermissions = permissionCatalog.map(({ key }) => key);
 const adminPermissions = allPermissions.filter(
   (key) =>
-    !["cash-fund.configure", "inventory.configure", "families.waive-balance", "roles.manage"].includes(key),
+    !["cash-fund.configure", "inventory.configure", "families.waive-balance", "roles.manage", "psychopedagogy.view", "psychopedagogy.manage"].includes(key),
 );
 
 export const legacyRolePermissions: Record<UserRole, readonly PermissionKey[]> = {
@@ -66,8 +71,14 @@ export const legacyRolePermissions: Record<UserRole, readonly PermissionKey[]> =
     "inventory.view",
     "students.view",
   ],
+  PSYCHOPEDAGOGY_TEACHER: ["dashboard.access", "students.view", "psychopedagogy.view", "psychopedagogy.manage"],
   PARENT: [],
 };
+
+/** Superadmin retains every capability even when an assigned role has a partial grant set. */
+export function withSuperAdminPermissions(role: string, permissions: readonly PermissionKey[]): PermissionKey[] {
+  return role === "SUPERADMIN" ? [...allPermissions] : [...permissions];
+}
 
 export function hasPermission(
   permissions: readonly string[],

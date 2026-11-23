@@ -33,6 +33,7 @@ import {
   useDashboardEditorPanel,
 } from "@/modules/dashboard/components/dashboard-editor-panel";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CurrentUserAvatarImage } from "@/components/current-user-avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -74,6 +75,7 @@ import {
   type AppUserRole,
 } from "@/modules/auth/roles";
 import type { PermissionKey } from "@/modules/auth/permissions/permission-catalog";
+import { authorizeContacts } from "@/modules/contacts/contacts.domain";
 
 const contentNavigationItems = [
   { key: "navbar", label: "Navbar", parent: undefined },
@@ -140,7 +142,8 @@ export function DashboardShell({
   const isHomeActive = pathname === "/dashboard";
   const isKanbanActive = pathname.startsWith("/dashboard/kanban");
   const isBlogActive = pathname.startsWith("/dashboard/blog");
-  const isCalendarActive = pathname.startsWith("/dashboard/calendar");
+  const isCalendarActive = pathname === "/dashboard/calendar" || pathname.startsWith("/dashboard/calendar/");
+  const isCalendarPermissionsActive = pathname.startsWith("/dashboard/calendar-permissions");
   const isBasecampActive = pathname.startsWith("/dashboard/basecamp");
   const isUsersActive = pathname.startsWith("/dashboard/users");
   const isRolesActive = pathname.startsWith("/dashboard/roles");
@@ -189,8 +192,9 @@ export function DashboardShell({
     userRole === "TEACHER" ||
     userRole === "ADMIN_TEACHER";
   const permissionSet = new Set(userPermissions);
+  const canViewContacts = authorizeContacts(userRole, userPermissions);
   const can = (permission: PermissionKey) =>
-    userPermissions ? permissionSet.has(permission) : isAdmin;
+    isSuperAdmin || (userPermissions ? permissionSet.has(permission) : isAdmin);
   const showCmsNavigation = false;
   const sidebarMenuButtonClass =
     "h-10 rounded-xl px-3 text-slate-600 hover:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] hover:text-[var(--brand-700)] data-active:bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] data-active:text-[var(--brand-700)]";
@@ -235,7 +239,7 @@ export function DashboardShell({
                       <span>Inicio</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
+                  {userRole !== "PSYCHOPEDAGOGY_TEACHER" ? <SidebarMenuItem>
                     <SidebarMenuButton
                       tooltip="Kanban"
                       aria-label="Kanban"
@@ -246,7 +250,7 @@ export function DashboardShell({
                       <LayoutDashboard />
                       <span>Kanban</span>
                     </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  </SidebarMenuItem> : null}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -254,6 +258,7 @@ export function DashboardShell({
           {can("students.view") ||
           can("families.view") ||
           isSuperAdmin ||
+          can("psychopedagogy.view") ||
           canViewBasecamp ||
           can("calendar.view") ? (
             <SidebarGroup>
@@ -384,19 +389,21 @@ export function DashboardShell({
                           <span>Reportes</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton
-                          tooltip="Psicopedagogía"
-                          aria-label="Psicopedagogía"
-                          isActive={isPsychopedagogyActive}
-                          className={sidebarMenuButtonClass}
-                          render={<Link href="/dashboard/psicopedagogia" />}
-                        >
-                          <NotebookPen />
-                          <span>Psicopedagogía</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
                     </>
+                  ) : null}
+                  {can("psychopedagogy.view") ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Psicopedagogía"
+                        aria-label="Psicopedagogía"
+                        isActive={isPsychopedagogyActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/psicopedagogia" />}
+                      >
+                        <NotebookPen />
+                        <span>Psicopedagogía</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   ) : null}
                 </SidebarMenu>
               </SidebarGroupContent>
@@ -470,13 +477,27 @@ export function DashboardShell({
               </SidebarGroupContent>
             </SidebarGroup>
           ) : null}
-          {can("mailing.view") || can("blog.view") || can("content.view") ? (
+          {canViewContacts || can("mailing.view") || can("blog.view") || can("content.view") ? (
             <SidebarGroup>
               <SidebarGroupLabel className="text-slate-500">
                 Comunicación y web
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu className="gap-1">
+                  {canViewContacts ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Contactos"
+                        aria-label="Contactos"
+                        isActive={pathname.startsWith("/dashboard/contactos")}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/contactos" />}
+                      >
+                        <Mail />
+                        <span>Contactos</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
                   {can("mailing.view") ? (
                     <SidebarMenuItem>
                       <SidebarMenuButton
@@ -635,7 +656,7 @@ export function DashboardShell({
               </SidebarGroupContent>
             </SidebarGroup>
           ) : null}
-          {can("users.view") || can("roles.view") ? (
+          {can("users.view") || can("roles.view") || can("calendar.permissions.manage") ? (
             <SidebarGroup>
               <SidebarGroupLabel className="text-slate-500">
                 Sistema
@@ -653,6 +674,20 @@ export function DashboardShell({
                       >
                         <Users />
                         <span>Usuarios</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
+                  {can("calendar.permissions.manage") ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        tooltip="Permisos del calendario"
+                        aria-label="Permisos del calendario"
+                        isActive={isCalendarPermissionsActive}
+                        className={sidebarMenuButtonClass}
+                        render={<Link href="/dashboard/calendar-permissions" />}
+                      >
+                        <CalendarDays />
+                        <span>Permisos del calendario</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ) : null}
@@ -687,6 +722,7 @@ export function DashboardShell({
               }
             >
               <Avatar className="size-6">
+                <CurrentUserAvatarImage alt={userEmail} />
                 <AvatarFallback>
                   {userEmail.slice(0, 2).toUpperCase()}
                 </AvatarFallback>

@@ -5,8 +5,6 @@ import { getPublicPublishedPostMetadataBySlug } from "@/modules/blog/server/blog
 
 export const dynamic = "force-dynamic";
 
-const defaultShareImage = "/branding/koru-logo.png";
-
 type BlogPostPageProps = {
   params: Promise<{
     slug: string;
@@ -16,22 +14,6 @@ type BlogPostPageProps = {
   }>;
 };
 
-function getShareImage(content: string) {
-  const source = content.match(/<img\b[^>]*\bsrc=["']([^"']+)["']/i)?.[1];
-  if (!source) return defaultShareImage;
-
-  if (source.startsWith("/") && !source.startsWith("//")) return source;
-
-  try {
-    const imageUrl = new URL(source);
-    return imageUrl.protocol === "http:" || imageUrl.protocol === "https:"
-      ? imageUrl.href
-      : defaultShareImage;
-  } catch {
-    return defaultShareImage;
-  }
-}
-
 export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata> {
@@ -40,21 +22,25 @@ export async function generateMetadata({
 
   if (!post) return {};
 
+  const postUrl = `/blog/${encodeURIComponent(slug)}`;
+
   return {
+    alternates: { canonical: postUrl },
     title: `${post.title} | Koru`,
     description: post.excerpt,
     openGraph: {
       type: "article",
+      url: postUrl,
       siteName: "Koru",
       title: post.title,
       description: post.excerpt,
-      images: [{ url: getShareImage(post.content), alt: post.title }],
+      images: post.imageUrl ? [{ url: post.imageUrl, alt: post.title }] : [],
     },
     twitter: {
-      card: "summary_large_image",
+      card: post.imageUrl ? "summary_large_image" : "summary",
       title: post.title,
       description: post.excerpt,
-      images: [getShareImage(post.content)],
+      images: post.imageUrl ? [post.imageUrl] : [],
     },
   };
 }

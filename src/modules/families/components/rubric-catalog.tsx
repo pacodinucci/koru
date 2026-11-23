@@ -70,13 +70,15 @@ export function RubricCatalog({ rubrics, canManage }: { rubrics: RubricCatalogIt
   const filteredRubrics = query ? rubrics.filter((rubric) => normalize(rubric.name).includes(query)) : rubrics;
 
   return (
-    <div className="min-w-0 space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Input type="search" aria-label="Buscar rubros por nombre" placeholder="Buscar rubro por nombre" value={search} onChange={(event) => setSearch(event.target.value)} className="sm:max-w-sm" />
-        {canManage ? <RubricDialog /> : null}
+    <div className="min-w-0 space-y-3">
+      <div aria-label="Buscar y filtrar rubros" className="flex flex-wrap items-end gap-x-4 gap-y-3">
+        <div className="w-full min-w-0 space-y-1 lg:w-64 lg:shrink-0">
+          <label htmlFor="rubrics-search" className="text-sm text-slate-600">Buscar</label>
+          <Input id="rubrics-search" type="search" placeholder="Buscar rubro por nombre" value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0" />
+        </div>
+        {canManage ? <div className="ml-auto w-full min-w-0 sm:w-auto"><RubricDialog /></div> : null}
       </div>
-      <p className="text-sm text-slate-600">El catálogo define el importe total. Las cuotas y el mes se eligen al agregar cada rubro a un alumno. Los cambios no modifican las asignaciones existentes.</p>
-      <div className="min-w-0 rounded-xl border border-slate-200">
+      <div className="min-w-0 overflow-x-auto rounded-xl border border-slate-200 bg-white p-3">
         <Table aria-label="Rubros" className="min-w-[560px]">
           <TableHeader>
             <TableRow>
@@ -99,7 +101,10 @@ export function RubricCatalog({ rubrics, canManage }: { rubrics: RubricCatalogIt
           </TableBody>
         </Table>
       </div>
-      <p className="text-sm text-slate-600" role="status">{filteredRubrics.length} de {rubrics.length} rubros</p>
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 text-sm text-slate-600">
+        <p className="min-w-0 max-w-prose">El catálogo define el importe total. Las cuotas y el mes se eligen al agregar cada rubro a un alumno. Los cambios no modifican las asignaciones existentes.</p>
+        <p className="shrink-0" role="status">{filteredRubrics.length} de {rubrics.length} rubros</p>
+      </div>
     </div>
   );
 }

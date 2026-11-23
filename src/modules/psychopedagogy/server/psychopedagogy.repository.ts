@@ -18,12 +18,40 @@ export async function listStudentPsychopedagogyEntries(studentId: string, teache
   });
 }
 
+export async function listPsychopedagogyStudentsForSuperadmin() {
+  return prisma.student.findMany({
+    orderBy: [{ group: { sortOrder: "asc" } }, { lastName: "asc" }, { firstName: "asc" }],
+    select: { id: true, firstName: true, lastName: true, group: { select: { name: true } } },
+  });
+}
+
+export async function getPsychopedagogyStudentForSuperadmin(studentId: string) {
+  return prisma.student.findUnique({ where: { id: studentId }, select: { id: true } });
+}
+
+export async function listStudentPsychopedagogyEntriesForSuperadmin(studentId: string) {
+  return prisma.psychopedagogyEntry.findMany({
+    where: { studentId },
+    orderBy: [{ entryDate: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+    select: { id: true, entryDate: true, title: true, body: true },
+  });
+}
+
+export async function getPsychopedagogyTeacherForUser(userId: string) {
+  return prisma.teacherProfile.findFirst({
+    where: { userId, isActive: true },
+    select: { id: true },
+  });
+}
+
 export async function createPsychopedagogyEntry(data: {
   studentId: string;
-  teacherId: string;
+  teacherId: string | null;
+  authorUserId?: string;
   entryDate: Date;
   title: string;
   body: string;
 }) {
+  if (!data.teacherId && !data.authorUserId) throw new Error("Missing observation author");
   return prisma.psychopedagogyEntry.create({ data, select: { id: true } });
 }

@@ -1,13 +1,16 @@
 import "server-only";
 
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
+import { isInternalCalendarRole } from "@/modules/calendar/lib/calendar-access";
 import {
   legacyRolePermissions,
+  withSuperAdminPermissions,
   type PermissionKey,
 } from "@/modules/auth/permissions/permission-catalog";
 import {
@@ -22,6 +25,7 @@ export type AuthenticatedUser = {
   id: string;
   name: string;
   email: string;
+  image?: string | null;
   role: AppUserRole;
   familyId: string | null;
   accessRoleId: string | null;
@@ -34,11 +38,12 @@ function normalizeEmail(email: unknown) {
   return typeof email === "string" ? email.trim().toLowerCase() : "";
 }
 
-export async function getSession() {
+// React cache is request-scoped in server renders, never a shared identity cache.
+export const getSession = cache(async function getSession() {
   return auth.api.getSession({
     headers: await headers(),
   });
-}
+});
 
 export async function requireSession(redirectTo = "/sign-in") {
   const session = await getSession();
@@ -58,7 +63,7 @@ export async function getDevelopmentViewTargetId() {
   return (await cookies()).get(DEVELOPMENT_VIEW_COOKIE)?.value ?? null;
 }
 
-export async function getActualAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+export const getActualAuthenticatedUser = cache(async function getActualAuthenticatedUser(): Promise<AuthenticatedUser | null> {
   const session = await getSession();
   const email = normalizeEmail(session?.user?.email);
 
@@ -72,9 +77,11 @@ export async function getActualAuthenticatedUser(): Promise<AuthenticatedUser | 
       id: true,
       name: true,
       email: true,
+      image: true,
       role: true,
       familyId: true,
       accessRoleId: true,
+      calendarAreaGrants: { select: { areaId: true } },
       accessRole: {
         select: {
           name: true,
@@ -91,10 +98,11 @@ export async function getActualAuthenticatedUser(): Promise<AuthenticatedUser | 
   if (!user) return null;
 
   return authenticatedUserFromRecord(user);
-}
+});
 
 function authenticatedUserFromRecord(user: {
-  id: string; name: string; email: string; role: AppUserRole; familyId: string | null; accessRoleId: string | null;
+  id: string; name: string; email: string; image?: string | null; role: AppUserRole; familyId: string | null; accessRoleId: string | null;
+  calendarAreaGrants?: Array<{ areaId: string }>;
   accessRole: { name: string; key: string; isActive: boolean; permissions: Array<{ permission: { key: string } }> } | null;
 }): AuthenticatedUser {
   const assignedPermissionKeys =
@@ -107,14 +115,17 @@ function authenticatedUserFromRecord(user: {
     user.role === "ADMIN" || user.role === "SUPERADMIN"
       ? ["calendar.view", "calendar.manage"]
       : [];
+  const guaranteedRoleManagementPermissions: PermissionKey[] =
+    user.role === "SUPERADMIN" ? ["dashboard.access", "roles.view", "roles.manage"] : [];
   const permissionKeys = Array.from(
-    new Set([...assignedPermissionKeys, ...guaranteedCalendarPermissions]),
+    new Set([...withSuperAdminPermissions(user.role, assignedPermissionKeys), ...guaranteedRoleManagementPermissions, ...guaranteedCalendarPermissions, ...(isInternalCalendarRole(user.role) && user.calendarAreaGrants?.length ? ["calendar.view" as PermissionKey] : [])]),
   );
 
   return {
     id: user.id,
     name: user.name,
     email: user.email,
+    image: user.image ?? null,
     role: user.role,
     familyId: user.familyId,
     accessRoleId: user.accessRoleId,
@@ -124,7 +135,7 @@ function authenticatedUserFromRecord(user: {
   };
 }
 
-export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+export const getAuthenticatedUser = cache(async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
   const actualUser = await getActualAuthenticatedUser();
   if (!actualUser || !isDevelopmentViewController(actualUser)) return actualUser;
 
@@ -133,11 +144,11 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
 
   const target = await prisma.user.findFirst({
     where: { id: targetUserId, OR: [{ role: UserRole.PARENT, familyId: { not: null } }, { role: { in: [UserRole.TEACHER, UserRole.ADMIN_TEACHER] }, teacherProfile: { is: { isActive: true } } }] },
-    select: { id: true, name: true, email: true, role: true, familyId: true, accessRoleId: true, accessRole: { select: { name: true, key: true, isActive: true, permissions: { select: { permission: { select: { key: true } } } } } } },
+    select: { id: true, name: true, email: true, image: true, role: true, familyId: true, accessRoleId: true, calendarAreaGrants: { select: { areaId: true } }, accessRole: { select: { name: true, key: true, isActive: true, permissions: { select: { permission: { select: { key: true } } } } } } },
   });
 
   return target ? authenticatedUserFromRecord(target) : actualUser;
-}
+});
 
 export async function requireUser(redirectTo = "/sign-in") {
   const user = await getAuthenticatedUser();
@@ -204,15 +215,22 @@ export async function requireRole(
 ) {
   const user = await requireUser();
 
-  if (!roles.includes(user.role)) {
+  if (!roles.includes(user.role) ||
+    (user.role === "PSYCHOPEDAGOGY_TEACHER" && !user.permissionKeys.includes("dashboard.access"))) {
     redirect(forbiddenRedirectTo);
   }
 
   return user;
 }
 
+/** Dashboard entry does not imply access to the shared Kanban workspace. */
 export async function requireDashboardUser(
   forbiddenRedirectTo = "/dashboard?error=forbidden",
+  scope: "dashboard" | "kanban" = "dashboard",
 ) {
-  return requirePermission("dashboard.access", forbiddenRedirectTo);
+  const user = await requirePermission("dashboard.access", forbiddenRedirectTo);
+  if (scope === "kanban" && user.role === "PSYCHOPEDAGOGY_TEACHER") {
+    redirect(forbiddenRedirectTo);
+  }
+  return user;
 }

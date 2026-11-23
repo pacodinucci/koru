@@ -5,7 +5,7 @@ import vm from "node:vm";
 import test from "node:test";
 import ts from "typescript";
 import { projectFutureFamilyCharges } from "../../src/modules/families/lib/family-charge-projections.ts";
-import { buildAllocationSummary } from "../../src/modules/families/lib/payment-allocation.ts";
+import { buildFamilyFinancialSummary } from "../../src/modules/families/lib/family-financial-summary.ts";
 
 const require = createRequire(import.meta.url);
 function load(file, dependencies) {
@@ -55,7 +55,7 @@ test("detail action returns future projections separately without changing balan
     "@/modules/auth/server/auth-guards": { requirePermission: async (key) => { assert.equal(key, "families.manage"); return { permissionKeys: ["families.payments"] }; } },
     "@/modules/families/server/families.repository": { getFamilyDetailForAdmin: async (id) => { assert.equal(id, "family"); reads++; return record; } },
     "@/lib/prisma": { prisma: { billingRubric: { findMany: async () => [] } } },
-    "@/modules/families/lib/payment-allocation": { buildAllocationSummary },
+    "@/modules/families/lib/family-financial-summary": { buildFamilyFinancialSummary: (entries, schedules) => buildFamilyFinancialSummary(entries, schedules, new Date("2026-10-01T12:00:00Z")) },
     "@/modules/families/lib/family-charge-projections": { projectFutureFamilyCharges },
     "@/modules/families/lib/monthly-billing": { getBillingPeriod: () => new Date("2026-10-01T00:00:00Z") },
   };
@@ -64,7 +64,7 @@ test("detail action returns future projections separately without changing balan
   assert.equal(result.balance, "40.00");
   assert.deepEqual(result.futureCharges.map((r) => r.amount), ["40.00", "40.00"]);
   assert.equal(result.entries.length, 1);
-  assert.equal(result.pendingCharges.length, 1);
+  assert.equal(result.pendingCharges.length, 3);
   assert.equal(result.pendingCharges[0].outstandingAmount, "40.00");
   assert.equal(result.unallocatedCredits.length, 0);
   assert.equal(result.entries[0].id, "charge");

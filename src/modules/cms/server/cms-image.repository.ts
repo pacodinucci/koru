@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { cachePublishedCms, invalidatePublishedCms } from "@/modules/cms/server/published-cms-cache";
 
 export type CmsImageValue = {
   url: string;
@@ -110,16 +111,17 @@ export async function getCmsDraftImageMapBySlug(
   return entriesToMap(entries, "draft");
 }
 
-export async function getCmsPublishedImageMapBySlug(
-  pageSlug: string,
-): Promise<CmsImageMap> {
-  const entries = await prisma.cmsImageEntry.findMany({
-    where: { pageSlug },
-    orderBy: { key: "asc" },
-  });
+export const getCmsPublishedImageMapBySlug = cachePublishedCms(
+  "cms-published-images-v1",
+  async (pageSlug: string): Promise<CmsImageMap> => {
+    const entries = await prisma.cmsImageEntry.findMany({
+      where: { pageSlug },
+      orderBy: { key: "asc" },
+    });
 
-  return entriesToMap(entries, "published");
-}
+    return entriesToMap(entries, "published");
+  },
+);
 
 export async function saveCmsDraftImage(
   pageSlug: string,
@@ -209,6 +211,7 @@ export async function publishCmsImageMap(
   await prisma.$transaction((client) =>
     publishCmsImageMapWithClient(client, pageSlug, imageMap),
   );
+  invalidatePublishedCms();
 }
 
 export async function publishCmsImageMapWithClient(
@@ -294,4 +297,5 @@ export async function publishAllCmsDraftImages() {
       "publishedRounded" = "draftRounded",
       "updatedAt" = NOW()
   `;
+  invalidatePublishedCms();
 }

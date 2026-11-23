@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { parsePublicCalendarDate, publicCalendarWindow } from "@/modules/calendar/lib/public-calendar-window";
 import { getAuthenticatedUser } from "@/modules/auth/server/auth-guards";
 import { GoogleCalendarConnectionCard } from "@/modules/calendar/components/google-calendar-connection-card";
 import { getGoogleCalendarConnectionState } from "@/modules/calendar/server/google-calendar/google-calendar.repository";
@@ -16,16 +18,13 @@ type CalendarPageProps = {
   }>;
 };
 
-function parseDate(value?: string) {
-  if (!value) return calendarTodayCursor();
-  const parsed = new Date(`${value}T12:00:00`);
-  return Number.isNaN(parsed.getTime()) ? calendarTodayCursor() : parsed;
-}
-
 export default async function CalendarPage({ searchParams }: CalendarPageProps) {
   const { date, day, google, googleError } = await searchParams;
-  const dateCursor = parseDate(date);
-  const selectedDate = day ? parseDate(day) : undefined;
+  const today = calendarTodayCursor();
+  const window = publicCalendarWindow(today.getFullYear());
+  const dateCursor = date === undefined ? today : parsePublicCalendarDate(date, window);
+  const selectedDate = day === undefined ? undefined : parsePublicCalendarDate(day, window);
+  if (!dateCursor || selectedDate === null) notFound();
   const { start, end } = getRangeForView(dateCursor, "month");
   const user = await getAuthenticatedUser();
   const [events, googleConnection] = await Promise.all([
@@ -40,6 +39,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   return (
     <PublicCalendarView
       dateCursor={dateCursor}
+      window={window}
       selectedDate={selectedDate}
       events={events}
       googleCalendarCard={

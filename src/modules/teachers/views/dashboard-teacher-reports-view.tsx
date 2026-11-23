@@ -37,7 +37,7 @@ export async function DashboardTeacherReportsView({
   }
 
   return (
-    <div className="space-y-5 [font-family:var(--font-montserrat)]">
+    <div className="min-w-0 space-y-6 [font-family:var(--font-montserrat)]">
       <Button
         nativeButton={false}
         render={<Link href="/dashboard/teachers" />}
@@ -48,7 +48,7 @@ export async function DashboardTeacherReportsView({
       </Button>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">
+          <h1 className="text-2xl font-semibold text-slate-900">
             Reportes de {teacherName}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">

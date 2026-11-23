@@ -3,36 +3,20 @@ import "server-only";
 import { UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { buildFamilyFinancialSummary } from "@/modules/families/lib/family-financial-summary";
 
-export function listFamiliesForAdmin() {
-  return Promise.all([
-    prisma.family.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        _count: { select: {
-          users: true,
-          students: true,
-          eventualChargeSchedules: { where: { rubricId: { not: null }, cancelledFrom: null } },
-        } },
-      },
-    }),
-    prisma.familyAccountEntry.groupBy({
-      by: ["familyId"],
-      _sum: { amount: true },
-    }),
-  ]).then(([families, balances]) => {
-    const balancesByFamilyId = new Map(
-      balances.map((balance) => [
-        balance.familyId,
-        balance._sum.amount?.toString() ?? "0",
-      ]),
-    );
-
-    return families.map((family) => ({
-      ...family,
-      balance: balancesByFamilyId.get(family.id) ?? "0",
-    }));
+export async function listFamiliesForAdmin() {
+  const families = await prisma.family.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      _count: { select: { users: true, students: true, eventualChargeSchedules: { where: { rubricId: { not: null }, cancelledFrom: null } } } },
+      eventualChargeSchedules: { include: { student: { select: { firstName: true, lastName: true, familyId: true } }, accountEntries: { select: { installmentNumber: true } } } },
+      accountEntries: { include: { allocationsAsCredit: true, payment: { select: { status: true } } } },
+    },
   });
+  return families.map(({ accountEntries, eventualChargeSchedules, ...family }) => ({
+    ...family, balance: buildFamilyFinancialSummary(accountEntries, eventualChargeSchedules).balance,
+  }));
 }
 
 export function getFamilyDetailForAdmin(familyId: string) {

@@ -162,6 +162,25 @@ test("missing key, timeout, provider status/refusal/incomplete/malformed output 
   }
 });
 
+test("item counts without a written unit populate stock quantities", async () => {
+  const app = api({ draft: {
+    invoiceNumber: null, warnings: [],
+    lines: [["Bolígrafos", 15], ["Carpetas", 20], ["Cartulinas", 6]].map(([description, quantity]) => ({
+      ...draftLine, description, invoiceQuantity: quantity, invoiceUnit: null,
+      stockQuantity: null, unitsPerInvoiceUnit: null, packageSize: null,
+      sourceUnitCost: null, unitCost: null, costBasis: "unknown",
+    })),
+  } });
+  const response = await app.analyzeInvoice(upload());
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.deepEqual(body.draft.lines.map((line) => line.stockQuantity), [15, 20, 6]);
+  assert.deepEqual(body.draft.lines.map((line) => line.unitsPerInvoiceUnit), [1, 1, 1]);
+  assert.deepEqual(body.draft.lines.map((line) => line.unitCost), [null, null, null]);
+  assert.equal(app.effects.writes.length, 0);
+  assert.equal(app.effects.transactions, 0);
+});
+
 test("known conversion is checked; boxes remain boxes; unknown or ambiguous needs review", async () => {
   for (const [line, quantity, cost] of [
     [{}, 24, 10],

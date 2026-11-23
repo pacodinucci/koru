@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/.tmp-admissions-e2e/
 
 # next.js
 /.next/
@@ -23,6 +24,10 @@
 # misc
 .DS_Store
 *.pem
+
+# Local development worktrees and Windows reserved-name artifacts
+/.worktrees/
+/NUL
 
 # debug
 npm-debug.log*

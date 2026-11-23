@@ -17,8 +17,8 @@ test("future projection keeps saved net installment cents and excludes the curre
   const before = JSON.stringify(schedules);
   const rows = projectFutureFamilyCharges(schedules, current);
   assert.deepEqual(rows.map((r) => [r.id, r.amount, r.grossAmount, r.discountAmount, r.occurredAt]), [
-    ["future:rubric:2", "33.33", "40.00", "6.67", "2026-11-01T00:00:00.000Z"],
-    ["future:rubric:3", "33.34", "40.00", "6.66", "2026-12-01T00:00:00.000Z"],
+    ["future:rubric:2", "33.33", "40.00", "6.67", "2026-10-25T03:00:00.000Z"],
+    ["future:rubric:3", "33.34", "40.00", "6.66", "2026-11-25T03:00:00.000Z"],
   ]);
   assert.ok(rows.every((r) => r.isFuture && r.payment === null && r.type === "EVENTUAL_CHARGE"));
   assert.match(rows[0].description, /Materiales.*cuota 2\/3.*noviembre de 2026.*Ana Pérez/);
@@ -43,7 +43,7 @@ test("future projection crosses years, retains zero totals and omits finished sc
     schedule({ id: "finished", startPeriod: new Date("2025-01-01T00:00:00Z") }),
   ], new Date("2026-12-01T00:00:00Z"));
   assert.deepEqual(rows.map((r) => [r.occurredAt, r.amount, r.type]), [
-    ["2027-01-01T00:00:00.000Z", "0.00", "MONTHLY_CHARGE"],
-    ["2027-02-01T00:00:00.000Z", "0.00", "MONTHLY_CHARGE"],
+    ["2026-12-25T03:00:00.000Z", "0.00", "MONTHLY_CHARGE"],
+    ["2027-01-25T03:00:00.000Z", "0.00", "MONTHLY_CHARGE"],
   ]);
 });

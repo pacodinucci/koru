@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import type { PendingFamilyCharge } from "@/modules/families/lib/payment-allocation";
+import { validateConsecutiveAllocations, type PendingFamilyCharge } from "@/modules/families/lib/payment-allocation";
 
 export type AllocationDraft = Record<string, string>;
 export type ChargeAllocation = { chargeEntryId: string; amount: string };
@@ -52,8 +52,17 @@ export function allocationSummary(charges: PendingFamilyCharge[], draft: Allocat
     }
   }
   const remainingCents = totalCents - assignedCents;
+  let error: string | null = null;
+  if (valid) {
+    try {
+      validateConsecutiveAllocations(allocations.map(row => ({ chargeEntryId: row.chargeEntryId, cents: moneyCents(row.amount)! })), charges);
+    } catch (cause) {
+      error = cause instanceof Error ? cause.message : "Seleccioná cuotas correlativas y completá las anteriores antes de adelantar la siguiente.";
+      valid = false;
+    }
+  }
   valid = valid && Number.isSafeInteger(assignedCents) && remainingCents >= 0 && (allowPartial || remainingCents === 0);
-  return { totalCents, assignedCents, remainingCents, valid, allocations };
+  return { totalCents, assignedCents, remainingCents, valid, allocations, error };
 }
 
 type AllocationFieldsProps = {
@@ -70,17 +79,26 @@ export function FamilyPaymentAllocationFields({ charges, draft, total, disabled,
     <legend className="mb-2 text-sm font-medium">Conceptos pendientes</legend>
     {charges.length === 0 ? <p className="text-sm text-slate-600">No hay conceptos pendientes para asignar. Se requiere revisión manual.</p> : charges.map((charge) => {
       const selected = Object.hasOwn(draft, charge.id);
+      const previous = charge.eventualChargeScheduleId && charge.installmentNumber ? charges.filter(item =>
+        item.eventualChargeScheduleId === charge.eventualChargeScheduleId && item.installmentNumber! < charge.installmentNumber!,
+      ) : [];
+      const canSelect = previous.every(item => moneyCents(draft[item.id] ?? "") === moneyCents(item.outstandingAmount));
       const currentCents = moneyCents(draft[charge.id] ?? "") ?? 0;
       const maximum = Math.max(0, Math.min(moneyCents(charge.outstandingAmount) ?? 0, summary.totalCents - (summary.assignedCents - currentCents)));
       return <div key={charge.id} className="grid gap-3 rounded-lg border border-slate-200 p-3 sm:grid-cols-[minmax(0,1fr)_160px] sm:items-end">
         <label className="flex min-w-0 items-start gap-3 text-sm">
-          <input type="checkbox" value={charge.id} checked={selected} className="mt-1 size-4 shrink-0" onChange={(event) => {
+          <input type="checkbox" value={charge.id} checked={selected} disabled={!selected && (!canSelect || maximum === 0)} className="mt-1 size-4 shrink-0" onChange={(event) => {
             const next = { ...draft };
             if (event.target.checked) next[charge.id] = centsAmount(maximum);
-            else delete next[charge.id];
+            else {
+              delete next[charge.id];
+              if (charge.eventualChargeScheduleId && charge.installmentNumber) {
+                for (const later of charges.filter(item => item.eventualChargeScheduleId === charge.eventualChargeScheduleId && item.installmentNumber! > charge.installmentNumber!)) delete next[later.id];
+              }
+            }
             onChange(next);
           }} />
-          <span className="min-w-0 break-words"><span className="font-medium">{charge.description}</span><span className="block text-xs text-slate-600">{formatFamilyEntryDate(charge.occurredAt)} · Pendiente {currencyCents(moneyCents(charge.outstandingAmount) ?? 0)}</span></span>
+          <span className="min-w-0 break-words"><span className="font-medium">{charge.description}</span><span className="block text-xs text-slate-600">Imputación {formatFamilyEntryDate(charge.occurredAt)}{charge.isFuture ? " · Cuota futura" : ""} · Pendiente {currencyCents(moneyCents(charge.outstandingAmount) ?? 0)}</span></span>
         </label>
         <label className="grid gap-1 text-xs font-medium text-slate-700">Importe a asignar
           <Input aria-label={`Importe para ${charge.description}`} type="number" inputMode="decimal" min="0.01" max={centsAmount(maximum)} step="0.01" required={selected} disabled={disabled || !selected} value={draft[charge.id] ?? ""} onChange={(event) => onChange({ ...draft, [charge.id]: event.target.value })} />

@@ -4,6 +4,7 @@ import path from "node:path";
 import { BlockType, PageStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { invalidatePublishedCms } from "@/modules/cms/server/published-cms-cache";
 
 export type CmsDiscoveredPage = {
   slug: string;
@@ -58,7 +59,7 @@ async function walkPageFiles(dir: string, found: CmsDiscoveredPage[]) {
   }
 }
 
-export async function discoverPagesGroupRoutes() {
+async function scanPagesGroupRoutes() {
   const pages: CmsDiscoveredPage[] = [];
   await walkPageFiles(PAGES_GROUP_DIR, pages);
 
@@ -71,6 +72,20 @@ export async function discoverPagesGroupRoutes() {
     }
     return a.slug.localeCompare(b.slug, "es");
   });
+}
+
+let productionRoutes: Promise<CmsDiscoveredPage[]> | undefined;
+
+export async function discoverPagesGroupRoutes() {
+  if (process.env.NODE_ENV !== "production") return scanPagesGroupRoutes();
+
+  productionRoutes ??= scanPagesGroupRoutes().catch((error: unknown) => {
+    // A transient filesystem failure must not poison discovery until restart.
+    productionRoutes = undefined;
+    throw error;
+  });
+  // Do not expose the process-wide cached array to callers that may sort/edit it.
+  return (await productionRoutes).map((page) => ({ ...page }));
 }
 
 function defaultTitleFromSlug(slug: string) {
@@ -172,4 +187,7 @@ export async function saveEditableCmsPage(input: CmsEditablePage) {
       data: { content: input.content },
     },
   });
+
+  // Draft transitions can remove a previously published page, too.
+  invalidatePublishedCms();
 }

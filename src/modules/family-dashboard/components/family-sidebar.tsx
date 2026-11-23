@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CurrentUserAvatarImage } from "@/components/current-user-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -193,6 +194,7 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
                 className={sidebarMenuButtonClass}
               >
                 <Avatar className="h-8 w-8 rounded-lg">
+                  <CurrentUserAvatarImage alt={userEmail} />
                   <AvatarFallback className="rounded-lg">{userInitials}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -211,6 +213,7 @@ export function FamilySidebar({ userName, userEmail }: FamilySidebarProps) {
                   <DropdownMenuLabel className="p-0 font-normal">
                     <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                       <Avatar className="h-8 w-8 rounded-lg">
+                        <CurrentUserAvatarImage alt={userEmail} />
                         <AvatarFallback className="rounded-lg">{userInitials}</AvatarFallback>
                       </Avatar>
                       <div className="grid flex-1 text-left text-sm leading-tight">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { parsePublicCalendarDate, publicCalendarWindow, type PublicCalendarWindow } from "@/modules/calendar/lib/public-calendar-window";
 import {
   calendarDateValue,
   calendarTimeValue,
@@ -18,6 +19,7 @@ type PublicCalendarEvent = {
 
 type PublicCalendarViewProps = {
   dateCursor: Date;
+  window?: PublicCalendarWindow;
   selectedDate?: Date;
   events: PublicCalendarEvent[];
   googleCalendarCard?: ReactNode;
@@ -50,6 +52,20 @@ function calendarHref(date: Date, selectedDate?: Date) {
   return `/calendario?${params.toString()}`;
 }
 
+function CalendarLink({ href, window, ...props }: {
+  href: string;
+  window: PublicCalendarWindow;
+  children: ReactNode;
+  className?: string;
+  "aria-label"?: string;
+}) {
+  const date = new URLSearchParams(href.split("?")[1]).get("date");
+  if (!parsePublicCalendarDate(date, window)) {
+    return <span {...props} aria-disabled="true" />;
+  }
+  return <Link href={href} {...props} />;
+}
+
 function getMonthDays(dateCursor: Date) {
   const firstDay = new Date(dateCursor.getFullYear(), dateCursor.getMonth(), 1);
   const lastDay = new Date(
@@ -77,6 +93,7 @@ function formatTime(start: Date, end: Date) {
 
 export function PublicCalendarView({
   dateCursor,
+  window = publicCalendarWindow(Number(calendarDateValue(new Date(), DEFAULT_CALENDAR_TIME_ZONE).slice(0, 4))),
   selectedDate,
   events,
   googleCalendarCard,
@@ -108,7 +125,7 @@ export function PublicCalendarView({
       <section className="mx-auto mt-10 grid max-w-6xl overflow-hidden rounded-[0.5rem] bg-[#fbfaf4] lg:grid-cols-[13rem_minmax(0,1fr)_18rem]">
         <aside className="border-b-[2.5px] border-[var(--complement-800)] bg-[#fbfaf4] lg:border-r-[2.5px] lg:border-b-0">
           <div className="flex min-h-[76px] items-center justify-between border-b-[2.5px] border-white/80 bg-[var(--complement-800)] px-5 text-white">
-            <Link
+            <CalendarLink window={window}
               href={calendarHref(
                 new Date(
                   dateCursor.getFullYear() - 1,
@@ -120,11 +137,11 @@ export function PublicCalendarView({
               aria-label="Ver ano anterior"
             >
               &larr;
-            </Link>
+            </CalendarLink>
             <span className="text-xl font-semibold">
               {dateCursor.getFullYear()}
             </span>
-            <Link
+            <CalendarLink window={window}
               href={calendarHref(
                 new Date(
                   dateCursor.getFullYear() + 1,
@@ -136,13 +153,13 @@ export function PublicCalendarView({
               aria-label="Ver ano siguiente"
             >
               &rarr;
-            </Link>
+            </CalendarLink>
           </div>
           <div className="mt-5 grid grid-cols-3 gap-1 px-5 pb-5 lg:grid-cols-1">
             {currentYearMonths.map((month) => {
               const isActive = month.getMonth() === dateCursor.getMonth();
               return (
-                <Link
+                <CalendarLink window={window}
                   key={month.toISOString()}
                   href={calendarHref(month)}
                   className={`rounded-xl px-3 py-2 text-sm capitalize transition ${
@@ -152,7 +169,7 @@ export function PublicCalendarView({
                   }`}
                 >
                   {month.toLocaleDateString("es-AR", { month: "long" })}
-                </Link>
+                </CalendarLink>
               );
             })}
           </div>
@@ -161,23 +178,23 @@ export function PublicCalendarView({
         <div className="min-w-0 border-b-[2.5px] border-[var(--complement-800)] lg:border-r-[2.5px] lg:border-b-0">
           <div className="flex min-h-[76px] items-center justify-center border-b-[2.5px] border-white/80 bg-[var(--complement-800)] px-5 py-5">
             <div className="flex items-center gap-6">
-              <Link
+              <CalendarLink window={window}
                 href={calendarHref(addMonths(dateCursor, -1))}
                 className="text-3xl font-bold leading-none text-white transition hover:text-[var(--complement-500)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                 aria-label="Ver mes anterior"
               >
                 &larr;
-              </Link>
+              </CalendarLink>
               <h2 className="text-2xl font-semibold capitalize text-white">
                 {monthLabel}
               </h2>
-              <Link
+              <CalendarLink window={window}
                 href={calendarHref(addMonths(dateCursor, 1))}
                 className="text-3xl font-bold leading-none text-white transition hover:text-[var(--complement-500)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                 aria-label="Ver mes siguiente"
               >
                 &rarr;
-              </Link>
+              </CalendarLink>
             </div>
           </div>
 
@@ -206,7 +223,7 @@ export function PublicCalendarView({
               const isSelected = selected ? isSameDay(day, selected) : false;
 
               return (
-                <Link
+                <CalendarLink window={window}
                   key={day.toISOString()}
                   href={calendarHref(dateCursor, day)}
                   className={`flex min-h-20 flex-col items-center justify-center gap-2 p-2 transition hover:text-[var(--complement-700)] md:min-h-24 ${
@@ -232,7 +249,7 @@ export function PublicCalendarView({
                       ))}
                     </span>
                   ) : null}
-                </Link>
+                </CalendarLink>
               );
             })}
           </div>

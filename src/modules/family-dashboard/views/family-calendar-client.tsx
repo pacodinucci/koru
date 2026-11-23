@@ -4,19 +4,16 @@ import {
   createContext,
   useContext,
   useMemo,
-  useRef,
   useState,
-  useTransition,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useCalendarRange } from "@/modules/calendar/lib/calendar-range-loader";
+import { calendarNavigationUrl } from "@/modules/calendar/lib/calendar-navigation";
 
 import {
   type CalendarViewMode,
   getNextCursor,
-  getRangeForView,
-  serializeDate,
-  toDateOnly,
+  calendarTodayCursor,
 } from "@/modules/dashboard/lib/calendar-range";
 import {
   DashboardCalendarGrid,
@@ -65,31 +62,39 @@ export function FamilyCalendarClientProvider({
 }: {
   initialEvents: FamilyCalendarEventItem[];
   initialUpcomingEvents: FamilyCalendarEventItem[];
-  initialDateCursor: Date;
+  initialDateCursor: Date | string;
   initialViewMode: CalendarViewMode;
   initialSelectedEventId?: string;
   initialFeedback?: { ok?: string; error?: string };
   viewer: { name: string; email: string };
   children: ReactNode;
 }) {
-  const router = useRouter();
-  const [, startTransition] = useTransition();
-  const [dateCursor, setDateCursor] = useState(toDateOnly(initialDateCursor));
-  const [viewMode, setViewMode] = useState<CalendarViewMode>(initialViewMode);
-  const [selectedEventId, setSelectedEventId] = useState(
-    initialSelectedEventId,
-  );
-  const [feedbackEventId, setFeedbackEventId] = useState(
-    initialSelectedEventId,
-  );
+  const {
+    dateCursor, viewMode, selectedEventId, events, upcomingEvents,
+    navigate: navigateRange, selectEvent: selectRangeEvent, clearSelectedEvent,
+    rangeError, isLoading, retryRange,
+  } = useCalendarRange({
+    initialEvents, initialUpcomingEvents, initialDateCursor, initialViewMode, initialSelectedEventId,
+    endpoint: "/api/family-dashboard/calendar/events", selectionKey: "event", normalizeEvents,
+  });
+  const [dismissedFeedback, setDismissedFeedback] = useState<{
+    events: FamilyCalendarEventItem[];
+    eventId?: string;
+    ok?: string;
+    error?: string;
+  } | null>(null);
   const [isUpcomingListOpen, setIsUpcomingListOpen] = useState(false);
-  const [events, setEvents] = useState(() => normalizeEvents(initialEvents));
-  const [upcomingEvents] = useState(() =>
-    normalizeEvents(initialUpcomingEvents),
-  );
-  const cacheRef = useRef<Map<string, ReturnType<typeof normalizeEvents>>>(
-    new Map(),
-  );
+
+  // Dismiss only this server snapshot; a refresh makes new feedback visible
+  // without synchronizing redundant state in a post-render effect.
+  const feedbackDismissed = dismissedFeedback?.events === initialEvents
+    && dismissedFeedback.eventId === initialSelectedEventId
+    && dismissedFeedback.ok === initialFeedback?.ok
+    && dismissedFeedback.error === initialFeedback?.error;
+  const dismissFeedback = () => setDismissedFeedback({
+    events: initialEvents, eventId: initialSelectedEventId,
+    ok: initialFeedback?.ok, error: initialFeedback?.error,
+  });
 
   const selectedEvent = useMemo(() => {
     if (!selectedEventId) return undefined;
@@ -99,75 +104,19 @@ export function FamilyCalendarClientProvider({
     );
   }, [events, selectedEventId, upcomingEvents]);
 
-  const makeKey = (cursor: Date, view: CalendarViewMode) => {
-    const { start, end } = getRangeForView(cursor, view);
-    return `${view}:${start.toISOString()}:${end.toISOString()}`;
-  };
-
-  const makeUrl = (
-    cursor: Date,
-    view: CalendarViewMode,
-    eventId?: string,
-  ) => {
-    const params = new URLSearchParams();
-    params.set("date", serializeDate(cursor));
-    params.set("view", view);
-    if (eventId) params.set("event", eventId);
-    return `/family-dashboard/calendario?${params.toString()}`;
-  };
-
-  const syncUrl = (cursor: Date, view: CalendarViewMode) => {
-    startTransition(() => {
-      router.replace(makeUrl(cursor, view), { scroll: false });
-    });
-  };
-
-  const loadRange = async (cursor: Date, view: CalendarViewMode) => {
-    const key = makeKey(cursor, view);
-    const cached = cacheRef.current.get(key);
-    if (cached) {
-      setEvents(cached);
-      return;
-    }
-
-    const params = new URLSearchParams();
-    params.set("date", serializeDate(cursor));
-    params.set("view", view);
-    const response = await fetch(
-      `/api/family-dashboard/calendar/events?${params.toString()}`,
-      {
-        method: "GET",
-        cache: "no-store",
-      },
-    );
-    if (!response.ok) return;
-    const payload = (await response.json()) as {
-      events?: FamilyCalendarEventItem[];
-    };
-    const nextEvents = normalizeEvents(payload.events ?? []);
-    cacheRef.current.set(key, nextEvents);
-    setEvents(nextEvents);
-  };
-
   const navigate = (cursor: Date, nextViewMode: CalendarViewMode) => {
-    const normalizedCursor = toDateOnly(cursor);
-    setDateCursor(normalizedCursor);
-    setViewMode(nextViewMode);
-    setSelectedEventId(undefined);
-    setFeedbackEventId(undefined);
-    syncUrl(normalizedCursor, nextViewMode);
-    void loadRange(normalizedCursor, nextViewMode);
+    dismissFeedback();
+    navigateRange(cursor, nextViewMode);
   };
 
   const selectEvent = (eventId: string) => {
-    setFeedbackEventId(undefined);
-    setSelectedEventId(eventId);
+    dismissFeedback();
+    selectRangeEvent(eventId);
   };
 
   const closeSelectedEvent = () => {
-    setSelectedEventId(undefined);
-    setFeedbackEventId(undefined);
-    syncUrl(dateCursor, viewMode);
+    dismissFeedback();
+    clearSelectedEvent();
   };
 
   const toggleUpcomingList = () => {
@@ -188,6 +137,8 @@ export function FamilyCalendarClientProvider({
         toggleUpcomingList,
       }}
     >
+      {isLoading && <p role="status" className="px-4 py-2 text-sm">Cargando eventos…</p>}
+      {rangeError && <div role="alert" className="px-4 py-2 text-sm">No se pudieron cargar los eventos. <button type="button" onClick={retryRange}>Reintentar</button></div>}
       {children}
       <FamilyEventDetailDialog
         event={selectedEvent}
@@ -195,10 +146,10 @@ export function FamilyCalendarClientProvider({
         onOpenChange={(open) => {
           if (!open) closeSelectedEvent();
         }}
-        returnTo={makeUrl(dateCursor, viewMode, selectedEventId)}
+        returnTo={calendarNavigationUrl("/family-dashboard/calendario", dateCursor, viewMode, "event", selectedEventId)}
         viewer={viewer}
         feedback={
-          feedbackEventId === selectedEventId ? initialFeedback : undefined
+          !feedbackDismissed && initialSelectedEventId === selectedEventId ? initialFeedback : undefined
         }
       />
     </FamilyCalendarContext.Provider>
@@ -242,7 +193,7 @@ export function FamilyCalendarGridClient() {
       onMoveCursor={(direction) =>
         navigate(getNextCursor(dateCursor, viewMode, direction), viewMode)
       }
-      onGoToday={() => navigate(new Date(), viewMode)}
+      onGoToday={() => navigate(calendarTodayCursor(), viewMode)}
       onSelectEvent={selectEvent}
     />
   );

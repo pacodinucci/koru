@@ -20,13 +20,18 @@ export function installmentPeriod(startPeriod: Date, installmentIndex: number): 
   return new Date(Date.UTC(startPeriod.getUTCFullYear(), startPeriod.getUTCMonth() + installmentIndex, 1));
 }
 
+// Argentina has UTC-03:00 year-round. Periods are stored as UTC month starts.
+export function installmentImputationDate(startPeriod: Date, installmentIndex: number): Date {
+  return new Date(Date.UTC(startPeriod.getUTCFullYear(), startPeriod.getUTCMonth() + installmentIndex - 1, 25, 3));
+}
+
 export function eventualInstallmentDescription(name: string, number: number, total: number): string {
   return `Cargo eventual · ${name} · cuota ${number}/${total}`;
 }
 
 export function dueInstallmentIndexes(startPeriod: Date, count: number, currentPeriod: Date, emittedNumbers: ReadonlySet<number>): number[] {
   return Array.from({ length: count }, (_, index) => index).filter((index) =>
-    installmentPeriod(startPeriod, index) <= currentPeriod && !emittedNumbers.has(index + 1),
+    installmentImputationDate(startPeriod, index) <= currentPeriod && !emittedNumbers.has(index + 1),
   );
 }
 

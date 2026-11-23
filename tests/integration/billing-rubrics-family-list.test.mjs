@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
+import { buildFamilyFinancialSummary } from "../../src/modules/families/lib/family-financial-summary.ts";
 
 const require = createRequire(import.meta.url);
 function load(path, imports) {
@@ -16,8 +17,9 @@ function load(path, imports) {
 
 test("family index counts rubric assignments and preserves membership/status/balance", async () => {
   let query;
-  const family = { id: "family", name: "Familia", status: "ACTIVE", _count: { users: 2, students: 2, eventualChargeSchedules: 3 } };
+  const family = { id: "family", name: "Familia", status: "ACTIVE", eventualChargeSchedules: [], accountEntries: [{ id: "free", type: "EVENTUAL_CHARGE", amount: "25.50", occurredAt: new Date("2026-01-01T03:00:00Z"), allocationsAsCredit: [] }], _count: { users: 2, students: 2, eventualChargeSchedules: 3 } };
   const repository = load("src/modules/families/server/families.repository.ts", {
+    "@/modules/families/lib/family-financial-summary": { buildFamilyFinancialSummary },
     "server-only": {}, "@prisma/client": { UserRole: { PARENT: "PARENT" } },
     "@/lib/prisma": { prisma: { family: { async findMany(args) { query = args; return [family]; } }, familyAccountEntry: { async groupBy() { return [{ familyId: "family", _sum: { amount: { toString: () => "25.50" } } }]; } } } },
   });

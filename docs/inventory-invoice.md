@@ -49,6 +49,7 @@ Las defensas acotan la exposición a la versión instalada de `xlsx`; no equival
 
 ### Conversión y costos
 
+- Si el documento dice «15 Bolígrafos», «20 Carpetas» o «6 Cartulinas», se proponen respectivamente 15, 20 y 6 unidades de stock para el producto identificado, aunque no esté escrita la palabra «unidad». Sin unidad ni envase explícitos, la cantidad leída se usa directamente con factor 1; sigue siendo obligatoria la revisión antes de confirmar.
 - Factura: 2 cajas x12; catálogo: unidad → 24 unidades y factor 12.
 - La misma factura; catálogo: caja → 2 cajas y factor 1.
 - Factura: 2 cajas sin tamaño declarado; catálogo: unidad → cantidad, factor y costo quedan `null`, confianza baja y revisión humana.

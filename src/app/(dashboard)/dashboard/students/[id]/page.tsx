@@ -10,10 +10,12 @@ import { requirePermission } from "@/modules/auth/server/auth-guards";
 import { DashboardShell } from "@/modules/dashboard/components/dashboard-shell";
 import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.repository";
 import { updateStudentRecordStatusAction } from "@/modules/students/server/student.actions";
+import { StudentRecordChangesDialog } from "@/modules/students/components/student-record-changes-dialog";
 import { getStudentRecordForViewer, listStudentReportsForViewer } from "@/modules/students/server/students.repository";
 import { admissionQuestionnaireSections, readQuestionnaireAnswers } from "@/modules/family-dashboard/lib/admission-questionnaire";
 import { CreateStudentReportDialog } from "@/modules/teachers/components/create-student-report-dialog";
 import { TeacherReportsTable } from "@/modules/teachers/components/teacher-reports-table";
+import { PsychopedagogyProfile } from "@/modules/psychopedagogy/components/psychopedagogy-profile";
 
 const statusLabels = {
   DRAFT: "En progreso",
@@ -54,15 +56,24 @@ export default async function DashboardStudentRecordPage({ params }: { params: P
     group: { name: student.group.name },
   };
   const isTeacher = user.role === "TEACHER" || user.role === "ADMIN_TEACHER";
+  const isPsychopedagogyTeacher = user.role === "PSYCHOPEDAGOGY_TEACHER";
+  const canViewPsychopedagogy = user.permissionKeys.includes("psychopedagogy.view");
   return (
     <DashboardShell userEmail={user.email}
       userRole={user.role}
       userPermissions={user.permissionKeys} cmsPages={cmsPages.filter((page) => !page.isDynamic)} breadcrumbPage="Expediente del alumno">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button nativeButton={false} render={<Link href="/dashboard/students" />} variant="ghost" size="sm"><ArrowLeft /> Volver a alumnos</Button>
-          {user.permissionKeys.includes("students.manage") ? <div className="flex flex-wrap gap-2">
-            <form action={updateStudentRecordStatusAction}><input type="hidden" name="studentId" value={student.id} /><input type="hidden" name="recordStatus" value="NEEDS_CHANGES" /><Button type="submit" variant="outline" size="sm">Solicitar cambios</Button></form>
+          <Button nativeButton={false} render={<Link href={isPsychopedagogyTeacher ? "/dashboard/psicopedagogia" : "/dashboard/students"} />} variant="ghost" size="sm"><ArrowLeft /> {isPsychopedagogyTeacher ? "Volver a psicopedagogía" : "Volver a alumnos"}</Button>
+          {!isPsychopedagogyTeacher && user.permissionKeys.includes("students.manage") ? <div className="flex flex-wrap gap-2">
+            <StudentRecordChangesDialog
+              studentId={student.id}
+              studentName={`${student.firstName} ${student.lastName}`}
+              guardianNames={student.guardians.flatMap((guardian) => {
+                const name = guardian.fullName?.trim() || guardian.user?.name?.trim();
+                return name ? [name] : [];
+              })}
+            />
             <form action={updateStudentRecordStatusAction}><input type="hidden" name="studentId" value={student.id} /><input type="hidden" name="recordStatus" value="REVIEWED" /><Button type="submit" size="sm">Marcar revisada</Button></form>
           </div> : null}
         </div>
@@ -167,6 +178,18 @@ export default async function DashboardStudentRecordPage({ params }: { params: P
             </Accordion>
           </CardContent>
         </Card>
+        {canViewPsychopedagogy ? <Card>
+          <CardContent>
+            <Accordion defaultValue={[]}>
+              <AccordionItem value="psychopedagogy-profile">
+                <AccordionTrigger>Perfil psicopedagógico</AccordionTrigger>
+                <AccordionContent>
+                  <PsychopedagogyProfile student={reportStudent} readOnly />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+        </Card> : null}
       </div>
     </DashboardShell>
   );

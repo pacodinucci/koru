@@ -15,12 +15,12 @@ export async function DashboardTeacherFollowUpAgreementsView({ teacherId, teache
   }
 
   return (
-    <div className="space-y-5 [font-family:var(--font-montserrat)]">
+    <div className="min-w-0 space-y-6 [font-family:var(--font-montserrat)]">
       <Button nativeButton={false} variant="ghost" size="sm" render={<Link href="/dashboard/teachers" />}>
         <ArrowLeft className="size-4" />Volver a docentes
       </Button>
       <div>
-        <h1 className="text-xl font-semibold text-slate-900">Acuerdos de seguimiento de {teacherName}</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">Acuerdos de seguimiento de {teacherName}</h1>
         <p className="mt-1 text-sm text-muted-foreground">Solo superadmin puede gestionar estos acuerdos. El docente accede únicamente a sus acuerdos publicados y puede dar su conformidad.</p>
       </div>
       {agreements === null ? (

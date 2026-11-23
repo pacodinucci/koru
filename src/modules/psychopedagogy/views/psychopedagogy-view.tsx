@@ -1,15 +1,17 @@
 import { PsychopedagogyClient } from "@/modules/psychopedagogy/components/psychopedagogy-client";
-import { listTeacherHomeData } from "@/modules/teachers/server/teachers.repository";
+import { listPsychopedagogyStudentsForSuperadmin } from "@/modules/psychopedagogy/server/psychopedagogy.repository";
 
-export async function PsychopedagogyView({ userId }: { userId: string }) {
-  const { students } = await listTeacherHomeData(userId);
+export async function PsychopedagogyView({ readOnly = false }: { userId: string; readOnly?: boolean }) {
+  const students = await listPsychopedagogyStudentsForSuperadmin();
   return (
     <div className="space-y-5 [font-family:var(--font-montserrat)]">
       <div>
         <h1 className="text-xl font-semibold text-slate-900">Psicopedagogía</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Tus bitácoras por alumno, con fecha, título y texto libre.</p>
+        <p className="mt-1 text-sm text-muted-foreground">{readOnly
+          ? "Consulta de perfiles psicopedagógicos de todos los alumnos. Solo lectura."
+          : "Reportes psicopedagógicos de todos los alumnos, con fecha, título y texto libre."}</p>
       </div>
-      <PsychopedagogyClient students={students} />
+      <PsychopedagogyClient students={students} readOnly={readOnly} />
     </div>
   );
 }

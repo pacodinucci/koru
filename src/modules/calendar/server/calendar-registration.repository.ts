@@ -1,5 +1,4 @@
 import {
-  CalendarAudienceType,
   CalendarAttendanceStatus,
   CalendarEventStatus,
   CalendarEventVisibility,
@@ -7,32 +6,13 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { getAudienceTypesForViewer } from "@/modules/calendar/lib/calendar-audience";
+import { getCalendarReadWhere } from "@/modules/calendar/server/calendar-access";
 
 type Viewer = { id: string; role: UserRole };
 
-function visibleWhere(viewer?: Viewer) {
-  if (!viewer) {
-    return {
-      status: CalendarEventStatus.PUBLISHED,
-      visibility: CalendarEventVisibility.PUBLIC,
-      audienceType: CalendarAudienceType.ALL,
-    };
-  }
-
-
-  return {
-    status: CalendarEventStatus.PUBLISHED,
-    OR: [
-      { audienceType: { in: getAudienceTypesForViewer(viewer.role) } },
-      { audienceType: CalendarAudienceType.PRIVATE, audiences: { some: { userId: viewer.id } } },
-    ],
-  };
-}
-
 export async function getCalendarEventForViewer(id: string, viewer?: Viewer) {
   return prisma.calendarEvent.findFirst({
-    where: { id, ...visibleWhere(viewer) },
+    where: { id, ...await getCalendarReadWhere(viewer) },
     select: {
       id: true,
       title: true,

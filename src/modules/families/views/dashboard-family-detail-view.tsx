@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FamilyAdminActionsMenu } from "@/modules/families/components/family-admin-actions-menu";
@@ -10,9 +11,7 @@ import { FamilyResponsiblesList } from "@/modules/families/components/family-res
 import { buildFamilyResponsibles } from "@/modules/families/lib/family-responsibles";
 import { StudentRubricAssignmentForm } from "@/modules/families/components/student-rubric-assignment-form";
 import { StudentRubricAssignmentEditor } from "@/modules/families/components/student-rubric-assignment-editor";
-import { buildAllocationSummary } from "@/modules/families/lib/payment-allocation";
-import { projectFutureFamilyCharges } from "@/modules/families/lib/family-charge-projections";
-import { getBillingPeriod } from "@/modules/families/lib/monthly-billing";
+import { buildFamilyFinancialSummary } from "@/modules/families/lib/family-financial-summary";
 import { getFamilyFinancialRecord } from "@/modules/families/server/family-financial.repository";
 import { listBillingRubricsForAdmin, listStudentRubricAssignments } from "@/modules/families/server/rubrics.repository";
 
@@ -28,20 +27,25 @@ export async function DashboardFamilyDetailView({ familyId, canManageFamily, can
   ]);
   const rubricOptions = rubrics.map((rubric) => ({ id: rubric.id, name: rubric.name, amount: rubric.amount.toString(), isActive: rubric.isActive }));
   if (!family) notFound();
-  const balance = family.accountEntries.reduce((total, entry) => total + Number(entry.amount), 0);
+  const summary = buildFamilyFinancialSummary(family.accountEntries, family.eventualChargeSchedules);
+  const normalizedById = new Map(summary.entries.map(entry => [entry.id, entry]));
   const financialFamily = {
     id: family.id,
     name: family.name,
-    balance: balance.toFixed(2),
-    ...buildAllocationSummary(family.accountEntries),
-    futureCharges: projectFutureFamilyCharges(family.eventualChargeSchedules, getBillingPeriod()),
+    balance: summary.balance,
+    pendingCharges: summary.pendingCharges,
+    unallocatedCredits: summary.unallocatedCredits,
+    futureCharges: summary.projectedCharges,
     // Rubrics are student assignments, not legacy PlanEventualChargeItem IDs.
     // An empty list keeps the financial card's manual free-charge flow available.
     eventualChargeItems: [],
-    entries: family.accountEntries.map((entry) => ({
-      id: entry.id, type: entry.type, amount: entry.amount.toString(), grossAmount: entry.grossAmount?.toString() ?? null, discountAmount: entry.discountAmount?.toString() ?? null, description: entry.description, occurredAt: entry.occurredAt.toISOString(),
+    entries: family.accountEntries.map((entry) => {
+      const normalized = normalizedById.get(entry.id)!;
+      return {
+      id: entry.id, isFuture: normalized.isFuture, type: entry.type, amount: entry.amount.toString(), grossAmount: entry.grossAmount?.toString() ?? null, discountAmount: entry.discountAmount?.toString() ?? null, description: entry.description, occurredAt: normalized.occurredAt.toISOString(),
       payment: entry.payment ? { id: entry.payment.id, method: entry.payment.method, reference: entry.payment.reference, status: entry.payment.status, receipt: entry.payment.receipt ? { id: entry.payment.receipt.id, status: entry.payment.receipt.status, pdfUrl: entry.payment.receipt.pdfUrl, number: entry.payment.receipt.number } : null } : null,
-    })),
+      };
+    }),
   };
   const responsibles = buildFamilyResponsibles(family.users, family.students).map((responsible) => ({
     id: responsible.id,
@@ -67,14 +71,17 @@ export async function DashboardFamilyDetailView({ familyId, canManageFamily, can
     <Card>
       <CardHeader><CardTitle>Hij@s · Rubros por alumno</CardTitle></CardHeader>
       <CardContent className="space-y-4">
-        {family.students.length ? family.students.map((student) => {
+        {family.students.length ? <Accordion multiple defaultValue={family.students.map(student => student.id)} className="gap-4 [&_[data-slot=accordion-content]]:[--radix-accordion-content-height:var(--accordion-panel-height)] motion-reduce:[&_[data-slot=accordion-content]]:animate-none">{family.students.map((student) => {
           const studentAssignments = assignments.filter((assignment) => assignment.studentId === student.id);
           return (
-            <section key={student.id} aria-label={`Rubros de ${student.firstName} ${student.lastName}`} className="space-y-3 rounded-lg border border-slate-200 p-3">
-              <div>
+            <AccordionItem key={student.id} value={student.id} render={<section />} aria-label={`Rubros de ${student.firstName} ${student.lastName}`} className="rounded-lg border border-slate-200 p-3">
+              <div className="flex items-center justify-between gap-3">
                 <Link href={`/dashboard/students/${student.id}`} className="font-medium text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{student.lastName}, {student.firstName}</Link>
-                <p className="text-sm text-slate-600">{student.group.name}</p>
+                <AccordionTrigger aria-label={`Mostrar u ocultar rubros de ${student.firstName} ${student.lastName}`} className="items-center gap-3 py-1 text-slate-600 hover:no-underline">
+                  <span>{student.group.name}</span>
+                </AccordionTrigger>
               </div>
+              <AccordionContent className="h-auto space-y-3 pt-3 pb-0 [&_a]:no-underline [&_p:not(:last-child)]:mb-0">
               {studentAssignments.length ? (
                 <ul className="space-y-2">
                   {studentAssignments.map((assignment) => (
@@ -99,9 +106,10 @@ export async function DashboardFamilyDetailView({ familyId, canManageFamily, can
                 </ul>
               ) : <p className="text-sm text-slate-600">Todavía no tiene rubros asignados.</p>}
               {canManageFamily ? <StudentRubricAssignmentForm familyId={family.id} studentId={student.id} rubrics={rubricOptions} /> : null}
-            </section>
+              </AccordionContent>
+            </AccordionItem>
           );
-        }) : <p className="text-sm text-slate-600">Todavía no hay hij@s registrados.</p>}
+        })}</Accordion> : <p className="text-sm text-slate-600">Todavía no hay hij@s registrados.</p>}
       </CardContent>
     </Card>
     <FamilyFinancialCard family={financialFamily} eventualChargeItems={financialFamily.eventualChargeItems} canManagePayments={canManagePayments} canWaive={canWaive} />

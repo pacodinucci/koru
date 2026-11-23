@@ -31,7 +31,7 @@ function formatTime(date: Date) {
 export default async function DashboardCalendarAttendancePage({ params }: Props) {
   const [{ id }, user, cmsPages] = await Promise.all([
     params,
-    requirePermission("calendar.manage"),
+    requirePermission("calendar.view"),
     discoverPagesGroupRoutes(),
   ]);
   const event = await getCalendarEventAttendanceForAdmin(id);

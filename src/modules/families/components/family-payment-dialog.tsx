@@ -61,6 +61,8 @@ export function FamilyPaymentDialog({ total, charges, title, description, allowP
         </div>
         <ResponsiveDialogBody className="space-y-3 overscroll-contain">
           <p className="text-sm text-slate-600">{allowPartial ? "Al elegir un concepto, se completa su saldo pendiente hasta el importe disponible. Podés editarlo y conciliar una parte dejando el resto pendiente." : "Al elegir un concepto, se completa su saldo pendiente hasta el importe disponible. Podés editarlo; para confirmar, el restante debe quedar en cero."}</p>
+          <p className="text-sm text-slate-600">Podés adelantar cuotas futuras del mismo rubro, en orden y sin saltos. Completá la cuota anterior antes de seleccionar la siguiente. Cada cuota se imputa al saldo el día 25 del mes anterior a su período.</p>
+          {summary.error ? <p className="text-sm text-red-700" role="alert">{summary.error}</p> : null}
           <FamilyPaymentAllocationFields charges={charges} total={total} draft={draft} onChange={setDraft} disabled={isPending} />
           {error ? <p className="text-sm text-red-700" role="alert">{error}</p> : null}
         </ResponsiveDialogBody>

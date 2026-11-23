@@ -4,7 +4,7 @@ import { discoverPagesGroupRoutes } from "@/modules/dashboard/server/cms-pages.r
 import { KanbanWorkspace } from "@/modules/kanban/components/kanban-workspace";
 
 export default async function KanbanPage() {
-  const user = await requireDashboardUser();
+  const user = await requireDashboardUser(undefined, "kanban");
   const cmsPages = await discoverPagesGroupRoutes();
 
   return (

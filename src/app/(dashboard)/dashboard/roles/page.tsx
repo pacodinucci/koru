@@ -23,7 +23,7 @@ export default async function DashboardRolesPage() {
         roles={roles}
         canManage={user.permissionKeys.includes("roles.manage")}
         actorPermissions={user.permissionKeys}
-        currentRoleKey={user.accessRoleKey}
+        actorRole={user.role}
       />
     </DashboardShell>
   );

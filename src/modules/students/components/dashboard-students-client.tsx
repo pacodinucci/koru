@@ -9,13 +9,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -43,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   studentFormSchema,
   type StudentFormInput,
@@ -299,39 +294,47 @@ export function DashboardStudentsClient({
   }
 
   return (
-    <div className="space-y-4">
-      <Card size="sm" className="min-w-0">
-        <CardHeader>
-          <CardTitle>Alumnos</CardTitle>
-          {!readOnly ? (
-            <CardAction>
-              <Button type="button" size="sm" onClick={openCreateDialog}>
-                <Plus />
-                Nuevo alumno
-              </Button>
-            </CardAction>
-          ) : null}
-        </CardHeader>
-        <CardContent className="min-w-0 space-y-3">
-          <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_220px]">
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por nombre o apellido"
-            />
-            <select
-              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
-              value={groupFilter}
-              onChange={(event) => setGroupFilter(event.target.value)}
-            >
-              <option value="">Todos los grupos</option>
-              {groups.map((group) => (
-                <option key={group.id} value={group.id}>
+    <div className="min-w-0 space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold">Alumnos</h1>
+        {!readOnly ? (
+          <Button type="button" size="sm" onClick={openCreateDialog}>
+            <Plus />
+            Nuevo alumno
+          </Button>
+        ) : null}
+      </div>
+      <div aria-label="Buscar y filtrar alumnos" className="flex flex-wrap items-end gap-x-4 gap-y-3">
+        <div className="w-full min-w-0 space-y-1 lg:w-64 lg:shrink-0">
+          <label htmlFor="students-search" className="text-sm text-slate-600">Buscar</label>
+          <Input
+            id="students-search"
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar por nombre o apellido"
+            className="min-w-0"
+          />
+        </div>
+        <div className="ml-auto min-w-0 max-w-full space-y-1">
+          <p id="students-group-label" className="text-sm text-slate-600">Grupo</p>
+          <Tabs value={groupFilter} onValueChange={setGroupFilter}>
+            <TabsList aria-labelledby="students-group-label" className="w-fit max-w-full items-center gap-1 rounded-lg bg-[color-mix(in_srgb,var(--brand-600)_14%,white)] p-1">
+              {[{ id: "", name: "Todos" }, ...groups].map((group) => (
+                <TabsTrigger
+                  key={group.id}
+                  value={group.id}
+                  className="min-h-7 flex-none rounded-md border-0 px-2.5 py-1 text-sm text-muted-foreground data-[active]:mb-0 data-[active]:bg-background data-[active]:text-foreground data-[active]:shadow-sm"
+                >
                   {group.name}
-                </option>
+                </TabsTrigger>
               ))}
-            </select>
-          </div>
+            </TabsList>
+          </Tabs>
+        </div>
+      </div>
+      <Card size="sm" className="min-w-0">
+        <CardContent className="min-w-0">
           <Table className="min-w-[1280px]">
             <TableHeader>
               <TableRow>

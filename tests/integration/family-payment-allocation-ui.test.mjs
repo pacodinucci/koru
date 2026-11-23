@@ -6,6 +6,7 @@ import vm from "node:vm";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
+import * as paymentAllocation from "../../src/modules/families/lib/payment-allocation.ts";
 
 const require = createRequire(import.meta.url);
 const base = "@/modules/families/components/";
@@ -71,6 +72,7 @@ function loader(overrides = {}, globals = {}) {
             ? ({ open, children, onOpenChange }) => open ? React.createElement("dialog", { open, onOpenChange }, children) : null
             : pass,
         });
+        if (id.endsWith("lib/payment-allocation")) return paymentAllocation;
         if (id.endsWith("annual-plan")) return { BILLING_MONTHS: [] };
         if (id.endsWith("plan-discounts")) return { calculatePlanDiscount: () => null };
         return new Proxy({}, { get: () => pass });
@@ -696,6 +698,79 @@ test("charge table defaults to all and filters pending including partial, future
   assert.equal(JSON.stringify({ entries, futureCharges, chargeList }), before);
 });
 
+test("movement pagination limits sorted rows, navigates boundaries and changes page size without accounting writes", () => {
+  const entries = Array.from({ length: 23 }, (_, i) => ({ id: `row-${i}`, type: "EVENTUAL_CHARGE", amount: "10.00", grossAmount: null, discountAmount: null, description: `Movimiento ${i}`, occurredAt: new Date(Date.UTC(2026, 0, i + 1)).toISOString(), payment: null }));
+  const before = JSON.stringify(entries);
+  const ui = harness({ entries, chargeList: [], canManagePayments: false, canWaive: false });
+  const rows = () => ui.nodes().filter(n => n.type === "tr" && n.props.className === "border-t border-slate-100");
+  assert.equal(rows().length, 10);
+  assert.ok(JSON.stringify(rows()[0]).includes("Movimiento 22"));
+  assert.ok(ui.text().includes("Página 1 de 3"));
+  assert.ok(ui.text().includes("Mostrando 1–10 de 23"));
+  assert.equal(ui.button("Anterior").props.disabled, true);
+  assert.equal(ui.button("Siguiente").props.disabled, false);
+  ui.button("Siguiente").props.onClick(); ui.render();
+  assert.equal(rows().length, 10);
+  assert.ok(JSON.stringify(rows()[0]).includes("Movimiento 12"));
+  assert.ok(ui.text().includes("Página 2 de 3"));
+  ui.button("Siguiente").props.onClick(); ui.render();
+  assert.equal(rows().length, 3);
+  assert.ok(ui.text().includes("Mostrando 21–23 de 23"));
+  assert.equal(ui.button("Siguiente").props.disabled, true);
+  ui.button("Anterior").props.onClick(); ui.render();
+  assert.ok(ui.text().includes("Página 2 de 3"));
+  const size = () => ui.find(n => n.type === "select" && n.props["aria-label"] === "Movimientos por página");
+  assert.deepEqual(ui.nodes().filter(n => n.type === "option" && [10, 20, 50].includes(n.props.value)).map(n => n.props.value), [10, 20, 50]);
+  size().props.onChange({ target: { value: "20" } }); ui.render();
+  assert.equal(rows().length, 20);
+  assert.ok(ui.text().includes("Página 1 de 2"));
+  size().props.onChange({ target: { value: "50" } }); ui.render();
+  assert.equal(rows().length, 23);
+  assert.equal(ui.button("Anterior").props.disabled, true);
+  assert.equal(ui.button("Siguiente").props.disabled, true);
+  assert.equal(JSON.stringify(entries), before);
+  assert.deepEqual(ui.calls, []);
+  assert.equal(ui.refreshes(), 0);
+});
+
+test("movement filters reset pagination and refreshed smaller results clamp the page without hiding payment choices", async () => {
+  const entries = Array.from({ length: 21 }, (_, i) => ({ id: `row-${i}`, type: "EVENTUAL_CHARGE", amount: "10.00", grossAmount: null, discountAmount: null, description: `Movimiento ${i}`, occurredAt: new Date(Date.UTC(2026, 0, i + 1)).toISOString(), payment: null }));
+  const chargeList = entries.map(e => ({ ...e, outstandingAmount: e.amount }));
+  const futureCharges = Array.from({ length: 12 }, (_, i) => ({ ...entries[i], id: `future-${i}`, description: `Proyección ${i}`, isFuture: true }));
+  const ui = harness({ entries, chargeList, futureCharges });
+  const filter = () => ui.find(n => n.props["aria-label"] === "Filtrar cargos");
+  ui.button("Siguiente").props.onClick(); ui.render();
+  assert.ok(ui.text().includes("Página 2 de 4"));
+  filter().props.onChange({ target: { value: "pending" } }); ui.render();
+  assert.ok(ui.text().includes("Página 1 de 3"));
+  ui.button("Siguiente").props.onClick(); ui.render();
+  ui.button("Siguiente").props.onClick(); ui.render();
+  assert.ok(ui.text().includes("Página 3 de 3"));
+  ui.update([], chargeList.slice(0, 2));
+  assert.ok(ui.text().includes("Página 1 de 1"));
+  assert.ok(ui.text().includes("Movimiento 0") && ui.text().includes("Movimiento 1"));
+  assert.equal(ui.button("Anterior").props.disabled, true);
+  assert.equal(ui.button("Siguiente").props.disabled, true);
+  filter().props.onChange({ target: { value: "future" } }); ui.render();
+  assert.ok(ui.text().includes("Página 1 de 2"));
+  ui.button("Siguiente").props.onClick(); ui.render();
+  filter().props.onChange({ target: { value: "all" } }); ui.render();
+  assert.ok(ui.text().includes("Página 1 de 4"));
+  ui.update([], chargeList);
+  await ui.submit(paymentForm(ui));
+  assert.equal(ui.nodes().filter(n => n.type === "input" && n.props.type === "checkbox").length, 21, "payment selection still receives all pending charges, not the table page");
+  assert.deepEqual(ui.calls, []);
+});
+
+test("empty movement pagination displays zero results with both navigation controls disabled", () => {
+  const ui = harness({ entries: [], chargeList: [] });
+  assert.ok(ui.text().includes("Todavía no hay movimientos registrados."));
+  assert.ok(ui.text().includes("Mostrando 0–0 de 0"));
+  assert.ok(ui.text().includes("Página 1 de 1"));
+  assert.equal(ui.button("Anterior").props.disabled, true);
+  assert.equal(ui.button("Siguiente").props.disabled, true);
+});
+
 test("charge filter has specific empty states and future rows never become payable allocation choices", async () => {
   const ui = harness({ chargeList: [], futureCharges: [{ id: "future:s:1", type: "EVENTUAL_CHARGE", amount: "20.00", grossAmount: null, discountAmount: null, description: "Solo futuro", occurredAt: "2027-01-01T00:00:00Z", isFuture: true, payment: null }] });
   const filter = () => ui.find((n) => n.type === "select" && n.props["aria-label"] === "Filtrar cargos");
@@ -711,4 +786,54 @@ test("charge filter has specific empty states and future rows never become payab
   empty.find((n) => n.props["aria-label"] === "Filtrar cargos").props.onChange({ target: { value: "future" } });
   empty.render();
   assert.ok(empty.text().includes("No hay cargos futuros."));
+});
+
+
+test("advance selection accepts November/December/January and rejects gaps or incomplete prior installments", () => {
+  const pending = [1, 2, 3].map((number) => ({ id: `installment-${number}`, description: `Cuota ${number}`, occurredAt: "2026-10-25T03:00:00Z", amount: "2000.00", outstandingAmount: "2000.00", eventualChargeScheduleId: "annual", installmentNumber: number, isFuture: number > 1 }));
+  const { allocationSummary } = fields();
+  assert.equal(allocationSummary(pending, { "installment-1": "2000", "installment-2": "2000", "installment-3": "2000" }, "6000").valid, true);
+  for (const [draft, amount] of [
+    [{ "installment-1": "2000", "installment-3": "2000" }, "4000"],
+    [{ "installment-2": "2000" }, "2000"],
+    [{ "installment-1": "1000", "installment-2": "2000" }, "3000"],
+  ]) {
+    const summary = allocationSummary(pending, draft, amount);
+    assert.equal(summary.valid, false);
+    assert.match(summary.error, /correlativas/);
+  }
+});
+
+
+test("selector only enables the next installment and clears later selections when an earlier one is removed", async () => {
+  const pending = [1, 2, 3].map(number => ({ id: `i${number}`, description: `Cuota ${number}`, occurredAt: "2026-10-25T03:00:00Z", amount: "2000.00", outstandingAmount: "2000.00", eventualChargeScheduleId: "annual", installmentNumber: number, isFuture: number > 1 }));
+  const ui = harness({ chargeList: pending });
+  ui.form.values.amount = "6000";
+  await ui.submit(paymentForm(ui));
+  const box = id => ui.find(node => node.type === "input" && node.props.type === "checkbox" && node.props.value === id);
+  assert.equal(box("i1").props.disabled, false);
+  assert.equal(box("i2").props.disabled, true);
+  assert.equal(box("i3").props.disabled, true);
+  for (const id of ["i1", "i2", "i3"]) {
+    assert.equal(box(id).props.disabled, false);
+    box(id).props.onChange({ target: { checked: true } });
+    ui.render();
+  }
+  assert.equal(ui.button("Confirmar pago").props.disabled, false);
+  box("i2").props.onChange({ target: { checked: false } });
+  ui.render();
+  assert.equal(box("i1").props.checked, true);
+  assert.equal(box("i2").props.checked, false);
+  assert.equal(box("i3").props.checked, false);
+  assert.equal(ui.button("Confirmar pago").props.disabled, true);
+  assert.equal(ui.calls.length, 0);
+});
+
+test("persisted future installments paid in advance remain future and show paid status", () => {
+  const ui = harness({ chargeList: [], entries: [{ id: "advanced", type: "EVENTUAL_CHARGE", amount: "2000", grossAmount: null, discountAmount: null, description: "Cuota de enero", occurredAt: "2026-12-25T03:00:00Z", payment: null, isFuture: true }] });
+  assert.ok(ui.text().includes("Pagado por adelantado"));
+  const filter = ui.find(node => node.type === "select" && node.props["aria-label"] === "Filtrar cargos");
+  filter.props.onChange({ target: { value: "future" } });
+  ui.render();
+  assert.ok(ui.text().includes("Cuota de enero"));
 });

@@ -26,10 +26,14 @@ function load(path) {
     if (specifier === "next/navigation") return { useRouter: () => ({ replace() {} }) };
     if (specifier === "@/modules/dashboard/views/dashboard-calendar-view") return load("modules/dashboard/views/dashboard-calendar-view.tsx");
     if (specifier === "@/modules/calendar/lib/calendar-time-zone") return load("modules/calendar/lib/calendar-time-zone.ts");
+    if (specifier === "@/modules/calendar/lib/calendar-area-types") return load("modules/calendar/lib/calendar-area-types.ts");
+    if (specifier === "@/modules/calendar/lib/calendar-navigation") return load("modules/calendar/lib/calendar-navigation.ts");
+    if (specifier === "@/modules/calendar/lib/public-calendar-window") return load("modules/calendar/lib/public-calendar-window.ts");
+    if (specifier === "@/modules/calendar/lib/calendar-range-loader") return load("modules/calendar/lib/calendar-range-loader.ts");
     if (specifier === "@/modules/dashboard/lib/calendar-range") return load("modules/dashboard/lib/calendar-range.ts");
     return new Proxy({}, { get: () => passthrough });
   };
-  vm.runInNewContext(output, { require: mockedRequire, module: loadedModule, exports: loadedModule.exports, Date: FixedDate, URLSearchParams });
+  vm.runInNewContext(output, { require: mockedRequire, module: loadedModule, exports: loadedModule.exports, Date: FixedDate, URLSearchParams, URL });
   return loadedModule.exports;
 }
 const render = (Component, props) => renderToStaticMarkup(createElement(Component, props));

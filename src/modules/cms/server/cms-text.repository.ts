@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { cachePublishedCms, invalidatePublishedCms } from "@/modules/cms/server/published-cms-cache";
 import { BlockType, PageStatus, Prisma, type Prisma as PrismaTypes } from "@prisma/client";
 import {
   CMS_DELETED_TEXT_SLOT_IDS_KEY,
@@ -34,17 +35,23 @@ export async function getCmsDraftTextMap(
   return ensureLandingDefaults(map);
 }
 
-export async function getCmsPublishedTextMap(): Promise<CmsTextMap> {
-  const entries = await getEntries();
+async function readPublishedTextMap(
+  client: CmsTextRepositoryClient = prisma,
+): Promise<CmsTextMap> {
+  const entries = await getEntries(client);
   const map = Object.fromEntries(
-    entries.map((entry) => [
-      entry.key,
-      entry.publishedValue ?? entry.draftValue ?? "",
-    ]),
+    entries
+      .filter((entry) => entry.publishedValue !== null)
+      .map((entry) => [entry.key, entry.publishedValue ?? ""]),
   );
 
   return ensureLandingDefaults(map);
 }
+
+export const getCmsPublishedTextMap = cachePublishedCms(
+  "cms-published-text-v1",
+  () => readPublishedTextMap(),
+);
 
 async function saveCmsTextEntries(
   textMap: CmsTextMap,
@@ -111,6 +118,7 @@ export async function publishCmsTextMap(
   client: CmsTextRepositoryClient = prisma,
 ) {
   await publishCmsTextEntries(textMap, client);
+  if (client === prisma) invalidatePublishedCms();
 }
 type CmsLandingPageBlockData = {
   cmsLandingDraftOverrides?: Record<string, string>;
@@ -139,9 +147,7 @@ function getLandingOverrides(
 
   const data = blockData as CmsLandingPageBlockData;
   if (mode === "published") {
-    return toStringMap(
-      data.cmsLandingPublishedOverrides ?? data.cmsLandingDraftOverrides,
-    );
+    return toStringMap(data.cmsLandingPublishedOverrides);
   }
 
   return toStringMap(data.cmsLandingDraftOverrides);
@@ -220,27 +226,32 @@ export async function getCmsDraftTextMapBySlug(slug: string): Promise<CmsTextMap
   });
 }
 
-export async function getCmsPublishedTextMapBySlug(
-  slug: string,
-): Promise<CmsTextMap> {
+const readPublishedTextMapBySlug = cachePublishedCms(
+  "cms-published-page-text-v1",
+  async (normalizedSlug: string): Promise<CmsTextMap> => {
+    const baseMap = withoutInsertedTextBlockData(await getCmsPublishedTextMap());
+    const { page, block } = await getPageLandingBlock(normalizedSlug);
+    const overrides = getLandingOverrides(
+      page?.status === PageStatus.PUBLISHED ? block?.data : null,
+      "published",
+    );
+
+    return ensureLandingDefaults({
+      ...baseMap,
+      ...overrides,
+      [CMS_INSERTED_TEXT_BLOCKS_KEY]:
+        overrides[CMS_INSERTED_TEXT_BLOCKS_KEY] ?? "[]",
+      [CMS_DELETED_TEXT_SLOT_IDS_KEY]:
+        overrides[CMS_DELETED_TEXT_SLOT_IDS_KEY] ?? "[]",
+    });
+  },
+);
+
+export async function getCmsPublishedTextMapBySlug(slug: string): Promise<CmsTextMap> {
   const normalizedSlug = slug.trim() || "/";
-
-  if (normalizedSlug === "/") {
-    return getCmsPublishedTextMap();
-  }
-
-  const baseMap = withoutInsertedTextBlockData(await getCmsPublishedTextMap());
-  const { block } = await getPageLandingBlock(normalizedSlug);
-  const overrides = getLandingOverrides(block?.data, "published");
-
-  return ensureLandingDefaults({
-    ...baseMap,
-    ...overrides,
-    [CMS_INSERTED_TEXT_BLOCKS_KEY]:
-      overrides[CMS_INSERTED_TEXT_BLOCKS_KEY] ?? "[]",
-    [CMS_DELETED_TEXT_SLOT_IDS_KEY]:
-      overrides[CMS_DELETED_TEXT_SLOT_IDS_KEY] ?? "[]",
-  });
+  return normalizedSlug === "/"
+    ? getCmsPublishedTextMap()
+    : readPublishedTextMapBySlug(normalizedSlug);
 }
 
 export async function saveCmsPageDraftTextMap(slug: string, textMap: CmsTextMap) {
@@ -302,7 +313,10 @@ export async function saveCmsPageDraftTextMap(slug: string, textMap: CmsTextMap)
 }
 
 export async function publishCmsPageTextMap(slug: string, textMap: CmsTextMap) {
-  return publishCmsPageTextMapWithClient(prisma, slug, textMap);
+  await prisma.$transaction((client) =>
+    publishCmsPageTextMapWithClient(client, slug, textMap),
+  );
+  invalidatePublishedCms();
 }
 
 export async function publishCmsPageTextMapWithClient(
@@ -312,12 +326,12 @@ export async function publishCmsPageTextMapWithClient(
 ) {
   const normalizedSlug = slug.trim() || "/";
   if (normalizedSlug === "/") {
-    await publishCmsTextMap(textMap, client);
+    await publishCmsTextEntries(textMap, client);
     return;
   }
 
   const baseMap = {
-    ...withoutInsertedTextBlockData(await getCmsDraftTextMap(client)),
+    ...withoutInsertedTextBlockData(await readPublishedTextMap(client)),
     [CMS_INSERTED_TEXT_BLOCKS_KEY]: "[]",
     [CMS_DELETED_TEXT_SLOT_IDS_KEY]: "[]",
   };

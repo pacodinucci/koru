@@ -24,7 +24,7 @@ const plain = (value) => JSON.parse(JSON.stringify(value));
 // Transactional Prisma double: only the production row-lock query serializes callers.
 // No real PostgreSQL, FK enforcement or lock scheduler is claimed by this suite.
 function app() {
-  let data = { kanbanBoard: [], kanbanStatus: [], kanbanCard: [], user: [
+  let data = { kanbanBoard: [], kanbanStatus: [], kanbanCard: [], kanbanStatusWatch: [], kanbanNotification: [], user: [
     { id: "teacher", name: "Docente", role: "TEACHER", accessRoleId: null, accessRole: null },
     { id: "parent", name: "Familia", role: "PARENT", accessRoleId: null, accessRole: null },
     { id: "custom", name: "Interno", role: "PARENT", accessRoleId: "r1", accessRole: { isActive: true, permissions: [{ permission: { key: "dashboard.access" } }] } },
@@ -32,6 +32,7 @@ function app() {
     { id: "no-access", name: "Sin acceso", role: "ADMIN", accessRoleId: "r3", accessRole: { isActive: true, permissions: [] } },
   ] };
   let nextId = 0, denied = false, cardUpdatesUntilFailure = -1, failStatusCreate = false, actor = "teacher";
+  let notificationsUntilFailure = -1, failDeletion = false;
   let lockTail = Promise.resolve();
   const effects = { guards: 0, reads: 0, writes: 0, refreshes: 0, locks: 0 };
   const matches = (row, where = {}) => Object.entries(where).every(([key, value]) => {
@@ -50,6 +51,8 @@ function app() {
       const result = { ...row };
       if (args.include?.statuses) result.statuses = db.kanbanStatus.findManySync({ ...args.include.statuses, where: { boardId: row.id } });
       if (args.include?.cards) result.cards = db.kanbanCard.findManySync({ ...args.include.cards, where: { statusId: row.id } });
+      if (args.include?.watches) result.watches = db.kanbanStatusWatch.findManySync({ ...args.include.watches, where: { statusId: row.id } });
+      if (args.include?.user) result.user = { ...state.user.find((u) => u.id === row.userId) };
       if (args.include?._count) result._count = { cards: state.kanbanCard.filter((c) => c.boardId === row.id).length };
       return result;
     }
@@ -74,7 +77,13 @@ function app() {
         create: async ({ data: input }) => {
           if (model === "kanbanStatus" && failStatusCreate && input.position === 1) throw Error("fallo simulado");
           effects.writes++;
-          const row = { id: `id-${++nextId}`, description: null, assigneeId: null, dueDate: null, ...input };
+          if (model === "kanbanNotification") {
+            if (notificationsUntilFailure === 0) throw Error("fallo de aviso");
+            if (notificationsUntilFailure > 0) notificationsUntilFailure--;
+          }
+          const defaults = model === "kanbanStatus" ? { archivedAt: null, trashedAt: null, holdEnabled: false }
+            : model === "kanbanCard" ? { onHold: false } : model === "kanbanNotification" ? { createdAt: new Date(), readAt: null, cardId: null } : {};
+          const row = { id: `id-${++nextId}`, description: null, assigneeId: null, dueDate: null, ...defaults, ...input };
           state[model].push(row); return { ...row };
         },
         update: async ({ where, data: changes }) => {
@@ -86,6 +95,7 @@ function app() {
           assert.ok(row, `${model} update target exists`); effects.writes++; Object.assign(row, changes); return { ...row };
         },
         delete: async ({ where }) => {
+          if (model === "kanbanStatus" && failDeletion) throw Error("fallo de eliminación");
           const index = state[model].findIndex((row) => matches(row, where));
           assert.notEqual(index, -1); effects.writes++; return state[model].splice(index, 1)[0];
         },
@@ -124,7 +134,7 @@ function app() {
     "@/modules/auth/server/auth-guards": { requireDashboardUser: async () => { effects.guards++; if (denied) throw Error("Acceso denegado."); return { id: actor }; } },
     "next/cache": { revalidatePath: (path) => { assert.equal(path, "/dashboard/kanban"); effects.refreshes++; } },
   });
-  return { api, effects, deny: (value) => { denied = value; }, fail: (value) => { cardUpdatesUntilFailure = typeof value === "number" ? value : value ? 0 : -1; }, failDefaults: (value) => { failStatusCreate = value; }, actor: (value) => { actor = value; }, snapshot: () => JSON.stringify(data) };
+  return { api, effects, deny: (value) => { denied = value; }, fail: (value) => { cardUpdatesUntilFailure = typeof value === "number" ? value : value ? 0 : -1; }, failDefaults: (value) => { failStatusCreate = value; }, actor: (value) => { actor = value; }, failNotifications: (value) => { notificationsUntilFailure = typeof value === "number" ? value : value ? 0 : -1; }, failDeletion: (value) => { failDeletion = value; }, snapshot: () => JSON.stringify(data) };
 }
 async function board(ctx, name = "Trabajo") {
   const { id } = await ctx.api.createBoardAction({ name });
@@ -140,10 +150,10 @@ async function reject(ctx, action, message) {
 
 test("S1-S4 every L5 action checks dashboard access before reads or writes", async () => {
   const ctx = app(); ctx.deny(true);
-  const calls = [() => ctx.api.listBoardsAction(), () => ctx.api.getBoardAction("b"), () => ctx.api.listAssigneesAction(),
-    ...["createBoard", "updateBoard", "deleteBoard", "createStatus", "updateStatus", "reorderStatuses", "deleteStatus", "createCard", "updateCard", "deleteCard", "moveCard"].map((name) => () => ctx.api[`${name}Action`]({}))];
+  const calls = [() => ctx.api.listBoardsAction(), () => ctx.api.getBoardAction("b"), () => ctx.api.listAssigneesAction(), () => ctx.api.listKanbanNotificationsAction(),
+    ...["createBoard", "updateBoard", "deleteBoard", "createStatus", "updateStatus", "reorderStatuses", "deleteStatus", "createCard", "updateCard", "deleteCard", "moveCard", "setStatusWatching", "setStatusHoldEnabled", "setCardOnHold", "setStatusLifecycle", "permanentlyDeleteStatus", "markKanbanNotificationRead"].map((name) => () => ctx.api[`${name}Action`]({}))];
   for (const call of calls) await reject(ctx, call, "Acceso denegado.");
-  assert.equal(ctx.effects.guards, 14); assert.equal(ctx.effects.writes, 0); assert.equal(ctx.effects.locks, 0); assert.equal(ctx.effects.reads, 0);
+  assert.equal(ctx.effects.guards, 21); assert.equal(ctx.effects.writes, 0); assert.equal(ctx.effects.locks, 0); assert.equal(ctx.effects.reads, 0);
 });
 
 test("S1-S4 shared board lifecycle, default editable columns and summaries", async () => {
@@ -201,7 +211,7 @@ test("S1-S4 card lifecycle, internal responsible users, ISO dates and null clear
   assert.deepEqual(plain(await ctx.api.listAssigneesAction()).map((u) => u.id).sort(), ["custom", "teacher"]);
   await ctx.api.createCardAction({ boardId: b.id, statusId, title: "  Tarea  ", description: " Detalle ", assigneeId: "teacher", dueDate: "2024-02-29" });
   let card = (await ctx.api.getBoardAction(b.id)).statuses[0].cards[0];
-  assert.deepEqual(plain(card), { id: card.id, title: "Tarea", description: "Detalle", assigneeId: "teacher", dueDate: "2024-02-29T00:00:00.000Z", position: 0 });
+  assert.deepEqual(plain(card), { id: card.id, title: "Tarea", description: "Detalle", assigneeId: "teacher", dueDate: "2024-02-29T00:00:00.000Z", position: 0, onHold: false });
   await ctx.api.updateCardAction({ boardId: b.id, id: card.id, title: "Cambio", assigneeId: "custom", dueDate: "2026-10-20T12:30:00.000Z" });
   card = (await ctx.api.getBoardAction(b.id)).statuses[0].cards[0]; assert.equal(card.description, null); assert.equal(card.assigneeId, "custom"); assert.equal(card.dueDate, "2026-10-20T12:30:00.000Z");
   for (const assigneeId of ["parent", "disabled", "no-access", "missing"]) await reject(ctx, () => ctx.api.updateCardAction({ boardId: b.id, id: card.id, title: "Cambio", assigneeId }), "La persona responsable debe tener acceso al dashboard.");
@@ -271,4 +281,224 @@ test("S2 concurrent deletions retain the last column and board deletion excludes
   assert.equal(results[0].status, "fulfilled");
   for (const result of results.slice(1)) { assert.equal(result.status, "rejected"); assert.equal(result.reason.message, "El tablero no existe."); }
   assert.equal(await ctx.api.getBoardAction(b.id), null); assert.deepEqual(plain(await ctx.api.listBoardsAction()), []);
+});
+
+const currentStatus = async (ctx, boardId, id) => plain((await ctx.api.getBoardAction(boardId)).statuses.find((s) => s.id === id));
+const watch = (ctx, boardId, id, watching = true) => ctx.api.setStatusWatchingAction({ boardId, id, watching });
+const lifecycle = (ctx, boardId, id, state) => ctx.api.setStatusLifecycleAction({ boardId, id, state });
+
+test("S1-S3/S5 column defaults, no-color rename and personal idempotent followers use the actor", async () => {
+  const ctx = app(), b = await board(ctx), [s] = b.statuses;
+  assert.deepEqual([s.archivedAt, s.trashedAt, s.holdEnabled, s.watching, s.watchers], [null, null, false, false, []]);
+  const locks = ctx.effects.locks;
+  await watch(ctx, b.id, s.id); await watch(ctx, b.id, s.id);
+  assert.equal(ctx.effects.locks, locks + 2);
+  let status = await currentStatus(ctx, b.id, s.id);
+  assert.equal(status.watching, true); assert.deepEqual(status.watchers, [{ id: "teacher", name: "Docente" }]);
+  ctx.actor("custom"); status = await currentStatus(ctx, b.id, s.id); assert.equal(status.watching, false);
+  await ctx.api.setStatusWatchingAction({ boardId: b.id, id: s.id, watching: true, userId: "parent" });
+  await watch(ctx, b.id, s.id, false); await watch(ctx, b.id, s.id, false);
+  assert.deepEqual((await currentStatus(ctx, b.id, s.id)).watchers, [{ id: "teacher", name: "Docente" }]);
+  await ctx.api.setStatusHoldEnabledAction({ boardId: b.id, id: s.id, enabled: true });
+  await ctx.api.createCardAction({ boardId: b.id, statusId: s.id, title: "Preservar" });
+  const beforeRename = await currentStatus(ctx, b.id, s.id);
+  await ctx.api.updateStatusAction({ boardId: b.id, id: s.id, name: "Sin color", color: "" });
+  status = await currentStatus(ctx, b.id, s.id);
+  assert.deepEqual(status, { ...beforeRename, name: "Sin color", color: "" }); assert.equal(status.color, ""); assert.equal(status.name, "Sin color"); assert.equal(status.position, s.position); assert.equal(status.watchers.length, 1);
+  await reject(ctx, () => ctx.api.setStatusWatchingAction({ boardId: b.id, id: s.id, watching: "true" }), "Indica si quieres seguir la columna.");
+  const other = await board(ctx, "Otro");
+  await reject(ctx, () => watch(ctx, b.id, other.statuses[0].id), "El estado no pertenece a este tablero.");
+});
+
+test("S2 hold opt-in is per card, reversible and preserves metadata and column settings", async () => {
+  const ctx = app(), b = await board(ctx), [s] = b.statuses;
+  await ctx.api.createCardAction({ boardId: b.id, statusId: s.id, title: "Conservar", description: "Detalle", assigneeId: "teacher", dueDate: "2026-10-20" });
+  const original = (await currentStatus(ctx, b.id, s.id)).cards[0];
+  await reject(ctx, () => ctx.api.setCardOnHoldAction({ boardId: b.id, id: original.id, onHold: true }), "Primero habilita las tareas en espera en esta columna.");
+  await ctx.api.setStatusHoldEnabledAction({ boardId: b.id, id: s.id, enabled: true });
+  assert.deepEqual((await currentStatus(ctx, b.id, s.id)).cards[0], original);
+  await ctx.api.setCardOnHoldAction({ boardId: b.id, id: original.id, onHold: true });
+  assert.deepEqual((await currentStatus(ctx, b.id, s.id)).cards[0], { ...original, onHold: true });
+  await ctx.api.setStatusHoldEnabledAction({ boardId: b.id, id: s.id, enabled: false });
+  assert.equal((await currentStatus(ctx, b.id, s.id)).cards[0].onHold, true);
+  await ctx.api.setCardOnHoldAction({ boardId: b.id, id: original.id, onHold: false });
+  assert.deepEqual((await currentStatus(ctx, b.id, s.id)).cards[0], original);
+  await reject(ctx, () => ctx.api.setStatusHoldEnabledAction({ boardId: b.id, id: s.id, enabled: 1 }), "Indica si quieres habilitar las tareas en espera.");
+  await reject(ctx, () => ctx.api.setCardOnHoldAction({ boardId: b.id, id: original.id, onHold: "false" }), "Indica si la tarjeta está en espera.");
+});
+
+test("S2 archive/trash restore exact cards/settings, reject normal edits and inactive moves", async () => {
+  const ctx = app(), b = await board(ctx), [s, target] = b.statuses;
+  await watch(ctx, b.id, s.id); await ctx.api.setStatusHoldEnabledAction({ boardId: b.id, id: s.id, enabled: true });
+  await ctx.api.createCardAction({ boardId: b.id, statusId: s.id, title: "Historial", assigneeId: "teacher", dueDate: "2026-10-20" });
+  let original = await currentStatus(ctx, b.id, s.id); const card = original.cards[0];
+  await ctx.api.setCardOnHoldAction({ boardId: b.id, id: card.id, onHold: true }); original = await currentStatus(ctx, b.id, s.id);
+  await ctx.api.createCardAction({ boardId: b.id, statusId: target.id, title: "Activa" });
+  const activeCard = (await currentStatus(ctx, b.id, target.id)).cards[0];
+  for (const state of ["archived", "trashed"]) {
+    await lifecycle(ctx, b.id, s.id, state);
+    const inactive = await currentStatus(ctx, b.id, s.id);
+    assert.equal(Boolean(inactive.archivedAt), state === "archived"); assert.equal(Boolean(inactive.trashedAt), state === "trashed");
+    assert.deepEqual(inactive.cards, original.cards); assert.deepEqual(inactive.watchers, original.watchers);
+    for (const action of [
+      () => ctx.api.updateStatusAction({ boardId: b.id, id: s.id, name: "No", color: "" }),
+      () => watch(ctx, b.id, s.id, false),
+      () => ctx.api.setStatusHoldEnabledAction({ boardId: b.id, id: s.id, enabled: false }),
+      () => ctx.api.createCardAction({ boardId: b.id, statusId: s.id, title: "No" }),
+      () => ctx.api.updateCardAction({ boardId: b.id, id: card.id, title: "No" }),
+      () => ctx.api.deleteCardAction({ boardId: b.id, id: card.id }),
+      () => ctx.api.setCardOnHoldAction({ boardId: b.id, id: card.id, onHold: false }),
+      () => ctx.api.moveCardAction({ boardId: b.id, id: card.id, statusId: target.id, position: 0 }),
+      () => ctx.api.moveCardAction({ boardId: b.id, id: activeCard.id, statusId: s.id, position: 0 }),
+      () => ctx.api.deleteStatusAction({ boardId: b.id, id: s.id, destinationStatusId: target.id }),
+    ]) await reject(ctx, action, "La columna está archivada o en la papelera.");
+    await reject(ctx, () => ctx.api.deleteStatusAction({ boardId: b.id, id: target.id, destinationStatusId: s.id }), "Elegí otro estado del mismo tablero como destino.");
+    const activeIds = b.statuses.filter((item) => item.id !== s.id).map((item) => item.id).reverse();
+    await ctx.api.reorderStatusesAction({ boardId: b.id, statusIds: activeIds });
+    await reject(ctx, () => ctx.api.reorderStatusesAction({ boardId: b.id, statusIds: b.statuses.map((item) => item.id) }), "Incluí todos los estados del tablero una sola vez.");
+    await lifecycle(ctx, b.id, s.id, "active");
+    assert.deepEqual(await currentStatus(ctx, b.id, s.id), original);
+  }
+  await reject(ctx, () => lifecycle(ctx, b.id, s.id, "deleted"), "Elige un estado válido para la columna.");
+});
+
+test("S2 concurrent lifecycle changes retain the last active column", async () => {
+  const ctx = app(), b = await board(ctx);
+  await lifecycle(ctx, b.id, b.statuses[2].id, "archived");
+  const results = await Promise.allSettled(b.statuses.slice(0, 2).map((s) => lifecycle(ctx, b.id, s.id, "trashed")));
+  assert.equal(results.filter((r) => r.status === "fulfilled").length, 1);
+  assert.equal(results.find((r) => r.status === "rejected").reason.message, "El tablero debe conservar al menos un estado.");
+  const statuses = (await ctx.api.getBoardAction(b.id)).statuses, active = statuses.find((s) => !s.archivedAt && !s.trashedAt);
+  await reject(ctx, () => lifecycle(ctx, b.id, active.id, "archived"), "El tablero debe conservar al menos un estado.");
+  await reject(ctx, () => ctx.api.deleteStatusAction({ boardId: b.id, id: active.id }), "El tablero debe conservar al menos un estado.");
+  await lifecycle(ctx, b.id, b.statuses[2].id, "active");
+  await lifecycle(ctx, b.id, active.id, "archived");
+});
+
+test("S2/S5 permanent deletion requires trash, guards ownership and rolls back contained card deletion", async () => {
+  const ctx = app(), b = await board(ctx), other = await board(ctx, "Otro"), [s] = b.statuses;
+  await watch(ctx, b.id, s.id); await ctx.api.createCardAction({ boardId: b.id, statusId: s.id, title: "Destruir" });
+  const del = () => ctx.api.permanentlyDeleteStatusAction({ boardId: b.id, id: s.id });
+  await reject(ctx, del, "Primero mueve la columna a la papelera.");
+  await lifecycle(ctx, b.id, s.id, "archived"); await reject(ctx, del, "Primero mueve la columna a la papelera.");
+  await lifecycle(ctx, b.id, s.id, "trashed");
+  const trashedAt = (await currentStatus(ctx, b.id, s.id)).trashedAt;
+  await lifecycle(ctx, b.id, s.id, "trashed");
+  assert.equal((await currentStatus(ctx, b.id, s.id)).trashedAt, trashedAt);
+  await reject(ctx, () => ctx.api.permanentlyDeleteStatusAction({ boardId: other.id, id: s.id }), "El estado no pertenece a este tablero.");
+  ctx.failDeletion(true); await reject(ctx, del, "fallo de eliminación"); ctx.failDeletion(false);
+  await del(); assert.equal((await ctx.api.getBoardAction(b.id)).statuses.some((x) => x.id === s.id), false);
+  assert.equal((await ctx.api.listBoardsAction()).find((x) => x.id === b.id).cardCount, 0);
+  await reject(ctx, () => lifecycle(ctx, b.id, s.id, "active"), "El estado no pertenece a este tablero.");
+});
+
+test("S3/S5 persistent column notifications cover create/edit/move/hold, recipients and read markers", async () => {
+  const ctx = app(), b = await board(ctx), [source, target, unwatched] = b.statuses;
+  await watch(ctx, b.id, source.id); ctx.actor("custom"); await watch(ctx, b.id, target.id);
+  await ctx.api.createCardAction({ boardId: b.id, statusId: source.id, title: "Aviso" });
+  const card = (await currentStatus(ctx, b.id, source.id)).cards[0];
+  assert.deepEqual(plain(await ctx.api.listKanbanNotificationsAction()), []);
+  ctx.actor("teacher");
+  let notices = plain(await ctx.api.listKanbanNotificationsAction()); assert.equal(notices.length, 1);
+  assert.deepEqual(Object.keys(notices[0]).sort(), ["boardId", "cardId", "createdAt", "id", "message", "readAt", "statusId"].sort());
+  assert.equal(notices[0].message, 'Se agregó la tarjeta "Aviso" a "Pendiente".');
+  assert.deepEqual([notices[0].boardId, notices[0].statusId, notices[0].cardId, notices[0].readAt], [b.id, source.id, card.id, null]);
+  assert.ok(Number.isFinite(Date.parse(notices[0].createdAt)));
+  await ctx.api.updateCardAction({ boardId: b.id, id: card.id, title: "Editada" });
+  await ctx.api.setStatusHoldEnabledAction({ boardId: b.id, id: source.id, enabled: true });
+  await ctx.api.setCardOnHoldAction({ boardId: b.id, id: card.id, onHold: true });
+  await ctx.api.setCardOnHoldAction({ boardId: b.id, id: card.id, onHold: true }); // no duplicate notice for a no-op
+  await ctx.api.moveCardAction({ boardId: b.id, id: card.id, statusId: target.id, position: 0 });
+  notices = plain(await ctx.api.listKanbanNotificationsAction());
+  assert.equal(notices.length, 4);
+  assert.deepEqual(new Set(notices.map((n) => n.message)), new Set([
+    'Se agregó la tarjeta "Aviso" a "Pendiente".', 'Se actualizó la tarjeta "Editada" en "Pendiente".',
+    'La tarjeta "Editada" quedó en espera en "Pendiente".', 'La tarjeta "Editada" salió de "Pendiente" hacia "En curso".',
+  ]));
+  const locks = ctx.effects.locks;
+  await ctx.api.markKanbanNotificationReadAction({ id: notices[0].id, userId: "custom" });
+  const readAt = (await ctx.api.listKanbanNotificationsAction()).find((n) => n.id === notices[0].id).readAt;
+  assert.ok(Number.isFinite(Date.parse(readAt)));
+  await ctx.api.markKanbanNotificationReadAction({ id: notices[0].id });
+  assert.equal((await ctx.api.listKanbanNotificationsAction()).find((n) => n.id === notices[0].id).readAt, readAt);
+  assert.equal(ctx.effects.locks, locks + 2);
+  ctx.actor("custom"); let own = plain(await ctx.api.listKanbanNotificationsAction()); assert.equal(own.length, 1); assert.equal(own[0].readAt, null);
+  assert.equal(own[0].message, 'La tarjeta "Editada" llegó a "En curso" desde "Pendiente".');
+  await reject(ctx, () => ctx.api.markKanbanNotificationReadAction({ id: notices[0].id }), "El aviso no existe.");
+  await reject(ctx, () => ctx.api.markKanbanNotificationReadAction({ id: "missing" }), "El aviso no existe.");
+  await ctx.api.moveCardAction({ boardId: b.id, id: card.id, statusId: target.id, position: 0 });
+  assert.equal((await ctx.api.listKanbanNotificationsAction()).length, 1, "unchanged position is not a move event");
+  await ctx.api.setCardOnHoldAction({ boardId: b.id, id: card.id, onHold: false });
+  own = plain(await ctx.api.listKanbanNotificationsAction()); assert.equal(own.length, 2);
+  assert.ok(own.some((n) => n.message === 'La tarjeta "Editada" dejó de estar en espera en "En curso".'));
+  await watch(ctx, b.id, target.id, false);
+  await ctx.api.moveCardAction({ boardId: b.id, id: card.id, statusId: unwatched.id, position: 0 });
+  await ctx.api.updateCardAction({ boardId: b.id, id: card.id, title: "Sin seguimiento" });
+  assert.equal((await ctx.api.listKanbanNotificationsAction()).length, 2, "following a column never follows the card");
+});
+
+test("S3 notification failure rolls back each watched card mutation and legacy relocation", async () => {
+  const ctx = app(), b = await board(ctx), [s, target] = b.statuses;
+  await watch(ctx, b.id, s.id); await watch(ctx, b.id, target.id);
+  await ctx.api.createCardAction({ boardId: b.id, statusId: s.id, title: "Antes" });
+  const card = (await currentStatus(ctx, b.id, s.id)).cards[0];
+  await ctx.api.setStatusHoldEnabledAction({ boardId: b.id, id: s.id, enabled: true }); ctx.failNotifications(true);
+  for (const action of [
+    () => ctx.api.createCardAction({ boardId: b.id, statusId: s.id, title: "Falla" }),
+    () => ctx.api.updateCardAction({ boardId: b.id, id: card.id, title: "Falla" }),
+    () => ctx.api.setCardOnHoldAction({ boardId: b.id, id: card.id, onHold: true }),
+    () => ctx.api.moveCardAction({ boardId: b.id, id: card.id, statusId: target.id, position: 0 }),
+    () => ctx.api.deleteStatusAction({ boardId: b.id, id: s.id, destinationStatusId: target.id }),
+  ]) await reject(ctx, action, "fallo de aviso");
+  ctx.failNotifications(false);
+  await ctx.api.moveCardAction({ boardId: b.id, id: card.id, statusId: target.id, position: 0 });
+  await ctx.api.createCardAction({ boardId: b.id, statusId: target.id, title: "Segunda" });
+  const before = (await ctx.api.listKanbanNotificationsAction()).length;
+  await ctx.api.moveCardAction({ boardId: b.id, id: card.id, statusId: target.id, position: 1 });
+  assert.equal((await ctx.api.listKanbanNotificationsAction()).length, before + 1, "within-column reorder notifies once");
+  await ctx.api.deleteBoardAction({ id: b.id }); assert.deepEqual(plain(await ctx.api.listKanbanNotificationsAction()), []);
+});
+
+test("S3/S5 fan-out failure rolls back already-inserted notices and unread counters", async () => {
+  const ctx = app(), b = await board(ctx), [s] = b.statuses;
+  await Promise.all([watch(ctx, b.id, s.id), watch(ctx, b.id, s.id)]);
+  assert.equal((await currentStatus(ctx, b.id, s.id)).watchers.length, 1);
+  ctx.actor("custom"); await watch(ctx, b.id, s.id); ctx.failNotifications(1);
+  await reject(ctx, () => ctx.api.createCardAction({ boardId: b.id, statusId: s.id, title: "Todo o nada" }), "fallo de aviso");
+  for (const actor of ["custom", "teacher"]) {
+    ctx.actor(actor); assert.equal((await ctx.api.listKanbanNotificationsAction()).filter((n) => n.readAt === null).length, 0);
+  }
+  ctx.failNotifications(false);
+  await ctx.api.createCardAction({ boardId: b.id, statusId: s.id, title: "Persistente" });
+  await lifecycle(ctx, b.id, s.id, "trashed");
+  await ctx.api.permanentlyDeleteStatusAction({ boardId: b.id, id: s.id });
+  const notices = plain(await ctx.api.listKanbanNotificationsAction()); assert.equal(notices.length, 1);
+  await ctx.api.markKanbanNotificationReadAction({ id: notices[0].id });
+  assert.equal((await ctx.api.listKanbanNotificationsAction()).filter((n) => n.readAt === null).length, 0);
+});
+
+test("S2/S5 new mutations validate board-local targets and serialize stale lifecycle writers", async () => {
+  const ctx = app(), b = await board(ctx), other = await board(ctx, "Otro"), [s] = b.statuses;
+  await ctx.api.createCardAction({ boardId: other.id, statusId: other.statuses[0].id, title: "Ajena" });
+  const card = (await currentStatus(ctx, other.id, other.statuses[0].id)).cards[0];
+  await reject(ctx, () => ctx.api.setStatusHoldEnabledAction({ boardId: b.id, id: other.statuses[0].id, enabled: true }), "El estado no pertenece a este tablero.");
+  await reject(ctx, () => lifecycle(ctx, b.id, other.statuses[0].id, "trashed"), "El estado no pertenece a este tablero.");
+  await reject(ctx, () => ctx.api.setCardOnHoldAction({ boardId: b.id, id: card.id, onHold: false }), "La tarjeta no pertenece a este tablero.");
+  for (const action of [
+    () => watch(ctx, "missing", s.id),
+    () => ctx.api.setStatusHoldEnabledAction({ boardId: "missing", id: s.id, enabled: true }),
+    () => lifecycle(ctx, "missing", s.id, "active"),
+    () => ctx.api.setCardOnHoldAction({ boardId: "missing", id: card.id, onHold: false }),
+    () => ctx.api.permanentlyDeleteStatusAction({ boardId: "missing", id: s.id }),
+  ]) await reject(ctx, action, "El tablero no existe.");
+  const outcomes = await Promise.allSettled([
+    lifecycle(ctx, b.id, s.id, "archived"),
+    ctx.api.createCardAction({ boardId: b.id, statusId: s.id, title: "Tardía" }),
+    watch(ctx, b.id, s.id),
+  ]);
+  assert.equal(outcomes[0].status, "fulfilled");
+  for (const outcome of outcomes.slice(1)) {
+    assert.equal(outcome.status, "rejected"); assert.equal(outcome.reason.message, "La columna está archivada o en la papelera.");
+  }
+  const status = await currentStatus(ctx, b.id, s.id); assert.equal(status.cards.length, 0); assert.equal(status.watchers.length, 0);
 });

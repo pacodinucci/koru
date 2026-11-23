@@ -15,7 +15,8 @@ export type KanbanEditorState =
   | { kind: "status"; status?: KanbanStatus }
   | { kind: "card"; statusId: string; card?: KanbanCard }
   | { kind: "deleteBoard"; board: KanbanBoard }
-  | { kind: "deleteStatus"; status: KanbanStatus }
+  | { kind: "trashStatus"; status: KanbanStatus }
+  | { kind: "permanentDeleteStatus"; status: KanbanStatus }
   | { kind: "deleteCard"; card: KanbanCard };
 
 export const selectClass = "h-10 w-full rounded-md border border-input bg-white px-3 text-sm disabled:opacity-50";
@@ -24,17 +25,17 @@ const textareaClass = "w-full rounded-md border border-input bg-white px-3 py-2 
 export function editorTitle(editor: KanbanEditorState) {
   switch (editor.kind) {
     case "board": return editor.board ? "Editar tablero" : "Crear tablero";
-    case "status": return editor.status ? "Editar columna" : "Crear columna";
+    case "status": return editor.status ? "Cambiar nombre de columna" : "Crear columna";
     case "card": return editor.card ? "Editar tarjeta" : "Crear tarjeta";
     case "deleteBoard": return "Eliminar tablero";
-    case "deleteStatus": return "Eliminar columna";
+    case "trashStatus": return "Mover columna a la papelera";
+    case "permanentDeleteStatus": return "Eliminar columna definitivamente";
     case "deleteCard": return "Eliminar tarjeta";
   }
 }
 
-export function KanbanEditor({ editor, statuses, assignees, pending, error, onSubmit, onCancel }: {
+export function KanbanEditor({ editor, assignees, pending, error, onSubmit, onCancel }: {
   editor: KanbanEditorState;
-  statuses: KanbanStatus[];
   assignees: KanbanAssignee[];
   pending: boolean;
   error?: string | null;
@@ -42,9 +43,8 @@ export function KanbanEditor({ editor, statuses, assignees, pending, error, onSu
   onCancel: () => void;
 }) {
   const title = editorTitle(editor);
-  const deleting = editor.kind === "deleteBoard" || editor.kind === "deleteStatus" || editor.kind === "deleteCard";
-  const occupied = editor.kind === "deleteStatus" && editor.status.cards.length > 0;
-  const destinations = editor.kind === "deleteStatus" ? statuses.filter((status) => status.id !== editor.status.id) : [];
+  const deleting = editor.kind === "deleteBoard" || editor.kind === "permanentDeleteStatus" || editor.kind === "deleteCard";
+  const confirming = deleting || editor.kind === "trashStatus";
   const card = editor.kind === "card" ? editor.card : undefined;
 
   const creating = (editor.kind === "board" && !editor.board)
@@ -52,7 +52,7 @@ export function KanbanEditor({ editor, statuses, assignees, pending, error, onSu
     || (editor.kind === "card" && !editor.card);
   const form = (
       <form aria-label={title} onSubmit={onSubmit}>
-        {creating && error ? <p role="alert" className="mb-4 text-sm text-red-700">{error}</p> : null}
+        {error ? <p role="alert" className="mb-4 text-sm text-red-700">{error}</p> : null}
         <fieldset disabled={pending} className="space-y-4">
           <legend className="sr-only">{title}</legend>
           {editor.kind === "board" || editor.kind === "status" ? (
@@ -66,12 +66,12 @@ export function KanbanEditor({ editor, statuses, assignees, pending, error, onSu
                   <Label htmlFor="kanban-description">Descripción (opcional)</Label>
                   <textarea id="kanban-description" name="description" rows={3} defaultValue={editor.board?.description ?? ""} className={textareaClass} />
                 </div>
-              ) : (
+              ) : !editor.status ? (
                 <div className="space-y-1.5">
                   <Label htmlFor="kanban-color">Color</Label>
-                  <Input id="kanban-color" name="color" type="color" required defaultValue={editor.status?.color ?? "#64748b"} className="h-10 w-24 p-1" />
+                  <Input id="kanban-color" name="color" type="color" required defaultValue="#64748b" className="h-10 w-24 p-1" />
                 </div>
-              )}
+              ) : null}
             </>
           ) : null}
           {editor.kind === "card" ? (
@@ -102,35 +102,19 @@ export function KanbanEditor({ editor, statuses, assignees, pending, error, onSu
           ) : null}
           {editor.kind === "deleteBoard" ? <p className="text-sm text-slate-700">¿Eliminar el tablero «{editor.board.name}» y todas sus tarjetas? Esta acción no se puede deshacer.</p> : null}
           {editor.kind === "deleteCard" ? <p className="text-sm text-slate-700">¿Eliminar la tarjeta «{editor.card.title}»? Esta acción no se puede deshacer.</p> : null}
-          {editor.kind === "deleteStatus" ? (
-            <div className="space-y-3 text-sm text-slate-700">
-              <p>¿Eliminar la columna «{editor.status.name}»? Esta acción no se puede deshacer.</p>
-              {occupied ? (
-                <>
-                  <p>Sus {editor.status.cards.length} tarjetas se moverán a la columna que elijas al confirmar.</p>
-                  {destinations.length === 0 ? <p>Creá otra columna antes de eliminar esta columna con tarjetas.</p> : null}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="kanban-destination">Destino de las tarjetas</Label>
-                    <select id="kanban-destination" name="destinationStatusId" required defaultValue="" className={selectClass}>
-                      <option value="" disabled>Elegí una columna de destino</option>
-                      {destinations.map((status) => <option key={status.id} value={status.id}>{status.name}</option>)}
-                    </select>
-                  </div>
-                </>
-              ) : <p>La columna está vacía.</p>}
-            </div>
-          ) : null}
+          {editor.kind === "trashStatus" ? <p className="text-sm text-slate-700">¿Mover «{editor.status.name}» y sus {editor.status.cards.length} tarjetas a la papelera? Dejarán de aparecer en el tablero. Puedes restaurarlas desde Papelera.</p> : null}
+          {editor.kind === "permanentDeleteStatus" ? <p className="text-sm text-slate-700">¿Eliminar definitivamente «{editor.status.name}» y sus {editor.status.cards.length} tarjetas? Esta acción no se puede deshacer.</p> : null}
           <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="outline" disabled={pending} onClick={onCancel}>Cancelar</Button>
-            <Button type="submit" variant={deleting ? "destructive" : "default"} disabled={pending || (occupied && destinations.length === 0)}>
-              {pending ? "Guardando…" : deleting ? "Confirmar eliminación" : "Guardar"}
+            <Button type="submit" variant={deleting ? "destructive" : "default"} disabled={pending}>
+              {deleting ? "Confirmar eliminación" : editor.kind === "trashStatus" ? "Confirmar traslado a papelera" : "Guardar"}
             </Button>
           </div>
         </fieldset>
       </form>
   );
 
-  if (creating) {
+  if (creating || confirming) {
     return (
       <ResponsiveDialog open onOpenChange={(open) => { if (!open && !pending) onCancel(); }}>
         <ResponsiveDialogContent
@@ -139,7 +123,7 @@ export function KanbanEditor({ editor, statuses, assignees, pending, error, onSu
         >
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>{title}</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription>Completá los datos y guardá para confirmar la creación.</ResponsiveDialogDescription>
+            <ResponsiveDialogDescription>{confirming ? "Revisa los detalles antes de confirmar." : "Completa los datos y guarda para confirmar la creación."}</ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
           <ResponsiveDialogBody>{form}</ResponsiveDialogBody>
         </ResponsiveDialogContent>

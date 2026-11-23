@@ -6,7 +6,7 @@ import { BillingRubricInputError, parseBillingRubric, parseRubricAssignment, par
 import { splitInstallmentAmounts } from "@/modules/families/lib/eventual-installments";
 import { calculatePlanDiscount } from "@/modules/families/lib/plan-discounts";
 import { getBillingPeriod } from "@/modules/families/lib/monthly-billing";
-import { createDueEventualInstallmentCharges, lockFamilyBilling } from "@/modules/families/server/eventual-installments.core";
+import { createDueEventualInstallmentChargesInTransaction, lockFamilyBilling } from "@/modules/families/server/eventual-installments.core";
 
 type AssignmentInput = { familyId: string; studentId: string; rubricId: string; installmentCount: number; startMonth: number; discountPercent?: string };
 type AssignmentIdentity = { familyId: string; studentId: string; assignmentId: string };
@@ -79,7 +79,7 @@ export async function assignRubricToStudent(input: AssignmentInput, createdById:
       createdById: actorId,
       isBase: false,
     } });
-    await createDueEventualInstallmentCharges(tx, now, currentPeriod, assignment.id);
+    await createDueEventualInstallmentChargesInTransaction(tx, now, currentPeriod, assignment.id);
     return assignment;
   });
 }
@@ -88,7 +88,7 @@ function parseIdentity(input: AssignmentIdentity) {
   return { familyId: parseRubricId(input.familyId), studentId: parseRubricId(input.studentId), assignmentId: parseRubricId(input.assignmentId) };
 }
 
-async function editableAssignment(tx: Prisma.TransactionClient, identity: AssignmentIdentity) {
+async function editableAssignment(tx: Prisma.TransactionClient, identity: AssignmentIdentity, allowPayments = false) {
   await requireStudent(tx, identity.familyId, identity.studentId);
   const schedule = await tx.eventualChargeSchedule.findUnique({ where: { id: identity.assignmentId } });
   if (!schedule || schedule.familyId !== identity.familyId || schedule.studentId !== identity.studentId || !schedule.rubricId || schedule.cancelledFrom || schedule.isBase || schedule.eventualChargeItemId) {
@@ -96,17 +96,26 @@ async function editableAssignment(tx: Prisma.TransactionClient, identity: Assign
   }
   const entries = await tx.familyAccountEntry.findMany({
     where: { eventualChargeScheduleId: schedule.id },
-    include: { allocationsAsCharge: true, allocationsAsCredit: true },
+    include: { allocationsAsCharge: { include: { creditEntry: { include: { payment: true } } } }, allocationsAsCredit: true },
   });
   // A schedule link alone is insufficient proof that a row can be removed. Check
   // its generated terms and all allocation history, even allocations of voided payments.
-  const amounts = splitInstallmentAmounts(schedule.totalAmount.toString(), schedule.installmentCount);
+  const protectedEntries = entries.filter(entry => entry.allocationsAsCharge.length > 0);
+  // After a paid-only edit, the schedule total is the actual mixed total, not
+  // the nominal discounted total. Unpaid rows still follow the nominal terms.
+  const nominalNet = protectedEntries.length && schedule.grossAmount !== null && schedule.discountPercent !== null
+    ? calculatePlanDiscount(schedule.grossAmount.toString(), schedule.discountPercent.toString()).netAmount
+    : schedule.totalAmount.toString();
+  const amounts = splitInstallmentAmounts(nominalNet, schedule.installmentCount);
   const gross = schedule.grossAmount === null ? null : splitInstallmentAmounts(schedule.grossAmount.toString(), schedule.installmentCount);
   const unsafe = entries.some(entry => {
     const number = entry.installmentNumber;
-    if (entry.allocationsAsCharge.length || entry.allocationsAsCredit.length || entry.type !== "EVENTUAL_CHARGE"
+    if ((!allowPayments && entry.allocationsAsCharge.length) || entry.allocationsAsCredit.length || entry.type !== "EVENTUAL_CHARGE"
       || entry.familyId !== schedule.familyId || entry.paymentId !== null || entry.billingPeriod !== null
       || entry.eventualChargeItemId !== null || number === null || !Number.isInteger(number) || number < 1 || number > schedule.installmentCount) return true;
+    // Allocated rows are immutable historical terms, including partial and
+    // voided-payment history. Their amounts need not match today's discount.
+    if (allowPayments && entry.allocationsAsCharge.length) return false;
     const index = number - 1;
     if (!new Prisma.Decimal(entry.amount).equals(amounts[index])) return true;
     if (gross) {
@@ -117,7 +126,7 @@ async function editableAssignment(tx: Prisma.TransactionClient, identity: Assign
     return entry.grossAmount !== null || entry.discountAmount !== null;
   });
   if (unsafe) throw new BillingRubricInputError(protectedMessage);
-  return { schedule, entryIds: entries.map(entry => entry.id) };
+  return { schedule, protectedEntries, entryIds: entries.filter(entry => !entry.allocationsAsCharge.length).map(entry => entry.id) };
 }
 
 export async function updateStudentRubricAssignment(input: AssignmentInput & { assignmentId: string; discountPercent: string }, createdById: string) {
@@ -127,7 +136,22 @@ export async function updateStudentRubricAssignment(input: AssignmentInput & { a
   const now = new Date();
   const currentPeriod = getBillingPeriod(now);
   return assignmentTransaction(identity.familyId, async tx => {
-    const { schedule, entryIds } = await editableAssignment(tx, identity);
+    const { schedule, entryIds, protectedEntries } = await editableAssignment(tx, identity, true);
+    // A voided payment contributes no credit, but its allocation must retain the
+    // same charge ID. Changing the count can reprice those unpaid charges in
+    // place as long as every historically linked installment still exists.
+    const previousInstallmentCount = schedule.installmentCount;
+    const repriceVoidedCharges = protectedEntries.length > 0
+      && terms.installmentCount !== schedule.installmentCount
+      && protectedEntries.every(entry => entry.installmentNumber! <= terms.installmentCount)
+      && schedule.rubricId === terms.rubricId
+      && schedule.startPeriod.getUTCMonth() + 1 === terms.startMonth
+      && protectedEntries.every(entry => entry.allocationsAsCharge.every(allocation =>
+        allocation.creditEntry?.type === "PAYMENT" && allocation.creditEntry.payment?.status === "VOIDED"));
+    if (protectedEntries.length && !repriceVoidedCharges && (schedule.rubricId !== terms.rubricId
+      || schedule.installmentCount !== terms.installmentCount || schedule.startPeriod.getUTCMonth() + 1 !== terms.startMonth)) {
+      throw new BillingRubricInputError("Con pagos imputados solo podés cambiar el descuento. Se conservan el rubro, las cuotas y el mes de inicio.");
+    }
     // Reusing a rubric keeps its original gross/name, even if the catalog is now inactive.
     const snapshot = schedule.rubricId === terms.rubricId
       ? { name: schedule.itemName, amount: (schedule.grossAmount ?? schedule.totalAmount).toString() }
@@ -141,7 +165,39 @@ export async function updateStudentRubricAssignment(input: AssignmentInput & { a
       installmentCount: terms.installmentCount,
       startPeriod: new Date(Date.UTC(schedule.startPeriod.getUTCFullYear(), terms.startMonth - 1, 1)),
     } });
-    await createDueEventualInstallmentCharges(tx, now, currentPeriod, assignment.id);
+    if (repriceVoidedCharges) {
+      const amounts = splitInstallmentAmounts(discount.totalAmount, terms.installmentCount);
+      const gross = splitInstallmentAmounts(discount.grossAmount, terms.installmentCount);
+      for (const entry of protectedEntries) {
+        const index = entry.installmentNumber! - 1;
+        await tx.familyAccountEntry.update({ where: { id: entry.id }, data: {
+          amount: amounts[index], grossAmount: gross[index],
+          discountAmount: new Prisma.Decimal(gross[index]).minus(amounts[index]),
+          description: entry.description.replace(
+            ` · cuota ${entry.installmentNumber}/${previousInstallmentCount} · `,
+            ` · cuota ${entry.installmentNumber}/${terms.installmentCount} · `,
+          ),
+        } });
+      }
+      await createDueEventualInstallmentChargesInTransaction(tx, now, currentPeriod, assignment.id);
+      return assignment;
+    }
+    if (protectedEntries.length) {
+      // Freeze every unpaid installment, including future ones, using the new
+      // nominal terms before storing the actual mixed total. Existing rows stop
+      // generators/previews from redistributing that mixed total in the future.
+      const horizon = new Date(Date.UTC(schedule.startPeriod.getUTCFullYear(), terms.startMonth - 1 + terms.installmentCount, 1));
+      await createDueEventualInstallmentChargesInTransaction(tx, horizon, horizon, assignment.id);
+      const nominalAmounts = splitInstallmentAmounts(discount.totalAmount, terms.installmentCount);
+      let total = new Prisma.Decimal(discount.totalAmount);
+      for (const entry of protectedEntries) {
+        total = total.plus(entry.amount).minus(nominalAmounts[entry.installmentNumber! - 1]);
+      }
+      return tx.eventualChargeSchedule.update({ where: { id: schedule.id }, data: {
+        totalAmount: total, discountAmount: new Prisma.Decimal(discount.grossAmount).minus(total),
+      } });
+    }
+    await createDueEventualInstallmentChargesInTransaction(tx, now, currentPeriod, assignment.id);
     return assignment;
   });
 }

@@ -1,3 +1,4 @@
+import { canUserReadCalendarEvent } from "@/modules/calendar/server/calendar-access";
 import "server-only";
 
 import {
@@ -158,6 +159,11 @@ export async function syncConfirmedAttendanceToGoogle(
     },
   });
   if (!connection) return;
+
+  if (!await canUserReadCalendarEvent(eventId, userId)) {
+    await removeGoogleEvent(connection, eventId);
+    return;
+  }
 
   const event = await prisma.calendarEvent.findFirst({
     where: {

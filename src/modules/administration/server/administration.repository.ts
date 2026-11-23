@@ -7,6 +7,7 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { buildFamilyFinancialSummary } from "@/modules/families/lib/family-financial-summary";
 
 export type AdministrationPeriod = {
   from: Date;
@@ -20,11 +21,9 @@ export async function getAdministrationOverview(period: AdministrationPeriod) {
   const occurredAt = { gte: period.from, lt: period.to };
 
   const [
-    charges,
     collected,
     voidedPayments,
     waivers,
-    familyBalances,
     families,
     recentPayments,
     cashBalance,
@@ -33,10 +32,6 @@ export async function getAdministrationOverview(period: AdministrationPeriod) {
     configuredBudgets,
     recentCashEntries,
   ] = await Promise.all([
-    prisma.familyAccountEntry.aggregate({
-      where: { type: AccountEntryType.MONTHLY_CHARGE, occurredAt },
-      _sum: { amount: true },
-    }),
     prisma.familyPayment.aggregate({
       where: { status: PaymentStatus.REGISTERED, paidAt: occurredAt },
       _sum: { amount: true },
@@ -49,8 +44,10 @@ export async function getAdministrationOverview(period: AdministrationPeriod) {
       where: { type: AccountEntryType.BALANCE_WAIVER, occurredAt },
       _sum: { amount: true },
     }),
-    prisma.familyAccountEntry.groupBy({ by: ["familyId"], _sum: { amount: true } }),
-    prisma.family.findMany({ select: { id: true, name: true } }),
+    prisma.family.findMany({ select: { id: true, name: true,
+      eventualChargeSchedules: { include: { student: { select: { firstName: true, lastName: true, familyId: true } }, accountEntries: { select: { installmentNumber: true } } } },
+      accountEntries: { include: { allocationsAsCredit: true, payment: { select: { status: true } } } },
+    } }),
     prisma.familyPayment.findMany({
       where: { paidAt: occurredAt },
       orderBy: { paidAt: "desc" },
@@ -76,9 +73,12 @@ export async function getAdministrationOverview(period: AdministrationPeriod) {
     }),
   ]);
 
-  const familyNames = new Map(families.map((family) => [family.id, family.name]));
-  const overdueFamilies = familyBalances
-    .map((balance) => ({ name: familyNames.get(balance.familyId) ?? "Familia eliminada", balance: asNumber(balance._sum.amount) }))
+  const summaries = families.map(family => ({ family, summary: buildFamilyFinancialSummary(family.accountEntries, family.eventualChargeSchedules) }));
+  const charged = summaries.reduce((total, { summary }) => total + [...summary.entries, ...summary.projectedCharges.map(entry => ({ ...entry, occurredAt: new Date(entry.occurredAt) }))]
+    .filter(entry => entry.type === AccountEntryType.MONTHLY_CHARGE && entry.occurredAt >= period.from && entry.occurredAt < period.to && entry.occurredAt <= new Date())
+    .reduce((sum, entry) => sum + asNumber(entry.amount), 0), 0);
+  const overdueFamilies = summaries
+    .map(({ family, summary }) => ({ name: family.name, balance: Number(summary.balance) }))
     .filter((family) => family.balance > 0)
     .sort((left, right) => right.balance - left.balance);
 
@@ -89,7 +89,7 @@ export async function getAdministrationOverview(period: AdministrationPeriod) {
 
   return {
     familyFinance: {
-      charged: asNumber(charges._sum.amount),
+      charged,
       collected: asNumber(collected._sum.amount),
       voided: asNumber(voidedPayments._sum.amount),
       waived: Math.abs(asNumber(waivers._sum.amount)),

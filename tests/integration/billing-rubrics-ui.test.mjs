@@ -6,6 +6,7 @@ import vm from "node:vm";
 import React from "react";
 import ts from "typescript";
 import { projectFutureFamilyCharges } from "../../src/modules/families/lib/family-charge-projections.ts";
+import { buildFamilyFinancialSummary } from "../../src/modules/families/lib/family-financial-summary.ts";
 
 const require = createRequire(import.meta.url);
 const root = "@/modules/families/";
@@ -22,7 +23,7 @@ const assignments = [
 ];
 
 // Executes real public components and callbacks with deterministic hooks, not a browser or database.
-function harness({ rubrics = [rubric, inactive], records = assignments, schedules = [], pending = false, message = null, response = "Respuesta del servidor", defer = false } = {}) {
+function harness({ rubrics = [rubric, inactive], records = assignments, schedules = [], pending = false, message = null, response = "Respuesta del servidor", success = false, defer = false } = {}) {
   const cache = new Map();
   const slots = new Map();
   const calls = [];
@@ -53,7 +54,7 @@ function harness({ rubrics = [rubric, inactive], records = assignments, schedule
   const action = (name) => async (previousState, data) => {
     calls.push({ name, previousState, fields: Object.fromEntries(data) });
     if (defer) await new Promise((resolve) => { release = resolve; });
-    return { message: response };
+    return name === "assign" ? { message: response, success } : { message: response };
   };
   const pass = ({ children }) => React.createElement("div", null, children);
   function load(path) {
@@ -73,6 +74,12 @@ function harness({ rubrics = [rubric, inactive], records = assignments, schedule
         if (id.endsWith("ui/input")) return { Input: (props) => React.createElement("input", props) };
         if (id.endsWith("ui/button")) return { Button: ({ children, nativeButton, render, ...props }) => render ? React.cloneElement(render, props, children) : React.createElement("button", props, children) };
         if (id.endsWith("ui/card")) return { Card: pass, CardHeader: pass, CardTitle: pass, CardContent: pass };
+        if (id.endsWith("ui/accordion")) return {
+          Accordion: ({ children, ...props }) => React.createElement("div", { ...props, "data-slot": "accordion" }, children),
+          AccordionItem: ({ children, render, ...props }) => React.cloneElement(render ?? React.createElement("div"), { ...props, "data-slot": "accordion-item" }, children),
+          AccordionTrigger: ({ children, ...props }) => React.createElement("h3", null, React.createElement("button", { ...props, "data-slot": "accordion-trigger" }, children)),
+          AccordionContent: ({ children, ...props }) => React.createElement("div", { ...props, "data-slot": "accordion-content" }, children),
+        };
         if (id === "lucide-react") return { PlusIcon: () => null, PencilIcon: () => null, ArrowLeft: () => React.createElement("svg", { "data-icon": "arrow-left" }) };
         if (id.endsWith("ui/badge")) return { Badge: ({ children }) => React.createElement("span", null, children) };
         if (id.endsWith("ui/table")) return Object.fromEntries(Object.entries({ Table: "table", TableHeader: "thead", TableBody: "tbody", TableRow: "tr", TableHead: "th", TableCell: "td" }).map(([name, tag]) => [name, (props) => React.createElement(tag, props)]));
@@ -88,6 +95,7 @@ function harness({ rubrics = [rubric, inactive], records = assignments, schedule
         if (id.endsWith("server/rubrics.actions")) return { createBillingRubricAction: action("create"), updateBillingRubricAction: action("update"), assignRubricToStudentAction: action("assign"), updateStudentRubricAssignmentAction: action("editAssignment"), deleteStudentRubricAssignmentAction: action("deleteAssignment") };
         if (id.endsWith("server/rubrics.repository")) return { listBillingRubricsForAdmin: async () => rubrics, listStudentRubricAssignments: async (id) => { assert.equal(id, family.id); return records; } };
         if (id.endsWith("family-financial.repository")) return { getFamilyFinancialRecord: async () => ({ ...family, eventualChargeSchedules: schedules }) };
+        if (id.endsWith("family-financial-summary")) return { buildFamilyFinancialSummary: (entries, schedules) => buildFamilyFinancialSummary(entries.map(entry => ({ ...entry, allocationsAsCredit: entry.allocationsAsCredit ?? [] })), schedules, new Date("2026-10-01T12:00:00Z")) };
         if (id.endsWith("family-charge-projections")) return { projectFutureFamilyCharges };
         if (id.endsWith("monthly-billing")) return { getBillingPeriod: () => new Date("2026-10-01T00:00:00Z") };
         if (id.endsWith("family-responsibles")) return { buildFamilyResponsibles: () => [] };
@@ -153,6 +161,42 @@ function harness({ rubrics = [rubric, inactive], records = assignments, schedule
   return api;
 }
 const component = (ui, file, name, props) => React.createElement(ui.load(file)[name], props);
+
+test("successful assignment closes the dialog and reopens a fresh form for another rubric", async () => {
+  const ui = harness({ success: true });
+  ui.render(component(ui, "components/student-rubric-assignment-form", "StudentRubricAssignmentForm", { familyId: "family", studentId: "ana", rubrics: [rubric] }));
+  ui.button("Agregar rubro").props.onClick();
+  ui.render();
+  ui.find(node => node.type === "select" && node.props.name === "rubricId").props.onChange({ target: { value: "materials" } });
+  ui.find(node => node.type === "input" && node.props.name === "installmentCount").props.onChange({ target: { value: "3" } });
+  ui.render();
+  await ui.submit("Agregar rubro al alumno", { startMonth: "3" });
+  assert.equal(ui.find(node => node.props.role === "dialog"), undefined);
+  assert.equal(ui.form("Agregar rubro al alumno"), undefined);
+  assert.equal(ui.calls.length, 1);
+  assert.equal(ui.calls[0].fields.installmentCount, "3");
+  ui.button("Agregar rubro").props.onClick();
+  ui.render();
+  assert.ok(ui.form("Agregar rubro al alumno"));
+  assert.equal(ui.find(node => node.type === "select" && node.props.name === "rubricId").props.value, "");
+  assert.equal(ui.find(node => node.type === "input" && node.props.name === "installmentCount").props.value, "1");
+  assert.equal(ui.find(node => node.props.role === "alert"), undefined);
+});
+
+test("failed assignment keeps the dialog open with its values and server error", async () => {
+  const ui = harness({ success: false, response: "No pudimos guardar el rubro. Intentá nuevamente." });
+  ui.render(component(ui, "components/student-rubric-assignment-form", "StudentRubricAssignmentForm", { familyId: "family", studentId: "ana", rubrics: [rubric] }));
+  ui.button("Agregar rubro").props.onClick();
+  ui.render();
+  ui.find(node => node.type === "select" && node.props.name === "rubricId").props.onChange({ target: { value: "materials" } });
+  ui.render();
+  await ui.submit("Agregar rubro al alumno");
+  assert.ok(ui.find(node => node.props.role === "dialog"));
+  assert.ok(ui.form("Agregar rubro al alumno"));
+  assert.equal(ui.find(node => node.type === "select" && node.props.name === "rubricId").props.value, "materials");
+  assert.match(ui.text(ui.find(node => node.props.role === "alert")), /No pudimos guardar el rubro/);
+  assert.equal(ui.calls.length, 1);
+});
 
 // Catalog regressions remain independent from student-assignment editing.
 test("catalog exposes create/edit total amounts, active state and server feedback", async () => {
@@ -295,6 +339,30 @@ test("empty catalog and pending actions cannot submit from the UI", () => {
     assert.equal(ui.find((node) => node.type === "button" && node.props.type === "submit").props.disabled, true);
     assert.equal(ui.calls.length, 0);
   }
+});
+
+test("student rubrics use independent shadcn accordion items without nesting profile links in buttons", async () => {
+  const ui = harness();
+  ui.render(await ui.load("views/dashboard-family-detail-view").DashboardFamilyDetailView({ familyId: "family", canManageFamily: true, canManagePayments: true, canWaive: true }));
+  const accordion = ui.find(node => node.props["data-slot"] === "accordion");
+  assert.ok(accordion);
+  assert.equal(accordion.props.multiple, true, "siblings can stay open independently");
+  assert.deepEqual(Array.from(accordion.props.defaultValue), family.students.map(s => s.id), "preserve initially visible student rubrics");
+  for (const student of family.students) {
+    const item = ui.find(node => node.props["data-slot"] === "accordion-item" && node.props.value === student.id);
+    assert.ok(item);
+    const trigger = ui.find(node => node.props["data-slot"] === "accordion-trigger" && node.props["aria-label"] === `Mostrar u ocultar rubros de ${student.firstName} ${student.lastName}`);
+    assert.ok(trigger);
+    assert.equal(trigger.type, "button");
+    assert.equal(ui.text(trigger).includes(student.group.name), true);
+    assert.ok(trigger.props.className.includes("hover:no-underline"), "group toggles do not underline on hover");
+    const link = ui.find(node => node.type === "a" && node.props.href === `/dashboard/students/${student.id}`);
+    assert.ok(link);
+    assert.equal(ui.text(trigger).includes(`${student.lastName}, ${student.firstName}`), false, "profile link stays outside the toggle button");
+  }
+  const panels = ui.nodes().filter(node => node.props["data-slot"] === "accordion-content");
+  assert.equal(panels.length, family.students.length);
+  assert.ok(panels.every(node => node.props.className.includes("h-auto")), "inner content does not override the measured panel height");
 });
 
 test("family detail lists multiple snapshots per student and respects management permissions", async () => {
@@ -442,7 +510,12 @@ test("S3/S5/S6 editor prefills snapshot, preserves year and posts only assignmen
   assert.match(ui.text(), /2024/);
   assert.match(ui.text(), /Bruto:.*90\.000,00/);
   assert.match(ui.text(), /Neto:.*81\.000,00/);
-  assert.match(ui.text(), /impagos/);
+  assert.match(ui.text(), /solo a las cuotas sin pagos/);
+  assert.match(ui.text(), /parcialmente pagadas conservan sus importes y su saldo pendiente/);
+  assert.match(ui.text(), /Si todos los pagos imputados están anulados, podés aumentar o reducir la cantidad de cuotas/);
+  assert.match(ui.text(), /sin borrar el historial, manteniendo el rubro y el mes de inicio/);
+  assert.match(ui.text(), /ninguna cuota vinculada al historial quede fuera del nuevo cronograma/);
+  assert.match(ui.text(), /Referencia sin pagos previos/);
   change(ui, "rubricId", "new");
   assert.match(ui.text(), /Bruto:.*150\.000,00/);
   change(ui, "rubricId", "materials");
@@ -546,6 +619,6 @@ test("family route supplies read-only future rows while keeping persisted balanc
   assert.equal(data.entries.length, 1);
   assert.equal(data.entries[0].id, "entry");
   assert.deepEqual(data.futureCharges.map((r) => r.amount), ["40.00", "40.00"]);
-  assert.equal(data.pendingCharges.length, 0);
+  assert.equal(data.pendingCharges.length, 3);
   assert.equal(ui.calls.length, 0);
 });

@@ -39,7 +39,7 @@ export async function previewStudentBilling(db: BillingClient, familyId: string,
    const effectiveFrom = prior ? new Date(Date.UTC(year, current.getUTCMonth() + 1, 1)) : yearStart;
    proposals.push({ sourceKey, familyId, studentId: student.id, eventualChargeItemId: term.id, isBase: term.isBase, itemName: term.name, startPeriod, effectiveFrom, installmentCount: term.installmentCount, totalAmount: discounted.netAmount, grossAmount: discounted.grossAmount, discountAmount: discounted.discountAmount, discountPercent: term.discountPercent, createdById: "" });
    const amounts = splitInstallmentAmounts(discounted.netAmount, term.installmentCount);
-   for (const index of dueInstallmentIndexes(startPeriod, term.installmentCount, current, new Set())) {
+   for (const index of dueInstallmentIndexes(startPeriod, term.installmentCount, now, new Set())) {
     const period = installmentPeriod(startPeriod, index);
     if (period >= effectiveFrom) charges.push({ student: studentName, concept: term.name, period: formatBillingPeriod(period), amount: amounts[index] });
    }
@@ -48,9 +48,10 @@ export async function previewStudentBilling(db: BillingClient, familyId: string,
  for (const schedule of existing.filter(s => s.studentId)) {
   const student = family.students.find(s => s.id === schedule.studentId);
   if (!student || student.familyId !== familyId) continue;
-  const amounts = splitInstallmentAmounts(schedule.totalAmount.toString(), schedule.installmentCount);
   const emitted = new Set(schedule.accountEntries.flatMap(e => e.installmentNumber === null ? [] : [e.installmentNumber]));
-  for (const index of dueInstallmentIndexes(schedule.startPeriod, schedule.installmentCount, current, emitted)) {
+  if (Array.from({ length: schedule.installmentCount }, (_, index) => index + 1).every(number => emitted.has(number))) continue;
+  const amounts = splitInstallmentAmounts(schedule.totalAmount.toString(), schedule.installmentCount);
+  for (const index of dueInstallmentIndexes(schedule.startPeriod, schedule.installmentCount, now, emitted)) {
    const period = installmentPeriod(schedule.startPeriod, index);
    if (schedule.effectiveFrom && period < schedule.effectiveFrom || schedule.cancelledFrom && period >= schedule.cancelledFrom) continue;
    charges.push({ student: student ? student.firstName + " " + student.lastName : "Alumno", concept: schedule.itemName, period: formatBillingPeriod(period), amount: amounts[index] });

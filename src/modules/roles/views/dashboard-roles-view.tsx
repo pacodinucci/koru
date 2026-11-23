@@ -98,19 +98,21 @@ export function DashboardRolesView({
   roles,
   canManage,
   actorPermissions,
-  currentRoleKey,
+  actorRole,
 }: {
   roles: RoleItem[];
   canManage: boolean;
   actorPermissions: string[];
-  currentRoleKey: string | null;
+  actorRole: UserRole;
 }) {
-  const editablePermissions = new Set(canManage ? actorPermissions : []);
-  const isSuperAdmin = currentRoleKey === "SUPERADMIN";
+  const isSuperAdmin = actorRole === UserRole.SUPERADMIN;
+  const canManageRoles = isSuperAdmin || canManage;
+  const grantablePermissions = isSuperAdmin ? permissionCatalog.map(({ key }) => key) : actorPermissions;
+  const editablePermissions = new Set(canManageRoles ? grantablePermissions : []);
 
   return (
     <div className="space-y-4">
-      {canManage ? (
+      {canManageRoles ? (
         <Card>
           <CardHeader><CardTitle className="text-base">Crear rol</CardTitle></CardHeader>
           <CardContent>
@@ -134,8 +136,8 @@ export function DashboardRolesView({
       {roles.map((role) => {
         const selected = new Set(role.permissions.map(({ permission }) => permission.key));
         const assigned = role._count.users + role._count.invitations;
-        const canManageRole = canManage && (role.key !== "SUPERADMIN" || isSuperAdmin);
-        const roleEditablePermissions = new Set(canManageRole ? actorPermissions : []);
+        const canManageRole = canManageRoles && (role.key !== "SUPERADMIN" || isSuperAdmin);
+        const roleEditablePermissions = new Set(canManageRole ? grantablePermissions : []);
 
         return (
           <Card key={role.id}>
