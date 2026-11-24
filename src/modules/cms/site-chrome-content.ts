@@ -6,6 +6,13 @@ export const SITE_CHROME_IMAGE_PAGE_SLUG = "/";
 
 export const siteChromeImageSlots: CmsImageSlot[] = [
   {
+    key: "site-chrome.navbar.blog.featured",
+    label: "Navbar · Blog · Imagen del submenú",
+    defaultSrc: "/assets/images/comu7.png",
+    alt: "Blog Koru",
+    frameLocked: true,
+  },
+  {
     key: "site-chrome.navbar.logo",
     label: "Navbar · Logo",
     defaultSrc: "/branding/koru-logo.png",

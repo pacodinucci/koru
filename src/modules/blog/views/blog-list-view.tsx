@@ -49,7 +49,7 @@ function formatEventTime(start: Date, end: Date) {
 
 function BlogEventsSidebar({ events, isAuthenticated }: { events: BlogCalendarEvent[]; isAuthenticated: boolean }) {
   return (
-    <aside className="space-y-3 [font-family:var(--font-montserrat)]">
+    <aside id="proximos-eventos" className="scroll-mt-28 space-y-3 [font-family:var(--font-montserrat)]">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Calendario

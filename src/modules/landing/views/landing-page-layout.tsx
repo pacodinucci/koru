@@ -683,7 +683,7 @@ function LandingPageLayoutContent({
   return (
     <div
       ref={rootRef}
-      className="relative isolate min-h-screen overflow-x-clip bg-white text-black"
+      className="relative isolate flex min-h-screen flex-col overflow-x-clip bg-white text-black"
       data-landing-preview={previewMode ? "true" : undefined}
       style={previewRootStyle}
     >
@@ -737,7 +737,7 @@ function LandingPageLayoutContent({
           />
         </>
       ) : null}
-      <div className="relative z-[1]">
+      <div className="relative z-[1] flex flex-1 flex-col">
                 {!hideSiteChrome ? (<>
 <div
           className="relative"
@@ -781,7 +781,7 @@ function LandingPageLayoutContent({
           ) : null}
         </div>
                 </>) : null}
-<div className="relative" data-preview-layout-section-id="layout-body">
+<div className="relative flex-1" data-preview-layout-section-id="layout-body">
           <div
             style={{
               paddingTop:
@@ -808,7 +808,7 @@ function LandingPageLayoutContent({
         </div>
                 {!hideSiteChrome ? (<footer
           data-preview-layout-section-id="layout-footer"
-          className=""
+          className="shrink-0"
           style={{
             backgroundColor: "var(--complement-900)",
             minHeight: `${footerHeight}px`,

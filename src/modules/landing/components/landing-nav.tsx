@@ -47,6 +47,7 @@ type LandingSubmenu = {
   featured?: {
     imageSrc: string;
     imageAlt: string;
+    imageSlotId?: string;
     title?: string;
     href?: string;
   };
@@ -104,8 +105,8 @@ function getInitials(nameOrEmail: string) {
   return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
 }
 
-function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
-  const normalized = label
+function getDefaultSubmenuByLabel(label: string, id?: string): LandingSubmenu | undefined {
+  const normalized = (id === "blog" ? "blog" : label)
     .trim()
     .toLowerCase()
     .normalize("NFD")
@@ -140,6 +141,24 @@ function getDefaultSubmenuByLabel(label: string): LandingSubmenu | undefined {
               href: "/como-acompanamos#evaluacion",
             },
           ],
+        },
+      ],
+    };
+  }
+
+  if (normalized === "blog") {
+    return {
+      featured: {
+        imageSrc: "/assets/images/comu7.png",
+        imageAlt: "Blog Koru",
+        imageSlotId: "site-chrome.navbar.blog.featured",
+        title: "Blog",
+        href: "/blog",
+      },
+      columns: [
+        {
+          title: "Blog",
+          links: [{ label: "Próximos eventos", href: "/blog#proximos-eventos" }],
         },
       ],
     };
@@ -290,7 +309,7 @@ export function LandingNav({
     resolvedHeaderBackgroundColor.trim().toLowerCase() === "transparent";
 
   const [activeSubmenuId, setActiveSubmenuId] = useState<string | null>(null);
-  const hasActiveSubmenu = activeSubmenuId !== null;
+
 
   const authLink = links.find((item) => {
     const normalizedLabel = item.label.trim().toLowerCase();
@@ -312,7 +331,7 @@ export function LandingNav({
   });
   const navLinksWithSubmenu = navLinks.map((item) => ({
     ...item,
-    submenu: item.submenu ?? getDefaultSubmenuByLabel(item.label),
+    submenu: item.submenu ?? getDefaultSubmenuByLabel(item.label, item.id),
   }));
 
   const navSlotById = new Map(siteChromeNavbarSlots.map((slot) => [slot.id, slot]));
@@ -325,9 +344,42 @@ export function LandingNav({
   const userDisplay = user?.name?.trim() || user?.email || "Usuario";
   const userInitials = getInitials(userDisplay);
   const canAccessDashboard = user?.canAccessDashboard ?? false;
-  const activeSubmenu = navLinksWithSubmenu.find(
+  // Keep the selected image visible while the editor controls have focus.
+  const selectedSubmenu = previewMode && selectedContentSlotId
+    ? navLinksWithSubmenu.find((item) => item.submenu?.featured?.imageSlotId === selectedContentSlotId)?.submenu
+    : undefined;
+  const activeSubmenu = selectedSubmenu ?? navLinksWithSubmenu.find(
     (item, index) => (item.id?.trim() || `nav-${index}`) === activeSubmenuId,
   )?.submenu;
+  const hasActiveSubmenu = Boolean(activeSubmenu);
+  const featured = activeSubmenu?.featured;
+  const featuredCardClassName = "group relative hidden h-[260px] w-[320px] shrink-0 overflow-hidden md:block";
+  const featuredCardContent = featured ? (
+    <>
+      {featured.imageSlotId ? (
+        <CmsPageEditableImage
+          slotId={featured.imageSlotId}
+          defaultSrc={featured.imageSrc}
+          alt={featured.imageAlt}
+          imageMap={imageMap}
+          previewMode={previewMode}
+          selectedContentSlotId={selectedContentSlotId}
+          onSelectContentSlot={onSelectContentSlot}
+          lockFrame
+          width={640}
+          height={640}
+          className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+        />
+      ) : (
+        <Image src={featured.imageSrc} alt={featured.imageAlt} width={640} height={640} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]" />
+      )}
+      {featured.title ? (
+        <span className="absolute right-4 bottom-4 text-sm font-semibold tracking-wider text-white">
+          {featured.title}
+        </span>
+      ) : null}
+    </>
+  ) : null;
 
   function renderUserDropdown(
     menu: "desktop" | "mobile",
@@ -713,14 +765,30 @@ export function LandingNav({
               <div className="flex h-full w-full flex-col items-center justify-center px-6 py-10 text-center">
                 <nav className="flex flex-col items-center justify-center gap-8 font-['Roboto_Condensed'] text-2xl font-semibold tracking-wide text-white">
                   {navLinksWithSubmenu.map((item, index) => (
-                    <a
-                      key={`${item.label}-${index}`}
-                      href={item.href || "#"}
-                      onClick={(event) => { if (previewMode) event.preventDefault(); setIsMobileMenuOpen(false); }}
-                      className="transition-colors duration-200 hover:text-white/80"
-                    >
-                      {renderNavLabel(item)}
-                    </a>
+                    <div key={`${item.label}-${index}`} className="space-y-3">
+                      <a
+                        href={item.href || "#"}
+                        onClick={(event) => { if (previewMode) event.preventDefault(); setIsMobileMenuOpen(false); }}
+                        className="transition-colors duration-200 hover:text-white/80"
+                      >
+                        {renderNavLabel(item)}
+                      </a>
+                      {item.href === "/blog" && item.submenu ? (
+                        <ul className="space-y-2 text-lg font-normal">
+                          {item.submenu.columns.flatMap((column) => column.links).map((link) => (
+                            <li key={link.href}>
+                              <a
+                                href={link.href}
+                                onClick={(event) => { if (previewMode) event.preventDefault(); setIsMobileMenuOpen(false); }}
+                                className="transition-colors duration-200 hover:text-white/80"
+                              >
+                                {link.label}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
                   ))}
                 </nav>
                 {!user ? (
@@ -749,24 +817,12 @@ export function LandingNav({
           }}
         >
           <div className="mx-auto flex min-h-[260px] max-w-[1400px] items-stretch gap-12">
-            {activeSubmenu.featured ? (
-              <a
-                href={activeSubmenu.featured.href || "#"}
-                className="group relative hidden h-[260px] w-[320px] shrink-0 overflow-hidden md:block"
-              >
-                <Image
-                  src={activeSubmenu.featured.imageSrc}
-                  alt={activeSubmenu.featured.imageAlt}
-                  width={640}
-                  height={640}
-                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-                />
-                {activeSubmenu.featured.title ? (
-                  <span className="absolute right-4 bottom-4 text-sm font-semibold tracking-wider text-white">
-                    {activeSubmenu.featured.title}
-                  </span>
-                ) : null}
-              </a>
+            {featured ? (
+              previewMode ? (
+                <div className={featuredCardClassName}>{featuredCardContent}</div>
+              ) : (
+                <a href={featured.href || "#"} className={featuredCardClassName}>{featuredCardContent}</a>
+              )
             ) : null}
 
             <div className="grid flex-1 content-start grid-cols-1 gap-10 md:grid-cols-3">

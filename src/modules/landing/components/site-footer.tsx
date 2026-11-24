@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Instagram } from "lucide-react";
+import { Instagram, Youtube } from "lucide-react";
 
 import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
 import {
@@ -164,18 +164,30 @@ export function SiteFooter({
               onSelectContentSlot={onSelectContentSlot}
               className="text-lg font-semibold uppercase tracking-tight text-white"
             />
-            {instagramHref ? (
+            <div className="mt-4 flex items-center gap-4">
+              {instagramHref ? (
+                <a
+                  href={instagramHref}
+                  aria-label="Instagram de Koru"
+                  className="inline-flex text-white transition-opacity hover:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  onClick={(event) => {
+                    if (previewMode) event.preventDefault();
+                  }}
+                >
+                  <Instagram aria-hidden="true" className="size-9" />
+                </a>
+              ) : null}
               <a
-                href={instagramHref}
-                aria-label="Instagram de Koru"
-                className="mt-4 inline-flex text-white transition-opacity hover:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                href="https://www.youtube.com/@KORUOSA"
+                aria-label="YouTube de Koru"
+                className="inline-flex text-white transition-opacity hover:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                 onClick={(event) => {
                   if (previewMode) event.preventDefault();
                 }}
               >
-                <Instagram aria-hidden="true" className="size-9" />
+                <Youtube aria-hidden="true" className="size-9" />
               </a>
-            ) : null}
+            </div>
           </section>
           <section>
             <FooterText

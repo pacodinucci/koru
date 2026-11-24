@@ -5,6 +5,7 @@ import { useState, type CSSProperties, type ElementType } from "react";
 import { CmsPageEditableImage } from "@/modules/cms/components/cms-page-editable-image";
 import type { CmsImageMap } from "@/modules/cms/server/cms-image.repository";
 import { EditableContentSlot } from "@/modules/landing/views/components/editable-content-slot";
+import { getLandingContentSlotValue } from "@/modules/landing/content-slots";
 import type {
   LandingPreviewBindings,
   LandingTextMap,
@@ -329,9 +330,11 @@ function TeamSection({
 
         <div className="grid grid-cols-2 md:grid-cols-4">
           {teamMembers.map((member, index) => {
-            const name = textMap[`content.quienes-somos.team.member.${index}.name`] ?? member.name;
-            // Keep original CMS indices so other profiles retain their content and images.
+            const nameSlot = getContentSlot(`content.quienes-somos.team.member.${index}.name`);
+            const name = getLandingContentSlotValue(textMap, nameSlot);
+            // Keep original indices so CMS names, images and details stay aligned.
             if (name.trim().toLocaleLowerCase("es") === "itza") return null;
+
             const isSelected = selectedMemberIndex === index;
             const hasSelectedMember = selectedMemberIndex !== null;
             return (

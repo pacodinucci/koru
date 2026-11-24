@@ -1,50 +1,80 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 
 const require = createRequire(import.meta.url);
-const source = readFileSync("src/modules/quienes-somos/views/quienes-somos-view.tsx", "utf8");
-const members = source.slice(source.indexOf("const teamMembers ="), source.indexOf("const facilityImages ="));
-const section = source.slice(source.indexOf("function TeamSection("), source.indexOf("function FacilitiesSection("));
-const output = ts.transpileModule(`${members}\n${section}\nexport { TeamSection };`, {
-  compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS },
-}).outputText;
-const mod = { exports: {} };
-vm.runInNewContext(output, {
-  module: mod, exports: mod.exports, require,
-  useState: () => [null, () => {}],
-  quienesSomosContentSlotIds: { teamEyebrow: "team.title" },
-  EditableCopy: ({ slotId, textMap }) => React.createElement("span", { "data-slot": slotId }, textMap[slotId]),
-  CmsPageEditableImage: ({ slotId }) => React.createElement("img", { "data-slot": slotId, alt: "" }),
-  getInitials: (name) => name[0],
-});
-function render(names) {
-  const textMap = Object.fromEntries(names.map((name, index) => [`content.quienes-somos.team.member.${index}.name`, name]));
-  return renderToStaticMarkup(React.createElement(mod.exports.TeamSection, { textMap, imageMap: {} }));
+const root = fileURLToPath(new URL("../../", import.meta.url));
+const cache = new Map();
+
+function load(relativePath) {
+  const filename = path.join(root, relativePath);
+  if (cache.has(filename)) return cache.get(filename).exports;
+  const testModule = { exports: {} };
+  cache.set(filename, testModule);
+  vm.runInNewContext(ts.transpileModule(readFileSync(filename, "utf8"), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText, {
+    module: testModule, exports: testModule.exports,
+    require(id) {
+      if (id.endsWith("cms-page-editable-image")) return { CmsPageEditableImage: () => null };
+      if (id.endsWith("facilities-carousel")) return { FacilitiesCarousel: () => null };
+      if (id.endsWith("about-video-section")) return { AboutVideoSection: () => null };
+      if (id.endsWith("editable-content-slot")) return {
+        EditableContentSlot: ({ as = "span", slot, textMap }) => React.createElement(as, {
+          "data-content-slot-id": slot.id,
+        }, textMap[slot.id] ?? slot.defaultValue),
+      };
+      if (id.startsWith("@/")) {
+        const relative = `src/${id.slice(2)}`;
+        const extension = [".ts", ".tsx"].find((ext) => existsSync(path.join(root, relative + ext)));
+        assert.ok(extension, `Unresolved import: ${id}`);
+        return load(relative + extension);
+      }
+      return require(id);
+    },
+  });
+  return testModule.exports;
 }
 
-test("removes Itza without reindexing other members or changing the four-column grid", () => {
-  const names = Array.from({ length: 20 }, (_, index) => `Member ${index}`);
-  names[13] = "Itza";
-  const html = render(names);
-  assert.equal((html.match(/<article/g) ?? []).length, 19);
-  assert.doesNotMatch(html, /member\.13\.name/);
-  assert.doesNotMatch(html, />Itza</);
-  for (let index = 0; index < 20; index++) {
-    if (index !== 13) assert.ok(html.includes(`member.${index}.name`));
+const { QuienesSomosView } = load("src/modules/quienes-somos/views/quienes-somos-view.tsx");
+const memberName = (index) => `content.quienes-somos.team.member.${index}.name`;
+
+function renderTeam(textMap, previewMode = false) {
+  const html = renderToStaticMarkup(React.createElement(QuienesSomosView, { textMap, previewMode }));
+  const team = html.match(/<section[^>]*id="equipo"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(team, "Public about view must render the team section");
+  return team;
+}
+
+test("team excludes the CMS-named Itza card without shifting the other member slots", () => {
+  const textMap = { [memberName(18)]: "Integrante conservado", [memberName(19)]: "Itza" };
+  const snapshot = JSON.stringify(textMap);
+  for (const previewMode of [false, true]) {
+    const html = renderTeam(textMap, previewMode);
+    assert.equal((html.match(/<article\b/g) ?? []).length, 19);
+    assert.ok(!html.includes(`data-content-slot-id="${memberName(19)}"`));
+    assert.ok(!html.includes(">Itza<"));
+    assert.ok(html.includes(`data-content-slot-id="${memberName(18)}">Integrante conservado<`));
+    for (let index = 0; index < 19; index++) {
+      assert.ok(html.includes(`data-content-slot-id="${memberName(index)}"`), `Missing original slot ${index}`);
+    }
+    assert.ok(html.includes("grid grid-cols-2 md:grid-cols-4"));
   }
-  assert.match(html, /grid-cols-2 md:grid-cols-4/);
-  assert.equal(19 % 4, 3);
+  assert.equal(JSON.stringify(textMap), snapshot);
 });
 
-test("keeps every other member and their original CMS slots", () => {
-  const html = render(Array.from({ length: 20 }, (_, index) => `Member ${index}`));
-  assert.equal((html.match(/<article/g) ?? []).length, 20);
-  assert.match(html, /member\.19\.name/);
-  assert.match(html, /about\.image\.team\.13/);
+test("team preserves all cards and CMS names when no member is named Itza", () => {
+  const textMap = { [memberName(19)]: "Otra integrante" };
+  const snapshot = JSON.stringify(textMap);
+  const html = renderTeam(textMap);
+  assert.equal((html.match(/<article\b/g) ?? []).length, 20);
+  assert.ok(html.includes(`data-content-slot-id="${memberName(19)}">Otra integrante<`));
+  assert.equal(JSON.stringify(textMap), snapshot);
 });
