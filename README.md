@@ -53,9 +53,13 @@ npm run prisma:migrate -- --name init
 npm run dev
 ```
 
+El servidor local usa Webpack para evitar el fallo interno de Turbopack observado durante HMR y la compactación de su caché. Si ya tenías un servidor ejecutándose, detenelo con `Ctrl+C` y volvé a ejecutar `npm run dev`: el cambio no se aplica al proceso anterior. No hace falta borrar la base de datos ni reinstalar dependencias.
+
 ## Scripts útiles
 
-- `npm run dev`
+- `npm run dev` — servidor local con Webpack.
+- `npm run dev:webpack` — alias explícito del mismo servidor.
+- `npm run dev:poll` — Webpack con polling de archivos en Windows, si no se detectan cambios.
 - `npm run lint`
 - `npm run prisma:generate`
 - `npm run prisma:migrate`
