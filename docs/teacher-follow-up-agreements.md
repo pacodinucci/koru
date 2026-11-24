@@ -5,20 +5,20 @@ Superadmin gestiona acuerdos dirigidos a un docente. Cada docente lee y acepta �
 ## Uso
 
 1. Como superadmin, abrí **Docentes → ⋮ → Acuerdos de seguimiento**. La flecha permite volver al listado de docentes.
-2. Elegí **Nuevo acuerdo**, completá título y texto y, si corresponde, adjuntá PDF, DOC, DOCX, JPG, PNG o WEBP de hasta 10 MB. Guardá el borrador; todavía no es visible para el docente.
+2. Elegí **Nuevo acuerdo**, completá título y texto y, si corresponde, adjunta PDF, DOC, DOCX, JPG, PNG o WEBP de hasta 10 MB. Guardá el borrador; todavía no es visible para el docente.
 3. Podés editar el borrador o reemplazar su adjunto. Si no seleccionás otro archivo, se conserva el actual. **Publicar** habilita la lectura del docente y bloquea la edición definitivamente.
 4. Como docente, abrí **Mis acuerdos de seguimiento**, leé el texto y el adjunto y elegí **Dar conformidad**. La constancia muestra la persona y fecha originales registradas por el servidor; repetir la solicitud no las reemplaza.
 5. Superadmin puede eliminar borradores o publicados después de confirmar. Se elimina también el adjunto y la conformidad, si existen.
 
 ## Permisos y rutas
 
-| Acceso | Permiso |
-| --- | --- |
-| `/dashboard/teachers/[teacherId]/follow-up-agreements` | Solo SUPERADMIN; gestión por docente. |
-| `/dashboard/mis-acuerdos-seguimiento` | Solo TEACHER y ADMIN_TEACHER; publicados propios. |
-| Crear, editar, publicar y eliminar | Solo SUPERADMIN; editar únicamente borradores. |
-| Dar conformidad | Solo el usuario docente destinatario de un acuerdo publicado. |
-| Abrir adjunto | SUPERADMIN o destinatario de un publicado, mediante descarga autenticada. |
+| Acceso                                                 | Permiso                                                                   |
+| ------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `/dashboard/teachers/[teacherId]/follow-up-agreements` | Solo SUPERADMIN; gestión por docente.                                     |
+| `/dashboard/mis-acuerdos-seguimiento`                  | Solo TEACHER y ADMIN_TEACHER; publicados propios.                         |
+| Crear, editar, publicar y eliminar                     | Solo SUPERADMIN; editar únicamente borradores.                            |
+| Dar conformidad                                        | Solo el usuario docente destinatario de un acuerdo publicado.             |
+| Abrir adjunto                                          | SUPERADMIN o destinatario de un publicado, mediante descarga autenticada. |
 
 **Acuerdos de Seguimiento** (`/dashboard/acuerdos-seguimiento`) conserva su función anterior: acuerdos sobre alumnos que el docente redacta para las familias. **Reportes** y **Editar perfil** siguen disponibles en el menú docente con sus permisos previos.
 

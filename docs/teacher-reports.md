@@ -18,7 +18,7 @@ El mismo menú conserva **Editar perfil**, con los campos y la asignación de gr
 
 - Elegí **Nuevo reporte**, ingresá un título de 2 a 160 caracteres y usá **una** de estas alternativas:
   - Escribí el reporte con el editor enriquecido (negrita, cursiva, listas y otros formatos). El contenido serializado admite hasta 10.000 caracteres, incluido el formato.
-  - Adjuntá un archivo **PDF, DOC o DOCX** con contenido y de hasta **10 MB**.
+  - adjunta un archivo **PDF, DOC o DOCX** con contenido y de hasta **10 MB**.
 - No combines un archivo y texto en la misma carga. Elegí **Guardar reporte**. El nuevo reporte se guarda privado.
 - La tabla muestra fecha, autor, título, tipo y marca de visibilidad. **Ver reporte** permite leer el contenido o **Descargar** el adjunto.
 - La descarga usa una ruta autenticada; no se publican enlaces privados de almacenamiento.
@@ -35,11 +35,11 @@ Cuando no hay reportes, la pantalla lo indica y permite crear el primero. Si fal
 
 La página `/dashboard/teachers/[teacherId]/reports` verifica `SUPERADMIN` antes de consultar datos y devuelve una página no encontrada si el perfil no existe. La UI consume `listTeacherReports(teacherId)` y envía al cliente solo campos seleccionados y una fecha ISO; nunca la URL privada del archivo.
 
-| Operación | Ruta y datos |
-| --- | --- |
-| Crear | `POST /api/teachers/[teacherId]/reports`, multipart: `title` y `content` **o** `reportFile` |
+| Operación          | Ruta y datos                                                                                  |
+| ------------------ | --------------------------------------------------------------------------------------------- |
+| Crear              | `POST /api/teachers/[teacherId]/reports`, multipart: `title` y `content` **o** `reportFile`   |
 | Marcar visibilidad | `PATCH /api/teacher-reports/[id]/visibility`, JSON `{ "visibleToTeacher": true }` (o `false`) |
-| Eliminar | `DELETE /api/teacher-reports/[id]` |
-| Descargar | `GET /api/teacher-reports/[id]/download` |
+| Eliminar           | `DELETE /api/teacher-reports/[id]`                                                            |
+| Descargar          | `GET /api/teacher-reports/[id]/download`                                                      |
 
 Las mutaciones esperan la respuesta `{ "ok": true }`; los errores pueden incluir `error`. El servidor mantiene la validación y la autorización de cada operación, incluida la descarga. Cambiar una marca no debe relajar ninguna de esas comprobaciones.

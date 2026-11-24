@@ -9,7 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { TeacherFollowUpAgreementRow } from "./teacher-follow-up-agreements-client";
 
-export function TeacherFollowUpAgreementForm({ teacherId, draft, onSaved, onCancel }: {
+export function TeacherFollowUpAgreementForm({
+  teacherId,
+  draft,
+  onSaved,
+  onCancel,
+}: {
   teacherId: string;
   draft?: TeacherFollowUpAgreementRow;
   onSaved: () => void;
@@ -42,7 +47,7 @@ export function TeacherFollowUpAgreementForm({ teacherId, draft, onSaved, onCanc
     }
     if (file instanceof File && file.name) {
       if (!/\.(pdf|doc|docx|jpg|jpeg|png|webp)$/i.test(file.name)) {
-        setError("Adjuntá un PDF, DOC, DOCX, JPG, PNG o WEBP.");
+        setError("adjunta un PDF, DOC, DOCX, JPG, PNG o WEBP.");
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
@@ -59,18 +64,29 @@ export function TeacherFollowUpAgreementForm({ teacherId, draft, onSaved, onCanc
     if (file instanceof File && file.name) data.set("file", file);
     setBusy(true);
     try {
-      const response = await fetch(draft
-        ? `/api/teacher-follow-up-agreements/${encodeURIComponent(draft.id)}`
-        : "/api/teacher-follow-up-agreements", {
-        method: draft ? "PATCH" : "POST",
-        body: data,
-      });
-      const result = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
-      if (!response.ok || !result?.ok) throw new Error(result?.error ?? "No pudimos guardar el borrador.");
+      const response = await fetch(
+        draft
+          ? `/api/teacher-follow-up-agreements/${encodeURIComponent(draft.id)}`
+          : "/api/teacher-follow-up-agreements",
+        {
+          method: draft ? "PATCH" : "POST",
+          body: data,
+        },
+      );
+      const result = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+      } | null;
+      if (!response.ok || !result?.ok)
+        throw new Error(result?.error ?? "No pudimos guardar el borrador.");
       router.refresh();
       onSaved();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No pudimos guardar el borrador.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "No pudimos guardar el borrador.",
+      );
     } finally {
       setBusy(false);
     }
@@ -78,26 +94,77 @@ export function TeacherFollowUpAgreementForm({ teacherId, draft, onSaved, onCanc
 
   return (
     <form onSubmit={save} className="space-y-4 rounded-xl border bg-white p-4">
-      <h2 className="text-base font-semibold">{draft ? "Editar borrador" : "Nuevo acuerdo"}</h2>
-      {error ? <p role="alert" className="text-sm text-red-700">{error}</p> : null}
+      <h2 className="text-base font-semibold">
+        {draft ? "Editar borrador" : "Nuevo acuerdo"}
+      </h2>
+      {error ? (
+        <p role="alert" className="text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
       <div className="space-y-1.5">
         <Label htmlFor="teacher-agreement-title">Título</Label>
-        <Input id="teacher-agreement-title" name="title" defaultValue={draft?.title ?? ""} required minLength={2} maxLength={160} disabled={busy} />
+        <Input
+          id="teacher-agreement-title"
+          name="title"
+          defaultValue={draft?.title ?? ""}
+          required
+          minLength={2}
+          maxLength={160}
+          disabled={busy}
+        />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="teacher-agreement-body">Acuerdo</Label>
-        <Textarea id="teacher-agreement-body" name="body" defaultValue={draft?.body ?? ""} required maxLength={10000} rows={8} disabled={busy} />
+        <Textarea
+          id="teacher-agreement-body"
+          name="body"
+          defaultValue={draft?.body ?? ""}
+          required
+          maxLength={10000}
+          rows={8}
+          disabled={busy}
+        />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="teacher-agreement-file">Documento o imagen (opcional)</Label>
-        <Input id="teacher-agreement-file" name="file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" disabled={busy} />
-        <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, JPG, PNG o WEBP de hasta 10 MB.</p>
-        {draft?.hasAttachment ? <p className="text-sm text-muted-foreground">Adjunto actual: {draft.attachmentName ?? "Documento"}. Si no elegís otro archivo, se conserva.</p> : null}
+        <Label htmlFor="teacher-agreement-file">
+          Documento o imagen (opcional)
+        </Label>
+        <Input
+          id="teacher-agreement-file"
+          name="file"
+          type="file"
+          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+          disabled={busy}
+        />
+        <p className="text-xs text-muted-foreground">
+          PDF, DOC, DOCX, JPG, PNG o WEBP de hasta 10 MB.
+        </p>
+        {draft?.hasAttachment ? (
+          <p className="text-sm text-muted-foreground">
+            Adjunto actual: {draft.attachmentName ?? "Documento"}. Si no elegís
+            otro archivo, se conserva.
+          </p>
+        ) : null}
       </div>
-      <p className="text-sm text-muted-foreground">El borrador solo es visible para superadmin. Al publicarlo, el docente podrá leerlo y dar su conformidad; ya no se podrá editar.</p>
+      <p className="text-sm text-muted-foreground">
+        El borrador solo es visible para superadmin. Al publicarlo, el docente
+        podrá leerlo y dar su conformidad; ya no se podrá editar.
+      </p>
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={busy}>{busy ? "Guardando…" : "Guardar borrador"}</Button>
-        {onCancel ? <Button type="button" variant="outline" disabled={busy} onClick={onCancel}>Cancelar</Button> : null}
+        <Button type="submit" disabled={busy}>
+          {busy ? "Guardando…" : "Guardar borrador"}
+        </Button>
+        {onCancel ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={busy}
+            onClick={onCancel}
+          >
+            Cancelar
+          </Button>
+        ) : null}
       </div>
     </form>
   );
