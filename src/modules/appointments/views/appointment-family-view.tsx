@@ -32,7 +32,7 @@ export function AppointmentFamilyView({ token }: { token: string }) {
     } catch (cause) { if (identity.current === key) setFailure({ key, message: cause instanceof Error ? cause.message : "No pudimos confirmar tu elección." }); }
     finally { operation.current = false; setBusy(false); }
   }
-  return <main className="mx-auto min-h-screen w-full max-w-2xl space-y-5 px-6 py-12">
+  return <main className="mx-auto min-h-screen w-full max-w-2xl space-y-5 px-6 py-12 font-montserrat">
     <p className="font-medium text-primary">Koru · Cita de admisión</p>
     <h1 className="text-3xl font-semibold">{invitation?.status === "CONFIRMED" ? "Cita confirmada" : "Elegí un horario para tu cita"}</h1>
     {error && <div role="alert"><p>{error}</p>{!invitation && <Button variant="outline" onClick={() => setRetry(value => value + 1)}>Reintentar</Button>}</div>}
@@ -41,8 +41,7 @@ export function AppointmentFamilyView({ token }: { token: string }) {
       <p>Hola, {invitation.recipientName}.</p>
       {pending && <>
         <p>Los horarios están reservados hasta {appointmentDate(invitation.expiresAt)}. Elegí una opción y confirmá tu cita.</p>
-        <p>Zona horaria: Ciudad de México (America/Mexico_City).</p>
-        <fieldset className="space-y-3"><legend className="mb-2 font-medium">Horarios disponibles</legend>{invitation.slots.map(slot => <label key={slot.id} className="flex items-start gap-3 rounded-lg border p-4">
+        <fieldset className="space-y-2"><legend className="mb-2 font-medium">Horarios disponibles</legend>{invitation.slots.map(slot => <label key={slot.id} className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm">
           <input type="radio" name="appointment-slot" value={slot.id} checked={selection === slot.id} disabled={busy || new Date(slot.startsAt) <= new Date()} onChange={() => setSelection(slot.id)} />
           <span>{appointmentDate(slot.startsAt)} · {invitation.durationMinutes} minutos{new Date(slot.startsAt) <= new Date() && " · Horario pasado"}</span>
         </label>)}</fieldset>
@@ -50,7 +49,6 @@ export function AppointmentFamilyView({ token }: { token: string }) {
       {invitation.status === "CONFIRMED" && <>
         <p>Tu cita ya quedó confirmada. No necesitás volver a reservar.</p>
         {invitation.slots.filter(slot => slot.id === invitation.selectedSlotId).map(slot => <p key={slot.id} className="text-lg font-semibold">{appointmentDate(slot.startsAt)} · {invitation.durationMinutes} minutos</p>)}
-        <p>Zona horaria: Ciudad de México (America/Mexico_City).</p>
       </>}
       {(pending || invitation.status === "CONFIRMED") && <>
         <p>{invitation.mode === "ONLINE" ? "Online" : "Presencial"}: {invitation.location}</p>

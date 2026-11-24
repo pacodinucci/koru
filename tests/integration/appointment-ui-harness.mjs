@@ -27,7 +27,7 @@ export function harness(fetcher) {
         if (id === 'next/link') return { __esModule: true, default: ({ children, ...props }) => React.createElement('a', props, children) };
         if (id === 'lucide-react') return new Proxy({}, { get: () => () => null });
         if (id === '@/components/ui/button') return { Button: ({ children, ...props }) => React.createElement('button', props, children) };
-        if (id === '@/components/ui/responsive-dialog') return new Proxy({}, { get: (_, name) => ({ children, open }) => name === 'ResponsiveDialog' && !open ? null : React.createElement('div', null, children) });
+        if (id === '@/components/ui/responsive-dialog') return new Proxy({}, { get: (_, name) => ({ children, open, ...props }) => name === 'ResponsiveDialog' && !open ? null : React.createElement('div', props, children) });
         if (id.startsWith('@/')) return load(`src/${id.slice(2)}`);
         if (id.startsWith('.')) return load(path.join(path.dirname(file), id));
         return require(id);

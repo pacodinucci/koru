@@ -24,6 +24,11 @@ export type AppointmentInvitationView = PublicAppointmentInvitationView & {
   recipientEmail: string;
   sentAt: string | null;
   confirmationEmailFailed: boolean;
+  provider?: "GOOGLE_CALENDAR" | "EMAIL";
+  googleEventUrl?: string | null;
+  googleRsvpStatus?: "needsAction" | "accepted" | "declined" | "tentative" | null;
+  googleSyncPending?: boolean;
+  canManageGoogle?: boolean;
 };
 
 export type CreateAppointmentInvitationInput = {

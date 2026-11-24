@@ -618,6 +618,14 @@ model AppointmentInvitation {
   selectedSlotId          String?
   confirmationEmailFailed Boolean @default(false)
   resendCount             Int @default(0)
+  googleAccountId         String?
+  googleCalendarId        String?
+  googleEventId           String? @unique
+  googleEventUrl          String?
+  googleRsvpStatus        String?
+  googleSyncPending       Boolean @default(false)
+  googleCancelPending     Boolean @default(false)
+  googleOperationVersion  Int @default(0)
   slots                   Json
   lastEndsAt              DateTime
   createdAt               DateTime @default(now())

@@ -19,6 +19,7 @@ await client.connect();
 try {
   await client.query('CREATE TABLE "AdmissionInquiry" (id TEXT PRIMARY KEY, "guardianNames" TEXT NOT NULL, email TEXT NOT NULL)');
   await client.query(readFileSync('prisma/migrations/20261123190000_contact_appointment_invitations/migration.sql', 'utf8'));
+  await client.query(readFileSync('prisma/migrations/20261123210000_appointment_google_calendar/migration.sql', 'utf8'));
   for (const id of ['one', 'two', 'three', 'four']) await client.query('INSERT INTO "AdmissionInquiry" VALUES ($1,$2,$3)', [id, `Familia ${id}`, `${id}@example.test`]);
   const cache = new Map();
   function load(file) {
@@ -33,6 +34,8 @@ try {
         if (id === '@/lib/env') return { env: { APP_URL: 'https://appointments.example.test' } };
         if (id === '@/modules/auth/server/auth-guards') return { getAuthenticatedUser: async () => actor };
         if (id === '@/modules/users/server/invitation-token-cipher') return { encryptInvitationToken: value => `isolated:${value}`, decryptInvitationToken: value => value.slice(9) };
+        if (id === './appointments.repository') return { appointments: load('src/modules/appointments/server/appointments.repository.ts').legacyAppointments };
+        if (id === './appointments.google') return { getAppointmentGoogleConnection: async () => { throw new Error('No Google network allowed in legacy probe'); } };
         if (id === './appointments.mail') return { deliverAppointmentMail: async (kind, record, token) => { deliveries.push({ kind, record: structuredClone(record), token }); return true; } };
         if (id.startsWith('@/')) return load(`src/${id.slice(2)}`);
         if (id.startsWith('.')) return load(new URL(id, `file:///${file}`).pathname.slice(1));

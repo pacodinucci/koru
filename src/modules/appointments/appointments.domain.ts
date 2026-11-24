@@ -11,6 +11,9 @@ export type AppointmentRecord = {
   durationMinutes: number; mode: "IN_PERSON" | "ONLINE"; location: string; message: string | null;
   selectedSlotId: string | null; confirmationEmailFailed: boolean; resendCount: number;
   createdAt: Date; slots: AppointmentSlotView[];
+  googleAccountId?: string | null; googleCalendarId?: string | null; googleEventId?: string | null;
+  googleEventUrl?: string | null; googleRsvpStatus?: string | null; googleSyncPending?: boolean;
+  googleCancelPending?: boolean; googleOperationVersion?: number;
 };
 export type AppointmentStore = {
   listActive(): Promise<AppointmentRecord[]>;
@@ -79,7 +82,7 @@ export function createAppointmentService(deps: AppointmentDependencies) {
   async function lookup(store: AppointmentStore, token: string) {
     if (typeof token !== "string" || !token || token.length > 256) throw unavailable();
     const record = await store.byHash(deps.hash(token));
-    if (!record || record.status === "SENDING" || record.status === "SEND_FAILED") throw unavailable();
+    if (!record || record.googleEventId || record.status === "SENDING" || record.status === "SEND_FAILED") throw unavailable();
     return record;
   }
   return {

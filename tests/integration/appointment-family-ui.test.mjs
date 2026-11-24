@@ -11,7 +11,10 @@ test('family page initially only reads, confirms selected slot and shows final b
   });
   ui.mount(file, 'AppointmentFamilyView', { token: 'opaque-token' }); await ui.flush();
   assert.equal(calls.length, 1); assert.equal(calls[0].options.method, undefined);
-  assert.match(ui.text(), /Ciudad de México/); assert.match(ui.text(), /reservados hasta/);
+  assert.doesNotMatch(ui.text(), /Zona horaria|Ciudad de México|America\/Mexico_City/); assert.match(ui.text(), /reservados hasta/);
+  assert.match(ui.find(n => n.type === 'main').props.className, /font-montserrat/);
+  const option = ui.find(n => n.type === 'label' && n.children.some(child => child?.type === 'input'));
+  assert.match(option.props.className, /py-2/); assert.doesNotMatch(option.props.className, /p-4/);
   assert.equal(ui.button('Confirmar cita').props.disabled, true);
   const radio = ui.find(n => n.type === 'input' && n.props.type === 'radio'); radio.props.onChange(); ui.render();
   await ui.click('Confirmar cita');

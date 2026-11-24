@@ -22,6 +22,28 @@ function AppointmentEmail({ kind, record, url }: { kind: string; record: Appoint
     <Button href={url} style={{ padding: "12px 20px", backgroundColor: "#55764d", color: "#fff", borderRadius: 6 }}>{kind === "invitation" ? "Elegir horario" : kind === "rejection" ? "Ver contacto" : "Ver cita"}</Button>
   </Container></Body></Html>;
 }
+function VisitEmail({ record }: { record: AppointmentRecord }) {
+  return <Html lang="es"><Head /><Preview>Tu visita a Koru</Preview><Body style={{ backgroundColor: "#f8faf7", fontFamily: "Arial, sans-serif" }}><Container style={{ padding: 24 }}>
+    <Heading>Tu visita a Koru</Heading>
+    <Text>Hola, {record.recipientName}.</Text>
+    <Text>Gracias por completar el cuestionario inicial. Durante esta cita podremos conversar sobre lo que nos compartiste, conocer mejor a tu familia y resolver tus dudas sobre Koru.</Text>
+    <Text>{format(record.slots[0].startsAt)} — {record.durationMinutes} minutos.</Text>
+    <Text>Zona horaria: Ciudad de México (America/Mexico_City).</Text>
+    <Text>{record.mode === "ONLINE" ? "La visita será online. Enlace" : "La visita será presencial. Lugar"}: {record.location}</Text>
+    {record.message && <Text style={{ whiteSpace: "pre-wrap" }}>{record.message}</Text>}
+    <Text>Recibirás por separado una invitación de Google Calendar desde la cuenta de quien organiza la cita. Para confirmar tu asistencia, aceptá esa invitación. Este correo es informativo y no reemplaza la invitación de calendario.</Text>
+  </Container></Body></Html>;
+}
+export async function deliverAppointmentVisitMail(record: AppointmentRecord) {
+  const result = await sendMail({
+    type: EmailMessageType.MANUAL, subject: "Koru · Tu visita a Koru",
+    to: [{ email: record.recipientEmail, name: record.recipientName }],
+    react: createElement(VisitEmail, { record }),
+    payload: { appointmentInvitationId: record.id, kind: "visit", audience: "family" },
+    idempotencyKey: `appointment-${record.id}-visit-family`,
+  });
+  return result.status === "sent";
+}
 export async function deliverAppointmentMail(kind: "invitation" | "confirmation" | "rejection", record: AppointmentRecord, token?: string) {
   const base = env.APP_URL || env.BETTER_AUTH_URL;
   const privateUrl = new URL(`/dashboard/contactos/admission/${encodeURIComponent(record.admissionId)}`, base).toString();

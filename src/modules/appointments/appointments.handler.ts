@@ -1,6 +1,11 @@
 import { AppointmentError, type createAppointmentService } from "./appointments.domain";
 
-type Service = ReturnType<typeof createAppointmentService>;
+type Actor = { id: string; email: string; role: string; permissions: readonly string[] };
+type Service = Omit<ReturnType<typeof createAppointmentService>, "latest" | "manage"> & {
+  latest(admissionId: string, actor?: Actor): ReturnType<ReturnType<typeof createAppointmentService>["latest"]>;
+  manage(admissionId: string, invitationId: string, action: string, actor?: Actor): ReturnType<ReturnType<typeof createAppointmentService>["manage"]>;
+  connection?(userId: string): Promise<{ connected: boolean }>;
+};
 type Dependencies = {
   origin: string;
   actor(): Promise<{ id: string; email: string; role: string; permissions: readonly string[] } | null>;
@@ -44,11 +49,11 @@ export function createAppointmentHandlers(deps: Dependencies) {
         if (!admissionId || admissionId.length > 128 || (invitationId && invitationId.length > 128)) throw new AppointmentError("Contacto no encontrado.", 404);
         const contact = await deps.contact(admissionId);
         if (!contact) throw new AppointmentError("Contacto no encontrado.", 404);
-        if (request.method === "GET") return json({ invitation: await deps.service.latest(admissionId) });
+        if (request.method === "GET") return json({ invitation: await deps.service.latest(admissionId, actor), googleCalendar: deps.service.connection ? await deps.service.connection(actor.id) : { connected: false } });
         const body = await input(request);
         if (invitationId) {
-          if (Object.keys(body).length !== 1 || !["cancel", "resend"].includes(String(body.action))) throw new AppointmentError("Acción no válida.");
-          return json({ invitation: await deps.service.manage(admissionId, invitationId, String(body.action)) });
+          if (Object.keys(body).length !== 1 || !["cancel", "resend", "sync"].includes(String(body.action))) throw new AppointmentError("Acción no válida.");
+          return json({ invitation: await deps.service.manage(admissionId, invitationId, String(body.action), actor) });
         }
         if (Object.keys(body).some(key => !["startsAt", "durationMinutes", "mode", "location", "message"].includes(key))) throw new AppointmentError("Datos no válidos.");
         return json({ invitation: await deps.service.create(contact, actor, body) });
