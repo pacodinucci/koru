@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ConvertCandidateFamily } from "./convert-candidate-family";
 
 import {
   columnFilteringFeature,
@@ -29,6 +30,7 @@ import {
 export type FamilyListItem = {
   id: string;
   name: string;
+  kind?: "FAMILY" | "CANDIDATE";
   status: "ACTIVE" | "SUSPENDED" | "INACTIVE";
   rubricsCount: number;
   balance: string;
@@ -81,7 +83,7 @@ export function FamiliesDataTable({
       columnHelper.columns([
         columnHelper.accessor("name", {
           header: "Familia",
-          cell: (info) => <Link className="font-medium text-slate-900 hover:underline" href={`/dashboard/families/${info.row.original.id}`}>{info.getValue()}</Link>,
+          cell: (info) => <div className="flex items-center gap-2"><Link className="font-medium text-slate-900 hover:underline" href={`/dashboard/families/${info.row.original.id}`}>{info.getValue()}</Link>{info.row.original.kind === "CANDIDATE" && <Badge variant="warning">Candidata</Badge>}</div>,
         }),
         columnHelper.display({
           id: "members",
@@ -109,7 +111,7 @@ export function FamiliesDataTable({
         columnHelper.display({
           id: "manage",
           header: "",
-          cell: ({ row }) => onManage ? <Button type="button" size="sm" variant="outline" onClick={() => onManage(row.original.id)}>Gestionar</Button> : null,
+          cell: ({ row }) => <div className="flex items-center gap-2">{onManage && <Button type="button" size="sm" variant="outline" onClick={() => onManage(row.original.id)}>Gestionar</Button>}{row.original.kind === "CANDIDATE" && <ConvertCandidateFamily familyId={row.original.id} />}</div>,
         }),
       ]),
     [onManage],

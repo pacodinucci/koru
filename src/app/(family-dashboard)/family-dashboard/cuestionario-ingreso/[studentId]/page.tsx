@@ -8,6 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { FamilyDashboardHeader } from "@/modules/family-dashboard/components/family-dashboard-header";
 import { FamilySidebar } from "@/modules/family-dashboard/components/family-sidebar";
 import { readQuestionnaireAnswers } from "@/modules/family-dashboard/lib/admission-questionnaire";
+import { mergeAdmissionAnswers } from "@/modules/family-dashboard/lib/admission-prefill";
+import { getAdmissionPrefill } from "@/modules/family-dashboard/server/admission-prefill.repository";
 import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/family-dashboard-access";
 import { AdmissionQuestionnaireForm } from "@/modules/family-dashboard/views/admission-questionnaire-form";
 
@@ -24,6 +26,7 @@ export default async function FamilyAdmissionQuestionnaireStudentPage({ params }
     },
   }) : null;
   if (!student) notFound();
+  const prefill = await getAdmissionPrefill(familyUser.familyId, student);
 
   return <SidebarProvider>
     <FamilySidebar userName={viewer.name} userEmail={viewer.email} />
@@ -44,7 +47,7 @@ export default async function FamilyAdmissionQuestionnaireStudentPage({ params }
             <p><strong>Nombre de madre, padre o tutores:</strong> {student.guardians.map((guardian) => guardian.fullName).filter(Boolean).join(", ") || "No informado"}</p>
           </CardContent>
         </Card>
-        <AdmissionQuestionnaireForm studentId={student.id} initialAnswers={readQuestionnaireAnswers(student.admissionQuestionnaire?.answers)} submittedAt={student.admissionQuestionnaire?.submittedAt?.toISOString() ?? null} />
+        <AdmissionQuestionnaireForm studentId={student.id} originalAnswers={prefill?.originalAnswers} initialAnswers={readQuestionnaireAnswers(mergeAdmissionAnswers(prefill?.answers ?? {}, student.admissionQuestionnaire?.answers))} submittedAt={student.admissionQuestionnaire?.submittedAt?.toISOString() ?? null} />
       </main>
     </SidebarInset>
   </SidebarProvider>;

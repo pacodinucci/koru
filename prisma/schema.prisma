@@ -199,10 +199,19 @@ enum FamilyStatus {
   INACTIVE
 }
 
+// Candidate lifecycle marker. Independent from the operational FamilyStatus.
+enum FamilyKind {
+  FAMILY
+  CANDIDATE
+}
+
 model Family {
   id              String       @id @default(cuid())
   name            String
+  kind            FamilyKind   @default(FAMILY)
   status          FamilyStatus @default(ACTIVE)
+  admissionInquiryId String?   @unique
+  admissionInquiry AdmissionInquiry? @relation(fields: [admissionInquiryId], references: [id], onDelete: SetNull)
   planId          String?
   plan            Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
   streetAndNumber String?
@@ -592,6 +601,7 @@ model AdmissionInquiry {
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
+  family                Family?
   appointmentInvitations AppointmentInvitation[]
 
   @@index([status, submittedAt])

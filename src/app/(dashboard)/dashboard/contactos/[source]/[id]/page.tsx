@@ -7,5 +7,5 @@ export default async function ContactPage({ params }: { params: Promise<{ source
   const user = await requirePermission("contacts.view");
   const { source, id } = await params;
   if (!["contact", "admission"].includes(source) || id.length > 128) notFound();
-  return <DashboardShell userEmail={user.email} userRole={user.role} userPermissions={user.permissionKeys} breadcrumbPage="Contactos"><Suspense fallback={<p>Cargando contacto…</p>}><ContactDetail source={source} id={id} canManage={user.permissionKeys.includes("contacts.manage")} canSchedule={source === "admission" && ["ADMIN", "SUPERADMIN"].includes(user.role) && user.permissionKeys.includes("contacts.manage")} /></Suspense></DashboardShell>;
+  return <DashboardShell userEmail={user.email} userRole={user.role} userPermissions={user.permissionKeys} breadcrumbPage="Contactos"><Suspense fallback={<p>Cargando contacto…</p>}><ContactDetail source={source} id={id} canManage={user.permissionKeys.includes("contacts.manage")} canManageFamilies={user.permissionKeys.includes("families.manage")} canSchedule={source === "admission" && ["ADMIN", "SUPERADMIN"].includes(user.role) && user.permissionKeys.includes("contacts.manage")} /></Suspense></DashboardShell>;
 }

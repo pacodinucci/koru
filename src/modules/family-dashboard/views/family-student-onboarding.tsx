@@ -62,6 +62,8 @@ export type FamilyStudentRecordItem = {
   }>;
 };
 
+import type { AdmissionPrefill } from "@/modules/family-dashboard/lib/admission-prefill";
+
 type GroupOption = { id: string; name: string; ageRange: string };
 type Relationship = FamilyStudentRecordItem["guardians"][number]["relationship"];
 
@@ -211,6 +213,7 @@ export function FamilyStudentOnboarding({
   dashboardContent,
   startOnDashboard = false,
   familyAddress,
+  admissionPrefill,
 }: {
   students: FamilyStudentRecordItem[];
   groups: GroupOption[];
@@ -219,6 +222,7 @@ export function FamilyStudentOnboarding({
   dashboardContent?: React.ReactNode;
   startOnDashboard?: boolean;
   familyAddress?: FamilyAddress;
+  admissionPrefill?: AdmissionPrefill | null;
 }) {
   const router = useRouter();
   const initialDraft = students.find((student) => student.recordStatus === "DRAFT");
@@ -228,7 +232,11 @@ export function FamilyStudentOnboarding({
   const [step, setStep] = useState(() => initialDraft ? Math.min(2, Math.max(1, initialDraft.recordStep)) : 1);
   const [studentId, setStudentId] = useState<string | null>(initialDraft?.id ?? null);
   const [form, setForm] = useState<FormState>(() =>
-    initialDraft ? formFromStudent(initialDraft, userName, familyLastName, familyAddress) : emptyForm(userName, familyLastName, undefined, familyAddress),
+    initialDraft ? formFromStudent(initialDraft, userName, familyLastName, familyAddress) : {
+      ...emptyForm(userName, familyLastName, undefined, familyAddress),
+      ...(students.length === 0 ? admissionPrefill?.identity : undefined),
+      cityAndState: familyAddress?.cityAndState ?? admissionPrefill?.identity.cityAndState ?? "",
+    },
   );
   const [message, setMessage] = useState<string | null>(null);
   const [completedStudentName, setCompletedStudentName] = useState<string | null>(null);

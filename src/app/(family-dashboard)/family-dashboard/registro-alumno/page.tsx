@@ -6,6 +6,7 @@ import { requireFamilyDashboardAccess } from "@/modules/family-dashboard/server/
 import { listFamilyStudentRecords } from "@/modules/family-dashboard/server/family-student-record.repository";
 import { FamilyStudentOnboarding } from "@/modules/family-dashboard/views/family-student-onboarding";
 import { listStudentGroups } from "@/modules/students/server/students.repository";
+import { getAdmissionPrefill } from "@/modules/family-dashboard/server/admission-prefill.repository";
 
 export default async function FamilyStudentRegistrationPage() {
   const { viewer, familyUser } = await requireFamilyDashboardAccess();
@@ -16,5 +17,7 @@ export default async function FamilyStudentRegistrationPage() {
     prisma.userInvitation.findUnique({ where: { email: familyUser.email }, select: { family: { select: { name: true } } } }),
   ]);
 
-  return <SidebarProvider><FamilySidebar userName={viewer.name} userEmail={viewer.email} /><SidebarInset><FamilyDashboardHeader title="Registro de alumno" /><main className="p-4 sm:p-6"><FamilyStudentOnboarding userName={viewer.name} familyLastName={family?.name ?? invitation?.family?.name ?? ""} familyAddress={family ?? undefined} groups={groups.map((group) => ({ id: group.id, name: group.name, ageRange: group.ageRange }))} students={students.map((student) => ({ ...student, address: student.family ? { streetAndNumber: student.family.streetAndNumber ?? "", neighborhood: student.family.neighborhood ?? "", cityAndState: student.family.cityAndState ?? "", postalCode: student.family.postalCode ?? "" } : null, birthDate: student.birthDate.toISOString(), updatedAt: student.updatedAt.toISOString(), guardians: student.guardians.map((guardian) => ({ fullName: guardian.fullName, phone: guardian.phone, relationship: guardian.relationship })) }))} /></main></SidebarInset></SidebarProvider>;
+  const admissionPrefill = students.length === 0 ? await getAdmissionPrefill(familyUser.familyId) : null;
+
+  return <SidebarProvider><FamilySidebar userName={viewer.name} userEmail={viewer.email} /><SidebarInset><FamilyDashboardHeader title="Registro de alumno" /><main className="p-4 sm:p-6"><FamilyStudentOnboarding admissionPrefill={admissionPrefill} userName={viewer.name} familyLastName={family?.name ?? invitation?.family?.name ?? ""} familyAddress={family ?? undefined} groups={groups.map((group) => ({ id: group.id, name: group.name, ageRange: group.ageRange }))} students={students.map((student) => ({ ...student, address: student.family ? { streetAndNumber: student.family.streetAndNumber ?? "", neighborhood: student.family.neighborhood ?? "", cityAndState: student.family.cityAndState ?? "", postalCode: student.family.postalCode ?? "" } : null, birthDate: student.birthDate.toISOString(), updatedAt: student.updatedAt.toISOString(), guardians: student.guardians.map((guardian) => ({ fullName: guardian.fullName, phone: guardian.phone, relationship: guardian.relationship })) }))} /></main></SidebarInset></SidebarProvider>;
 }

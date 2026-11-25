@@ -6,9 +6,10 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { QUESTIONNAIRE_SECTIONS, QUESTIONNAIRE_VERSION } from "@/modules/admissions/initial-questionnaire";
 import { SOURCE_LABELS, STATUS_LABELS, type ContactDetail as Detail, type ContactStatus } from "../contacts.domain";
+import { CreateFamilyDialog } from "@/modules/families/components/create-family-dialog";
 import { AppointmentScheduler } from "@/modules/appointments/views/appointment-scheduler";
 
-export function ContactDetail({ source, id, canManage, canSchedule = false }: { source: string; id: string; canManage: boolean; canSchedule?: boolean }) {
+export function ContactDetail({ source, id, canManage, canSchedule = false, canManageFamilies = false }: { source: string; id: string; canManage: boolean; canSchedule?: boolean; canManageFamilies?: boolean }) {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const params = useSearchParams();
   const [loaded, setLoaded] = useState<{ key: string; item: Detail } | null>(null);
@@ -40,6 +41,7 @@ export function ContactDetail({ source, id, canManage, canSchedule = false }: { 
     {error && <div role="alert"><p>{error}</p>{!item && <Button variant="outline" onClick={() => setRetry((value) => value + 1)}>Reintentar</Button>}</div>}
     {!item ? !error && <p role="status">Cargando contacto…</p> : <>
       <section className="space-y-2 rounded-xl border p-5"><h2 className="text-xl font-semibold">{item.name || "Sin nombre"}</h2><p>{SOURCE_LABELS[item.source]}</p><p>{new Date(item.receivedAt).toLocaleString("es-AR")}</p><p className="break-all">{item.email}</p><p>{item.phone || "Sin teléfono"}</p><label className="block">Estado<select className="ml-3 rounded border p-2" disabled={pending || !canManage} value={item.status} onChange={(event) => update(event.target.value as ContactStatus)}>{Object.entries(STATUS_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>{pending && <p role="status">Guardando estado…</p>}<p className="text-sm text-muted-foreground">Marcar Respondido solo registra el seguimiento; no envía mensajes.</p></section>
+      {item.source === "admission" && canManage && canManageFamilies && <CreateFamilyDialog admissionInquiryId={item.id} initialName={item.name} initialEmail={item.email} />}
       {item.source === "admission" && canManage && canSchedule && <AppointmentScheduler key={item.id} contactId={id} recipientName={item.name || "Familia"} recipientEmail={item.email} open={scheduleOpen} onOpenChange={setScheduleOpen} />}
       {item.source === "contact" ? <section className="rounded-xl border p-5"><h2 className="mb-3 text-lg font-semibold">Mensaje original</h2><p className="whitespace-pre-wrap break-words">{item.message}</p></section> : item.questionnaireVersion !== QUESTIONNAIRE_VERSION ? <p role="alert">No está disponible la definición de esta versión del cuestionario. No se reinterpretaron las respuestas.</p> : QUESTIONNAIRE_SECTIONS.map((section) => <section key={section.title} className="space-y-4 rounded-xl border p-5"><h2 className="text-lg font-semibold">{section.title}</h2>{section.description && <p>{section.description}</p>}<dl className="space-y-4">{section.questions.map((question) => <div key={question.key}><dt className="font-medium">{question.label}</dt><dd className="whitespace-pre-wrap break-words">{String(item.answers?.[question.key] ?? "") || "Sin respuesta"}</dd></div>)}</dl></section>)}
     </>}

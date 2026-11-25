@@ -7,6 +7,11 @@ import {
   cancelStaleInvitationDeliveryJobs,
   createInvitationDeliveryJob,
 } from "@/modules/mailing/server/invitation-delivery-job.repository";
+import {
+  familyCreationRecord,
+  resolveImportRowKind,
+  type FamilyKindValue,
+} from "@/modules/families/lib/candidate-family";
 import { encryptInvitationToken } from "@/modules/users/server/invitation-token-cipher";
 import { createInvitationToken } from "@/modules/users/server/user-invitation-token";
 
@@ -15,17 +20,32 @@ export type FamilyImportRowInput = {
   familyName: string;
   motherEmail?: string;
   fatherEmail?: string;
+  kind?: FamilyKindValue | string;
+  admissionInquiryId?: string | null;
 };
 
 export type FamilyImportIssue = { rowNumber: number; message: string };
 export type FamilyImportPreview = {
-  validRows: Array<{ rowNumber: number; familyName: string; emails: string[] }>;
+  validRows: Array<{
+    rowNumber: number;
+    familyName: string;
+    emails: string[];
+    kind: FamilyKindValue;
+    admissionInquiryId: string | null;
+  }>;
   issues: FamilyImportIssue[];
   familiesCount: number;
   invitationsCount: number;
 };
 
-type NormalizedRow = { rowNumber: number; familyName: string; familyKey: string; emails: string[] };
+type NormalizedRow = {
+  rowNumber: number;
+  familyName: string;
+  familyKey: string;
+  emails: string[];
+  kind: FamilyKindValue;
+  admissionInquiryId: string | null;
+};
 
 const emailSchema = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -73,7 +93,13 @@ function normalizeRows(rows: FamilyImportRowInput[]) {
       issues.push({ rowNumber, message: "Los dos mails de la familia deben ser distintos." });
       continue;
     }
-    normalized.push({ rowNumber, familyName: name, familyKey: familyKey(name), emails });
+    const admissionInquiryId = (row.admissionInquiryId ?? "").trim() || null;
+    const kind = resolveImportRowKind({ kind: row.kind, admissionInquiryId });
+    if (!kind.ok) {
+      issues.push({ rowNumber, message: kind.message });
+      continue;
+    }
+    normalized.push({ rowNumber, familyName: name, familyKey: familyKey(name), emails, kind: kind.kind, admissionInquiryId });
   }
 
   const seenFamilies = new Map<string, number>();
@@ -105,8 +131,22 @@ async function appendDatabaseIssues(rows: NormalizedRow[], issues: FamilyImportI
     ? await prisma.userInvitation.findMany({ where: { email: { in: emails } }, select: { email: true } })
     : [];
   const existingInvitations = new Set(invitations.map((invitation) => invitation.email.toLowerCase()));
+  const admissionInquiryIds = rows.flatMap((row) => (row.admissionInquiryId ? [row.admissionInquiryId] : []));
+  const linkedOrigins = admissionInquiryIds.length
+    ? new Set((await prisma.family.findMany({ where: { admissionInquiryId: { in: admissionInquiryIds } }, select: { admissionInquiryId: true } }))
+        .map((family) => family.admissionInquiryId))
+    : new Set<string | null>();
+  const knownOrigins = admissionInquiryIds.length
+    ? new Set((await prisma.admissionInquiry.findMany({ where: { id: { in: admissionInquiryIds } }, select: { id: true } })).map((admission) => admission.id))
+    : new Set<string>();
 
   for (const row of rows) {
+    if (row.admissionInquiryId && !knownOrigins.has(row.admissionInquiryId)) {
+      issues.push({ rowNumber: row.rowNumber, message: "No encontramos el contacto de admisión de origen." });
+    }
+    if (row.admissionInquiryId && linkedOrigins.has(row.admissionInquiryId)) {
+      issues.push({ rowNumber: row.rowNumber, message: "Ese contacto de admisión ya tiene una familia creada." });
+    }
     if (existingFamilyKeys.has(row.familyKey)) issues.push({ rowNumber: row.rowNumber, message: "Ya existe una familia con ese nombre." });
     for (const email of row.emails) {
       if (existingUsers.has(email)) issues.push({ rowNumber: row.rowNumber, message: `El mail ${email} ya tiene un usuario creado.` });
@@ -120,7 +160,12 @@ export async function previewFamilyImport(rows: FamilyImportRowInput[], rejectEx
   await appendDatabaseIssues(result.normalized, result.issues, rejectExistingInvitations);
   const invalidRows = new Set(result.issues.map((issue) => issue.rowNumber));
   const validRows = result.normalized.filter((row) => !invalidRows.has(row.rowNumber));
-  return { validRows: validRows.map(({ rowNumber, familyName, emails }) => ({ rowNumber, familyName, emails })), issues: result.issues, familiesCount: validRows.length, invitationsCount: validRows.reduce((count, row) => count + row.emails.length, 0) };
+  return {
+    validRows: validRows.map(({ rowNumber, familyName, emails, kind, admissionInquiryId }) => ({ rowNumber, familyName, emails, kind, admissionInquiryId })),
+    issues: result.issues,
+    familiesCount: validRows.length,
+    invitationsCount: validRows.reduce((count, row) => count + row.emails.length, 0),
+  };
 }
 
 export async function confirmFamilyImport(rows: FamilyImportRowInput[], invitedById: string, rejectExistingInvitations = false) {
@@ -136,7 +181,16 @@ export async function confirmFamilyImport(rows: FamilyImportRowInput[], invitedB
       const sameName = await tx.family.findMany({ select: { name: true } });
       if (sameName.some((family) => familyKey(family.name) === familyKey(row.familyName))) throw new Error("family_import_conflict");
 
-      const family = await tx.family.create({ data: { name: row.familyName } });
+      // The admission origin is unique: re-check inside the write transaction so a stale
+      // preview can never create a second family for the same admission.
+      if (row.admissionInquiryId) {
+        const linkedFamily = await tx.family.findUnique({ where: { admissionInquiryId: row.admissionInquiryId }, select: { id: true } });
+        if (linkedFamily) throw new Error("family_admission_origin_conflict");
+      }
+
+      const family = await tx.family.create({
+        data: familyCreationRecord({ name: row.familyName, kind: row.kind, admissionInquiryId: row.admissionInquiryId }),
+      });
       for (const email of row.emails) {
         const [user, invitation] = await Promise.all([
           tx.user.findUnique({ where: { email }, select: { id: true } }),

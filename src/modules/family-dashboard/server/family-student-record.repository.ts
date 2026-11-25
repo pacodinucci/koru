@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { canAccessFamilyStudent } from "@/modules/families/lib/family-student-access-policy";
+import { getAdmissionPrefill } from "@/modules/family-dashboard/server/admission-prefill.repository";
 import type {
   FamilyStudentAddressInput,
   FamilyStudentCompletionInput,
@@ -113,6 +114,7 @@ export async function saveFamilyStudentIdentity(input: FamilyStudentIdentityInpu
       return await prisma.student.update({ where: { id: input.studentId }, data });
     }
 
+    const prefill = await getAdmissionPrefill(familyId, { firstName: data.firstName, lastName: data.lastName, birthDate });
     return await prisma.student.create({
       data: {
         ...data,
@@ -121,7 +123,8 @@ export async function saveFamilyStudentIdentity(input: FamilyStudentIdentityInpu
           create: {
             userId: user.id,
             email: user.email.trim().toLowerCase(),
-            fullName: user.name,
+            fullName: prefill?.identity.primaryFullName || user.name,
+            phone: prefill?.identity.primaryPhone || null,
             relationship: "GUARDIAN",
             isPrimary: true,
             canPickup: true,
