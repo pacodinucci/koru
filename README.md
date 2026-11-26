@@ -60,6 +60,8 @@ El servidor local usa Webpack para evitar el fallo interno de Turbopack observad
 - `npm run dev` — servidor local con Webpack.
 - `npm run dev:webpack` — alias explícito del mismo servidor.
 - `npm run dev:poll` — Webpack con polling de archivos en Windows, si no se detectan cambios.
+- `npm run build` — build de producción con Webpack, también en Vercel. Evita el fallo del resolvedor de fuentes de Turbopack en Next.js 16.2.1 (`next/font/google queries have exactly one entry`) sin cambiar las fuentes del sitio. Vercel debe usar `npm run build` como comando de build.
+- `node --test tests/integration/build-webpack.test.mjs` — verifica el bundler de producción y conserva los comandos de desarrollo.
 - `npm run lint`
 - `npm run prisma:generate`
 - `npm run prisma:migrate`
